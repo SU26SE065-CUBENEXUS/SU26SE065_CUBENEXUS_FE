@@ -243,24 +243,25 @@ export default function ArenaPage() {
 
     return (
       <Card className="border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/35">
-        <div className="grid min-h-[620px] lg:grid-cols-[1.35fr_0.65fr]">
-          <div className="flex items-center justify-center px-6 py-12 text-center">
-            <div className="max-w-2xl space-y-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Ready to Queue</p>
-              <h2 className="text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">RANKED ARENA</h2>
-              <p className="text-sm text-[#8fa7c1]">This keeps the lobby-like layout of LoL: choose mode, then enter the ranked queue.</p>
-              <div className="flex flex-wrap justify-center gap-3 text-sm text-[#d5dfeb]">
-                <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
-                <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Lobby queue</span>
-                <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Accept timer 10s</span>
-              </div>
-              <Button className="mt-4 min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={startMatchmaking}>
-                FIND MATCH
-              </Button>
-            </div>
-          </div>
+  {/* Thay đổi từ grid 2 cột thành flex để đưa mọi thứ vào giữa */}
+  <div className="flex min-h-[620px] w-full items-center justify-center">
+    <div className="flex items-center justify-center px-6 py-12 text-center">
+      <div className="max-w-2xl space-y-5">
+        <p className="text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Ready to Queue</p>
+        <h2 className="text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">RANKED ARENA</h2>
+        <p className="text-sm text-[#8fa7c1]">Find your next competitor</p>
+        <div className="flex flex-wrap justify-center gap-3 text-sm text-[#d5dfeb]">
+          <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
+          <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Lobby queue</span>
+          <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Accept timer 10s</span>
+        </div>
+        <Button className="mt-4 min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={startMatchmaking}>
+          FIND MATCH
+        </Button>
+      </div>
+    </div>
 
-          <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
+          {/* <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
             <div className="rounded-2xl border border-[#264059] bg-[#0a1628] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#89b4d8]">Queue Preview</p>
               <div className="mt-4 flex items-center justify-between text-sm text-[#b7c6d9]">
@@ -272,7 +273,7 @@ export default function ArenaPage() {
               </div>
               <p className="mt-3 text-xs text-[#7f95b2]">The layout will switch to the queue screen once you press Find Match.</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </Card>
     );
