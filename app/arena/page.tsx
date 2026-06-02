@@ -109,41 +109,51 @@ export default function ArenaPage() {
       return (
         <Card className="overflow-hidden border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/45">
           <div className="grid min-h-[620px] lg:grid-cols-[1.35fr_0.65fr]">
-            <div className="relative flex items-center justify-center overflow-hidden px-6 py-12">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(62,181,255,0.18)_0%,_rgba(8,17,31,0)_52%),radial-gradient(circle_at_center,_rgba(244,210,122,0.08)_0%,_rgba(8,17,31,0)_68%)]" />
-              <div className="relative flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute h-[360px] w-[360px] rounded-full border border-[#59c7ff]/45" />
-                  <div className="absolute h-[300px] w-[300px] rounded-full border-4 border-[#79d8ff]/75 shadow-[0_0_30px_rgba(61,211,255,0.45)]" />
-                  <div className="flex h-[220px] w-[220px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,_rgba(40,125,215,0.95)_0%,_rgba(13,38,72,0.98)_70%)] shadow-[0_0_70px_rgba(63,181,255,0.35)]">
-                    <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-[#f4d27a] bg-[#0b1a32] text-4xl shadow-lg shadow-black/30">
-                      {matchedOpponent.country}
-                    </div>
-                  </div>
-                </div>
+            <Card className="mx-auto w-full max-w-5xl border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/35">
+  {/* Thêm min-h-[620px] để bằng kích thước với màn hình tìm trận trước đó */}
+  <div className="relative flex min-h-[620px] items-center justify-center overflow-hidden px-6 py-12">
+    {/* Background Glow */}
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(62,181,255,0.18)_0%,_rgba(8,17,31,0)_52%),radial-gradient(circle_at_center,_rgba(244,210,122,0.08)_0%,_rgba(8,17,31,0)_68%)]" />
+    
+    <div className="relative flex flex-col items-center text-center">
+      {/* Vòng tròn hiệu ứng & Quốc gia */}
+      <div className="relative flex items-center justify-center">
+        <div className="absolute h-[360px] w-[360px] rounded-full border border-[#59c7ff]/45" />
+        <div className="absolute h-[300px] w-[300px] rounded-full border-4 border-[#79d8ff]/75 shadow-[0_0_30px_rgba(61,211,255,0.45)]" />
+        <div className="flex h-[220px] w-[220px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,_rgba(40,125,215,0.95)_0%,_rgba(13,38,72,0.98)_70%)] shadow-[0_0_70px_rgba(63,181,255,0.35)]">
+          <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-[#f4d27a] bg-[#0b1a32] text-4xl shadow-lg shadow-black/30">
+            {matchedOpponent.country}
+          </div>
+        </div>
+      </div>
 
-                <p className="mt-8 text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Match Found</p>
-                <h2 className="mt-4 text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">MATCH FOUND</h2>
-                <p className="mt-3 text-sm text-[#8fa7c1]">Ranked 1v1 • Similar Elo • Ready to accept</p>
+      {/* Thông tin trận đấu */}
+      <p className="mt-8 text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Match Found</p>
+      <h2 className="mt-4 text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">MATCH FOUND</h2>
+      <p className="mt-3 text-sm text-[#8fa7c1]">Ranked 1v1 • Similar Elo • Ready to accept</p>
 
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-[#d5dfeb]">
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Opponent Elo: {matchedOpponent.rating}</span>
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Accept in {acceptCountdown}s</span>
-                </div>
+      {/* Chỉ số Elo & Thời gian */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-[#d5dfeb]">
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Opponent Elo: {matchedOpponent.rating}</span>
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Accept in {acceptCountdown}s</span>
+      </div>
 
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Button className="min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={acceptMatch}>
-                    ACCEPT!
-                  </Button>
-                  <Button variant="outline" className="border-2 border-[#f4d27a] bg-transparent px-8 py-3 text-sm font-semibold tracking-[0.18em] text-[#f4d27a] hover:bg-[#f4d27a]/10" onClick={declineMatch}>
-                    DECLINE
-                  </Button>
-                </div>
-              </div>
-            </div>
+      {/* Nút bấm hành động */}
+      <div className="mt-8 flex flex-wrap justify-center gap-3 items-center">
+        <Button className="min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={acceptMatch}>
+          ACCEPT!
+        </Button>
+        {/* Thêm h-full hoặc sửa padding nhẹ để nút Decline cân bằng chiều cao với nút Accept */}
+        <Button variant="outline" className="border-2 border-[#f4d27a] bg-transparent px-8 py-5 text-sm font-semibold tracking-[0.18em] text-[#f4d27a] hover:bg-[#f4d27a]/10" onClick={declineMatch}>
+          DECLINE
+        </Button>
+      </div>
+    </div>
+  </div>
+</Card>
 
-            <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
+            {/* <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#89b4d8]">Finding Match</p>
                 <span className="text-lg font-bold text-[#79d8ff]">0:{String(Math.max(0, acceptCountdown ?? 0)).padStart(2, '0')}</span>
@@ -168,7 +178,7 @@ export default function ArenaPage() {
                   Ranked queue style only, no extra popup.
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </Card>
       );
@@ -176,68 +186,42 @@ export default function ArenaPage() {
 
     if (matchPhase === 'queue' || matchPhase === 'searching') {
       return (
-        <Card className="overflow-hidden border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/45">
-          <div className="grid min-h-[620px] lg:grid-cols-[1.35fr_0.65fr]">
-            <div className="relative flex items-center justify-center overflow-hidden px-6 py-12">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(62,181,255,0.18)_0%,_rgba(8,17,31,0)_52%),radial-gradient(circle_at_center,_rgba(244,210,122,0.08)_0%,_rgba(8,17,31,0)_68%)]" />
-              <div className="relative flex flex-col items-center text-center">
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute h-[360px] w-[360px] rounded-full border border-[#59c7ff]/45" />
-                  <div className="absolute h-[300px] w-[300px] rounded-full border-4 border-[#79d8ff]/75 shadow-[0_0_30px_rgba(61,211,255,0.45)]" />
-                  <div className="flex h-[220px] w-[220px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,_rgba(40,125,215,0.95)_0%,_rgba(13,38,72,0.98)_70%)] shadow-[0_0_70px_rgba(63,181,255,0.35)]">
-                    <LoaderCircle className="h-16 w-16 animate-spin text-[#d8f6ff]" />
-                  </div>
-                </div>
+        <Card className="mx-auto w-full max-w-5xl overflow-hidden border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/45">
+  {/* Thay đổi ở đây: Bỏ thẻ div grid cũ, chỉ giữ lại thẻ div chứa nội dung với flex w-full */}
+  <div className="relative flex min-h-[620px] w-full items-center justify-center overflow-hidden px-6 py-12">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(62,181,255,0.18)_0%,_rgba(8,17,31,0)_52%),radial-gradient(circle_at_center,_rgba(244,210,122,0.08)_0%,_rgba(8,17,31,0)_68%)]" />
+    
+    <div className="relative flex flex-col items-center text-center">
+      <div className="relative flex items-center justify-center">
+        <div className="absolute h-[360px] w-[360px] rounded-full border border-[#59c7ff]/45" />
+        <div className="absolute h-[300px] w-[300px] rounded-full border-4 border-[#79d8ff]/75 shadow-[0_0_30px_rgba(61,211,255,0.45)]" />
+        <div className="flex h-[220px] w-[220px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_center,_rgba(40,125,215,0.95)_0%,_rgba(13,38,72,0.98)_70%)] shadow-[0_0_70px_rgba(63,181,255,0.35)]">
+          <LoaderCircle className="h-16 w-16 animate-spin text-[#d8f6ff]" />
+        </div>
+      </div>
 
-                <p className="mt-8 text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Ready to Queue</p>
-                <h2 className="mt-4 text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">MATCHMAKING</h2>
-                <p className="mt-3 text-sm text-[#8fa7c1]">Ranked 1v1 • Similar Elo search • Lobby queue</p>
+      <p className="mt-8 text-sm font-semibold uppercase tracking-[0.42em] text-[#9fe8ff]">Ready to Queue</p>
+      <h2 className="mt-4 text-4xl font-black tracking-[0.16em] text-[#f6ead1] sm:text-5xl">MATCHMAKING</h2>
+      <p className="mt-3 text-sm text-[#8fa7c1]">Ranked 1v1 • Similar Elo search • Lobby queue</p>
 
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-[#d5dfeb]">
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Players in queue: {activePlayers.filter((player) => player.status === 'Waiting').length}</span>
-                  <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Estimated: ~3:00</span>
-                </div>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm text-[#d5dfeb]">
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Your Elo: {playerRating}</span>
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Players in queue: {activePlayers.filter((player) => player.status === 'Waiting').length}</span>
+        <span className="rounded-full border border-[#59c7ff]/30 bg-[#0b1529]/85 px-4 py-2">Estimated: ~3:00</span>
+      </div>
 
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Button className="min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={startMatchmaking}>
-                    FIND MATCH
-                  </Button>
-                  <Button variant="outline" className="border-2 border-[#f4d27a] bg-transparent px-8 py-3 text-sm font-semibold tracking-[0.18em] text-[#f4d27a] hover:bg-[#f4d27a]/10" onClick={declineMatch}>
-                    CANCEL
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#89b4d8]">In Queue</p>
-                <span className="text-lg font-bold text-[#79d8ff]">0:{String(matchPhase === 'searching' ? 3 : 0).padStart(2, '0')}</span>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-[#264059] bg-[#0a1628] p-4">
-                <div className="flex items-center justify-between text-sm text-[#b7c6d9]">
-                  <span>Searching for similar Elo</span>
-                  <span>{matchPhase === 'searching' ? 'Active' : 'Entering queue'}</span>
-                </div>
-                <div className="mt-3 h-2 rounded-full bg-[#20324c]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#36d8ff] via-[#6fd8ff] to-[#2f7dff] transition-all"
-                    style={{ width: matchPhase === 'searching' ? '88%' : '34%' }}
-                  />
-                </div>
-                <p className="mt-3 text-xs text-[#7f95b2]">Keep the queue open while the system scans for similar Elo.</p>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <div className="rounded-2xl border border-[#264059] bg-[#0a1628] px-4 py-3 text-sm text-[#cbd5e1]">
-                  Queueing like ranked LoL: lobby queue, match search, accept, room.
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
+      <div className="mt-8 flex flex-wrap justify-center gap-3 items-center">
+        <Button className="min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={startMatchmaking}>
+          FIND MATCH
+        </Button>
+        {/* Tăng lên py-5 để nút CANCEL có độ cao bằng nút FIND MATCH cho cân đối */}
+        <Button variant="outline" className="border-2 border-[#f4d27a] bg-transparent px-8 py-5 text-sm font-semibold tracking-[0.18em] text-[#f4d27a] hover:bg-[#f4d27a]/10" onClick={declineMatch}>
+          CANCEL
+        </Button>
+      </div>
+    </div>
+  </div>
+</Card>
       );
     }
 
