@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,12 @@ import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 export default function RankingsPage() {
   const [selectedCategory, setSelectedCategory] = useState('global');
+
+  const recentMatches = [
+    { playerA: 'SpeedMaster_JP', playerB: 'CubeLegend_CN', winner: 'SpeedMaster_JP', time: '8.12s', room: 'VN-2048' },
+    { playerA: 'FastFingers_US', playerB: 'TwistyKing_KR', winner: 'TwistyKing_KR', time: '8.48s', room: 'VN-2051' },
+    { playerA: 'BlazeFast_BR', playerB: 'PuzzleWizard_DE', winner: 'BlazeFast_BR', time: '8.77s', room: 'VN-2060' },
+  ];
 
   const rankings = [
     { rank: 1, name: 'SpeedMaster_JP', rating: 2950, country: '🇯🇵', change: 'up', bestTime: '7.2s', tournaments: 45 },
@@ -55,8 +62,44 @@ export default function RankingsPage() {
             Global Rankings
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Compete and climb the leaderboard to become a legend
+            Guest and spectator view for global Elo ranking, top players, and live match history
           </p>
+        </div>
+
+        <div className="mb-8 grid gap-6 lg:grid-cols-3">
+          <Card className="border-border p-6 lg:col-span-2">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Spectator Feed</p>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">Top players and live rank changes</h2>
+              </div>
+              <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href="/arena">Watch Arena</Link>
+              </Button>
+            </div>
+            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
+              This view is designed for guests and spectators to monitor the global leaderboard and inspect recent 1v1 outcomes in real time.
+            </p>
+          </Card>
+
+          <Card className="border-border p-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Match History</p>
+            <div className="mt-4 space-y-3">
+              {recentMatches.map((match) => (
+                <div key={match.room} className="rounded-xl border border-border p-3">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium text-foreground">{match.playerA}</span>
+                    <span className="text-muted-foreground">vs</span>
+                    <span className="font-medium text-foreground">{match.playerB}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Winner: {match.winner}</span>
+                    <span>{match.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
         {/* Category Tabs */}

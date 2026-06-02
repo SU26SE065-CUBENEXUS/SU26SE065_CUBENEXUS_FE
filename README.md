@@ -1,3 +1,12 @@
+# CubeNexus FE
+
+CubeNexus is a speedcubing platform with two main domains:
+
+- Offline tournament management for managers, judges, and competitors.
+- Online 1v1 matchmaking with WebRTC camera streaming and mobile timer sync.
+
+See [docs/business-flows.md](docs/business-flows.md) for the detailed offline and online business flows.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
