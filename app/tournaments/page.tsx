@@ -1,11 +1,121 @@
 'use client';
 
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Calendar, Users, Trophy, Zap } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Calendar, ClipboardList, QrCode, ShieldCheck, Trophy, Users, Zap } from 'lucide-react';
+
+type FlowAction = 'create' | 'register' | 'checkin' | 'dashboard' | null;
 
 export default function TournamentsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const routeAction = searchParams.get('action') as FlowAction | null;
+
+  const [activeAction, setActiveAction] = useState<FlowAction>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (routeAction === 'create' || routeAction === 'register' || routeAction === 'checkin' || routeAction === 'dashboard') {
+      setActiveAction(routeAction);
+      setFeedback(null);
+      return;
+    }
+
+    if (!routeAction) {
+      setActiveAction(null);
+      setFeedback(null);
+    }
+  }, [routeAction]);
+
+  const openFlow = (action: Exclude<FlowAction, null>) => {
+    setActiveAction(action);
+    setFeedback(null);
+    router.push(`/tournaments?action=${action}`);
+  };
+
+  const closeFlow = () => {
+    setActiveAction(null);
+    setFeedback(null);
+    router.replace('/tournaments');
+  };
+
+  const dialogMeta = useMemo(() => {
+    switch (activeAction) {
+      case 'create':
+        return {
+          title: 'Create Tournament',
+          description: 'Configure the event, choose Traditional or Medley, then generate groups and scrambles.',
+        };
+      case 'register':
+        return {
+          title: 'Register for Tournament',
+          description: 'Submit your registration and generate a QR check-in code for the competition station.',
+        };
+      case 'checkin':
+        return {
+          title: 'Judge Check-in',
+          description: 'Scan the competitor QR, validate the round, enter the result, and submit the final score.',
+        };
+      case 'dashboard':
+        return {
+          title: 'Live Operations Dashboard',
+          description: 'Monitor judge progress, competitor status, disputes, and realtime live board updates.',
+        };
+      default:
+        return {
+          title: 'Tournament Action',
+          description: 'Select a flow to continue.',
+        };
+    }
+  }, [activeAction]);
+
+  const offlineFlows = [
+    {
+      title: 'Manager / Delegate',
+      description: 'Login, create a tournament, configure the format, generate groups and scrambles, then publish the event.',
+      icon: Trophy,
+      action: 'Create Tournament',
+      href: '/tournaments?action=create',
+      actionType: 'create' as const,
+    },
+    {
+      title: 'Player Registration',
+      description: 'Browse tournaments, register, receive a QR check-in code, and wait for the schedule.',
+      icon: QrCode,
+      action: 'Register Now',
+      href: '/tournaments?action=register',
+      actionType: 'register' as const,
+    },
+    {
+      title: 'Judge Check-in',
+      description: 'Scan QR, verify the attempt, enter Stackmat times, apply penalties, and collect e-signatures.',
+      icon: ShieldCheck,
+      action: 'Open Judge App',
+      href: '/judge?action=checkin',
+      actionType: 'route' as const,
+    },
+    {
+      title: 'Live Operations',
+      description: 'Monitor judge progress, competitor status, live rankings, and lock results before advancing rounds.',
+      icon: ClipboardList,
+      action: 'Open Dashboard',
+      href: '/judge?action=dashboard',
+      actionType: 'route' as const,
+    },
+  ];
+
   const tournaments = [
     {
       id: 1,
@@ -82,34 +192,97 @@ export default function TournamentsPage() {
     }
   };
 
+  const handleCreateSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const tournamentName = String(formData.get('tournamentName') || 'Untitled Tournament');
+    const format = String(formData.get('format') || 'Traditional');
+    setFeedback(`Tournament "${tournamentName}" created. ${format} groups and scrambles generated.`);
+  };
+
+  const handleRegisterSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const playerName = String(formData.get('playerName') || 'Player');
+    const tournamentName = String(formData.get('tournamentName') || 'Selected Tournament');
+    const qrCode = `QR-${Math.floor(100000 + Math.random() * 900000)}`;
+    setFeedback(`${playerName} registered for ${tournamentName}. QR check-in code generated: ${qrCode}`);
+  };
+
+  const handleCheckInSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const playerQr = String(formData.get('playerQr') || 'Unknown QR');
+    const round = String(formData.get('round') || 'Round 1');
+    const stackmat = String(formData.get('stackmat') || '0.00');
+    const penalty = String(formData.get('penalty') || 'None');
+    const finalTime = penalty === '+2' ? `${stackmat} +2` : penalty === 'DNF' ? 'DNF' : `${stackmat}s`;
+    setFeedback(`Verified ${playerQr} for ${round}. Final result submitted as ${finalTime}.`);
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
       
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-12">
-          <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Tournaments
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Compete in tournaments worldwide and win amazing prizes
-          </p>
+        <div className="mb-12 grid gap-8 lg:grid-cols-1">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-muted-foreground">Offline Tournament Hub</p>
+            <h1 className="mt-3 text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+Tournament Hub            </h1>
+            <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+              This screen maps the full offline workflow: manager setup, player registration, judge station, Medley support, and real-time live board control.
+            </p>
+          </div>
+
+          
         </div>
 
-        {/* Filters */}
+        <div className="mb-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {offlineFlows.map((flow) => {
+            const Icon = flow.icon;
+            return (
+              <Card key={flow.title} className="border-border p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="rounded-2xl bg-accent/10 p-3">
+                    <Icon className="h-6 w-6 text-accent" />
+                  </div>
+                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    Offline
+                  </span>
+                </div>
+                <h3 className="mt-5 text-lg font-semibold text-foreground">{flow.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{flow.description}</p>
+                {flow.actionType === 'route' ? (
+                  <Button asChild className="mt-5 w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Link href={flow.href}>{flow.action}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    className="mt-5 w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                    onClick={() => openFlow(flow.actionType)}
+                  >
+                    <Link href={flow.href}>{flow.action}</Link>
+                  </Button>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+
         <div className="mb-8 flex flex-wrap gap-3">
           <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-            All Events
+            Published Events
           </Button>
           <Button variant="outline" className="border-border">
             Registration Open
           </Button>
           <Button variant="outline" className="border-border">
-            Starting Soon
+            Live Now
           </Button>
           <Button variant="outline" className="border-border">
-            In Progress
+            Medley Ready
           </Button>
         </div>
 
@@ -171,7 +344,16 @@ export default function TournamentsPage() {
 
               {/* Footer */}
               <div className="border-t border-border p-6">
-                <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  onClick={() => {
+                    if (tournament.status === 'Registration Open') {
+                      openFlow('register');
+                      return;
+                    }
+                    openFlow('checkin');
+                  }}
+                >
                   {tournament.status === 'Registration Open' ? 'Register Now' : 'View Details'}
                 </Button>
               </div>
@@ -179,6 +361,134 @@ export default function TournamentsPage() {
           ))}
         </div>
       </div>
+
+      <Dialog open={Boolean(activeAction)} onOpenChange={(open) => (!open ? closeFlow() : null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{dialogMeta.title}</DialogTitle>
+            <DialogDescription>{dialogMeta.description}</DialogDescription>
+          </DialogHeader>
+
+          {activeAction === 'create' && (
+            <form className="space-y-4" onSubmit={handleCreateSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Tournament name</span>
+                  <input name="tournamentName" defaultValue="CubeNexus Open 2026" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Time limit</span>
+                  <input name="timeLimit" defaultValue="10 minutes" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+              </div>
+              <label className="block space-y-2 text-sm">
+                <span className="font-medium text-foreground">Description</span>
+                <textarea name="description" defaultValue="Offline tournament with live board, QR check-in, and Judge station workflow." rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+              </label>
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-foreground">Format</span>
+                <select name="format" defaultValue="Traditional" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent">
+                  <option>Traditional</option>
+                  <option>Medley</option>
+                </select>
+              </label>
+              {feedback && <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 text-sm text-foreground">{feedback}</div>}
+              <DialogFooter>
+                <Button type="button" variant="outline" className="border-border" onClick={closeFlow}>Cancel</Button>
+                <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Save Tournament</Button>
+              </DialogFooter>
+            </form>
+          )}
+
+          {activeAction === 'register' && (
+            <form className="space-y-4" onSubmit={handleRegisterSubmit}>
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-foreground">Tournament</span>
+                <input name="tournamentName" defaultValue="Global Championship 2025" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Player name</span>
+                  <input name="playerName" defaultValue="CubeNexus_Player" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Email</span>
+                  <input name="email" defaultValue="player@cubenexus.app" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+              </div>
+              {feedback && <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 text-sm text-foreground">{feedback}</div>}
+              <DialogFooter>
+                <Button type="button" variant="outline" className="border-border" onClick={closeFlow}>Cancel</Button>
+                <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Generate QR Check-in</Button>
+              </DialogFooter>
+            </form>
+          )}
+
+          {activeAction === 'checkin' && (
+            <form className="space-y-4" onSubmit={handleCheckInSubmit}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Player QR code</span>
+                  <input name="playerQr" defaultValue="QR-428761" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Round</span>
+                  <input name="round" defaultValue="Solve 1" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Stackmat time</span>
+                  <input name="stackmat" defaultValue="8.42" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Penalty</span>
+                  <select name="penalty" defaultValue="None" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent">
+                    <option>None</option>
+                    <option>+2</option>
+                    <option>DNF</option>
+                  </select>
+                </label>
+              </div>
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-foreground">Judge note</span>
+                <textarea name="note" defaultValue="Verified identity and attempt; player signed on device after final result was shown." rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent" />
+              </label>
+              {feedback && <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 text-sm text-foreground">{feedback}</div>}
+              <DialogFooter>
+                <Button type="button" variant="outline" className="border-border" onClick={closeFlow}>Cancel</Button>
+                <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">Submit Result</Button>
+              </DialogFooter>
+            </form>
+          )}
+
+          {activeAction === 'dashboard' && (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-sm text-muted-foreground">Judge Progress</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">18 / 24</p>
+                </div>
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-sm text-muted-foreground">Pending Disputes</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">2</p>
+                </div>
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-sm text-muted-foreground">Live Rankings</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">Realtime</p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                Live operations dashboard route is now connected. Replace these mock values with the real websocket feed when the API is ready.
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" className="border-border" onClick={closeFlow}>Close</Button>
+                <Button type="button" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push('/rankings')}>Open Rankings</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

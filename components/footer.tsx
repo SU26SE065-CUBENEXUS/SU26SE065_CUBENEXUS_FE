@@ -5,13 +5,13 @@ import { Github, Instagram, Twitter, Youtube } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card">
+    <footer className="border-t border-border bg-gradient-to-b from-card via-secondary/40 to-accent/10">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-              <div className="relative h-12 w-12 overflow-hidden rounded bg-background sm:h-14 sm:w-14">
+              <div className="relative h-12 w-12 overflow-hidden rounded-md border border-border bg-background sm:h-14 sm:w-14">
                 <Image
                   src="/logoCube.png"
                   alt="CubeNexus logo"
@@ -22,7 +22,7 @@ export function Footer() {
               <div className="leading-none">
                 <div className="flex items-baseline gap-1 sm:gap-1.5">
                   <span className="text-xl font-black tracking-tight text-foreground sm:text-2xl">CUBE</span>
-                  <span className="text-xl font-black tracking-tight text-[#f4b400] sm:text-2xl">NEXUS</span>
+                  <span className="text-xl font-black tracking-tight text-accent sm:text-2xl">NEXUS</span>
                 </div>
                 <div className="mt-1 flex items-center gap-1.5 text-[8px] font-semibold tracking-[0.25em] text-muted-foreground sm:text-[9px]">
                   <span>SOLVE</span>

@@ -1,0 +1,58 @@
+(*) 3.1. Capstone Project name: 
+English: CubeNexus - A Comprehensive Speedcubing Platform for Offline Tournament Management and Online Matchmaking
+Vietnamese: CubeNexus - Nền tảng Speedcubing toàn diện quản lý giải đấu trực tiếp và ghép trận trực tuyến
+a. Context:
+The Speedcubing community is expanding rapidly across both offline World Cube Association (WCA) tournaments and online platforms. Currently, the operational workflow for offline tournaments faces critical bottlenecks: paper-based scoresheets and manual data entry cause significant delays and human errors. Furthermore, there is a lack of software support for complex competition formats like the "Medley" (solving multiple different puzzles sequentially in a single attempt). In the online space, players lack a transparent, real-time 1v1 competitive arena. Existing online events are highly susceptible to cheating due to the absence of camera supervision. Therefore, a comprehensive platform is required to solve both issues: digitizing the offline tournament workflow and establishing a fair online arena that securely synchronizes camera surveillance with a reliable physical timer
+Functional requirement :
+Guest (Spectator):
+● Live Tracking: Access the Web Portal to view real-time Live boards for ongoing offline tournaments without requiring an account.
+● Online Ranking: View the Global Top Rank leaderboard of the highest Elo players in the online 1v1 Arena.
+Competitor (Player):
+● Practice (Smart Timer): Use the Mobile App to practice with system-generated Scrambles (a standardized sequence of moves to shuffle the cube). The system automatically calculates Ao5 and Ao12 (Average of 5/12 solves, excluding the best and worst times) and displays statistical progress charts.
+● Offline Tournament Participation: Browse and register for tournaments. Receive a QR Code for check-in at the competition station. Receive Push Notifications calling them to their designated table and view the Live board.
+● Online 1v1 Arena (Ranked Matchmaking with Web-Mobile Sync):
+oMatchmaking: Users click "Find Match" on the Web. The system pairs them with an opponent of a similar Elo rating.
+oPreparation: Upon entering the Virtual Room on the Web, users must enable their Webcam facing their hands/cube (broadcasted via WebRTC to the opponent). A unique QR Session Code is displayed on the Web screen.
+oTimer Synchronization: Users scan this QR code using the CubeNexus Mobile App to connect their phone as the dedicated timer for that Virtual Room.
+oCompetition: A synchronized Scramble sequence appears on the Web. Both players use their Mobile phones like a Stackmat Timer (placing hands on the screen to start/stop the clock). The first to stop the timer with a solved cube wins. Results instantly sync to the Web to update Elo ratings. A "Report" button is available if an opponent is caught cheating via the webcam feed.
+● Asynchronous Online Tournament: Participate in weekly/monthly events by receiving a Scramble, recording a continuous video of the solve, and submitting the video link alongside the time for admin approval.
+Judge (At Offline Tournament Stations):
+● Verification: Scan the Competitor's QR code using the App to verify their identity and current attempt (Solve 1 to 5).
+● Data Entry & Penalties: Read the time from the physical Stackmat Timer on the table and input it into the App. Apply standard WCA penalties: "+2 seconds" (if the cube is one turn away from being solved) or "DNF" (Did Not Finish - the puzzle remains unsolved).
+● Medley Event Handling: Evaluate each puzzle in a sequential Medley independently. The system automatically accumulates "+2" penalties into the total time. If any single puzzle in the sequence receives a "DNF", the entire Medley attempt is marked as DNF.
+● E-Signature: Display the final inputted time on the device screen for the competitor to verify and digitally sign using the touchscreen before submission.
+Tournament Manager / Delegate:
+● Tournament Configuration: Create events, select puzzle categories (Traditional or Medley), and set Time Limits or Cut-off times.
+● Grouping & Scrambling: Auto-generate competitor Groups/Heats based on previous seed times. Automatically generate cryptographically secure PDF Scrambles (for Medley events, the system generates a sequential "Scramble Bundle" for all puzzles involved).
+● Live Operations: Monitor the data entry progress from all judge stations via a real-time dashboard. Resolve disputes and lock results to advance competitors to the next round.
+System Admin:
+● Platform Management: Approve and grant "Tournament Manager" permissions to clubs or organizations. Manage the Master Data (valid puzzle types, standard penalty rules, and Random State Scrambler parameters).
+● Dispute Resolution (Online): Review video reports from the 1v1 Arena or Asynchronous tournaments. Validate results or apply penalties (deduct Elo/ban accounts) for cheating behaviors.
+Non-functional requirement:
+● Performance: Web-Mobile timer sync latency must be < 200ms via WebSockets. Live leaderboards must update in under 1 second.
+● Security: APIs require strict JWT authentication. Offline Scramble PDF files must be password-encrypted.
+● Compatibility: The Web application must support major WebRTC-enabled browsers. Mobile apps must be fully compatible with both iOS and Android.
+ (*) 3.2. Main proposal content (including result and product)   
+Proposed Solutions:
+CubeNexus proposes a closed-loop platform serving two core business domains:
+● Offline Tournament Management Ecosystem: Fully digitizes the competition process using a Mobile app for Judges (for data entry, e-signatures, and offline synchronization) and a Web portal for Tournament Managers (for automated grouping, Scramble generation, and real-time leaderboard calculation). It robustly supports both traditional single-puzzle events and Medley events.
+● Online Matchmaking Arena: Integrates a 1v1 Ranked Matchmaking system based on Elo ratings. To ensure competitive integrity and prevent cheating, the system utilizes "Web-Mobile Synchronization": Competitors use the Web platform on their PC/Laptop to broadcast their Webcam, while simultaneously connecting their Mobile App to act as a physical Smart Timer, accurately simulating the hand-tapping mechanics used in official competitions.
+Applied Theory:
+● Students apply the software development process and UML 2.0 in modeling the system. Documents include: User Requirements, Software Requirement Specification (SRS), Architecture Design, Detailed Design, System Implementation, Testing Document, Installation Guide, Source Code, and Deployment Packages.
+oServer: .NET, Spring Boot, Node.js, Redis, Socket.io,…
+oDatabase Design: PostgreSQL, SQL Server, MySQL,…
+oWeb Client: HTML5, CSS3, Tailwind CSS, JavaScript, ReactJS…
+oMobile App: Flutter, React Native…
+oAI/ML: TensorFlow/PyTorch, Gemini API,…
+Products (Expected Deliverables):
+● Mobile App: For Competitors, Offline Table Judges.
+● Web Application: Dashboard for System Admins, Tournament Managers, and the 1v1 Online Matchmaking interface.
+● Web Portal: Public-facing site for viewing Offline Live boards and Online Elo Rankings.
+Core API & Real-time Services (Socket Server, Matchmaking Engine).
+Proposed Tasks:
+● Task package 1: Develop the Web App for System Admins and Tournament Managers (Tournament configuration, auto-grouping, and Scramble generation).
+● Task package 2: Develop the Core API, Database schema, Elo calculation algorithms, and Socket.io server for the Live board.
+● Task package 3: Develop the Judge Mobile/Tablet App (Data entry workflows, Medley logic, Offline Sync mechanism, and E-signature).
+● Task package 4: Develop the Competitor Mobile App and the 1v1 Online Arena: Implement WebRTC for Web camera streaming and Socket.io for Web-Mobile timer synchronization.
+● Task package 5: Prepare technical documentation (System Analysis & Design, Test Plan), execute end-to-end integration testing, and write the User Manual.
+4. Other comments (propose all relative things if have). 

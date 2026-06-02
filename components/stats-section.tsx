@@ -27,7 +27,7 @@ export function StatsSection() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <Card key={index} className="border-border bg-card p-8 text-center">
-            <p className="text-4xl font-bold text-accent mb-2">{stat.value}</p>
+            <p className="mb-2 text-4xl font-bold text-primary">{stat.value}</p>
             <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
           </Card>
         ))}

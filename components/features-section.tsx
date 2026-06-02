@@ -11,24 +11,32 @@ export function FeaturesSection() {
       title: 'LIVE LEADERBOARD',
       description: 'See who\'s on top right now and track your progress.',
       cta: 'VIEW LEADERBOARD',
+      tone: 'from-[#f44336]/15 to-[#ff9800]/15',
+      iconColor: 'text-[#f44336]',
     },
     {
       icon: Zap,
       title: 'ONLINE ARENA',
       description: 'Challenge real players in exciting 1v1 matches.',
       cta: 'FIND AN OPPONENT',
+      tone: 'from-[#ffeb3b]/20 to-[#ff9800]/15',
+      iconColor: 'text-[#ff9800]',
     },
     {
       icon: Trophy,
       title: 'PRACTICE TIMER',
       description: 'Train, improve, and beat your best time.',
       cta: 'START PRACTICE',
+      tone: 'from-[#4caf50]/15 to-[#2196f3]/15',
+      iconColor: 'text-[#4caf50]',
     },
     {
       icon: Globe,
       title: 'GLOBAL RANKING',
       description: 'Compete worldwide and climb the ranks.',
       cta: 'SEE RANKING',
+      tone: 'from-[#2196f3]/15 to-[#f44336]/15',
+      iconColor: 'text-[#2196f3]',
     },
   ];
 
@@ -47,9 +55,9 @@ export function FeaturesSection() {
         {features.map((feature, index) => {
           const IconComponent = feature.icon;
           return (
-            <Card key={index} className="border-border bg-card p-6 hover:shadow-md transition-shadow">
-              <div className="mb-4 inline-block rounded-lg bg-accent/10 p-3">
-                <IconComponent className="h-6 w-6 text-accent" />
+            <Card key={index} className="border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className={`mb-4 inline-block rounded-xl bg-gradient-to-br ${feature.tone} p-3`}>
+                  <IconComponent className={`h-6 w-6 ${feature.iconColor}`} />
               </div>
               <h3 className="mb-2 font-bold text-foreground">{feature.title}</h3>
               <p className="mb-6 text-sm text-muted-foreground leading-relaxed">
@@ -57,7 +65,8 @@ export function FeaturesSection() {
               </p>
               <Button 
                 variant="ghost" 
-                className="h-auto p-0 text-accent hover:text-accent/80 hover:bg-transparent font-semibold text-sm"
+                className="h-auto p-0 font-semibold text-sm hover:bg-transparent"
+                style={{ color: index === 0 ? '#f44336' : index === 1 ? '#ff9800' : index === 2 ? '#4caf50' : '#2196f3' }}
               >
                 {feature.cta} →
               </Button>
