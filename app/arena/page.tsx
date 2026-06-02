@@ -11,7 +11,7 @@ export default function ArenaPage() {
 
   const modes = [
     { id: '1v1', name: '1v1 Match', icon: Users, description: 'Challenge a cuber worldwide' },
-    { id: 'speed', name: 'Speed Run', icon: Zap, description: 'Race against the clock' },
+    // { id: 'speed', name: 'Speed Run', icon: Zap, description: 'Race against the clock' },
     { id: 'ranked', name: 'Ranked Match', icon: Trophy, description: 'Climb the leaderboard' },
     { id: 'timed', name: 'Timed Challenge', icon: Timer, description: 'Complete in set time' },
   ];
