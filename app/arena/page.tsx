@@ -107,11 +107,10 @@ export default function ArenaPage() {
   const renderQueueScreen = () => {
     if (matchPhase === 'found' && matchedOpponent) {
       return (
-        <Card className="overflow-hidden border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/45">
-          <div className="grid min-h-[620px] lg:grid-cols-[1.35fr_0.65fr]">
-            <Card className="mx-auto w-full max-w-5xl border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/35">
-  {/* Thêm min-h-[620px] để bằng kích thước với màn hình tìm trận trước đó */}
-  <div className="relative flex min-h-[620px] items-center justify-center overflow-hidden px-6 py-12">
+        <Card className="mx-auto w-full max-w-5xl overflow-hidden border border-[#2d4f74] bg-[#08111f] p-0 shadow-2xl shadow-black/45">
+  {/* Đã loại bỏ Grid chia cột, dùng flex w-full để đưa mọi thứ vào chính giữa */}
+  <div className="relative flex min-h-[620px] w-full items-center justify-center overflow-hidden px-6 py-12">
+    
     {/* Background Glow */}
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(62,181,255,0.18)_0%,_rgba(8,17,31,0)_52%),radial-gradient(circle_at_center,_rgba(244,210,122,0.08)_0%,_rgba(8,17,31,0)_68%)]" />
     
@@ -144,43 +143,14 @@ export default function ArenaPage() {
         <Button className="min-w-[240px] border-2 border-[#79d8ff] bg-[#112544] px-10 py-6 text-xl font-black tracking-[0.12em] text-[#d8f6ff] shadow-[0_0_30px_rgba(81,197,255,0.35)] hover:bg-[#143055]" onClick={acceptMatch}>
           ACCEPT!
         </Button>
-        {/* Thêm h-full hoặc sửa padding nhẹ để nút Decline cân bằng chiều cao với nút Accept */}
         <Button variant="outline" className="border-2 border-[#f4d27a] bg-transparent px-8 py-5 text-sm font-semibold tracking-[0.18em] text-[#f4d27a] hover:bg-[#f4d27a]/10" onClick={declineMatch}>
           DECLINE
         </Button>
       </div>
     </div>
+
   </div>
 </Card>
-
-            {/* <div className="border-t border-[#264059] bg-[#07101d] px-6 py-6 lg:border-l lg:border-t-0">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#89b4d8]">Finding Match</p>
-                <span className="text-lg font-bold text-[#79d8ff]">0:{String(Math.max(0, acceptCountdown ?? 0)).padStart(2, '0')}</span>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-[#264059] bg-[#0a1628] p-4">
-                <div className="flex items-center justify-between text-sm text-[#b7c6d9]">
-                  <span>Match locked</span>
-                  <span>Invite pending</span>
-                </div>
-                <div className="mt-3 h-2 rounded-full bg-[#20324c]">
-                  <div className="h-full w-full rounded-full bg-gradient-to-r from-[#36d8ff] via-[#6fd8ff] to-[#2f7dff]" />
-                </div>
-                <p className="mt-3 text-xs text-[#7f95b2]">Accept now to enter the room before the countdown ends.</p>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <div className="rounded-2xl border border-[#264059] bg-[#0a1628] px-4 py-3 text-sm text-[#cbd5e1]">
-                  {matchedOpponent.name} is ready.
-                </div>
-                <div className="rounded-2xl border border-[#264059] bg-[#0a1628] px-4 py-3 text-sm text-[#cbd5e1]">
-                  Ranked queue style only, no extra popup.
-                </div>
-              </div>
-            </div> */}
-          </div>
-        </Card>
       );
     }
 
