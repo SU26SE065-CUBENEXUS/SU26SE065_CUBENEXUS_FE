@@ -16,9 +16,12 @@ import {
 } from '@/components/ui/dialog';
 import { Calendar, ClipboardList, QrCode, ShieldCheck, Trophy, Users, Zap } from 'lucide-react';
 
+import { Suspense } from 'react';
+import { LoaderCircle as LoaderCircleIcon } from 'lucide-react';
+
 type FlowAction = 'create' | 'register' | 'checkin' | 'dashboard' | null;
 
-export default function TournamentsPage() {
+function TournamentsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const routeAction = searchParams.get('action') as FlowAction | null;
@@ -490,5 +493,17 @@ Tournament Hub            </h1>
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+export default function TournamentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoaderCircleIcon className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    }>
+      <TournamentsPageContent />
+    </Suspense>
   );
 }
