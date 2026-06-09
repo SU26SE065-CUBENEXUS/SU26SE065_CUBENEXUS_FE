@@ -9,7 +9,7 @@ export function Header() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-border bg-background shadow-sm shadow-primary/10 sm:h-16 sm:w-16">
+          <div className="relative h-20 w-20 sm:h-24 sm:w-24">
             <Image
               src="/logoCube.png"
               alt="CubeNexus logo"
@@ -39,7 +39,7 @@ export function Header() {
           <a href="/arena" className="text-sm font-medium text-foreground transition hover:text-green-500">ARENA</a>
           <a href="/tournaments" className="text-sm font-medium text-foreground transition hover:text-orange-500">TOURNAMENTS</a>
           <a href="/rankings" className="text-sm font-medium text-foreground transition hover:text-blue-500">RANKINGS</a>
-          <a href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</a>
+          {/* <a href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</a> */}
           <a href="/community" className="text-sm font-medium text-foreground transition hover:text-yellow-500">COMMUNITY</a>
         </div>
 
