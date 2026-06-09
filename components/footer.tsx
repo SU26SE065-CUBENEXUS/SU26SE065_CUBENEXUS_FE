@@ -11,7 +11,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-              <div className="relative h-12 w-12 overflow-hidden rounded-md border border-border bg-background sm:h-14 sm:w-14">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20">
                 <Image
                   src="/logoCube.png"
                   alt="CubeNexus logo"
@@ -42,10 +42,10 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-foreground mb-4">PRODUCT</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-accent transition">Arena</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-accent transition">Tournaments</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-accent transition">Practice</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-accent transition">Pricing</a></li>
+              <li><a href="/arena" className="text-sm text-muted-foreground hover:text-accent transition">Arena</a></li>
+              <li><a href="/tournaments" className="text-sm text-muted-foreground hover:text-accent transition">Tournaments</a></li>
+              <li><a href="/rankings" className="text-sm text-muted-foreground hover:text-accent transition">Rankings</a></li>
+              <li><a href="/community" className="text-sm text-muted-foreground hover:text-accent transition">Community</a></li>
             </ul>
           </div>
 

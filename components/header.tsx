@@ -9,7 +9,7 @@ export function Header() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-border bg-background shadow-sm shadow-primary/10 sm:h-16 sm:w-16">
+          <div className="relative h-20 w-20 sm:h-24 sm:w-24">
             <Image
               src="/logoCube.png"
               alt="CubeNexus logo"
