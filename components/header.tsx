@@ -39,7 +39,7 @@ export function Header() {
           <a href="/arena" className="text-sm font-medium text-foreground transition hover:text-green-500">ARENA</a>
           <a href="/tournaments" className="text-sm font-medium text-foreground transition hover:text-orange-500">TOURNAMENTS</a>
           <a href="/rankings" className="text-sm font-medium text-foreground transition hover:text-blue-500">RANKINGS</a>
-          <a href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</a>
+          {/* <a href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</a> */}
           <a href="/community" className="text-sm font-medium text-foreground transition hover:text-yellow-500">COMMUNITY</a>
         </div>
 
