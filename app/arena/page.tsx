@@ -4,6 +4,8 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useEffect, useMemo, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 import {
   ChevronRight,
   Crown,
@@ -23,6 +25,7 @@ import {
   Tv,
   Trash2,
   History,
+  Shield,
 } from "lucide-react";
 
 // Types of matchmaking simulator phases
@@ -97,8 +100,19 @@ const generateWcaScramble = () => {
 };
 
 export default function ArenaPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
   const [selectedMode, setSelectedMode] = useState<"1v1" | "history" | "practice">("1v1");
   const [matchPhase, setMatchPhase] = useState<MatchPhase>("lobby");
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+
 
   // Timer & setup state for 1v1
   const [queueTimer, setQueueTimer] = useState<number>(0);
@@ -1783,6 +1797,18 @@ export default function ArenaPage() {
         return "LOBBY";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <LoaderCircle className="h-8 w-8 animate-spin text-[#eab308]" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans antialiased pb-16 relative">

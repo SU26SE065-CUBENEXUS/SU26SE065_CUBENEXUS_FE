@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import AuthVisualPanel from '@/components/auth-visual/AuthVisualPanel';
-import SignupForm from './components/SignupForm';
+import ForgotPasswordForm from './components/ForgotPasswordForm';
 
-// ─── Signup Page ─────────────────────────────────────────────────
-// Main page controller for registration. Organizes the split-screen
+// ─── Forgot Password Page ─────────────────────────────────────────
+// Main page controller for password recovery. Organizes the split-screen
 // view on desktop with the modular visual Rubik's Cube panel on the
-// left and the SignupForm card component on the right.
+// left and the ForgotPasswordForm card component on the right.
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -22,11 +22,6 @@ export default function SignupPage() {
       <style>{`
         @media (min-width: 1024px) {
           #login-visual-panel {
-            display: flex !important;
-          }
-        }
-        @media (max-width: 1023px) {
-          #signup-mobile-logo {
             display: flex !important;
           }
         }
@@ -43,8 +38,8 @@ export default function SignupPage() {
         {/* Left: Reused Visual Panel */}
         <AuthVisualPanel />
 
-        {/* Right: Registration Form */}
-        <SignupForm />
+        {/* Right: Recovery Form */}
+        <ForgotPasswordForm />
       </main>
     </>
   );
