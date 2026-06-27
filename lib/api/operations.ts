@@ -11,6 +11,10 @@ import type {
   StartRoundRequestDto,
   AdvanceRoundRequestDto,
   ResultCorrectionDto,
+  VerifyJudgeStationByStationDto,
+  VerifyJudgeStationResponseDto,
+  SubmitResultResponseDto,
+  SolveProgressDto,
 } from './types';
 
 /** POST /api/tournament-operation/check-in — Điểm danh bằng QR Token */
@@ -22,16 +26,16 @@ export async function checkIn(dto: CheckInRequestDto): Promise<CheckInResponseDt
 }
 
 /** POST /api/tournament-operation/results/traditional — Lưu kết quả Traditional */
-export async function submitTraditionalResult(dto: SubmitTraditionalResultDto): Promise<unknown> {
-  return apiFetch('/api/tournament-operation/results/traditional', {
+export async function submitTraditionalResult(dto: SubmitTraditionalResultDto): Promise<SubmitResultResponseDto> {
+  return apiFetch<SubmitResultResponseDto>('/api/tournament-operation/results/traditional', {
     method: 'POST',
     body: JSON.stringify(dto),
   });
 }
 
 /** POST /api/tournament-operation/results/medley — Lưu kết quả Medley */
-export async function submitMedleyResult(dto: SubmitMedleyResultDto): Promise<unknown> {
-  return apiFetch('/api/tournament-operation/results/medley', {
+export async function submitMedleyResult(dto: SubmitMedleyResultDto): Promise<SubmitResultResponseDto> {
+  return apiFetch<SubmitResultResponseDto>('/api/tournament-operation/results/medley', {
     method: 'POST',
     body: JSON.stringify(dto),
   });
@@ -100,12 +104,17 @@ export async function correctResult(
   });
 }
 
-/** POST /api/tournament-operation/judge/verify — Xác thực QR tại trạm trọng tài */
-export async function verifyJudgeStation(dto: { qrToken: string; stationId: string }): Promise<unknown> {
-  return apiFetch('/api/tournament-operation/judge/verify', {
+/** POST /api/tournament-operation/judge/verify-by-station — Xác thực QR tại trạm trọng tài */
+export async function verifyJudgeStation(dto: VerifyJudgeStationByStationDto): Promise<VerifyJudgeStationResponseDto> {
+  return apiFetch<VerifyJudgeStationResponseDto>('/api/tournament-operation/judge/verify-by-station', {
     method: 'POST',
     body: JSON.stringify(dto),
   });
+}
+
+/** GET /api/tournament-operation/competitors/{groupCompetitorId}/solve-progress — Lấy tiến trình solve */
+export async function getSolveProgress(groupCompetitorId: string): Promise<SolveProgressDto> {
+  return apiFetch<SolveProgressDto>(`/api/tournament-operation/competitors/${groupCompetitorId}/solve-progress`);
 }
 
 /** POST /api/tournament-operation/events/{eventId}/complete — Hoàn thành Event */

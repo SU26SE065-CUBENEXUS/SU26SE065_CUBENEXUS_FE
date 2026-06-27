@@ -228,23 +228,88 @@ export interface AdvanceRoundRequestDto {
 }
 
 export interface SubmitTraditionalResultDto {
-  registrationEventId: string;
-  roundNumber: number;
-  attemptNumber: number;
-  timeMs: number;
-  penalty?: string; // 'none' | 'plus2' | 'dnf'
+  groupCompetitorId: string;
+  solveNumber: number;
+  rawTimeMs?: number;
+  penaltyTypeId?: string | null;
+  scrambleId: string;
+  esignatureData?: string | null;
 }
 
 export interface SubmitMedleyResultDto {
-  registrationEventId: string;
-  roundNumber: number;
-  results: MedleyAttemptDto[];
+  groupCompetitorId: string;
+  solveNumber: number;
+  esignatureData?: string | null;
+  details: MedleyDetailSubmissionDto[];
 }
 
-export interface MedleyAttemptDto {
-  puzzleTypeId: string;
-  timeMs: number;
-  penalty?: string;
+export interface MedleyDetailSubmissionDto {
+  medleyPuzzleId: string;
+  rawTimeMs?: number;
+  penaltyTypeId?: string | null;
+  scrambleId: string;
+}
+
+export interface ScrambleInfoDto {
+  scrambleId: string;
+  solveNumber: number;
+  sequence: string;
+}
+
+export interface SubmitProgressDto {
+  submittedCount: number;
+  solveCount: number;
+  nextSolveNumber?: number | null;
+  canSubmitNext: boolean;
+}
+
+export interface SubmitResultResponseDto {
+  resultId: string;
+  finalTimeMs?: number | null;
+  isDnf: boolean;
+  submittedSolveNumber?: number | null;
+  progress?: SubmitProgressDto | null;
+  nextScramble?: ScrambleInfoDto | null;
+}
+
+export interface SolveProgressDto {
+  groupCompetitorId: string;
+  eventId?: string | null;
+  eventName: string;
+  roundNumber?: number | null;
+  groupId?: string | null;
+  groupName: string;
+  stationNumber?: number | null;
+  solveCount: number;
+  submittedSolveNumbers: number[];
+  submittedCount: number;
+  nextSolveNumber?: number | null;
+  canSubmit: boolean;
+  reason?: string | null;
+  currentScramble?: ScrambleInfoDto | null;
+}
+
+export interface VerifyJudgeStationByStationDto {
+  qrToken: string;
+  eventId: string;
+  roundNumber: number;
+  stationNumber: number;
+}
+
+export interface VerifyJudgeStationResponseDto {
+  success: boolean;
+  message: string;
+  groupCompetitorId?: string | null;
+  eventId?: string | null;
+  eventName: string;
+  roundNumber?: number | null;
+  groupId?: string | null;
+  groupName: string;
+  stationNumber?: number | null;
+  nextSolveNumber?: number | null;
+  solveCount?: number | null;
+  canSubmit: boolean;
+  currentScramble?: ScrambleInfoDto | null;
 }
 
 export interface ResultCorrectionDto {

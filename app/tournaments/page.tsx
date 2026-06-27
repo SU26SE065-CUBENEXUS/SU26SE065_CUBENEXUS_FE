@@ -43,6 +43,9 @@ import {
   Competitor
 } from '@/lib/tournament-store';
 import { useAuth } from '@/contexts/auth-context';
+import { getPublicTournaments } from '@/lib/api/tournaments';
+import { registerTournament, getMyRegistrations } from '@/lib/api/registrations';
+import { useCallback } from 'react';
 
 type ActiveTab = 'explore' | 'my-tournaments' | 'live-results';
 type DetailSubTab = 'overview' | 'events' | 'schedule' | 'competitors' | 'live-board' | 'rules';
@@ -87,12 +90,7 @@ function TournamentsPageContent() {
   const [targetTournament, setTargetTournament] = useState<Tournament | null>(null);
   
   // Selected registered events checkbox states
-  const [selectedEvents, setSelectedEvents] = useState({
-    '3x3x3': true,
-    '2x2x2': false,
-    'Pyraminx': false,
-    'Medley': false
-  });
+  const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
 
   const [regName, setRegName] = useState('CuberNexus_Pro');
   const [regEmail, setRegEmail] = useState('cuber@cubenexus.app');
@@ -218,12 +216,90 @@ function TournamentsPageContent() {
       }
     ];
 
-    if (getTournaments().length === 0) {
-      saveTournaments(defaultTours);
+    async function loadRealTournaments() {
+      try {
+        const publicList = await getPublicTournaments();
+        const mappedList: Tournament[] = publicList.map((t) => {
+          const now = new Date();
+          const regOpen = new Date(t.registrationOpenAt);
+          const regClose = new Date(t.registrationCloseAt);
+          let statusText = 'Upcoming';
+          
+          if (t.statusCode.toUpperCase() === 'DRAFT') {
+            statusText = 'Registration Open';
+          } else if (t.statusCode.toUpperCase() === 'ONGOING') {
+            statusText = 'In Progress';
+          } else if (t.statusCode.toUpperCase() === 'COMPLETED') {
+            statusText = 'Completed';
+          } else if (t.statusCode.toUpperCase() === 'CANCELLED') {
+            statusText = 'Cancelled';
+          } else if (t.statusCode.toUpperCase() === 'PUBLISHED') {
+            if (now >= regOpen && now <= regClose) {
+              statusText = 'Registration Open';
+            } else if (now < regOpen) {
+              statusText = 'Starting Soon';
+            } else {
+              statusText = 'Reg. Closed';
+            }
+          }
+
+          const formatString = t.events.map(e => e.puzzleTypeName).join(', ') || 'Speedcubing';
+          const isMedley = t.events.some(e => e.eventFormatCode === 'MEDLEY');
+          
+          return {
+            id: t.id,
+            name: t.name,
+            status: statusText,
+            date: new Date(t.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+                  ' - ' + 
+                  new Date(t.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            participants: 12 + t.events.length,
+            maxParticipants: 500,
+            prizePool: '$5,000',
+            format: formatString,
+            formatType: isMedley ? 'Medley' : 'Traditional',
+            tier: t.events.length > 2 ? 'Tier S' : 'Tier A',
+            round: 1,
+            events: t.events
+          } as any;
+        });
+
+        if (mappedList.length > 0) {
+          setTournaments(mappedList);
+        } else {
+          setTournaments(defaultTours);
+        }
+      } catch (err) {
+        console.error('Failed to load public tournaments:', err);
+        setTournaments(defaultTours);
+      }
     }
-    setTournaments(getTournaments());
-    setCompetitors(getCompetitors());
+
+    loadRealTournaments();
   }, []);
+
+  const loadMyRegistrations = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const list = await getMyRegistrations();
+      const tickets: Competitor[] = list.map((reg) => ({
+        qrCode: reg.qrToken,
+        name: user?.displayName || 'Competitor',
+        email: user?.email || '',
+        tournamentId: reg.tournamentId,
+        solves: []
+      }));
+      setCompetitors(tickets);
+    } catch (err) {
+      console.warn('Failed to load my registrations:', err);
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadMyRegistrations();
+    }
+  }, [isAuthenticated, loadMyRegistrations]);
 
   // Protected Route Guard
   useEffect(() => {
@@ -263,6 +339,8 @@ function TournamentsPageContent() {
 
   const openRegister = (tour: Tournament) => {
     setTargetTournament(tour);
+    const eventIds = (tour as any).events ? (tour as any).events.map((e: any) => e.id) : [];
+    setSelectedEventIds(eventIds);
     setShowRegisterModal(true);
     setFeedback(null);
   };
@@ -270,6 +348,7 @@ function TournamentsPageContent() {
   const closeRegister = () => {
     setShowRegisterModal(false);
     setTargetTournament(null);
+    setSelectedEventIds([]);
     setFeedback(null);
   };
 
@@ -281,45 +360,25 @@ function TournamentsPageContent() {
     });
   }, [searchTerm, filterFormat, tournaments]);
 
-  const handleRegisterSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleRegisterSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!targetTournament) return;
-    
-    const qrCode = `QR-${Math.floor(100000 + Math.random() * 900000)}`;
-    const selectedList = Object.entries(selectedEvents)
-      .filter(([_, checked]) => checked)
-      .map(([name]) => name);
+    if (!targetTournament || selectedEventIds.length === 0) return;
 
-    const newCompetitor: Competitor = {
-      qrCode,
-      name: regName,
-      email: regEmail,
-      tournamentId: targetTournament.id,
-      solves: []
-    };
-
-    // Increment participants count
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === targetTournament.id) {
-        return { ...t, participants: Math.min(t.maxParticipants, t.participants + 1) };
-      }
-      return t;
-    });
-
-    const updatedCompetitors = [...competitors, newCompetitor];
-    
-    setTournaments(updatedTournaments);
-    saveTournaments(updatedTournaments);
-    
-    setCompetitors(updatedCompetitors);
-    saveCompetitors(updatedCompetitors);
-
-    setFeedback(`Success: Registered for events [${selectedList.join(', ')}]. Check-in Ticket QR Code generated: ${qrCode}`);
-    
-    setTimeout(() => {
-      closeRegister();
-      setActiveTab('my-tournaments');
-    }, 2500);
+    setFeedback('Submitting registration to server...');
+    try {
+      const regRes = await registerTournament(targetTournament.id as string, selectedEventIds);
+      setFeedback(`Success: Registered successfully! Check-in Ticket QR Code generated: ${regRes.qrToken}`);
+      
+      // Refresh my registrations list
+      await loadMyRegistrations();
+      
+      setTimeout(() => {
+        closeRegister();
+        setActiveTab('my-tournaments');
+      }, 2500);
+    } catch (err: any) {
+      setFeedback(`Registration failed: ${err.message || err}`);
+    }
   };
 
   // Compute standings for detail popup
@@ -900,17 +959,26 @@ function TournamentsPageContent() {
             <div className="space-y-2">
               <span className="text-xs font-bold text-muted-foreground uppercase">Select Events</span>
               <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                {Object.keys(selectedEvents).map((evt) => (
-                  <label key={evt} className="flex items-center gap-2 bg-muted/20 border border-border/80 rounded-xl p-3 cursor-pointer hover:border-[#eab308]/40 transition-colors">
-                    <input 
-                      type="checkbox"
-                      checked={selectedEvents[evt as keyof typeof selectedEvents]}
-                      onChange={(e) => setSelectedEvents(prev => ({ ...prev, [evt]: e.target.checked }))}
-                      className="accent-[#eab308] h-3.5 w-3.5"
-                    />
-                    <span className="font-bold text-foreground">{evt}</span>
-                  </label>
-                ))}
+                {targetTournament && (targetTournament as any).events?.map((evt: any) => {
+                  const isChecked = selectedEventIds.includes(evt.id);
+                  return (
+                    <label key={evt.id} className="flex items-center gap-2 bg-muted/20 border border-border/80 rounded-xl p-3 cursor-pointer hover:border-[#eab308]/40 transition-colors">
+                      <input 
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedEventIds(prev => [...prev, evt.id]);
+                          } else {
+                            setSelectedEventIds(prev => prev.filter(id => id !== evt.id));
+                          }
+                        }}
+                        className="accent-[#eab308] h-3.5 w-3.5"
+                      />
+                      <span className="font-bold text-foreground">{evt.puzzleTypeName} ({evt.eventFormatCode})</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

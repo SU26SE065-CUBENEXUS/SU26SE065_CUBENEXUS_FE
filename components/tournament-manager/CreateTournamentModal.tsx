@@ -147,6 +147,23 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       return;
     }
 
+    // Validate event limits
+    for (let i = 0; i < events.length; i++) {
+      const ev = events[i];
+      if (ev.timeLimitMs && Number(ev.timeLimitMs) <= 0) {
+        setError(`Event ${i + 1}: Time Limit must be greater than 0 ms.`);
+        return;
+      }
+      if (ev.cutoffTimeMs && Number(ev.cutoffTimeMs) <= 0) {
+        setError(`Event ${i + 1}: Cutoff Time must be greater than 0 ms.`);
+        return;
+      }
+      if (ev.timeLimitMs && ev.cutoffTimeMs && Number(ev.cutoffTimeMs) > Number(ev.timeLimitMs)) {
+        setError(`Event ${i + 1}: Cutoff Time must be less than or equal to Time Limit.`);
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       const payload = {
