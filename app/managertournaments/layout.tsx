@@ -151,6 +151,7 @@ function Sidebar({
             { label: 'Events & Cutoffs', href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
             { label: 'Groups & Scrambles', href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
             { label: 'Disputes & Audits', href: selectedId ? `/managertournaments/${selectedId}/disputes` : '#', icon: Shield, exact: false },
+            { label: 'Live Operations', href: selectedId ? `/managertournaments/${selectedId}/live` : '#', icon: Radio, exact: false },
           ].map((item) => {
             const Icon = item.icon;
             const active = selectedId ? isActive(item.href, item.exact) : false;

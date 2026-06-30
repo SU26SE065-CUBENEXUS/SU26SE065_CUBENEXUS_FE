@@ -107,7 +107,7 @@ export default function ForgotPasswordForm() {
       if (response.devOtp) {
         setDevOtp(response.devOtp);
       }
-      toast.success('Gửi mã OTP thành công!', 'Vui lòng kiểm tra email của bạn.');
+      toast.success('OTP sent successfully!', 'Please check your email inbox.');
       setStep(2);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -115,7 +115,7 @@ export default function ForgotPasswordForm() {
         ? 'Unable to connect to server. Please check your connection.'
         : message;
       setError(userFriendlyMsg);
-      toast.error('Gửi mã OTP thất bại', userFriendlyMsg);
+      toast.error('Failed to send OTP', userFriendlyMsg);
     } finally {
       setIsLoading(false);
     }
@@ -132,7 +132,7 @@ export default function ForgotPasswordForm() {
     setIsLoading(true);
     try {
       await verifyOtpApi({ email, otp });
-      toast.success('Xác thực OTP thành công!', 'Hãy thiết lập mật khẩu mới.');
+      toast.success('OTP verified successfully!', 'Please set up your new password.');
       setStep(3);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -140,7 +140,7 @@ export default function ForgotPasswordForm() {
         ? 'Unable to connect to server. Please check your connection.'
         : message;
       setError(userFriendlyMsg);
-      toast.error('Xác thực OTP thất bại', userFriendlyMsg);
+      toast.error('Failed to verify OTP', userFriendlyMsg);
     } finally {
       setIsLoading(false);
     }
@@ -166,7 +166,7 @@ export default function ForgotPasswordForm() {
         newPassword,
         confirmNewPassword: confirmPassword,
       });
-      toast.success('Đặt lại mật khẩu thành công!', 'Bạn đã có thể đăng nhập bằng mật khẩu mới.');
+      toast.success('Password reset successful!', 'You can now sign in with your new password.');
       setStep(4);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -174,7 +174,7 @@ export default function ForgotPasswordForm() {
         ? 'Unable to connect to server. Please check your connection.'
         : message;
       setError(userFriendlyMsg);
-      toast.error('Đặt lại mật khẩu thất bại', userFriendlyMsg);
+      toast.error('Failed to reset password', userFriendlyMsg);
     } finally {
       setIsLoading(false);
     }

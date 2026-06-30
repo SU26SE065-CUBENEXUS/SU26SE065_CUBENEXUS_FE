@@ -52,6 +52,13 @@ const QUICK_ACTIONS = [
     accent: 'border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10',
   },
   {
+    title: 'Live Operations',
+    description: 'Bàn điều hành trực tiếp: Điểm danh thí sinh, ghi nhận điểm và xác thực trạm trọng tài.',
+    href: 'live',
+    icon: Radio,
+    accent: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10',
+  },
+  {
     title: 'Disputes & Corrections',
     description: 'Review DNF appeals, correct timing mistakes, and override system audits.',
     href: 'disputes',

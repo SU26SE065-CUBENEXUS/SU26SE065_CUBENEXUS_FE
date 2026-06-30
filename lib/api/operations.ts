@@ -11,6 +11,7 @@ import type {
   StartRoundRequestDto,
   AdvanceRoundRequestDto,
   ResultCorrectionDto,
+  VerifyJudgeStationByStationDto,
 } from './types';
 
 /** POST /api/tournament-operation/check-in — Điểm danh bằng QR Token */
@@ -100,9 +101,9 @@ export async function correctResult(
   });
 }
 
-/** POST /api/tournament-operation/judge/verify — Xác thực QR tại trạm trọng tài */
-export async function verifyJudgeStation(dto: { qrToken: string; stationId: string }): Promise<unknown> {
-  return apiFetch('/api/tournament-operation/judge/verify', {
+/** POST /api/tournament-operation/judge/verify-by-station — Xác thực QR tại trạm trọng tài */
+export async function verifyJudgeStation(dto: VerifyJudgeStationByStationDto): Promise<unknown> {
+  return apiFetch('/api/tournament-operation/judge/verify-by-station', {
     method: 'POST',
     body: JSON.stringify(dto),
   });

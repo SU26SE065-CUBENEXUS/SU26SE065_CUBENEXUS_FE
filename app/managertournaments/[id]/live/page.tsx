@@ -32,7 +32,7 @@ import {
   RefreshCw,
   Camera,
 } from 'lucide-react';
-import { QrCameraScanner } from '@/components/tournament-manager/QrCameraScanner';
+
 
 export default function LiveOperationsPage({
   params,
@@ -53,8 +53,6 @@ export default function LiveOperationsPage({
   // ─── Check-In Panel States ─────────────────────────────────
   const [qrInput, setQrInput] = useState('');
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [showCheckinScanner, setShowCheckinScanner] = useState(false);
-  const [showVerifyScanner, setShowVerifyScanner] = useState(false);
   const [checkInResult, setCheckInResult] = useState<{
     success: boolean;
     message: string;
@@ -511,7 +509,6 @@ export default function LiveOperationsPage({
         qrToken: verifyForm.qrToken.trim(),
         eventId: verifyForm.eventId,
         roundNumber: Number(verifyForm.roundNumber),
-        groupId: verifyForm.groupId,
         stationNumber: Number(verifyForm.stationNumber),
       });
       setVerifyResult({ success: true, ...result });
@@ -637,43 +634,7 @@ export default function LiveOperationsPage({
                     autoFocus
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCheckinScanner(true)}
-                  className="rounded-xl border border-border bg-card px-4 text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition flex items-center gap-1.5 shrink-0"
-                >
-                  <Camera className="h-4 w-4 text-primary" />
-                  Mở Camera
-                </button>
               </div>
-
-              {showCheckinScanner && (
-                <QrCameraScanner
-                  onScan={async (text) => {
-                    setQrInput(text);
-                    setShowCheckinScanner(false);
-                    setIsCheckingIn(true);
-                    setCheckInResult(null);
-                    try {
-                      const res = await checkIn({ qrToken: text });
-                      if (res.success) {
-                        setCheckInResult({ success: true, message: res.message, displayName: res.displayName });
-                        setQrInput('');
-                      } else {
-                        setCheckInResult({ success: false, message: res.message });
-                      }
-                    } catch (err) {
-                      setCheckInResult({
-                        success: false,
-                        message: err instanceof Error ? err.message : 'Check-in failed.',
-                      });
-                    } finally {
-                      setIsCheckingIn(false);
-                    }
-                  }}
-                  onClose={() => setShowCheckinScanner(false)}
-                />
-              )}
               <button
                 type="submit"
                 disabled={isCheckingIn || !qrInput.trim()}
@@ -1405,37 +1366,17 @@ export default function LiveOperationsPage({
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                   Competitor QR Token
                 </label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Scan className="absolute h-5 w-5 text-muted-foreground" style={{ left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
-                    <input
-                      type="text"
-                      value={verifyForm.qrToken}
-                      onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
-                      placeholder="Enter competitor's QR token..."
-                      className="w-full rounded-xl border border-border bg-card pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
-                      style={{ paddingLeft: '2.75rem' }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowVerifyScanner(true)}
-                    className="rounded-xl border border-border bg-card px-4 text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition flex items-center gap-1.5 shrink-0"
-                  >
-                    <Camera className="h-4 w-4 text-primary" />
-                    Mở Camera
-                  </button>
-                </div>
-
-                {showVerifyScanner && (
-                  <QrCameraScanner
-                    onScan={(text) => {
-                      setVerifyForm((v) => ({ ...v, qrToken: text }));
-                      setShowVerifyScanner(false);
-                    }}
-                    onClose={() => setShowVerifyScanner(false)}
+                <div className="relative">
+                  <Scan className="absolute h-5 w-5 text-muted-foreground" style={{ left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input
+                    type="text"
+                    value={verifyForm.qrToken}
+                    onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
+                    placeholder="Enter competitor's QR token..."
+                    className="w-full rounded-xl border border-border bg-card pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
+                    style={{ paddingLeft: '2.75rem' }}
                   />
-                )}
+                </div>
               </div>
 
               <button

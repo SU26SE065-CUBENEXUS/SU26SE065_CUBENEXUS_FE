@@ -228,23 +228,33 @@ export interface AdvanceRoundRequestDto {
 }
 
 export interface SubmitTraditionalResultDto {
-  registrationEventId: string;
-  roundNumber: number;
-  attemptNumber: number;
-  timeMs: number;
-  penalty?: string; // 'none' | 'plus2' | 'dnf'
+  groupCompetitorId: string;
+  solveNumber: number;
+  rawTimeMs?: number;
+  penaltyTypeId?: string;
+  scrambleId: string;
+  esignatureData?: string;
 }
 
 export interface SubmitMedleyResultDto {
-  registrationEventId: string;
-  roundNumber: number;
-  results: MedleyAttemptDto[];
+  groupCompetitorId: string;
+  solveNumber: number;
+  esignatureData?: string;
+  details: MedleyDetailSubmissionDto[];
 }
 
-export interface MedleyAttemptDto {
-  puzzleTypeId: string;
-  timeMs: number;
-  penalty?: string;
+export interface MedleyDetailSubmissionDto {
+  medleyPuzzleId: string;
+  rawTimeMs?: number;
+  penaltyTypeId?: string;
+  scrambleId: string;
+}
+
+export interface VerifyJudgeStationByStationDto {
+  qrToken: string;
+  eventId: string;
+  roundNumber: number;
+  stationNumber: number;
 }
 
 export interface ResultCorrectionDto {

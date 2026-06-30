@@ -1,5 +1,15 @@
 'use client';
 
+if (typeof window !== 'undefined') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0] && typeof args[0] === 'string' && (args[0].includes('THREE.Clock') || args[0].includes('deprecated'))) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
+
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useRef, useLayoutEffect, forwardRef, useState } from 'react';
 import * as THREE from 'three';

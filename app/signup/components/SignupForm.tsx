@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { registerApi } from '@/lib/api/auth';
 import { toast } from '@/lib/toast';
-import { Mail, Lock, User, Globe, Eye, EyeOff, Sparkles, Loader2, ArrowRight, ChevronDown, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Sparkles, Loader2, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 
 
 // ─── Signup Form Component ───────────────────────────────────────
@@ -21,7 +21,6 @@ export default function SignupForm() {
     email: '',
     password: '',
     confirmPassword: '',
-    country: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +30,7 @@ export default function SignupForm() {
   // Field focus states for interactive border color changes
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
-  const [countryFocused, setCountryFocused] = useState(false);
+
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
@@ -39,16 +38,28 @@ export default function SignupForm() {
     e.preventDefault();
     setError('');
 
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       setError('Full name is required');
+      return;
+    }
+    if (formData.name.trim().length < 2) {
+      setError('Full name must be at least 2 characters');
       return;
     }
     if (!formData.email) {
       setError('Email is required');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
     if (!formData.password) {
       setError('Password is required');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -67,21 +78,18 @@ export default function SignupForm() {
         password: formData.password,
         displayName: formData.name,
       });
-      toast.success('Đăng ký tài khoản thành công!', 'Bạn đã có thể đăng nhập ngay bây giờ.');
+      toast.success('Registration successful!', 'You can now sign in to your account.');
       router.push('/login');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(message);
-      toast.error('Đăng ký thất bại', message);
+      toast.error('Registration failed', message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const countries = [
-    '🇯🇵 Japan', '🇨🇳 China', '🇺🇸 United States', '🇰🇷 Korea', '🇧🇷 Brazil',
-    '🇩🇪 Germany', '🇷🇺 Russia', '🇲🇽 Mexico', '🇮🇳 India', '🇦🇺 Australia',
-  ];
+
 
   // ── Shared input styles ──
   const inputBaseStyle: React.CSSProperties = {
@@ -273,44 +281,7 @@ export default function SignupForm() {
             </div>
           </div>
 
-          {/* Country Selection */}
-          <div style={{ marginBottom: 16 }}>
-            <label htmlFor="signup-country" style={labelStyle}>Country</label>
-            <div style={{ position: 'relative' }}>
-              <Globe size={18} style={iconStyle(countryFocused)} />
-              <select
-                id="signup-country"
-                style={{
-                  ...inputBaseStyle,
-                  ...(countryFocused ? inputFocusedStyle : {}),
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                }}
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                onFocus={() => setCountryFocused(true)}
-                onBlur={() => setCountryFocused(false)}
-                required
-                disabled={isLoading}
-              >
-                <option value="" style={{ color: '#64748b' }}>Select your country</option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <ChevronDown
-                size={16}
-                style={{
-                  position: 'absolute',
-                  right: 14,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#64748b',
-                  pointerEvents: 'none',
-                }}
-              />
-            </div>
-          </div>
+
 
           {/* Password */}
           <div style={{ marginBottom: 16 }}>
@@ -329,8 +300,9 @@ export default function SignupForm() {
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 placeholder="••••••••"
+                autoComplete="new-password"
                 required
-                disabled={isLoading}
+                disabled={isLoading}              
               />
               <button
                 type="button"
@@ -376,6 +348,7 @@ export default function SignupForm() {
                 onFocus={() => setConfirmPasswordFocused(true)}
                 onBlur={() => setConfirmPasswordFocused(false)}
                 placeholder="••••••••"
+                autoComplete="new-password"
                 required
                 disabled={isLoading}
               />
@@ -385,38 +358,36 @@ export default function SignupForm() {
           {/* Terms of Service Checkbox */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 24 }}>
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', userSelect: 'none' }}>
-              <input
-                type="checkbox"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                style={{
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  width: 18,
-                  height: 18,
-                  border: '1.5px solid rgba(15, 23, 42, 0.15)',
-                  borderRadius: 5,
-                  background: agreedToTerms ? '#ffb703' : '#ffffff',
-                  borderColor: agreedToTerms ? '#ffb703' : 'rgba(15, 23, 42, 0.15)',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  position: 'relative',
-                  marginTop: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              />
-              {agreedToTerms && (
-                <span style={{
-                  position: 'absolute',
-                  fontSize: 11,
-                  fontWeight: 950,
-                  color: '#0f172a',
-                  pointerEvents: 'none',
-                  marginTop: -2,
-                }}>✓</span>
-              )}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  style={{
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    width: 18,
+                    height: 18,
+                    border: '1.5px solid rgba(15, 23, 42, 0.15)',
+                    borderRadius: 5,
+                    background: agreedToTerms ? '#ffb703' : '#ffffff',
+                    borderColor: agreedToTerms ? '#ffb703' : 'rgba(15, 23, 42, 0.15)',
+                    cursor: 'pointer',
+                  }}
+                />
+                {agreedToTerms && (
+                  <span style={{
+                    position: 'absolute',
+                    fontSize: 11,
+                    fontWeight: 950,
+                    color: '#0f172a',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>✓</span>
+                )}
+              </div>
               <span style={{ fontSize: 13.5, color: '#475569', lineHeight: 1.4 }}>
                 I agree to the{' '}
                 <Link href="#" style={{ color: '#e07a00', fontWeight: 600, textDecoration: 'none' }}>Terms of Service</Link>

@@ -85,13 +85,16 @@ export default function LoginForm() {
     try {
       const res = await login({ email, password });
       const payload = parseJwt(res.accessToken);
+      if (!payload) {
+        throw new Error('Invalid token returned.');
+      }
       
       const role =
         (payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
         (payload['role'] as string) ||
         '';
 
-      toast.success('Đăng nhập thành công!', `Chào mừng quay trở lại, ${res.displayName || email}!`);
+      toast.success('Login successful!', `Welcome back, ${res.displayName || email}!`);
 
       if (role.toUpperCase() === 'MANAGER' || role.toUpperCase() === 'ADMIN') {
         router.push('/managertournaments');
@@ -102,7 +105,7 @@ export default function LoginForm() {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
       const mapped = mapErrorMessage(message);
       setError(mapped);
-      toast.error('Đăng nhập thất bại', mapped);
+      toast.error('Login failed', mapped);
     } finally {
       setIsLoading(false);
     }
@@ -317,7 +320,7 @@ export default function LoginForm() {
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
                 placeholder="Enter your password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
                 disabled={isLoading}
               />

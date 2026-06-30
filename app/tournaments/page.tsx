@@ -338,6 +338,7 @@ function TournamentsPageContent() {
         name: c.name,
         qr: c.qrCode,
         bestTime: best ? (best / 1000).toFixed(3) + 's' : 'Waiting attempt',
+        rawBest: best !== null ? best : Infinity,
         solvesCount: c.solves.length
       };
     }).sort((a, b) => a.rawBest - b.rawBest);
