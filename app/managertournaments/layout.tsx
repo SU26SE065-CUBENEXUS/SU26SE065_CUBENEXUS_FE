@@ -150,7 +150,6 @@ function Sidebar({
             { label: 'Registrations', href: selectedId ? `/managertournaments/${selectedId}/registrations` : '#', icon: Users, exact: false },
             { label: 'Events & Cutoffs', href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
             { label: 'Groups & Scrambles', href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
-            { label: 'Live Operations', href: selectedId ? `/managertournaments/${selectedId}/live` : '#', icon: Radio, exact: false },
             { label: 'Disputes & Audits', href: selectedId ? `/managertournaments/${selectedId}/disputes` : '#', icon: Shield, exact: false },
           ].map((item) => {
             const Icon = item.icon;
@@ -338,8 +337,10 @@ export default function ManagerLayout({
 
   return (
     <div
-      className="flex min-h-screen bg-background text-foreground transition-colors duration-300"
+      className="flex bg-background text-foreground transition-colors duration-300"
       style={{
+        height: '100vh',
+        overflow: 'hidden',
         '--background': 'oklch(0.925 0.015 240)',     // Clean mid-tone gray-blue background
         '--foreground': 'oklch(0.25 0.02 240)',       // Dark slate text
         '--card': 'oklch(0.97 0.008 240)',            // Lighter card/sidebar background
@@ -359,11 +360,11 @@ export default function ManagerLayout({
       />
 
       {/* Main content area */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0" style={{ height: '100vh', overflow: 'hidden' }}>
         <TopHeader />
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6" style={{ height: 'calc(100vh - 4rem)' }}>{children}</div>
       </main>
     </div>
   );

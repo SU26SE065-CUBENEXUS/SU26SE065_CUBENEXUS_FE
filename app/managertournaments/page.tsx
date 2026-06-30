@@ -33,29 +33,43 @@ export default function TournamentManagerOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<TournamentStatusCode | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeFilter]);
 
   const fetchTournaments = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const publicList = await getPublicTournaments();
-      
+      setTournaments(publicList);
+      setIsLoading(false); // End main loading immediately
+
+      // Fetch drafts in parallel in the background
       const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
       const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
-      const drafts: TournamentDetailDto[] = [];
       
-      for (const id of storedDrafts) {
-        if (!publicList.some(t => t.id === id)) {
-           try {
-              const draft = await getTournamentById(id);
-              drafts.push(draft);
-           } catch (e) {
-              // Ignore if not found
-           }
-        }
+      const draftPromises = storedDrafts
+        .filter(id => !publicList.some(t => t.id === id))
+        .map(async (id) => {
+          try {
+            return await getTournamentById(id);
+          } catch (e) {
+            return null;
+          }
+        });
+
+      const resolvedDrafts = (await Promise.all(draftPromises)).filter((d): d is TournamentDetailDto => d !== null);
+      if (resolvedDrafts.length > 0) {
+        setTournaments((prev) => {
+          const combined = [...resolvedDrafts, ...prev];
+          const unique = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+          return unique;
+        });
       }
-      
-      setTournaments([...drafts, ...publicList]);
     } catch (err) {
       console.warn('API connection failed, falling back to mock data:', err);
       const mappedMocks: TournamentDetailDto[] = [
@@ -117,7 +131,6 @@ export default function TournamentManagerOverviewPage() {
       ];
       setTournaments(mappedMocks);
       setError('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
-    } finally {
       setIsLoading(false);
     }
   }, []);
@@ -151,14 +164,14 @@ export default function TournamentManagerOverviewPage() {
     });
   }, [tournaments, searchTerm, activeFilter]);
 
-  const handleCreated = (newTournament: TournamentDetailDto) => {
-    setTournaments((prev) => [newTournament, ...prev]);
-    setShowCreateModal(false);
-  };
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedTournaments = useMemo(() => {
+    return filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [filtered, currentPage]);
 
   const statCards = [
     { label: 'Total Tournaments', value: stats.total, icon: Trophy, color: 'text-foreground', bg: 'bg-muted/50', border: 'border-border' },
-    { label: 'Ongoing', value: stats.ongoing, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+    { label: 'In Progress', value: stats.ongoing, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
     { label: 'Upcoming / Open', value: stats.upcoming, icon: Calendar, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/5', border: 'border-sky-500/20' },
     { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
   ];
@@ -240,13 +253,14 @@ export default function TournamentManagerOverviewPage() {
       {/* Filters + Search */}
       <div className="flex flex-col sm:flex-row gap-4 bg-card/40 border border-border/60 p-4 rounded-2xl">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute h-4 w-4 text-muted-foreground" style={{ left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search by name or location..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-muted/20 border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary transition"
+            className="w-full bg-muted/20 border border-border rounded-xl pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary transition"
+            style={{ paddingLeft: '2.5rem' }}
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -281,19 +295,45 @@ export default function TournamentManagerOverviewPage() {
       )}
 
       {/* Tournament Table */}
-      {!isLoading && <TournamentTable tournaments={filtered} />}
+      {!isLoading && (
+        <div className="space-y-4">
+          <TournamentTable tournaments={paginatedTournaments} />
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border/60 pt-4 mt-2 flex-wrap gap-4">
+              <span className="text-xs text-muted-foreground font-semibold">
+                Hiển thị {Math.min(filtered.length, (currentPage - 1) * itemsPerPage + 1)} - {Math.min(filtered.length, currentPage * itemsPerPage)} trên tổng số {filtered.length} giải đấu
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-bold hover:bg-muted/50 disabled:opacity-50 disabled:pointer-events-none transition"
+                >
+                  Trước
+                </button>
+                <span className="text-xs font-bold text-foreground">
+                  Trang {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-bold hover:bg-muted/50 disabled:opacity-50 disabled:pointer-events-none transition"
+                >
+                  Sau
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
 
       {/* Create Tournament Modal */}
       {showCreateModal && (
         <CreateTournamentModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={(newTourney) => {
+          onCreated={() => {
             setShowCreateModal(false);
-            const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
-            const storedDrafts = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
-            if (!storedDrafts.includes(newTourney.id)) {
-              localStorage.setItem('local_draft_tournaments', JSON.stringify([newTourney.id, ...storedDrafts]));
-            }
             fetchTournaments();
           }}
         />

@@ -15,6 +15,7 @@ import {
 import type { TournamentDetailDto, EventDetailDto } from '@/lib/api/types';
 import {
   ChevronRight,
+  ChevronDown,
   Trophy,
   Radio,
   QrCode,
@@ -29,7 +30,9 @@ import {
   ShieldCheck,
   Check,
   RefreshCw,
+  Camera,
 } from 'lucide-react';
+import { QrCameraScanner } from '@/components/tournament-manager/QrCameraScanner';
 
 export default function LiveOperationsPage({
   params,
@@ -50,6 +53,8 @@ export default function LiveOperationsPage({
   // ─── Check-In Panel States ─────────────────────────────────
   const [qrInput, setQrInput] = useState('');
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [showCheckinScanner, setShowCheckinScanner] = useState(false);
+  const [showVerifyScanner, setShowVerifyScanner] = useState(false);
   const [checkInResult, setCheckInResult] = useState<{
     success: boolean;
     message: string;
@@ -619,17 +624,56 @@ export default function LiveOperationsPage({
               Enter or scan the competitor's QR token to check them in as physically present at the tournament.
             </p>
             <form onSubmit={handleCheckIn} className="space-y-4">
-              <div className="relative">
-                <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={qrInput}
-                  onChange={(e) => setQrInput(e.target.value)}
-                  placeholder="Scan or paste the competitor's QR token..."
-                  className="w-full rounded-xl border border-border bg-card pl-11 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
-                  autoFocus
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Scan className="absolute h-5 w-5 text-muted-foreground" style={{ left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input
+                    type="text"
+                    value={qrInput}
+                    onChange={(e) => setQrInput(e.target.value)}
+                    placeholder="Scan or paste the competitor's QR token..."
+                    className="w-full rounded-xl border border-border bg-card pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
+                    style={{ paddingLeft: '2.75rem' }}
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCheckinScanner(true)}
+                  className="rounded-xl border border-border bg-card px-4 text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition flex items-center gap-1.5 shrink-0"
+                >
+                  <Camera className="h-4 w-4 text-primary" />
+                  Mở Camera
+                </button>
               </div>
+
+              {showCheckinScanner && (
+                <QrCameraScanner
+                  onScan={async (text) => {
+                    setQrInput(text);
+                    setShowCheckinScanner(false);
+                    setIsCheckingIn(true);
+                    setCheckInResult(null);
+                    try {
+                      const res = await checkIn({ qrToken: text });
+                      if (res.success) {
+                        setCheckInResult({ success: true, message: res.message, displayName: res.displayName });
+                        setQrInput('');
+                      } else {
+                        setCheckInResult({ success: false, message: res.message });
+                      }
+                    } catch (err) {
+                      setCheckInResult({
+                        success: false,
+                        message: err instanceof Error ? err.message : 'Check-in failed.',
+                      });
+                    } finally {
+                      setIsCheckingIn(false);
+                    }
+                  }}
+                  onClose={() => setShowCheckinScanner(false)}
+                />
+              )}
               <button
                 type="submit"
                 disabled={isCheckingIn || !qrInput.trim()}
@@ -690,17 +734,21 @@ export default function LiveOperationsPage({
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                         Event
                       </label>
-                      <select
-                        value={selectedEventId}
-                        onChange={(e) => setSelectedEventId(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      >
-                        {traditionalEvents.map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {e.puzzleTypeName}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={selectedEventId}
+                          onChange={(e) => setSelectedEventId(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary transition-colors"
+                          style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                        >
+                          {traditionalEvents.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.puzzleTypeName}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -726,18 +774,22 @@ export default function LiveOperationsPage({
                           <Loader2 className="h-3 w-3 animate-spin" /> Loading groups...
                         </div>
                       ) : (
-                        <select
-                          value={selectedGroupId}
-                          onChange={(e) => setSelectedGroupId(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                        >
-                          <option value="">-- Choose Group --</option>
-                          {liveState?.groups.map((g: any) => (
-                            <option key={g.groupId} value={g.groupId}>
-                              {g.groupName} ({g.statusCode})
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={selectedGroupId}
+                            onChange={(e) => setSelectedGroupId(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary transition-colors"
+                            style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                          >
+                            <option value="">-- Choose Group --</option>
+                            {liveState?.groups.map((g: any) => (
+                              <option key={g.groupId} value={g.groupId}>
+                                {g.groupName} ({g.statusCode})
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                        </div>
                       )}
                     </div>
 
@@ -745,19 +797,23 @@ export default function LiveOperationsPage({
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                         Competitor
                       </label>
-                      <select
-                        value={selectedGroupCompetitorId}
-                        onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
-                        disabled={!selectedGroupId}
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50"
-                      >
-                        <option value="">-- Choose Competitor --</option>
-                        {filteredTradCompetitors.map((c: any) => (
-                          <option key={c.groupCompetitorId} value={c.groupCompetitorId}>
-                            {c.competitorName} (Station {c.stationNumber ?? '—'})
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={selectedGroupCompetitorId}
+                          onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
+                          disabled={!selectedGroupId}
+                          className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50 transition-colors"
+                          style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                        >
+                          <option value="">-- Choose Competitor --</option>
+                          {filteredTradCompetitors.map((c: any) => (
+                            <option key={c.groupCompetitorId} value={c.groupCompetitorId}>
+                              {c.competitorName} (Station {c.stationNumber ?? '—'})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                      </div>
                     </div>
                   </div>
 
@@ -984,17 +1040,21 @@ export default function LiveOperationsPage({
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                         Medley Event
                       </label>
-                      <select
-                        value={medleyEventId}
-                        onChange={(e) => setMedleyEventId(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      >
-                        {medleyEvents.map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {e.puzzleTypeName}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={medleyEventId}
+                          onChange={(e) => setMedleyEventId(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary transition-colors"
+                          style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                        >
+                          {medleyEvents.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.puzzleTypeName}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -1020,18 +1080,22 @@ export default function LiveOperationsPage({
                           <Loader2 className="h-3 w-3 animate-spin" /> Loading groups...
                         </div>
                       ) : (
-                        <select
-                          value={medleyGroupId}
-                          onChange={(e) => setMedleyGroupId(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                        >
-                          <option value="">-- Choose Group --</option>
-                          {medleyLiveState?.groups.map((g: any) => (
-                            <option key={g.groupId} value={g.groupId}>
-                              {g.groupName} ({g.statusCode})
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={medleyGroupId}
+                            onChange={(e) => setMedleyGroupId(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary transition-colors"
+                            style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                          >
+                            <option value="">-- Choose Group --</option>
+                            {medleyLiveState?.groups.map((g: any) => (
+                              <option key={g.groupId} value={g.groupId}>
+                                {g.groupName} ({g.statusCode})
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                        </div>
                       )}
                     </div>
 
@@ -1039,19 +1103,23 @@ export default function LiveOperationsPage({
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                         Competitor Team / Player
                       </label>
-                      <select
-                        value={medleyCompetitorId}
-                        onChange={(e) => setMedleyCompetitorId(e.target.value)}
-                        disabled={!medleyGroupId}
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50"
-                      >
-                        <option value="">-- Choose Competitor --</option>
-                        {filteredMedleyCompetitors.map((c: any) => (
-                          <option key={c.groupCompetitorId} value={c.groupCompetitorId}>
-                            {c.competitorName}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={medleyCompetitorId}
+                          onChange={(e) => setMedleyCompetitorId(e.target.value)}
+                          disabled={!medleyGroupId}
+                          className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50 transition-colors"
+                          style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                        >
+                          <option value="">-- Choose Competitor --</option>
+                          {filteredMedleyCompetitors.map((c: any) => (
+                            <option key={c.groupCompetitorId} value={c.groupCompetitorId}>
+                              {c.competitorName}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                      </div>
                     </div>
                   </div>
 
@@ -1062,13 +1130,17 @@ export default function LiveOperationsPage({
                         <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                           Attempt #
                         </label>
-                        <select
-                          value={medleyAttemptNumber}
-                          onChange={(e) => setMedleyAttemptNumber(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-                        >
-                          <option value="1">Attempt 1 (Standard Relay)</option>
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={medleyAttemptNumber}
+                            onChange={(e) => setMedleyAttemptNumber(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-card text-xs text-foreground outline-none focus:border-primary transition-colors"
+                            style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                          >
+                            <option value="1">Attempt 1 (Standard Relay)</option>
+                          </select>
+                          <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                        </div>
                       </div>
 
                       {/* Medley details list */}
@@ -1109,25 +1181,28 @@ export default function LiveOperationsPage({
                                     />
                                   </div>
                                   <div>
-                                    <select
-                                      value={medleyPenalties[puzzle.id] || 'none'}
-                                      onChange={(e) =>
-                                        setMedleyPenalties((prev) => ({
-                                          ...prev,
-                                          [puzzle.id]: e.target.value,
-                                        }))
-                                      }
-                                      className="w-full rounded-lg border border-border bg-muted/20 px-2 py-1.5 text-xs text-foreground outline-none focus:border-primary"
-                                    >
-                                      <option value="none">No penalty (OK)</option>
-                                      {penaltyTypes
-                                        .filter((p) => p.code !== 'OK')
-                                        .map((p) => (
-                                          <option key={p.id} value={p.id}>
-                                            {p.label}
-                                          </option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                      <select
+                                        value={medleyPenalties[puzzle.id] || 'none'}
+                                        onChange={(e) =>
+                                          setMedleyPenalties((prev) => ({
+                                            ...prev,
+                                            [puzzle.id]: e.target.value,
+                                          }))
+                                        }
+                                        className="w-full appearance-none rounded-lg border border-border bg-muted/20 pl-2 pr-8 py-1.5 text-xs text-foreground outline-none focus:border-primary transition-colors"
+                                      >
+                                        <option value="none">No penalty (OK)</option>
+                                        {penaltyTypes
+                                          .filter((p) => p.code !== 'OK')
+                                          .map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                              {p.label}
+                                            </option>
+                                          ))}
+                                      </select>
+                                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                    </div>
                                   </div>
                                 </div>
 
@@ -1259,17 +1334,21 @@ export default function LiveOperationsPage({
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                     Event
                   </label>
-                  <select
-                    value={verifyForm.eventId}
-                    onChange={(e) => setVerifyForm((v) => ({ ...v, eventId: e.target.value }))}
-                    className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  >
-                    {tournament.events.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.puzzleTypeName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={verifyForm.eventId}
+                      onChange={(e) => setVerifyForm((v) => ({ ...v, eventId: e.target.value }))}
+                      className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary transition-colors"
+                      style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                    >
+                      {tournament.events.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.puzzleTypeName}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -1290,19 +1369,23 @@ export default function LiveOperationsPage({
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                     Group
                   </label>
-                  <select
-                    value={verifyForm.groupId}
-                    onChange={(e) => setVerifyForm((v) => ({ ...v, groupId: e.target.value }))}
-                    disabled={verifyGroups.length === 0}
-                    className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50"
-                  >
-                    <option value="">-- Select Group --</option>
-                    {verifyGroups.map((g) => (
-                      <option key={g.groupId} value={g.groupId}>
-                        {g.groupName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={verifyForm.groupId}
+                      onChange={(e) => setVerifyForm((v) => ({ ...v, groupId: e.target.value }))}
+                      disabled={verifyGroups.length === 0}
+                      className="w-full rounded-xl border border-border bg-card text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50 transition-colors"
+                      style={{ paddingLeft: '0.75rem', paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none', height: '2.5rem' }}
+                    >
+                      <option value="">-- Select Group --</option>
+                      {verifyGroups.map((g) => (
+                        <option key={g.groupId} value={g.groupId}>
+                          {g.groupName}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute h-4 w-4 text-muted-foreground pointer-events-none" style={{ right: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -1322,16 +1405,37 @@ export default function LiveOperationsPage({
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1.5">
                   Competitor QR Token
                 </label>
-                <div className="relative">
-                  <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={verifyForm.qrToken}
-                    onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
-                    placeholder="Enter competitor's QR token..."
-                    className="w-full rounded-xl border border-border bg-card pl-11 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Scan className="absolute h-5 w-5 text-muted-foreground" style={{ left: '0.875rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      value={verifyForm.qrToken}
+                      onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
+                      placeholder="Enter competitor's QR token..."
+                      className="w-full rounded-xl border border-border bg-card pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
+                      style={{ paddingLeft: '2.75rem' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowVerifyScanner(true)}
+                    className="rounded-xl border border-border bg-card px-4 text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition flex items-center gap-1.5 shrink-0"
+                  >
+                    <Camera className="h-4 w-4 text-primary" />
+                    Mở Camera
+                  </button>
                 </div>
+
+                {showVerifyScanner && (
+                  <QrCameraScanner
+                    onScan={(text) => {
+                      setVerifyForm((v) => ({ ...v, qrToken: text }));
+                      setShowVerifyScanner(false);
+                    }}
+                    onClose={() => setShowVerifyScanner(false)}
+                  />
+                )}
               </div>
 
               <button

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getTournamentById } from '@/lib/api/tournaments';
 import { getLiveBoardState, getPenaltyTypes, correctResult } from '@/lib/api/operations';
 import type { TournamentDetailDto, EventDetailDto } from '@/lib/api/types';
+import { toast } from '@/lib/toast';
 import {
   ChevronRight,
   Trophy,
@@ -103,7 +104,6 @@ export default function DisputeManagementPage({
   const [correctionPenaltyId, setCorrectionPenaltyId] = useState('none');
   const [correctionReason, setCorrectionReason] = useState('');
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   // ─── Mock Disputes states ──────────────────────────────────
   const [disputes, setDisputes] = useState<MockDispute[]>(MOCK_DISPUTES);
@@ -139,10 +139,15 @@ export default function DisputeManagementPage({
   // Fetch live board state for audits
   const fetchLiveState = async () => {
     if (!selectedEventId) return;
+    const rNum = Number(roundNumber);
+    if (isNaN(rNum) || rNum <= 0) {
+      toast.error('Round Number must be a positive integer.');
+      return;
+    }
     setIsLoadingLive(false);
     try {
       setIsLoadingLive(true);
-      const state = await getLiveBoardState(selectedEventId, Number(roundNumber));
+      const state = await getLiveBoardState(selectedEventId, rNum);
       setLiveState(state);
     } catch (err) {
       console.warn('Failed to load live board state for audit:', err);
@@ -177,22 +182,26 @@ export default function DisputeManagementPage({
     setCorrectionTimeMs(solve.rawTimeMs ? String(solve.rawTimeMs) : '');
     setCorrectionPenaltyId(penId);
     setCorrectionReason('');
-    setSubmitMessage(null);
   };
 
   const handleApplyCorrection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSolve) return;
+
     if (!correctionReason.trim()) {
-      setSubmitMessage({ ok: false, text: 'Please enter a reason for this correction.' });
+      toast.error('Please enter a reason for this correction.');
+      return;
+    }
+
+    const rawTimeMsVal = correctionTimeMs ? Number(correctionTimeMs) : null;
+    if (rawTimeMsVal !== null && (isNaN(rawTimeMsVal) || rawTimeMsVal < 0)) {
+      toast.error('Time must be a positive integer in milliseconds.');
       return;
     }
 
     setIsSubmittingCorrection(true);
-    setSubmitMessage(null);
     try {
       const penaltyTypeId = correctionPenaltyId !== 'none' ? correctionPenaltyId : null;
-      const rawTimeMsVal = correctionTimeMs ? Number(correctionTimeMs) : null;
 
       await correctResult(selectedSolve.resultId, {
         rawTimeMs: rawTimeMsVal || undefined,
@@ -200,16 +209,13 @@ export default function DisputeManagementPage({
         reason: correctionReason,
       });
 
-      setSubmitMessage({ ok: true, text: 'Result updated successfully!' });
+      toast.success('Result updated successfully!');
       setSelectedSolve(null);
 
       // Refresh data
       fetchLiveState();
     } catch (err) {
-      setSubmitMessage({
-        ok: false,
-        text: err instanceof Error ? err.message : 'Result correction failed',
-      });
+      toast.error(err instanceof Error ? err.message : 'Result correction failed');
     } finally {
       setIsSubmittingCorrection(false);
     }
@@ -221,7 +227,7 @@ export default function DisputeManagementPage({
       prev.map((d) => (d.id === disputeId ? { ...d, status: 'Resolved' as const } : d))
     );
     setSelectedMockDispute(null);
-    setSubmitMessage({ ok: true, text: 'Mock dispute marked as resolved.' });
+    toast.success('Mock dispute marked as resolved.');
   };
 
   // ─── Filtering ─────────────────────────────────────────────
@@ -280,7 +286,6 @@ export default function DisputeManagementPage({
         <button
           onClick={() => {
             setActiveSubTab('real_corrections');
-            setSubmitMessage(null);
           }}
           className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
             activeSubTab === 'real_corrections'
@@ -293,7 +298,6 @@ export default function DisputeManagementPage({
         <button
           onClick={() => {
             setActiveSubTab('mock_disputes');
-            setSubmitMessage(null);
           }}
           className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
             activeSubTab === 'mock_disputes'
@@ -304,26 +308,6 @@ export default function DisputeManagementPage({
           Dispute Queue (Mock)
         </button>
       </div>
-
-      {submitMessage && (
-        <div
-          className={`mb-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-            submitMessage.ok
-              ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
-              : 'border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400'
-          }`}
-        >
-          {submitMessage.ok ? (
-            <CheckCircle className="h-4 w-4 shrink-0" />
-          ) : (
-            <AlertCircle className="h-4 w-4 shrink-0" />
-          )}
-          {submitMessage.text}
-          <button onClick={() => setSubmitMessage(null)} className="ml-auto text-xs underline">
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* ─── TAB 1: RESULT AUDITS & CORRECTIONS ────────────────── */}
       {activeSubTab === 'real_corrections' && (
@@ -378,13 +362,14 @@ export default function DisputeManagementPage({
 
               {/* Search Competitor */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Search className="absolute h-3.5 w-3.5 text-muted-foreground" style={{ left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
                   placeholder="Filter competitor by name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-muted/10 pl-9 pr-3 py-2 text-xs text-foreground outline-none focus:border-primary"
+                  className="w-full rounded-xl border border-border bg-muted/10 pr-3 py-2 text-xs text-foreground outline-none focus:border-primary"
+                  style={{ paddingLeft: '2.25rem' }}
                 />
               </div>
             </div>

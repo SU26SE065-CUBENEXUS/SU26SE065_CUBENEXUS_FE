@@ -74,3 +74,177 @@ Tài liệu này lưu trữ lịch sử các vấn đề đã được giải qu
 ---
 
 *(Tài liệu này sẽ liên tục được cập nhật các thay đổi mới nhất ở các phiên tiếp theo)*
+
+# Tóm Tắt Công Việc — CubeNexus FE (Tournament Manager)
+
+## Tổng Quan
+Toàn bộ công việc tập trung vào **Frontend (FE only)** của dự án CubeNexus — vai trò **Tournament Manager**. Không thay đổi Backend.
+
+---
+
+## 1. Tạo Component `DateTimeInput`
+**File:** [`components/tournament-manager/DateTimeInput.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/components/tournament-manager/DateTimeInput.tsx)
+
+- Component nhập ngày giờ kép: hỗ trợ **gõ tay** (định dạng `YYYY-MM-DD HH:mm` hoặc `DD/MM/YYYY HH:mm`) **và** chọn qua trình duyệt date-picker.
+- Có icon lịch để mở date-picker tích hợp.
+- Validate và chuyển đổi sang chuỗi ISO (`string`) khi blur.
+
+---
+
+## 2. Cập Nhật Modal Tạo Giải Đấu
+**File:** [`components/tournament-manager/CreateTournamentModal.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/components/tournament-manager/CreateTournamentModal.tsx)
+
+- Thay thế `<input type="datetime-local">` bằng component `DateTimeInput` mới.
+- Thêm **validate toàn diện** khi submit:
+  - Tên giải đấu không được rỗng.
+  - Ngày kết thúc phải sau ngày bắt đầu.
+  - Ngày đăng ký đóng phải sau ngày mở đăng ký.
+  - Ngày mở đăng ký phải trước ngày bắt đầu giải.
+  - Sự kiện Medley phải có ít nhất 2 loại Puzzle.
+- Thay thế tất cả thông báo lỗi nội tuyến (banner đỏ) bằng **toast notification** (`lib/toast.ts`).
+
+---
+
+## 3. Refactor Trang Events & Cutoffs
+**File:** [`app/managertournaments/[id]/events/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/events/page.tsx)
+
+- Thay toàn bộ thông báo lỗi nội tuyến bằng `toast`.
+- Thêm validate cho input Seed Time (phải là số nguyên dương, tính bằng ms).
+- **Xử lý trạng thái đóng đăng ký (Close Registration):**
+  - Thêm state `isClosed` lưu vào `localStorage` theo từng `event.id`.
+  - Sau khi đóng đăng ký thành công, nút **"Close Reg."** tự chuyển sang màu xanh lá + nhãn **"Registration Closed"** và bị vô hiệu hóa.
+  - Trạng thái được giữ nguyên kể cả sau khi reload trang (nhờ `localStorage`).
+
+---
+
+## 4. Refactor Trang Group & Heat Management
+**File:** [`app/managertournaments/[id]/groups/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/groups/page.tsx)
+
+- Thay toàn bộ thông báo lỗi nội tuyến bằng `toast`.
+- Thêm validate đầu vào cho:
+  - Round Number (phải là số nguyên dương).
+  - Group Size (phải là số nguyên dương).
+  - Station Count (phải là số nguyên dương).
+  - Advance Count (phải là số nguyên dương).
+- **Sửa lỗi render crash:** Thay icon `CheckCircle2` (đã bị xoá khỏi `lucide-react` phiên bản mới) bằng `CheckCircle` trên nút **Complete Round**.
+
+---
+
+## 5. Refactor Trang Overview (Tổng Quan Giải Đấu)
+**File:** [`app/managertournaments/[id]/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/page.tsx)
+
+- Thay toàn bộ thông báo lỗi nội tuyến bằng `toast`.
+- **Sửa lỗi render crash:** Thay icon `CheckCircle2` (deprecated) bằng `CheckCircle` trên nút **Complete Tournament**.
+
+---
+
+## 6. Refactor Trang Disputes
+**File:** [`app/managertournaments/[id]/disputes/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/disputes/page.tsx)
+
+- Thay thông báo lỗi nội tuyến bằng `toast`.
+
+---
+
+## 7. Phân Tích Luồng Nghiệp Vụ — Close Registration
+
+### Trả Lời Câu Hỏi Của Bạn
+
+| Câu hỏi | Kết quả phân tích |
+|---|---|
+| Sau khi Close Reg thì giao diện hiện gì? | Nút chuyển sang màu xanh lá, nhãn "Registration Closed", bị disabled — đã được implement |
+| Thao tác tiếp theo là gì? | Đến tab **Group & Heat** → Generate Groups → Generate Scrambles → Start Round |
+| Có API mở lại đăng ký không? | **Không.** Backend chỉ có API đóng, không có API mở lại (`CLOSED` là trạng thái cuối cùng) |
+
+---
+
+## 8. Sửa Lỗi Render Crash — Group & Heat
+
+### Nguyên Nhân
+Icon `CheckCircle2` bị **xoá hoàn toàn** khỏi `lucide-react >= 0.5xx`. Khi React render component `EventGroupPanel` (mở accordion), nó cố render `undefined` → sập luồng commit DOM.
+
+### Files Đã Sửa
+| File | Thay đổi |
+|---|---|
+| [`groups/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/groups/page.tsx) | `CheckCircle2` → `CheckCircle` (import + JSX) |
+| [`[id]/page.tsx`](file:///d:/kì%209/do%20an/SU26SE065_CUBENEXUS_FE/app/managertournaments/[id]/page.tsx) | `CheckCircle2` → `CheckCircle` (import + JSX) |
+
+---
+
+## Danh Sách Files Đã Chỉnh Sửa
+
+| File | Loại thay đổi |
+|---|---|
+| `components/tournament-manager/DateTimeInput.tsx` | Tạo mới |
+| `components/tournament-manager/CreateTournamentModal.tsx` | Cập nhật |
+| `app/managertournaments/[id]/events/page.tsx` | Cập nhật |
+| `app/managertournaments/[id]/groups/page.tsx` | Cập nhật + sửa lỗi |
+| `app/managertournaments/[id]/page.tsx` | Cập nhật + sửa lỗi |
+| `app/managertournaments/[id]/disputes/page.tsx` | Cập nhật |
+# Nhật Ký Phát Triển Dự Án CubeNexus
+
+Tài liệu này lưu trữ lịch sử sửa lỗi, cấu hình hệ thống và hướng dẫn vận hành dự án CubeNexus (bao gồm Backend .NET, Frontend Next.js và Database Postgres qua Docker).
+
+---
+
+## 📅 Nhật Ký Cập Nhật & Sửa Lỗi
+
+### 1. Khắc phục lỗi kết nối Frontend - Backend (ECONNREFUSED)
+* **Thời gian:** 28/06/2026
+* **Triệu chứng:** Frontend báo lỗi `Failed to proxy http://127.0.0.1:5212/api/tournaments Error: connect ECONNREFUSED 127.0.0.1:5212` mặc dù Backend đã chạy.
+* **Nguyên nhân:** 
+  * Cấu hình proxy ở frontend chuyển tiếp request tới địa chỉ IP cứng `127.0.0.1:5212`.
+  * Trong khi đó, Backend khởi chạy trên Windows lắng nghe qua `localhost:5212` (mặc định phân giải sang IPv6 `[::1]:5212`), dẫn đến việc gọi IPv4 bị từ chối kết nối.
+* **Giải pháp:** 
+  * Cập nhật file cấu hình [next.config.ts](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_FE/next.config.ts), thay đổi đích đến (destination) của rewrite từ `http://127.0.0.1:5212` thành `http://localhost:5212`.
+  * Khởi động lại Frontend dev server (`npm run dev`) để cập nhật cấu hình proxy.
+
+### 2. Cấu hình pgAdmin kết nối Database trong Docker
+* **Thời gian:** 28/06/2026
+* **Triệu chứng:** Không đăng nhập được vào giao diện pgAdmin hoặc đăng nhập được nhưng không kết nối được tới Database Postgres.
+* **Nguyên nhân:**
+  * Đăng nhập sai tài khoản quản trị pgAdmin mặc định.
+  * Sử dụng địa chỉ `localhost` hoặc `127.0.0.1` làm Host của PostgreSQL khi khai báo trong pgAdmin container. Vì pgAdmin chạy trong một container cô lập, `localhost` trỏ về chính nó chứ không trỏ về container Database.
+* **Giải pháp:**
+  * Sử dụng thông tin đăng nhập pgAdmin từ file [docker-compose.yml](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_BE/docker-compose.yml):
+    * **Email:** `admin@cubenexus.com`
+    * **Password:** `admin123`
+  * Khi đăng ký Server mới trong pgAdmin, cấu hình như sau:
+    * **Host name/address:** `cubenexus-db` (Tên service/container của Postgres trong docker-compose)
+    * **Port:** `5432` (Cổng nội bộ bên trong mạng Docker)
+    * **Username:** `cubenexus`
+    * **Password:** `123456`
+
+---
+
+## 🛠️ Hướng Dẫn Vận Hành Dự Án
+
+### Bước 1: Khởi động Docker Database & pgAdmin
+Di chuyển vào thư mục Backend chứa file `docker-compose.yml` và chạy lệnh:
+```bash
+docker-compose up -d
+```
+* **Database (Postgres):** Lắng nghe ở cổng `5433` trên máy chủ (Host), cổng `5432` nội bộ Docker.
+* **pgAdmin:** Truy cập tại địa chỉ **`http://localhost:5050`**.
+
+### Bước 2: Khởi động Backend (.NET API)
+Di chuyển vào thư mục [CubeNexus.API](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_BE/CubeNexus.API) và khởi chạy:
+```bash
+dotnet run
+```
+* API sẽ lắng nghe tại: **`http://localhost:5212`**
+* Tài liệu Swagger: **`http://localhost:5212/swagger`**
+
+### Bước 3: Khởi động Frontend (Next.js)
+Di chuyển vào thư mục [SU26SE065_CUBENEXUS_FE](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_FE) và chạy:
+```bash
+npm run dev
+```
+* Giao diện web chạy tại: **`http://localhost:3000`**
+
+---
+
+## 📌 Các File Cấu Hình Quan Trọng
+
+1. **Cấu hình kết nối DB của BE:** [appsettings.json](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_BE/CubeNexus.API/appsettings.json)
+2. **Cấu hình Docker Compose:** [docker-compose.yml](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_BE/docker-compose.yml)
+3. **Cấu hình Proxy của FE:** [next.config.ts](file:///d:/k%C3%AC%209/do%20an/SU26SE065_CUBENEXUS_FE/next.config.ts)

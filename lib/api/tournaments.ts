@@ -42,8 +42,8 @@ export async function createTournament(dto: CreateTournamentDto): Promise<Tourna
 }
 
 /** POST /api/tournament-management/tournaments/{id}/complete — Hoàn thành giải đấu */
-export async function completeTournament(tournamentId: string): Promise<TournamentDetailDto> {
-  return apiFetch<TournamentDetailDto>(
+export async function completeTournament(tournamentId: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(
     `/api/tournament-management/tournaments/${tournamentId}/complete`,
     { method: 'POST' }
   );

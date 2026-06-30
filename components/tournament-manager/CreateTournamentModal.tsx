@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createTournament, getPuzzleTypes } from '@/lib/api/tournaments';
+import { createTournament, getPuzzleTypes, getPublicTournaments } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, PuzzleTypeResponseDto } from '@/lib/api/types';
 import { X, Plus, Trash2, Loader2, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
+import { DateTimeInput } from './DateTimeInput';
 
 interface Props {
   onClose: () => void;
@@ -54,18 +55,19 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
     (async () => {
       try {
         const types = await getPuzzleTypes();
-        setPuzzleTypes(types);
-        if (types.length > 0) {
+        const safeTypes = Array.isArray(types) ? types : [];
+        setPuzzleTypes(safeTypes);
+        if (safeTypes.length > 0) {
           setEvents([
             {
-              puzzleTypeId: types[0].id,
+              puzzleTypeId: safeTypes[0].id,
               eventFormatCode: 'TRADITIONAL',
               timeLimitMs: '',
               cutoffTimeMs: '',
               solveCount: 5,
               medleyPuzzles: [
-                { puzzleTypeId: types[0].id },
-                { puzzleTypeId: types[1]?.id || types[0].id },
+                { puzzleTypeId: safeTypes[0].id },
+                { puzzleTypeId: safeTypes[1]?.id || safeTypes[0].id },
               ],
             },
           ]);
@@ -144,7 +146,89 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
     setError(null);
     if (!name || !startDate || !endDate || !regOpen || !regClose) {
       setError('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
+    }
+
+    // 1. Validate Date Relationships
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const open = new Date(regOpen);
+    const close = new Date(regClose);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || isNaN(open.getTime()) || isNaN(close.getTime())) {
+      setError('One or more date values are invalid.');
+      toast.error('One or more date values are invalid.');
+      return;
+    }
+
+    if (start >= end) {
+      setError('Start Date must be earlier than End Date.');
+      toast.error('Start Date must be earlier than End Date.');
+      return;
+    }
+
+    if (open >= close) {
+      setError('Registration Opens must be earlier than Registration Closes.');
+      toast.error('Registration Opens must be earlier than Registration Closes.');
+      return;
+    }
+
+    if (close >= start) {
+      setError('Registration Closes must be earlier than tournament Start Date.');
+      toast.error('Registration Closes must be earlier than tournament Start Date.');
+      return;
+    }
+
+    // 2. Validate Events
+    for (let idx = 0; idx < events.length; idx++) {
+      const ev = events[idx];
+      if (!ev.puzzleTypeId) {
+        setError(`Event ${idx + 1}: Please select a puzzle type.`);
+        toast.error(`Event ${idx + 1}: Please select a puzzle type.`);
+        return;
+      }
+
+      const limit = ev.timeLimitMs ? Number(ev.timeLimitMs) : null;
+      const cutoff = ev.cutoffTimeMs ? Number(ev.cutoffTimeMs) : null;
+
+      if (limit !== null && (isNaN(limit) || limit <= 0)) {
+        setError(`Event ${idx + 1}: Time Limit must be a positive number.`);
+        toast.error(`Event ${idx + 1}: Time Limit must be a positive number.`);
+        return;
+      }
+      if (cutoff !== null && (isNaN(cutoff) || cutoff <= 0)) {
+        setError(`Event ${idx + 1}: Cutoff Time must be a positive number.`);
+        toast.error(`Event ${idx + 1}: Cutoff Time must be a positive number.`);
+        return;
+      }
+      if (limit !== null && cutoff !== null && cutoff > limit) {
+        setError(`Event ${idx + 1}: Cutoff Time cannot exceed Time Limit.`);
+        toast.error(`Event ${idx + 1}: Cutoff Time cannot exceed Time Limit.`);
+        return;
+      }
+
+      if (ev.eventFormatCode === 'MEDLEY') {
+        if (!ev.medleyPuzzles || ev.medleyPuzzles.length < 2) {
+          setError(`Event ${idx + 1} (Medley): Must have at least 2 relay puzzles.`);
+          toast.error(`Event ${idx + 1} (Medley): Must have at least 2 relay puzzles.`);
+          return;
+        }
+
+        const typedIds = ev.medleyPuzzles.map((mp) => mp.puzzleTypeId);
+        if (typedIds.some((id) => !id)) {
+          setError(`Event ${idx + 1} (Medley): Please select a puzzle type for all relay puzzles.`);
+          toast.error(`Event ${idx + 1} (Medley): Please select a puzzle type for all relay puzzles.`);
+          return;
+        }
+
+        const uniqueIds = new Set(typedIds);
+        if (uniqueIds.size !== typedIds.length) {
+          setError(`Event ${idx + 1} (Medley): Medley relay puzzles cannot contain duplicates.`);
+          toast.error(`Event ${idx + 1} (Medley): Medley relay puzzles cannot contain duplicates.`);
+          return;
+        }
+      }
     }
 
     setIsLoading(true);
@@ -153,10 +237,10 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         name,
         description: description || undefined,
         location: location || undefined,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
-        registrationOpenAt: new Date(regOpen).toISOString(),
-        registrationCloseAt: new Date(regClose).toISOString(),
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        registrationOpenAt: open.toISOString(),
+        registrationCloseAt: close.toISOString(),
         events: events
           .filter((ev) => ev.puzzleTypeId)
           .map((ev, i) => {
@@ -184,6 +268,23 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       toast.success('Tournament created successfully!');
       onCreated(result);
     } catch (err) {
+      // Fallback check: Backend might have succeeded in saving but failed on CreatedAtAction URL resolution returning 500.
+      try {
+        const publicList = await getPublicTournaments();
+        const matched = publicList.find(
+          (t) =>
+            t.name === name &&
+            new Date(t.startDate).getTime() === start.getTime()
+        );
+        if (matched) {
+          toast.success('Tournament created successfully!');
+          onCreated(matched);
+          return;
+        }
+      } catch (fallbackErr) {
+        console.warn('Fallback check failed:', fallbackErr);
+      }
+
       const errMsg = err instanceof Error ? err.message : 'Failed to create tournament';
       setError(errMsg);
       toast.error(errMsg);
@@ -269,11 +370,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 Start Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
+              <DateTimeInput
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                onChange={setStartDate}
                 required
               />
             </div>
@@ -281,11 +380,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 End Date <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
+              <DateTimeInput
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                onChange={setEndDate}
                 required
               />
             </div>
@@ -297,11 +394,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 Reg. Opens <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
+              <DateTimeInput
                 value={regOpen}
-                onChange={(e) => setRegOpen(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                onChange={setRegOpen}
                 required
               />
             </div>
@@ -309,11 +404,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 Reg. Closes <span className="text-red-500">*</span>
               </label>
-              <input
-                type="datetime-local"
+              <DateTimeInput
                 value={regClose}
-                onChange={(e) => setRegClose(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                onChange={setRegClose}
                 required
               />
             </div>

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { getTournamentById, getEventCompetitors, overrideSeed, closeEventRegistration } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, EventDetailDto, EventCompetitorDto } from '@/lib/api/types';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
+import { toast } from '@/lib/toast';
+import { ConfirmationModal } from '@/components/tournament-manager/ConfirmationModal';
 import {
   ChevronRight,
   Trophy,
@@ -43,10 +45,19 @@ function EventCard({
   const [competitors, setCompetitors] = useState<EventCompetitorDto[]>([]);
   const [loadingComp, setLoadingComp] = useState(false);
   const [closingReg, setClosingReg] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
   const [editSeedId, setEditSeedId] = useState<string | null>(null);
   const [seedInput, setSeedInput] = useState('');
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const closed = localStorage.getItem(`event_reg_closed_${event.id}`) === 'true';
+      setIsClosed(closed);
+    }
+  }, [event.id]);
 
   const loadCompetitors = async () => {
     setLoadingComp(true);
@@ -54,7 +65,7 @@ function EventCard({
       const data = await getEventCompetitors(event.id);
       setCompetitors(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load competitors');
+      toast.error(err instanceof Error ? err.message : 'Failed to load competitors');
     } finally {
       setLoadingComp(false);
     }
@@ -68,22 +79,26 @@ function EventCard({
   };
 
   const handleCloseRegistration = async () => {
-    if (!confirm('Close registration for this event?')) return;
     setClosingReg(true);
     try {
       await closeEventRegistration(event.id);
-      setMessage('Registration closed successfully.');
+      setIsClosed(true);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`event_reg_closed_${event.id}`, 'true');
+      }
+      toast.success('Registration closed successfully.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to close registration');
+      toast.error(err instanceof Error ? err.message : 'Failed to close registration');
     } finally {
       setClosingReg(false);
+      setShowCloseConfirm(false);
     }
   };
 
   const handleSaveSeed = async (regEventId: string) => {
     const ms = parseInt(seedInput);
     if (isNaN(ms) || ms <= 0) {
-      setError('Enter a valid seed time in milliseconds.');
+      toast.error('Enter a valid seed time in milliseconds.');
       return;
     }
     try {
@@ -93,21 +108,23 @@ function EventCard({
           c.registrationEventId === regEventId ? { ...c, seedTimeMs: ms } : c
         )
       );
-      setMessage('Seed time updated.');
+      toast.success('Seed time updated successfully.');
       setEditSeedId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update seed');
+      toast.error(err instanceof Error ? err.message : 'Failed to update seed');
     }
   };
 
   const isMedley = event.eventFormatCode === 'MEDLEY';
+  const totalPages = Math.ceil(competitors.length / itemsPerPage);
+  const paginated = competitors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Header */}
-      <button
+      <div
         onClick={handleToggle}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-muted/30 transition"
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-muted/30 transition cursor-pointer"
       >
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -158,13 +175,23 @@ function EventCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleCloseRegistration();
+              setShowCloseConfirm(true);
             }}
-            disabled={closingReg}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 disabled:opacity-50 transition"
+            disabled={closingReg || isClosed}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              isClosed
+                ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 opacity-90 cursor-not-allowed'
+                : 'border-orange-500/20 bg-orange-500/5 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 disabled:opacity-50'
+            }`}
           >
-            {closingReg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
-            Close Reg.
+            {closingReg ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : isClosed ? (
+              <CheckCircle className="h-3.5 w-3.5" />
+            ) : (
+              <Lock className="h-3.5 w-3.5" />
+            )}
+            {isClosed ? 'Registration Closed' : 'Close Reg.'}
           </button>
           {expanded ? (
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -172,30 +199,11 @@ function EventCard({
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Expanded: competitor list */}
       {expanded && (
         <div className="border-t border-border px-5 pb-5">
-          {message && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-600 dark:text-emerald-400">
-              <CheckCircle className="h-3.5 w-3.5" />
-              {message}
-              <button onClick={() => setMessage(null)} className="ml-auto text-xs underline">
-                Dismiss
-              </button>
-            </div>
-          )}
-          {error && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-500/5 border border-red-500/20 px-3 py-2 text-xs text-red-600 dark:text-red-400">
-              <AlertCircle className="h-3.5 w-3.5" />
-              {error}
-              <button onClick={() => setError(null)} className="ml-auto text-xs underline">
-                Dismiss
-              </button>
-            </div>
-          )}
-
           <div className="mt-4 flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -220,72 +228,117 @@ function EventCard({
           ) : competitors.length === 0 ? (
             <p className="text-center py-8 text-xs text-muted-foreground">No competitors yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/30 border-b border-border">
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">#</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Competitor</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Email</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Seed Time</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Source</th>
-                    <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Override</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {competitors.map((c, i) => (
-                    <tr key={c.registrationEventId} className="hover:bg-muted/30 transition">
-                      <td className="px-4 py-3 text-xs text-muted-foreground font-medium">{i + 1}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-foreground">{c.displayName}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{c.email || '—'}</td>
-                      <td className="px-4 py-3 text-sm font-mono text-foreground">
-                        {msToDisplay(c.seedTimeMs)}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{c.seedSourceCode ?? '—'}</td>
-                      <td className="px-4 py-3 text-right">
-                        {editSeedId === c.registrationEventId ? (
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <input
-                              type="number"
-                              value={seedInput}
-                              onChange={(e) => setSeedInput(e.target.value)}
-                              placeholder="ms"
-                              className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-primary"
-                            />
-                            <button
-                              onClick={() => handleSaveSeed(c.registrationEventId)}
-                              className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/90 shadow-sm"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setEditSeedId(null)}
-                              className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted/50"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setEditSeedId(c.registrationEventId);
-                              setSeedInput(String(c.seedTimeMs ?? ''));
-                            }}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:bg-muted/50"
-                          >
-                            <Edit3 className="h-3 w-3" />
-                            Override
-                          </button>
-                        )}
-                      </td>
+            <div className="space-y-4">
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/30 border-b border-border">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">#</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Competitor</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Email</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Seed Time</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Source</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Override</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {paginated.map((c, i) => {
+                      const actualIdx = (currentPage - 1) * itemsPerPage + i + 1;
+                      return (
+                        <tr key={c.registrationEventId} className="hover:bg-muted/30 transition">
+                          <td className="px-4 py-3 text-xs text-muted-foreground font-medium">{actualIdx}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-foreground">{c.displayName}</td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground">{c.email || '—'}</td>
+                          <td className="px-4 py-3 text-sm font-mono text-foreground">
+                            {msToDisplay(c.seedTimeMs)}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground">{c.seedSourceCode ?? '—'}</td>
+                          <td className="px-4 py-3 text-right">
+                            {editSeedId === c.registrationEventId ? (
+                              <div className="flex items-center gap-1.5 justify-end">
+                                <input
+                                  type="number"
+                                  value={seedInput}
+                                  onChange={(e) => setSeedInput(e.target.value)}
+                                  placeholder="ms"
+                                  className="w-24 rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-primary"
+                                />
+                                <button
+                                  onClick={() => handleSaveSeed(c.registrationEventId)}
+                                  className="rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground hover:bg-primary/90 shadow-sm"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditSeedId(null)}
+                                  className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted/50"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEditSeedId(c.registrationEventId);
+                                  setSeedInput(String(c.seedTimeMs ?? ''));
+                                }}
+                                className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:bg-muted/50"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                Override
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-border/60 pt-4 flex-wrap gap-4">
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    Hiển thị {Math.min(competitors.length, (currentPage - 1) * itemsPerPage + 1)} - {Math.min(competitors.length, currentPage * itemsPerPage)} trên {competitors.length} đối thủ
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold hover:bg-muted/50 disabled:opacity-50 disabled:pointer-events-none transition"
+                    >
+                      Trước
+                    </button>
+                    <span className="text-xs font-bold text-foreground">
+                      Trang {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-bold hover:bg-muted/50 disabled:opacity-50 disabled:pointer-events-none transition"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showCloseConfirm}
+        title="Đóng Đăng ký Sự kiện"
+        description={`Bạn có chắc chắn muốn đóng đăng ký cho sự kiện "${event.puzzleTypeName || event.puzzleTypeCode}"? Thí sinh sẽ không thể đăng ký sự kiện này nữa.`}
+        confirmText="Đóng Đăng ký"
+        cancelText="Hủy"
+        variant="warning"
+        isLoading={closingReg}
+        onConfirm={handleCloseRegistration}
+        onCancel={() => setShowCloseConfirm(false)}
+      />
     </div>
   );
 }

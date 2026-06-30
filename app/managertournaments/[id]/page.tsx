@@ -4,13 +4,15 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { DashboardCard } from '@/components/tournament-manager/DashboardCard';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
-import { getTournamentById, completeTournament } from '@/lib/api/tournaments';
+import { getTournamentById, completeTournament, getEventCompetitors } from '@/lib/api/tournaments';
+import { getLiveBoardState } from '@/lib/api/operations';
 import type { TournamentDetailDto } from '@/lib/api/types';
+import { toast } from '@/lib/toast';
+import { ConfirmationModal } from '@/components/tournament-manager/ConfirmationModal';
 import {
   ChevronRight,
   Users,
   Layers,
-  CheckCircle2,
   AlertCircle,
   Settings,
   QrCode,
@@ -29,39 +31,32 @@ import {
 
 const QUICK_ACTIONS = [
   {
-    title: 'Configure Events',
-    description: 'Set formats, rounds, and scoring rules',
+    title: 'Events & Cutoffs',
+    description: 'Configure active puzzle events, time limits, and registration cutoff rules.',
     href: 'events',
     icon: Settings,
-    accent: 'bg-card border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/5',
+    accent: 'border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10',
   },
   {
-    title: 'Manage Registrations',
-    description: 'View and override competitor seed times',
+    title: 'Competitors & Seeds',
+    description: 'View registered speedcubers, verify payments, and manage seed times.',
     href: 'registrations',
-    icon: ClipboardList,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+    icon: Users,
+    accent: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10',
   },
   {
-    title: 'Generate Groups & Scrambles',
-    description: 'Create groups, assign stations and scrambles',
+    title: 'Group & Heat Setup',
+    description: 'Generate competitor groups, assign stations, and print scramble sheets.',
     href: 'groups',
     icon: Layers,
-    accent: 'bg-card border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/5',
+    accent: 'border-purple-500/20 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10',
   },
   {
-    title: 'Live Operations',
-    description: 'Monitor stations, check-in, and active rounds',
-    href: 'live',
-    icon: Radio,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
-  },
-  {
-    title: 'Manage Disputes',
-    description: 'Review and resolve result disputes',
+    title: 'Disputes & Corrections',
+    description: 'Review DNF appeals, correct timing mistakes, and override system audits.',
     href: 'disputes',
     icon: Shield,
-    accent: 'bg-card border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/5',
+    accent: 'border-orange-500/20 bg-orange-500/5 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10',
   },
 ];
 
@@ -83,7 +78,9 @@ export default function TournamentDetailDashboardPage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [completeMsg, setCompleteMsg] = useState<string | null>(null);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [competitorCount, setCompetitorCount] = useState<number | null>(null);
+  const [groupCount, setGroupCount] = useState<number | null>(null);
 
   const fetchTournament = async () => {
     setIsLoading(true);
@@ -91,6 +88,36 @@ export default function TournamentDetailDashboardPage({
     try {
       const data = await getTournamentById(id);
       setTournament(data);
+
+      if (data.events && data.events.length > 0) {
+        // Fetch stats in parallel
+        const compPromises = data.events.map((ev) => getEventCompetitors(ev.id).catch(() => []));
+        const groupPromises = data.events.map((ev) => getLiveBoardState(ev.id, 1).catch(() => null));
+
+        const compLists = await Promise.all(compPromises);
+        const liveStates = await Promise.all(groupPromises);
+
+        // Deduplicate unique competitor userIds
+        const uniqueUserIds = new Set<string>();
+        compLists.forEach((list) => {
+          list.forEach((c) => {
+            if (c.userId) uniqueUserIds.add(c.userId);
+          });
+        });
+        setCompetitorCount(uniqueUserIds.size);
+
+        // Sum groups
+        let totalGroups = 0;
+        liveStates.forEach((state) => {
+          if (state && state.groups) {
+            totalGroups += state.groups.length;
+          }
+        });
+        setGroupCount(totalGroups);
+      } else {
+        setCompetitorCount(0);
+        setGroupCount(0);
+      }
     } catch (err) {
       console.warn('API connection failed, falling back to mock details:', err);
       const mockDetail: TournamentDetailDto = {
@@ -117,7 +144,9 @@ export default function TournamentDetailDashboardPage({
         ]
       };
       setTournament(mockDetail);
-      setCompleteMsg('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
+      setCompetitorCount(28); // Mock stats
+      setGroupCount(6);
+      toast.info('Using mock tournament data (could not connect to API)');
     } finally {
       setIsLoading(false);
     }
@@ -129,18 +158,18 @@ export default function TournamentDetailDashboardPage({
 
   const handleComplete = async () => {
     if (!tournament) return;
-    if (!confirm(`Mark "${tournament.name}" as Completed? This cannot be undone.`)) return;
     setIsCompleting(true);
     try {
-      const updated = await completeTournament(id);
-      setTournament(updated);
-      setCompleteMsg('Tournament marked as completed!');
+      await completeTournament(id);
+      setTournament((prev) => (prev ? { ...prev, statusCode: 'completed' } : null));
+      toast.success('Tournament marked as completed successfully!');
     } catch (err) {
-      setCompleteMsg(
-        `Error: ${err instanceof Error ? err.message : 'Failed to complete tournament'}`
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to complete tournament'
       );
     } finally {
       setIsCompleting(false);
+      setShowCompleteConfirm(false);
     }
   };
 
@@ -185,19 +214,6 @@ export default function TournamentDetailDashboardPage({
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-foreground font-semibold">{tournament.name}</span>
       </div>
-
-      {/* Complete success/error banner */}
-      {completeMsg && (
-        <div className={`mb-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-          completeMsg.startsWith('Error')
-            ? 'border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400'
-            : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
-        }`}>
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          {completeMsg}
-          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline">Dismiss</button>
-        </div>
-      )}
 
       {/* Tournament Overview Card */}
       <div className="rounded-2xl border border-border bg-card shadow-sm p-6 mb-8">
@@ -257,14 +273,14 @@ export default function TournamentDetailDashboardPage({
             </button>
             {tournament.statusCode !== 'completed' && tournament.statusCode !== 'cancelled' && (
               <button
-                onClick={handleComplete}
+                onClick={() => setShowCompleteConfirm(true)}
                 disabled={isCompleting}
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
               >
                 {isCompleting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+                  <CheckCircle className="h-4 w-4" />
                 )}
                 Complete Tournament
               </button>
@@ -290,11 +306,20 @@ export default function TournamentDetailDashboardPage({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 mb-8">
-        <DashboardCard title="Events" value={tournament.events.length} icon={Zap} accent="blue" />
-        <DashboardCard title="Groups" value="—" icon={Layers} accent="purple" />
-        <DashboardCard title="Registrations" value="—" icon={Users} accent="yellow" />
-        <DashboardCard title="Pending Disputes" value="—" icon={AlertCircle} accent="red" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 w-full">
+        <DashboardCard title="Total Events" value={tournament.events.length} icon={Zap} accent="blue" />
+        <DashboardCard 
+          title="Total Competitors" 
+          value={competitorCount !== null ? competitorCount : 'Loading...'} 
+          icon={Users} 
+          accent="yellow" 
+        />
+        <DashboardCard 
+          title="Total Groups" 
+          value={groupCount !== null ? groupCount : 'Loading...'} 
+          icon={Layers} 
+          accent="purple" 
+        />
       </div>
 
       {/* Quick Action Cards */}
@@ -322,6 +347,21 @@ export default function TournamentDetailDashboardPage({
           })}
         </div>
       </div>
+
+      {/* Reusable Confirmation Modal */}
+      {tournament && (
+        <ConfirmationModal
+          isOpen={showCompleteConfirm}
+          title="Xác nhận Hoàn thành Giải đấu"
+          description={`Bạn có chắc chắn muốn đánh dấu giải đấu "${tournament.name}" là đã hoàn thành? Hành động này không thể hoàn tác.`}
+          confirmText="Xác nhận Hoàn thành"
+          cancelText="Hủy"
+          variant="success"
+          isLoading={isCompleting}
+          onConfirm={handleComplete}
+          onCancel={() => setShowCompleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
