@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         destination: 'http://127.0.0.1:5212/api/:path*',
       },
+      {
+        source: '/hubs/:path*',
+        destination: 'http://127.0.0.1:5212/hubs/:path*',
+      },
     ];
   },
 };

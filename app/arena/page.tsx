@@ -107,10 +107,8 @@ export default function ArenaPage() {
   const [matchPhase, setMatchPhase] = useState<MatchPhase>("lobby");
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
+    router.replace('/online');
+  }, [router]);
 
 
 

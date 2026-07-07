@@ -105,9 +105,9 @@ function EventCard({
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       {/* Header */}
-      <button
+      <div
         onClick={handleToggle}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-muted/30 transition"
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-muted/30 transition cursor-pointer select-none"
       >
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -172,7 +172,7 @@ function EventCard({
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Expanded: competitor list */}
       {expanded && (

@@ -30,19 +30,19 @@ const onlineFlows = [
   {
     title: 'Online 1v1 Arena',
     steps: ['Find Match', 'Queue', 'Elo match', 'Virtual Room', 'Realtime result'],
-    href: '/arena',
+    href: '/online',
     icon: Users,
   },
   {
     title: 'WebRTC Preparation',
     steps: ['Enable webcam', 'Show hands and cube', 'Generate QR session', 'Share room evidence'],
-    href: '/arena',
+    href: '/online',
     icon: Video,
   },
   {
     title: 'Mobile Smart Timer',
     steps: ['Scan QR', 'Join socket room', 'Sync timer', 'Solve and submit'],
-    href: '/arena',
+    href: '/online',
     icon: Smartphone,
   },
 ];
@@ -140,7 +140,7 @@ export function FlowsSection() {
           </div>
 
           <Button asChild className="mt-6 bg-foreground text-background hover:bg-foreground/90">
-            <Link href="/arena">
+            <Link href="/online">
               Launch Online Arena UI
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

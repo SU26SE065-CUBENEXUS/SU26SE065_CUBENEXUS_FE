@@ -122,9 +122,17 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    const message =
-      (errorBody as { message?: string }).message ||
-      `HTTP ${response.status}: ${response.statusText}`;
+    let message = (errorBody as { message?: string }).message;
+    if (!message && (errorBody as any).errors) {
+      const errs = (errorBody as any).errors;
+      const details = Object.entries(errs)
+        .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+        .join('; ');
+      message = `${(errorBody as any).title || 'Validation Error'} - ${details}`;
+    }
+    if (!message) {
+      message = `HTTP ${response.status}: ${response.statusText}`;
+    }
     throw new Error(message);
   }
 

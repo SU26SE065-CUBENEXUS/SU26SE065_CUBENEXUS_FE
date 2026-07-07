@@ -118,7 +118,7 @@ export default function RankingsPage() {
             </div>
             <div>
               <Button asChild className="bg-[#eab308] hover:bg-[#ca8a04] text-black font-black px-8 py-6 text-sm tracking-wider shadow-lg shadow-yellow-500/10 rounded-xl transition-all border-none uppercase flex items-center gap-2">
-                <Link href="/arena">
+                <Link href="/online">
                   Watch Live Arena <Play className="h-3.5 w-3.5 fill-current" />
                 </Link>
               </Button>

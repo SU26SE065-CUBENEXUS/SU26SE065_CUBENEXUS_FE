@@ -103,6 +103,7 @@ export interface EventDetailDto {
   cutoffTimeMs?: number;
   solveCount: number;
   sortOrder?: number;
+  maxCapacity?: number;
   medleyPuzzles: MedleyPuzzleDetailDto[];
 }
 
@@ -171,6 +172,26 @@ export interface RegisteredEventDetailDto {
   seedTimeMs?: number;
   seedSourceCode?: string;
   seedGeneratedAt?: string;
+}
+
+export interface TournamentRegistrationDetailDto {
+  registrationId: string;
+  tournamentId: string;
+  tournamentName: string;
+  userId: string;
+  competitorName: string;
+  email: string;
+  competitorUserCode: string;
+  competitorAvatarUrl?: string;
+  statusCode: string;
+  registeredAt: string;
+  checkedInAt?: string;
+  qrToken: string;
+  registeredEvents: RegisteredEventDetailDto[];
+}
+
+export interface UpdateRegistrationStatusDto {
+  status: string;
 }
 
 // ---------- Event Competitor (for seeding) ----------
@@ -325,4 +346,22 @@ export interface PuzzleTypeResponseDto {
   scrambleLength?: number;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface CompetitorQrTicketDto {
+  registrationId: string;
+  qrToken: string;
+  checkedInAt?: string | null;
+  statusCode: string;
+}
+
+export interface SimStationCompetitorDto {
+  groupCompetitorId: string;
+  competitorName: string;
+  userCode: string;
+  groupName: string;
+  groupStatus: string;
+  stationNumber: number;
+  qrToken: string;
+  competitorStatus: string;
 }

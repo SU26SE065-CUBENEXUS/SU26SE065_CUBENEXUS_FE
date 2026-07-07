@@ -87,8 +87,8 @@ export default function LoginForm() {
       const payload = parseJwt(res.accessToken);
       
       const role =
-        (payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
-        (payload['role'] as string) ||
+        (payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
+        (payload?.['role'] as string) ||
         '';
 
       toast.success('Đăng nhập thành công!', `Chào mừng quay trở lại, ${res.displayName || email}!`);

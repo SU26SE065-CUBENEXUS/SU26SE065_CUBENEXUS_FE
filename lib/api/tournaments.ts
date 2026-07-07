@@ -12,6 +12,8 @@ import type {
   GenerateGroupsDto,
   GenerateScramblesDto,
   PuzzleTypeResponseDto,
+  TournamentRegistrationDetailDto,
+  RegistrationResultDto,
 } from './types';
 
 // ---------- Public ----------
@@ -96,5 +98,25 @@ export async function generateScrambles(
   return apiFetch(`/api/tournament-management/events/${eventId}/scrambles`, {
     method: 'POST',
     body: JSON.stringify(dto),
+  });
+}
+
+/** GET /api/tournament-management/tournaments/{id}/registrations — Lấy tất cả đăng ký của giải đấu */
+export async function getTournamentRegistrations(tournamentId: string): Promise<TournamentRegistrationDetailDto[]> {
+  return apiFetch<TournamentRegistrationDetailDto[]>(`/api/tournament-management/tournaments/${tournamentId}/registrations`);
+}
+
+/** PATCH /api/tournament-management/registrations/{id}/status — Duyệt/hủy đăng ký */
+export async function updateRegistrationStatus(registrationId: string, status: string): Promise<RegistrationResultDto> {
+  return apiFetch<RegistrationResultDto>(`/api/tournament-management/registrations/${registrationId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+/** POST /api/tournament-management/registrations/{id}/check-in — Điểm danh thủ công */
+export async function checkInRegistration(registrationId: string): Promise<RegistrationResultDto> {
+  return apiFetch<RegistrationResultDto>(`/api/tournament-management/registrations/${registrationId}/check-in`, {
+    method: 'POST',
   });
 }

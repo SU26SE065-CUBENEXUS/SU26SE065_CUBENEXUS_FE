@@ -26,7 +26,7 @@ export function HeroSection() {
           {/* CTA Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-400 text-white font-semibold shadow-lg shadow-red-200/60">
-              <Link href="/arena">COMPETE NOW</Link>
+              <Link href="/online">COMPETE NOW</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-foreground/20 text-foreground hover:bg-foreground/5 font-semibold">
               <Link href="/tournaments">

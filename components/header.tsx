@@ -42,7 +42,7 @@ export function Header() {
         {/* Navigation */}
         <div className="hidden gap-8 lg:flex">
           <Link href="/" className="text-sm font-medium text-foreground transition hover:text-primary">HOME</Link>
-          <Link href="/arena" className="text-sm font-medium text-foreground transition hover:text-green-500">ARENA</Link>
+          <Link href="/online" className="text-sm font-medium text-foreground transition hover:text-green-500">ARENA</Link>
           <Link href="/tournaments" className="text-sm font-medium text-foreground transition hover:text-orange-500">TOURNAMENTS</Link>
           <Link href="/rankings" className="text-sm font-medium text-foreground transition hover:text-blue-500">RANKINGS</Link>
           <Link href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</Link>

@@ -15,7 +15,25 @@ import type {
   VerifyJudgeStationResponseDto,
   SubmitResultResponseDto,
   SolveProgressDto,
+  CompetitorQrTicketDto,
+  SimStationCompetitorDto,
 } from './types';
+
+/** GET /api/tournament-operation/competitor/qr-ticket — Lấy QR ticket cho đấu thủ */
+export async function getCompetitorQrTicket(tournamentId: string): Promise<CompetitorQrTicketDto> {
+  return apiFetch<CompetitorQrTicketDto>(`/api/tournament-operation/competitor/qr-ticket?tournamentId=${tournamentId}`);
+}
+
+/** GET /api/tournament-operation/simulation/station-competitors — Lấy danh sách competitor để chạy thử giả lập */
+export async function getStationCompetitorsForSimulation(
+  eventId: string,
+  roundNumber: number,
+  stationNumber: number
+): Promise<SimStationCompetitorDto[]> {
+  return apiFetch<SimStationCompetitorDto[]>(
+    `/api/tournament-operation/simulation/station-competitors?eventId=${eventId}&roundNumber=${roundNumber}&stationNumber=${stationNumber}`
+  );
+}
 
 /** POST /api/tournament-operation/check-in — Điểm danh bằng QR Token */
 export async function checkIn(dto: CheckInRequestDto): Promise<CheckInResponseDto> {
@@ -141,18 +159,42 @@ export async function getLiveBoardState(
   roundNumber: number;
   roundStatus: string;
   solveCount: number;
-  progress: string;
+  progress: {
+    totalCompetitors: number;
+    completedCompetitors: number;
+    noShowCompetitors: number;
+    pendingCompetitors: number;
+    totalExpectedSolves: number;
+    submittedSolves: number;
+  } | null;
   groups: Array<{ groupId: string; groupName: string; statusCode: string }>;
   competitors: Array<{
     groupCompetitorId: string;
     competitorName: string;
+    competitorUserCode: string;
+    competitorAvatarUrl?: string;
+    stationNumber?: number;
+    groupId: string;
     bestTimeMs?: number;
     averageTimeMs?: number;
+    rank?: number;
     completedSolves: number;
     competitorStatus: string;
+    results: Array<{
+      resultId: string;
+      solveNumber: number;
+      rawTimeMs?: number;
+      finalTimeMs?: number;
+      penaltyCode: string;
+      isDnf: boolean;
+      isLocked: boolean;
+      submittedAt: string;
+    }>;
   }>;
 }> {
-  return apiFetch(`/api/live-board/events/${eventId}/rounds/${roundNumber}`);
+  return apiFetch(
+    `/api/live-board/events/${eventId}/rounds/${roundNumber}?_=${Date.now()}`
+  );
 }
 
 /** GET /api/tournament-operation/penalty-types — Lấy danh sách các Penalty Type */
