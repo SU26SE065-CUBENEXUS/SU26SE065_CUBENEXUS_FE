@@ -697,18 +697,27 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
               </div>
 
               {/* Complete Event Entirely */}
-              <div className="pt-4 border-t border-border mt-2">
-                <button
-                  disabled={isLoading}
-                  onClick={() => {
-                    if (!confirm(`Mark all rounds of "${event.puzzleTypeName || event.puzzleTypeCode}" as completed? This cannot be undone.`)) return;
-                    doAction(() => completeEvent(event.id), 'Event completed!');
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/45 px-3 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 disabled:opacity-60 transition"
-                >
-                  <Flag className="h-3.5 w-3.5 text-red-400" />
-                  Terminate & Complete Event
-                </button>
+              <div className="pt-5 border-t border-border mt-4">
+                <div className="rounded-xl border border-red-500/25 bg-red-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <Flag className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-red-500">Hoàn tất hạng mục đấu (Complete Event)</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Xác nhận chốt kết quả và đóng hoàn toàn hạng mục thi đấu này. Hành động này không thể hoàn tác.</p>
+                    </div>
+                  </div>
+                  <button
+                    disabled={isLoading}
+                    onClick={() => {
+                      if (!confirm(`Mark all rounds of "${event.puzzleTypeName || event.puzzleTypeCode}" as completed? This cannot be undone.`)) return;
+                      doAction(() => completeEvent(event.id), 'Event completed!');
+                    }}
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-500 disabled:opacity-60 transition shadow-lg shadow-red-500/10"
+                  >
+                    <Flag className="h-3.5 w-3.5" />
+                    Terminate & Complete Event
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -978,7 +987,7 @@ export default function GroupHeatManagementPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 pt-8 pb-28 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-7 flex-wrap">
         <Trophy className="h-3.5 w-3.5" />

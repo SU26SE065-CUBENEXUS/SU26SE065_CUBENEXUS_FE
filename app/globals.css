@@ -375,3 +375,29 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+/* Date & Time Pickers Styling */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.9) !important;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.6) sepia(95%) saturate(3000%) hue-rotate(350deg) brightness(1.2) !important;
+}
+
+/* Style native select and option elements for consistent dark theme */
+select {
+  color-scheme: dark !important;
+}
+
+/* Force options inside dropdown list to be dark text on white background
+   to resolve Windows/macOS native styling limitations and contrast issues */
+select option {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}

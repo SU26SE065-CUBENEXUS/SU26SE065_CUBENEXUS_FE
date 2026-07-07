@@ -108,9 +108,9 @@ export default function TournamentDetailDashboardPage({
         updatedAt: new Date().toISOString(),
         statusCode: 'ongoing',
         events: [
-          { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-          { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-          { id: 'E004', puzzleTypeId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', puzzleTypeCode: 'MEDLEY', puzzleTypeName: 'Medley Relay', eventFormatCode: 'MEDLEY', solveCount: 1, medleyPuzzles: [
+          { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, registrationStatusCode: 'CLOSED', medleyPuzzles: [] },
+          { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, registrationStatusCode: 'OPEN', medleyPuzzles: [] },
+          { id: 'E004', puzzleTypeId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', puzzleTypeCode: 'MEDLEY', puzzleTypeName: 'Medley Relay', eventFormatCode: 'MEDLEY', solveCount: 1, registrationStatusCode: 'NOT_OPEN', medleyPuzzles: [
             { id: 'MP1', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2', sortOrder: 1 },
             { id: 'MP2', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3', sortOrder: 2 },
           ] }
@@ -132,9 +132,13 @@ export default function TournamentDetailDashboardPage({
     if (!confirm(`Mark "${tournament.name}" as Completed? This cannot be undone.`)) return;
     setIsCompleting(true);
     try {
-      const updated = await completeTournament(id);
-      setTournament(updated);
-      setCompleteMsg('Tournament marked as completed!');
+      const res = await completeTournament(id);
+      if (res.success) {
+        setCompleteMsg('Tournament marked as completed!');
+        await fetchTournament();
+      } else {
+        setCompleteMsg(`Error: ${res.message || 'Failed to complete tournament'}`);
+      }
     } catch (err) {
       setCompleteMsg(
         `Error: ${err instanceof Error ? err.message : 'Failed to complete tournament'}`
@@ -232,16 +236,32 @@ export default function TournamentDetailDashboardPage({
               </span>
             </div>
             {/* Events chips */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {tournament.events.map((e) => (
-                <span
-                  key={e.id}
-                  className="rounded-md bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
-                >
-                  {e.puzzleTypeName || e.puzzleTypeCode}
-                  {e.eventFormatCode === 'MEDLEY' && ' (Medley)'}
-                </span>
-              ))}
+            <div className="flex flex-col gap-1.5 mt-3">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Hạng mục thi đấu (Events)</span>
+              <div className="flex flex-wrap gap-1.5">
+                {tournament.events.map((e) => {
+                  const isClosed = e.registrationStatusCode === 'CLOSED';
+                  const isOpen = e.registrationStatusCode === 'OPEN';
+                  return (
+                    <span
+                      key={e.id}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                        isClosed
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                          : isOpen
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
+                          : 'bg-muted border-border text-muted-foreground'
+                      }`}
+                    >
+                      <span>{e.puzzleTypeName || e.puzzleTypeCode}{e.eventFormatCode === 'MEDLEY' && ' (Medley)'}</span>
+                      <span className="w-1 h-1 rounded-full bg-current opacity-70" />
+                      <span className="text-[9px] uppercase font-mono tracking-wider">
+                        {isClosed ? 'Completed' : isOpen ? 'Ongoing' : 'Not Open'}
+                      </span>
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -256,18 +276,26 @@ export default function TournamentDetailDashboardPage({
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             {tournament.statusCode !== 'completed' && tournament.statusCode !== 'cancelled' && (
-              <button
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
-              >
-                {isCompleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+              <div className="flex flex-col items-end gap-1.5">
+                <button
+                  onClick={handleComplete}
+                  disabled={isCompleting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
+                >
+                  {isCompleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  Complete Tournament
+                </button>
+                {tournament.events.some(e => e.registrationStatusCode !== 'CLOSED') && (
+                  <span className="text-[10px] font-semibold text-amber-500 flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Cần hoàn tất tất cả hạng mục thi đấu
+                  </span>
                 )}
-                Complete Tournament
-              </button>
+              </div>
             )}
           </div>
         </div>

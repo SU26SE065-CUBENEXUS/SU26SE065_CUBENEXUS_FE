@@ -104,6 +104,7 @@ export interface EventDetailDto {
   solveCount: number;
   sortOrder?: number;
   maxCapacity?: number;
+  registrationStatusCode: string;
   medleyPuzzles: MedleyPuzzleDetailDto[];
 }
 
