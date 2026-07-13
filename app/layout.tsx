@@ -1,43 +1,25 @@
-import type { Metadata, Viewport } from 'next'
-import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-  display: 'swap',
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'CubeNexus — Professional Speedcubing Tournament Platform',
-  description: 'The professional speedcubing tournament platform. Offline tournament management, live judge stations, online 1v1 arena, and real-time leaderboards.',
+  title: 'CubeNexus - Speedcubing Tournaments & Online Arena',
+  description: 'Join the global speedcubing arena. Solve. Compete. Inspire. Online 1v1 matches and tournament management platform.',
   generator: 'CubeNexus.app',
-  keywords: ['speedcubing', 'rubik', 'tournament', 'WCA', 'offline competition', 'judge station', 'live board'],
-  authors: [{ name: 'CubeNexus Team' }],
-  openGraph: {
-    title: 'CubeNexus — Professional Speedcubing Platform',
-    description: 'Join the global speedcubing arena. Compete. Inspire.',
-    type: 'website',
-  },
   icons: {
-    icon: [{ url: '/icon.png', type: 'image/png' }],
+    icon: [
+      {
+        url: '/icon.png',
+        type: 'image/png',
+      },
+    ],
     apple: '/icon.png',
   },
-}
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#0f1117',
 }
 
 export default function RootLayout({
@@ -46,11 +28,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body
-        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
-        suppressHydrationWarning
-      >
+    <html lang="en" className="bg-background" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased bg-background`} suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>
@@ -60,3 +39,4 @@ export default function RootLayout({
     </html>
   )
 }
+

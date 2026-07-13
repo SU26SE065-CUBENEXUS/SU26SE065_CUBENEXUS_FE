@@ -449,7 +449,7 @@ export default function LiveOperationsPage({
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = 'oklch(0.72 0.21 42)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = 'var(--primary)';
     const rect = canvas.getBoundingClientRect();
     ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     setIsTradDrawing(true);
@@ -472,7 +472,7 @@ export default function LiveOperationsPage({
   const startMedleyDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = medleyCanvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); if (!ctx) return;
-    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = 'oklch(0.68 0.20 310)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = 'var(--chart-5)';
     const rect = canvas.getBoundingClientRect();
     ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
     setIsMedleyDrawing(true);
@@ -501,7 +501,7 @@ export default function LiveOperationsPage({
     // If in Correction Mode, call the correction endpoint instead of submit
     if (isCorrectingMode && targetCorrectionResultId) {
       if (!correctionReason.trim()) {
-        setSubmitTradResult({ ok: false, message: 'Lý do sửa đổi (Correction Reason) là bắt buộc.' });
+        setSubmitTradResult({ ok: false, message: 'Correction reason is required.' });
         return;
       }
       setIsSubmittingTrad(true);
@@ -512,7 +512,7 @@ export default function LiveOperationsPage({
           penaltyTypeId,
           reason: correctionReason.trim(),
         });
-        setSubmitTradResult({ ok: true, message: `✓ Đã sửa điểm Solve #${solveNum} thành ${rawTimeMs}s!` });
+        setSubmitTradResult({ ok: true, message: `✓ Solve #\ updated to \s!` });
         setCorrectionReason('');
         // Refresh live state
         const state = await getLiveBoardState(selectedEventId, Number(roundNumber));
@@ -616,23 +616,23 @@ export default function LiveOperationsPage({
     try {
       if (action === 'start') {
         await startRound(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Round ${roundMgmtRound} started! Trạm trọng tài đã mở để bắt đầu thi đấu.` });
+        setRoundActionResult({ ok: true, message: `Round ${roundMgmtRound} started! Referee stations are now open for competition.` });
       } else if (action === 'lock') {
         await lockRoundResults(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Đã khóa kết quả Vòng ${roundMgmtRound}. Tất cả các trạm không thể gửi thêm điểm.` });
+        setRoundActionResult({ ok: true, message: `Locked results for Round \. Stations can no longer submit scores.` });
       } else if (action === 'complete') {
         await completeRound(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Vòng ${roundMgmtRound} đã hoàn thành. Điểm số đã chốt và xếp hạng đã được tạo.` });
+        setRoundActionResult({ ok: true, message: `Round \ completed. Scores finalized and rankings generated.` });
       } else if (action === 'complete_event') {
         await completeEvent(roundMgmtEventId);
-        setRoundActionResult({ ok: true, message: `Hạng mục thi đấu đã được Hoàn thành và chốt giải thành công!` });
+        setRoundActionResult({ ok: true, message: `Event category has been successfully completed and finalized!` });
       }
 
       // Refresh round state after action
       const state = await getLiveBoardState(roundMgmtEventId, Number(roundMgmtRound));
       setRoundState(state);
     } catch (err) {
-      setRoundActionResult({ ok: false, message: err instanceof Error ? err.message : 'Thực hiện thao tác thất bại.' });
+      setRoundActionResult({ ok: false, message: err instanceof Error ? err.message : 'Operation failed.' });
     } finally {
       setIsRoundAction(false);
     }
@@ -663,7 +663,7 @@ export default function LiveOperationsPage({
   if (isLoadingMain) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} />
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--primary)' }} />
       </div>
     );
   }
@@ -756,10 +756,10 @@ export default function LiveOperationsPage({
         <div className="space-y-6">
           {/* Hub Setup Card */}
           <div className="rounded-2xl border border-border p-5"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <Radio className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} />
+              <Radio className="h-4 w-4" style={{ color: 'var(--primary)' }} />
               Connect to SignalR Hub
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -769,7 +769,7 @@ export default function LiveOperationsPage({
                   value={hubEventId}
                   onChange={(e) => setHubEventId(e.target.value)}
                   className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 >
                   <option value="">Select Event</option>
                   {tournament.events.map((ev) => (
@@ -783,7 +783,7 @@ export default function LiveOperationsPage({
                   type="number" min="1" value={hubRound}
                   onChange={(e) => setHubRound(e.target.value)}
                   className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
               <div>
@@ -792,14 +792,14 @@ export default function LiveOperationsPage({
                   type="number" min="1" max="20" value={stationCount}
                   onChange={(e) => setStationCount(e.target.value)}
                   className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
               <div className="flex items-end">
                 <button
                   onClick={connectHub}
                   className="w-full py-2 rounded-lg text-xs font-bold text-primary-foreground transition-all hover:opacity-90"
-                  style={{ background: isHubConnected ? 'oklch(0.70 0.19 145)' : 'oklch(0.72 0.21 42)' }}
+                  style={{ background: isHubConnected ? 'var(--chart-4)' : 'var(--primary)' }}
                 >
                   {isHubConnected ? '✓ Reconnect' : 'Connect Hub'}
                 </button>
@@ -812,7 +812,7 @@ export default function LiveOperationsPage({
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Monitor className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} />
+                  <Monitor className="h-4 w-4" style={{ color: 'var(--primary)' }} />
                   Station Monitor — Round {hubRound}
                 </h2>
                 <div className="flex items-center gap-3">
@@ -866,10 +866,10 @@ export default function LiveOperationsPage({
       {/* ─── TAB 1: CHECK-IN ──────────────────────────────────── */}
       {activeTab === 'checkin' && (
         <div className="rounded-2xl border border-border p-6 max-w-xl mx-auto w-full"
-          style={{ background: 'oklch(0.155 0.018 255)' }}
+          style={{ background: 'var(--card)' }}
         >
           <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-            <QrCode className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} /> Competitor Check-In
+            <QrCode className="h-4 w-4" style={{ color: 'var(--primary)' }} /> Competitor Check-In
           </h2>
           <p className="text-xs text-muted-foreground mb-5">Enter or scan the competitor's QR token to mark as physically present.</p>
           <form onSubmit={handleCheckIn} className="space-y-3">
@@ -879,14 +879,14 @@ export default function LiveOperationsPage({
                 type="text" value={qrInput} onChange={(e) => setQrInput(e.target.value)}
                 placeholder="Scan or paste QR token..."
                 className="w-full rounded-xl border border-border pl-10 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
-                style={{ background: 'oklch(0.185 0.02 256)' }}
+                style={{ background: 'var(--muted)' }}
                 autoFocus
               />
             </div>
             <button
               type="submit" disabled={isCheckingIn || !qrInput.trim()}
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-primary-foreground transition disabled:opacity-50"
-              style={{ background: 'oklch(0.72 0.21 42)', boxShadow: '0 4px 16px oklch(0.72 0.21 42 / 0.25)' }}
+              style={{ background: 'var(--primary)', boxShadow: '0 4px 16px oklch(0.72 0.21 42 / 0.25)' }}
             >
               {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {isCheckingIn ? 'Processing...' : 'Confirm Check-In'}
@@ -912,10 +912,10 @@ export default function LiveOperationsPage({
       {activeTab === 'traditional' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-              <ClipboardEdit className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} /> Traditional Result Entry
+              <ClipboardEdit className="h-4 w-4" style={{ color: 'var(--primary)' }} /> Traditional Result Entry
             </h2>
             <p className="text-xs text-muted-foreground mb-5">Submit raw times for traditional solve events.</p>
 
@@ -928,7 +928,7 @@ export default function LiveOperationsPage({
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Event</label>
                     <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
                       className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     >
                       {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
                     </select>
@@ -937,7 +937,7 @@ export default function LiveOperationsPage({
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Round</label>
                     <input type="number" min="1" value={roundNumber} onChange={(e) => setRoundNumber(e.target.value)}
                       className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     />
                   </div>
                 </div>
@@ -950,7 +950,7 @@ export default function LiveOperationsPage({
                     ) : (
                       <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}
                         className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                        style={{ background: 'oklch(0.185 0.02 256)' }}
+                        style={{ background: 'var(--muted)' }}
                       >
                         <option value="">-- Choose Group --</option>
                         {liveState?.groups.map((g: any) => (
@@ -964,7 +964,7 @@ export default function LiveOperationsPage({
                     <select value={selectedGroupCompetitorId} onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
                       disabled={!selectedGroupId}
                       className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     >
                       <option value="">-- Choose Competitor --</option>
                       {filteredTradCompetitors.map((c: any) => (
@@ -976,14 +976,14 @@ export default function LiveOperationsPage({
 
                 {selectedGroupCompetitorId && (
                   <div className="rounded-xl border border-border p-4 space-y-4"
-                    style={{ background: 'oklch(0.17 0.018 255)' }}
+                    style={{ background: 'var(--accent)' }}
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Solve #</label>
                         <select value={attemptNumber} onChange={(e) => setAttemptNumber(e.target.value)}
                           className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          style={{ background: 'var(--muted)' }}
                         >
                           {[...Array(liveState?.solveCount || 5)].map((_, i) => (
                             <option key={i + 1} value={i + 1}>Solve {i + 1}</option>
@@ -997,7 +997,7 @@ export default function LiveOperationsPage({
                         <input type="number" step="0.01" value={rawTimeMs} onChange={(e) => setRawTimeMs(e.target.value)}
                           placeholder="e.g. 10.25"
                           className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-mono"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          style={{ background: 'var(--muted)' }}
                         />
                         {rawTimeMs && !isNaN(parseFloat(rawTimeMs)) && (
                           <p className="text-[10px] text-muted-foreground mt-1 font-mono">
@@ -1009,7 +1009,7 @@ export default function LiveOperationsPage({
                         <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Penalty</label>
                         <select value={selectedPenaltyId} onChange={(e) => setSelectedPenaltyId(e.target.value)}
                           className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          style={{ background: 'var(--muted)' }}
                         >
                           <option value="none">OK (clean)</option>
                           {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -1024,10 +1024,10 @@ export default function LiveOperationsPage({
                         <textarea
                           value={correctionReason}
                           onChange={(e) => setCorrectionReason(e.target.value)}
-                          placeholder="e.g. Trọng tài ghi nhầm giây trên scorecard giấy..."
+                          placeholder="e.g. Judge wrote wrong seconds on paper scorecard..."
                           rows={2}
                           className="w-full rounded-xl border border-border px-3.5 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          style={{ background: 'var(--muted)' }}
                         />
                       </div>
                     ) : (
@@ -1052,7 +1052,7 @@ export default function LiveOperationsPage({
                             onMouseDown={startTradDrawing} onMouseMove={drawTrad}
                             onMouseUp={() => setIsTradDrawing(false)} onMouseLeave={() => setIsTradDrawing(false)}
                             className="w-full rounded-xl border border-border cursor-crosshair block"
-                            style={{ background: 'oklch(0.13 0.02 255)', height: '80px' }}
+                            style={{ background: 'var(--sidebar)', height: '80px' }}
                           />
                         </div>
                       </>
@@ -1063,7 +1063,7 @@ export default function LiveOperationsPage({
                 {isCorrectingMode && !isHubConnected && (
                   <div className="mb-3 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-xs font-semibold text-red-400 animate-in fade-in duration-200">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>Yêu cầu kết nối Hub (Connected) hoạt động mới được phép sửa điểm.</span>
+                    <span>Active Hub connection required to edit scores.</span>
                   </div>
                 )}
 
@@ -1071,7 +1071,7 @@ export default function LiveOperationsPage({
                   disabled={isSubmittingTrad || !selectedGroupCompetitorId || (isCorrectingMode && !isHubConnected)}
                   className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
                   style={{ 
-                    background: isCorrectingMode ? 'oklch(0.65 0.20 40)' : 'oklch(0.72 0.21 42)',
+                    background: isCorrectingMode ? 'var(--destructive)' : 'var(--primary)',
                     boxShadow: isCorrectingMode ? '0 4px 16px oklch(0.65 0.20 40 / 0.2)' : '0 4px 16px oklch(0.72 0.21 42 / 0.2)'
                   }}
                 >
@@ -1099,11 +1099,11 @@ export default function LiveOperationsPage({
 
           {/* Results Monitor sidebar */}
           <div className="rounded-2xl border border-border p-5 h-fit"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h3 className="font-bold text-sm text-foreground mb-4 uppercase tracking-wider">Group Monitor</h3>
             {isLoadingLiveState ? (
-              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} /></div>
+              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'var(--primary)' }} /></div>
             ) : filteredTradCompetitors.length === 0 ? (
               <p className="text-xs text-muted-foreground">Select a group to view competitors.</p>
             ) : (
@@ -1164,10 +1164,10 @@ export default function LiveOperationsPage({
       {activeTab === 'medley' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-              <TimerIcon className="h-4 w-4" style={{ color: 'oklch(0.68 0.20 310)' }} /> Medley Relay Result Entry
+              <TimerIcon className="h-4 w-4" style={{ color: 'var(--chart-5)' }} /> Medley Relay Result Entry
             </h2>
             <p className="text-xs text-muted-foreground mb-5">Submit medley relay results with separate times per puzzle.</p>
 
@@ -1180,7 +1180,7 @@ export default function LiveOperationsPage({
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Medley Event</label>
                     <select value={medleyEventId} onChange={(e) => setMedleyEventId(e.target.value)}
                       className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     >
                       {medleyEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
                     </select>
@@ -1189,7 +1189,7 @@ export default function LiveOperationsPage({
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Round</label>
                     <input type="number" min="1" value={medleyRoundNumber} onChange={(e) => setMedleyRoundNumber(e.target.value)}
                       className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     />
                   </div>
                 </div>
@@ -1202,7 +1202,7 @@ export default function LiveOperationsPage({
                     ) : (
                       <select value={medleyGroupId} onChange={(e) => setMedleyGroupId(e.target.value)}
                         className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none"
-                        style={{ background: 'oklch(0.185 0.02 256)' }}
+                        style={{ background: 'var(--muted)' }}
                       >
                         <option value="">-- Choose Group --</option>
                         {medleyLiveState?.groups.map((g: any) => (
@@ -1216,7 +1216,7 @@ export default function LiveOperationsPage({
                     <select value={medleyCompetitorId} onChange={(e) => setMedleyCompetitorId(e.target.value)}
                       disabled={!medleyGroupId}
                       className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none disabled:opacity-50"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      style={{ background: 'var(--muted)' }}
                     >
                       <option value="">-- Choose Competitor --</option>
                       {filteredMedleyCompetitors.map((c: any) => (
@@ -1228,7 +1228,7 @@ export default function LiveOperationsPage({
 
                 {medleyCompetitorId && (
                   <div className="rounded-xl border border-border p-4 space-y-4"
-                    style={{ background: 'oklch(0.17 0.018 255)' }}
+                    style={{ background: 'var(--accent)' }}
                   >
                     <div className="space-y-3">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase border-b border-border pb-2">Puzzle Times</p>
@@ -1239,7 +1239,7 @@ export default function LiveOperationsPage({
                         );
                         return (
                           <div key={puzzle.id} className="rounded-xl border border-border/60 p-3 space-y-2"
-                            style={{ background: 'oklch(0.155 0.018 255)' }}
+                            style={{ background: 'var(--card)' }}
                           >
                             <div className="flex items-center justify-between">
                               <div>
@@ -1249,7 +1249,7 @@ export default function LiveOperationsPage({
                               <select value={medleyPenalties[puzzle.id] || 'none'}
                                 onChange={(e) => setMedleyPenalties((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
                                 className="rounded-lg border border-border px-2 py-1 text-[10px] text-foreground outline-none"
-                                style={{ background: 'oklch(0.185 0.02 256)' }}
+                                style={{ background: 'var(--muted)' }}
                               >
                                 <option value="none">OK</option>
                                 {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -1259,7 +1259,7 @@ export default function LiveOperationsPage({
                               onChange={(e) => setMedleyTimes((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
                               placeholder="Time in ms (e.g. 5240)"
                               className="w-full rounded-lg border border-border px-3 py-1.5 text-xs text-foreground outline-none font-mono"
-                              style={{ background: 'oklch(0.185 0.02 256)' }}
+                              style={{ background: 'var(--muted)' }}
                             />
                             {medleyTimes[puzzle.id] && (
                               <p className="text-[10px] text-muted-foreground font-mono">{formatMs(Number(medleyTimes[puzzle.id]))}s</p>
@@ -1281,7 +1281,7 @@ export default function LiveOperationsPage({
                         onMouseDown={startMedleyDrawing} onMouseMove={drawMedley}
                         onMouseUp={() => setIsMedleyDrawing(false)} onMouseLeave={() => setIsMedleyDrawing(false)}
                         className="w-full rounded-xl border border-border cursor-crosshair block"
-                        style={{ background: 'oklch(0.13 0.02 255)', height: '80px' }}
+                        style={{ background: 'var(--sidebar)', height: '80px' }}
                       />
                     </div>
                   </div>
@@ -1289,7 +1289,7 @@ export default function LiveOperationsPage({
 
                 <button type="submit" disabled={isSubmittingMedley || !medleyCompetitorId}
                   className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
-                  style={{ background: 'oklch(0.58 0.20 290)', boxShadow: '0 4px 16px oklch(0.58 0.20 290 / 0.2)' }}
+                  style={{ background: 'var(--chart-3)', boxShadow: '0 4px 16px oklch(0.58 0.20 290 / 0.2)' }}
                 >
                   {isSubmittingMedley ? <Loader2 className="h-4 w-4 animate-spin" /> : <TimerIcon className="h-4 w-4" />}
                   {isSubmittingMedley ? 'Submitting Medley...' : 'Submit Medley Result'}
@@ -1309,11 +1309,11 @@ export default function LiveOperationsPage({
 
           {/* Medley Monitor */}
           <div className="rounded-2xl border border-border p-5 h-fit"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h3 className="font-bold text-sm text-foreground mb-4 uppercase tracking-wider">Medley Monitor</h3>
             {isLoadingMedleyLive ? (
-              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'oklch(0.68 0.20 310)' }} /></div>
+              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'var(--chart-5)' }} /></div>
             ) : filteredMedleyCompetitors.length === 0 ? (
               <p className="text-xs text-muted-foreground">Select a medley group.</p>
             ) : (
@@ -1337,7 +1337,7 @@ export default function LiveOperationsPage({
       {/* ─── TAB 4: VERIFY QR ─────────────────────────────────── */}
       {activeTab === 'verify' && (
         <div className="rounded-2xl border border-border p-6 max-w-2xl mx-auto w-full"
-          style={{ background: 'oklch(0.155 0.018 255)' }}
+          style={{ background: 'var(--card)' }}
         >
           <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400" /> Verify Judge Station QR
@@ -1349,7 +1349,7 @@ export default function LiveOperationsPage({
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Event</label>
                 <select value={verifyForm.eventId} onChange={(e) => setVerifyForm((v) => ({ ...v, eventId: e.target.value }))}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 >
                   {tournament.events.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName} ({e.eventFormatCode})</option>)}
                 </select>
@@ -1359,7 +1359,7 @@ export default function LiveOperationsPage({
                 <input type="number" min="1" value={verifyForm.roundNumber}
                   onChange={(e) => setVerifyForm((v) => ({ ...v, roundNumber: e.target.value }))}
                   className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
             </div>
@@ -1368,7 +1368,7 @@ export default function LiveOperationsPage({
               <input type="number" min="1" value={verifyForm.stationNumber}
                 onChange={(e) => setVerifyForm((v) => ({ ...v, stationNumber: e.target.value }))}
                 className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none"
-                style={{ background: 'oklch(0.185 0.02 256)' }}
+                style={{ background: 'var(--muted)' }}
               />
             </div>
             <div>
@@ -1379,13 +1379,13 @@ export default function LiveOperationsPage({
                   onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
                   placeholder="Enter competitor's QR token..."
                   className="w-full rounded-xl border border-border pl-10 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
             </div>
             <button type="submit" disabled={isVerifying || !verifyForm.qrToken.trim()}
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
-              style={{ background: 'oklch(0.55 0.19 145)', boxShadow: '0 4px 16px oklch(0.55 0.19 145 / 0.2)' }}
+              style={{ background: 'var(--chart-4)', boxShadow: '0 4px 16px oklch(0.55 0.19 145 / 0.2)' }}
             >
               {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               {isVerifying ? 'Verifying...' : 'Verify Station Assignment'}
@@ -1410,7 +1410,7 @@ export default function LiveOperationsPage({
                     <p>Group Competitor ID: <strong className="text-foreground font-mono">{verifyResult.groupCompetitorId}</strong></p>
                     <p>Event: <strong className="text-foreground">{verifyResult.eventName}</strong></p>
                     <p>Group / Station: <strong className="text-foreground">{verifyResult.groupName} / Station {verifyResult.stationNumber}</strong></p>
-                    <p>Next Solve: <strong className="font-black" style={{ color: 'oklch(0.72 0.21 42)' }}>#{verifyResult.nextSolveNumber} of {verifyResult.solveCount}</strong></p>
+                    <p>Next Solve: <strong className="font-black" style={{ color: 'var(--primary)' }}>#{verifyResult.nextSolveNumber} of {verifyResult.solveCount}</strong></p>
                     {verifyResult.currentScramble && (
                       <ScrambleDisplay sequence={verifyResult.currentScramble.sequence} solveNumber={verifyResult.nextSolveNumber} className="mt-2" />
                     )}
@@ -1427,10 +1427,10 @@ export default function LiveOperationsPage({
         <div className="space-y-6 max-w-4xl mx-auto w-full">
           {/* Header & Selection */}
           <div className="rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <Play className="h-5 w-5" style={{ color: 'oklch(0.72 0.21 42)' }} />
+              <Play className="h-5 w-5" style={{ color: 'var(--primary)' }} />
               Round Lifecycle Control
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1438,7 +1438,7 @@ export default function LiveOperationsPage({
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Select Event</label>
                 <select value={roundMgmtEventId} onChange={(e) => setRoundMgmtEventId(e.target.value)}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 >
                   <option value="">Select Event</option>
                   {tournament.events.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName} ({e.eventFormatCode})</option>)}
@@ -1448,7 +1448,7 @@ export default function LiveOperationsPage({
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Round Number</label>
                 <input type="number" min="1" value={roundMgmtRound} onChange={(e) => setRoundMgmtRound(e.target.value)}
                   className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
             </div>
@@ -1458,24 +1458,24 @@ export default function LiveOperationsPage({
           {roundMgmtEventId && (
             isLoadingRoundState ? (
               <div className="rounded-2xl border border-border p-8 flex justify-center items-center"
-                style={{ background: 'oklch(0.155 0.018 255)' }}
+                style={{ background: 'var(--card)' }}
               >
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <span className="text-xs text-muted-foreground ml-2">Loading round metrics...</span>
               </div>
             ) : roundState ? (
               <div className="rounded-2xl border border-border overflow-hidden"
-                style={{ background: 'oklch(0.155 0.018 255)' }}
+                style={{ background: 'var(--card)' }}
               >
                 {/* Dashboard Banner */}
                 <div className="p-6 border-b border-border/85 bg-gradient-to-r from-primary/5 via-transparent to-transparent flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <span className="text-[10px] font-bold tracking-widest text-primary uppercase font-mono">ACTIVE DASHBOARD</span>
                     <h3 className="text-lg font-black text-foreground mt-0.5 leading-tight">
-                      {roundState.eventName} — Vòng {roundState.roundNumber}
+                      {roundState.eventName} — Round {roundState.roundNumber}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Tiến trình lượt giải của toàn bộ đấu thủ được cập nhật trực tiếp.
+                      Live progress of all competitors is updated in real-time.
                     </p>
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
@@ -1528,7 +1528,7 @@ export default function LiveOperationsPage({
                       {/* Progress Bar */}
                       <div className="px-6 py-4 bg-muted/10 border-b border-border/80">
                         <div className="flex justify-between items-center text-xs mb-1.5">
-                          <span className="font-semibold text-muted-foreground">Tổng số lượt giải đã thực hiện:</span>
+                          <span className="font-semibold text-muted-foreground">Total solves completed:</span>
                           <span className="font-mono font-bold text-foreground">{solvePercentage}%</span>
                         </div>
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -1548,9 +1548,9 @@ export default function LiveOperationsPage({
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-blue-400">STEP 1</span>
-                            <h5 className="font-bold text-sm text-foreground">Khai mạc vòng đấu (Start Round)</h5>
+                            <h5 className="font-bold text-sm text-foreground">Start Round</h5>
                             <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                              Mở trạm trọng tài để bắt đầu quét mã QR và submit điểm thi đấu trực tiếp.
+                              Open referee stations to start scanning QR codes and submitting scores.
                             </p>
                           </div>
                           <button
@@ -1570,14 +1570,14 @@ export default function LiveOperationsPage({
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-orange-400">STEP 2</span>
-                            <h5 className="font-bold text-sm text-foreground">Khóa bảng điểm (Lock Results)</h5>
+                            <h5 className="font-bold text-sm text-foreground">Lock Results</h5>
                             <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                              Khóa không cho các trạm gửi thêm điểm. Cho phép Manager chỉnh sửa lỗi nhập điểm của trọng tài trước khi chốt vòng.
+                              Prevent stations from submitting further scores. Allows Manager to edit score entry errors before closing the round.
                             </p>
                             {roundStatus === 'ONGOING' && completedCompetitors < totalCompetitors && (
                               <p className="text-[10px] text-orange-400 font-semibold mt-1.5 flex items-center gap-1">
                                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                                Lưu ý: Có {totalCompetitors - completedCompetitors} đấu thủ chưa hoàn thành lượt giải.
+                                Note: There are {totalCompetitors - completedCompetitors} competitors who have not finished their solves.
                               </p>
                             )}
                           </div>
@@ -1598,9 +1598,9 @@ export default function LiveOperationsPage({
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-purple-400">STEP 3</span>
-                            <h5 className="font-bold text-sm text-foreground">Hoàn tất vòng thi (Complete Round)</h5>
+                            <h5 className="font-bold text-sm text-foreground">Complete Round</h5>
                             <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                              Chốt thứ hạng chính thức của vòng đấu. Thăng hạng (Advance) cho các đấu thủ top đầu vào vòng tiếp theo.
+                              Finalize official round rankings. Advance top competitors to the next round.
                             </p>
                           </div>
                           <button
@@ -1620,9 +1620,9 @@ export default function LiveOperationsPage({
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-emerald-400">STEP 4</span>
-                            <h5 className="font-bold text-sm text-foreground">Hoàn tất hạng mục đấu (Complete Event)</h5>
+                            <h5 className="font-bold text-sm text-foreground">Complete Event</h5>
                             <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                              Chốt Podium trao giải và hoàn thành hạng mục thi đấu (3x3x3, 2x2x2, Medley...) của giải.
+                              Finalize Podium placements and complete the event category (3x3x3, 2x2x2, Medley, etc.) of the tournament.
                             </p>
                           </div>
                           <button
@@ -1641,8 +1641,8 @@ export default function LiveOperationsPage({
             ) : (
               <div className="rounded-2xl border border-dashed border-border py-16 text-center">
                 <AlertCircle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-muted-foreground">Không tìm thấy thông tin vòng đấu</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Vui lòng kiểm tra lại cấu hình sự kiện và số vòng thi.</p>
+                <p className="text-sm font-semibold text-muted-foreground">Round information not found</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Please verify event configuration and round count.</p>
               </div>
             )
           )}
@@ -1669,7 +1669,7 @@ export default function LiveOperationsPage({
       {editingResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl space-y-4"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
+            style={{ background: 'var(--card)' }}
           >
             <div>
               <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest font-mono">Result Correction Desk</span>
@@ -1677,7 +1677,7 @@ export default function LiveOperationsPage({
                 Correct {editingResult.competitorName} — Solve #{editingResult.solveNumber}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Sửa đổi điểm thi trực tiếp của đấu thủ. Thao tác này sẽ ghi nhận lại điểm số trên Live Leaderboard.
+                Directly modify competitor solve score. This action will update the Live Leaderboard.
               </p>
             </div>
 
@@ -1691,7 +1691,7 @@ export default function LiveOperationsPage({
                   onChange={(e) => setEditingResultTime(e.target.value)}
                   placeholder="e.g. 12.34"
                   className="w-full rounded-xl border border-border px-3.5 py-2.5 text-sm text-foreground font-semibold outline-none focus:border-primary font-mono"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
                 {editingResultTime && !isNaN(parseFloat(editingResultTime)) && (
                   <p className="text-[10px] text-muted-foreground mt-1 font-mono">
@@ -1706,7 +1706,7 @@ export default function LiveOperationsPage({
                   value={editingResultPenalty}
                   onChange={(e) => setEditingResultPenalty(e.target.value)}
                   className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 >
                   <option value="none">OK (clean)</option>
                   {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => (
@@ -1720,10 +1720,10 @@ export default function LiveOperationsPage({
                 <textarea
                   value={editingResultReason}
                   onChange={(e) => setEditingResultReason(e.target.value)}
-                  placeholder="e.g. Trọng tài nhập sai hàng chục, đối sánh với scorecard giấy..."
+                  placeholder="e.g. Judge typed wrong tens digit, matching paper scorecard..."
                   rows={2}
                   className="w-full rounded-xl border border-border px-3.5 py-2 text-xs text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  style={{ background: 'var(--muted)' }}
                 />
               </div>
             </div>

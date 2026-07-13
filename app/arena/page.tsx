@@ -1164,7 +1164,7 @@ export default function ArenaPage() {
           >
             <div className="space-y-1">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                BẠN (TIMER)
+                YOU (TIMER)
               </p>
               <h3 className="text-5xl md:text-6xl font-mono font-black text-foreground tracking-wide">
                 {formatTime(timerValue)}
@@ -1180,7 +1180,7 @@ export default function ArenaPage() {
                   CLICK TO STOP TIME
                 </Button>
                 <p className="text-[10px] text-muted-foreground font-medium">
-                  Tập trung giải! Click vào ô này hoặc bấm phím cách (Space) để dừng bộ bấm.
+                  Focus on solving! Click here or press the Spacebar to stop the timer.
                 </p>
               </div>
             ) : (
@@ -1206,7 +1206,7 @@ export default function ArenaPage() {
                 • Status: SOLVED
               </span>
               <p className="text-[10px] text-muted-foreground font-medium leading-relaxed max-w-xs mx-auto">
-                Camera đối thủ đang giám sát trực tiếp bằng WebRTC chống can thiệp dữ liệu.
+                Opponent's camera is active on WebRTC preventing data tampering.
               </p>
             </div>
           </Card>
@@ -1888,7 +1888,7 @@ export default function ArenaPage() {
             Ranking Arena
           </p>
           <h1 className="text-balance text-3xl font-black tracking-tight text-foreground sm:text-5xl uppercase">
-            ĐẤU HẠNG 1V1 CUBENEXUS
+            CUBENEXUS 1V1 RANKED ARENA
           </h1>
           <p className="max-w-2xl text-xs font-semibold text-muted-foreground">
             A premium cybernetic matchmaking client for competitive speedcubers. Solve, inspect, sync, win.

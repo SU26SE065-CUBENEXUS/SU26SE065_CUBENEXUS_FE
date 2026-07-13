@@ -57,32 +57,24 @@ function Sidebar({
 
   return (
     <aside
-      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 overflow-hidden ${
+      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 overflow-hidden bg-sidebar border-r border-sidebar-border ${
         collapsed ? 'w-[68px]' : 'w-60'
       }`}
-      style={{
-        background: 'var(--sidebar)',
-        borderRight: '1px solid oklch(0.22 0.02 256)',
-      }}
     >
       {/* Subtle gradient top */}
-      <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at top, oklch(0.72 0.21 42 / 0.06) 0%, transparent 70%)' }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none bg-gradient-to-b from-primary/5 to-transparent" />
 
       {/* Logo */}
       <div className="relative flex h-[60px] items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
         {!collapsed && (
           <Link href="/managertournaments" className="flex items-center gap-2.5 min-w-0">
-            <div className="relative h-8 w-8 overflow-hidden rounded-lg shrink-0"
-              style={{ border: '1px solid oklch(0.72 0.21 42 / 0.3)', boxShadow: '0 0 12px oklch(0.72 0.21 42 / 0.15)' }}
-            >
+            <div className="relative h-8 w-8 overflow-hidden rounded-lg shrink-0 border border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.15)] bg-white">
               <Image src="/logoCube.png" alt="CubeNexus" fill className="object-contain" priority />
             </div>
             <div className="leading-none min-w-0">
               <div className="flex items-baseline gap-0.5">
                 <span className="text-[13px] font-black tracking-tight text-foreground">CUBE</span>
-                <span className="text-[13px] font-black tracking-tight" style={{ color: 'oklch(0.72 0.21 42)' }}>NEXUS</span>
+                <span className="text-[13px] font-black tracking-tight text-primary">NEXUS</span>
               </div>
               <p className="text-[8px] font-bold uppercase tracking-[0.25em] text-muted-foreground mt-0.5 truncate">
                 Manager Portal
@@ -91,9 +83,7 @@ function Sidebar({
           </Link>
         )}
         {collapsed && (
-          <div className="mx-auto relative h-8 w-8 overflow-hidden rounded-lg flex-shrink-0"
-            style={{ border: '1px solid oklch(0.72 0.21 42 / 0.3)' }}
-          >
+          <div className="mx-auto relative h-8 w-8 overflow-hidden rounded-lg flex-shrink-0 border border-primary/30 bg-white">
             <Image src="/logoCube.png" alt="CubeNexus" fill className="object-contain" priority />
           </div>
         )}
@@ -102,12 +92,7 @@ function Sidebar({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute top-[18px] -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110"
-        style={{
-          background: 'var(--card)',
-          border: '1px solid oklch(0.28 0.02 256)',
-          color: 'var(--muted-foreground)',
-        }}
+        className="absolute top-[18px] -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full shadow-lg transition-all hover:scale-110 bg-card border border-border text-muted-foreground"
         aria-label="Toggle sidebar"
       >
         <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
@@ -130,14 +115,10 @@ function Sidebar({
                   router.push(`/managertournaments/${val}${subpage ? '/' + subpage : ''}`);
                 }
               }}
-              className="w-full pl-3 pr-7 py-2 text-xs font-semibold text-foreground outline-none appearance-none cursor-pointer transition rounded-lg"
-              style={{
-                background: 'oklch(0.185 0.02 256)',
-                border: '1px solid oklch(0.28 0.02 256)',
-              }}
+              className="w-full pl-3 pr-7 py-2 text-xs font-semibold text-foreground outline-none appearance-none cursor-pointer transition rounded-lg bg-muted border border-border hover:border-primary/50"
             >
               {tournaments.map((t) => (
-                <option key={t.id} value={t.id} style={{ background: 'oklch(0.155 0.018 255)', fontWeight: 600 }}>
+                <option key={t.id} value={t.id} className="bg-card font-semibold">
                   {t.name}
                 </option>
               ))}
@@ -200,9 +181,7 @@ function Sidebar({
                     <span className="flex-1">{item.label}</span>
                   )}
                   {!collapsed && isLive && selectedId && (
-                    <span className="live-dot w-1.5 h-1.5 rounded-full"
-                      style={{ background: 'oklch(0.70 0.19 145)', animation: 'livePulse 1.5s ease-in-out infinite' }}
-                    />
+                    <span className="live-dot w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   )}
                 </Link>
               </li>
@@ -245,14 +224,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
   const pageLabel = pageLabels[lastSegment] || (selectedTournamentName ? 'Overview' : 'Dashboard');
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between px-5 flex-shrink-0"
-      style={{
-        background: 'oklch(0.115 0.018 255 / 0.9)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid oklch(0.22 0.02 256)',
-      }}
-    >
+    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between px-5 flex-shrink-0 bg-background/90 backdrop-blur-md border-b border-border">
       {/* Left: Page Context */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em]">
@@ -275,18 +247,16 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
         onMouseLeave={() => setIsDropdownOpen(false)}
       >
         <button
-          className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all hover:bg-sidebar-accent/60"
-          style={{ border: '1px solid oklch(0.24 0.02 256)' }}
+          className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all hover:bg-muted border border-border bg-card"
         >
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-primary-foreground shadow-sm"
-            style={{ background: 'oklch(0.72 0.21 42)', boxShadow: '0 0 10px oklch(0.72 0.21 42 / 0.25)' }}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-primary-foreground shadow-sm bg-primary"
           >
             {user?.displayName?.charAt(0)?.toUpperCase() ?? 'M'}
           </div>
           <div className="hidden flex-col text-left sm:flex">
             <span className="text-xs font-bold text-foreground leading-tight">{user?.displayName}</span>
-            <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'oklch(0.72 0.21 42)' }}>
+            <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5 text-primary">
               {user?.role}
             </span>
           </div>
@@ -295,15 +265,11 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
 
         {isDropdownOpen && (
           <div className="absolute right-0 top-full pt-2 z-50">
-            <div className="w-52 rounded-2xl p-2 shadow-2xl animate-fade-in"
-              style={{ background: 'var(--card)', border: '1px solid oklch(0.24 0.02 256)' }}
-            >
+            <div className="w-52 rounded-2xl p-2 shadow-2xl animate-fade-in bg-card border border-border">
               <div className="px-3 py-2 border-b border-border/60">
                 <p className="text-xs font-extrabold text-foreground truncate">{user?.displayName}</p>
                 <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
-                <span className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-                  style={{ background: 'oklch(0.72 0.21 42 / 0.12)', border: '1px solid oklch(0.72 0.21 42 / 0.25)', color: 'oklch(0.72 0.21 42)' }}
-                >
+                <span className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-primary/10 border-primary/20 border text-primary">
                   {user?.role}
                 </span>
               </div>
@@ -401,7 +367,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   const selectedTournament = tournamentsList.find((t) => t.id === selectedId);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="manager-light flex min-h-screen bg-background text-foreground">
       <Sidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed((v) => !v)}

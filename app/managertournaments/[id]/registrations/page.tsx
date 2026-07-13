@@ -41,13 +41,26 @@ function msToDisplay(ms?: number | null): string {
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+}
+
+function formatDateOnly(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export default function RegistrationManagementPage({
@@ -276,14 +289,14 @@ export default function RegistrationManagementPage({
               </span>
               <span className="text-[10px] text-muted-foreground/60 font-semibold uppercase flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                {new Date(tournament.startDate).toLocaleDateString('vi-VN')} – {new Date(tournament.endDate).toLocaleDateString('vi-VN')}
+                {formatDateOnly(tournament.startDate)} – {formatDateOnly(tournament.endDate)}
               </span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground uppercase">
               {tournament.name}
             </h1>
             <div className="text-xs text-muted-foreground font-semibold flex flex-wrap gap-x-4 gap-y-1">
-              <p>Registration: <span className="font-mono text-primary">{formatDate(tournament.registrationOpenAt)}</span> to <span className="font-mono text-primary">{formatDate(tournament.registrationCloseAt)}</span></p>
+              <p>Registration: <span className="text-primary">{formatDate(tournament.registrationOpenAt)}</span> to <span className="text-primary">{formatDate(tournament.registrationCloseAt)}</span></p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -548,8 +561,8 @@ export default function RegistrationManagementPage({
                                 Checked In
                               </span>
                               {reg.checkedInAt && (
-                                <span className="text-[8px] text-muted-foreground/60 font-mono mt-0.5">
-                                  {new Date(reg.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                                <span className="text-[8px] text-muted-foreground/60 mt-0.5">
+                                  {new Date(reg.checkedInAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                                 </span>
                               )}
                             </div>
@@ -561,7 +574,7 @@ export default function RegistrationManagementPage({
                         </td>
 
                         {/* Registered At */}
-                        <td className="px-4 py-3.5 text-center text-xs text-muted-foreground font-mono">
+                        <td className="px-4 py-3.5 text-center text-xs text-muted-foreground">
                           {formatDate(reg.registeredAt)}
                         </td>
 

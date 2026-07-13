@@ -35,6 +35,7 @@ import {
   FileText,
   Check,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 function msToDisplay(ms?: number | null): string {
   if (!ms) return '—';
@@ -74,6 +75,8 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   // Fetch Live Board Status
   const fetchLiveBoard = async (roundNum: number) => {
@@ -702,16 +705,13 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
                   <div className="flex items-start gap-3">
                     <Flag className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-red-500">Hoàn tất hạng mục đấu (Complete Event)</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Xác nhận chốt kết quả và đóng hoàn toàn hạng mục thi đấu này. Hành động này không thể hoàn tác.</p>
+                      <p className="text-xs font-bold text-red-500">Complete Event</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Confirm and close this event category entirely. This action cannot be undone.</p>
                     </div>
                   </div>
                   <button
                     disabled={isLoading}
-                    onClick={() => {
-                      if (!confirm(`Mark all rounds of "${event.puzzleTypeName || event.puzzleTypeCode}" as completed? This cannot be undone.`)) return;
-                      doAction(() => completeEvent(event.id), 'Event completed!');
-                    }}
+                    onClick={() => setShowCompleteConfirm(true)}
                     className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-500 disabled:opacity-60 transition shadow-lg shadow-red-500/10"
                   >
                     <Flag className="h-3.5 w-3.5" />
@@ -719,6 +719,15 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
                   </button>
                 </div>
               </div>
+
+              <ConfirmDialog
+                isOpen={showCompleteConfirm}
+                onOpenChange={setShowCompleteConfirm}
+                title="Complete Event"
+                description={`Are you sure you want to mark all rounds of "${event.puzzleTypeName || event.puzzleTypeCode}" as completed? This action cannot be undone.`}
+                onConfirm={() => doAction(() => completeEvent(event.id), 'Event completed!')}
+                confirmText="Complete"
+              />
             </div>
           )}
         </div>

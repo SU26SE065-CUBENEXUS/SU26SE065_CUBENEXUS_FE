@@ -5,6 +5,29 @@
 import { apiFetch, API_BASE_URL, setTokens, clearTokens } from './config';
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ForgotPasswordRequest, ForgotPasswordResponse, VerifyOtpRequest, ResetPasswordRequest, MessageResponse } from './types';
 
+async function handleResponseError(res: Response, fallback: string): Promise<never> {
+  const errorBody = await res.json().catch(() => ({}));
+  let message = (errorBody as { message?: string }).message;
+  
+  if (!message && (errorBody as any).errors) {
+    const errs = (errorBody as any).errors;
+    if (Array.isArray(errs)) {
+      message = errs.map((e: any) => e.description || e.message || JSON.stringify(e)).join('; ');
+    } else if (typeof errs === 'object') {
+      const details = Object.entries(errs)
+        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? (msgs as string[]).join(', ') : msgs}`)
+        .join('; ');
+      message = `${(errorBody as any).title || 'Validation Error'} - ${details}`;
+    }
+  }
+  
+  if (!message) {
+    message = `HTTP ${res.status}: ${res.statusText}`;
+  }
+  
+  throw new Error(message || fallback);
+}
+
 export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
   // Auth endpoints do NOT need Bearer token — call raw fetch
   const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -14,8 +37,7 @@ export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Login failed');
+    await handleResponseError(res, 'Login failed');
   }
 
   const response: LoginResponse = await res.json();
@@ -31,8 +53,7 @@ export async function registerApi(data: RegisterRequest): Promise<RegisterRespon
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Registration failed');
+    await handleResponseError(res, 'Registration failed');
   }
 
   return res.json() as Promise<RegisterResponse>;
@@ -53,8 +74,7 @@ export async function forgotPasswordApi(data: ForgotPasswordRequest): Promise<Fo
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to request password reset');
+    await handleResponseError(res, 'Failed to request password reset');
   }
 
   return res.json() as Promise<ForgotPasswordResponse>;
@@ -68,8 +88,7 @@ export async function verifyOtpApi(data: VerifyOtpRequest): Promise<MessageRespo
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to verify OTP');
+    await handleResponseError(res, 'Failed to verify OTP');
   }
 
   return res.json() as Promise<MessageResponse>;
@@ -83,8 +102,7 @@ export async function resetPasswordApi(data: ResetPasswordRequest): Promise<Mess
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to reset password');
+    await handleResponseError(res, 'Failed to reset password');
   }
 
   return res.json() as Promise<MessageResponse>;

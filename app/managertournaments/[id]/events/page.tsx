@@ -20,6 +20,7 @@ import {
   Edit3,
   CheckCircle,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 function msToDisplay(ms?: number | null): string {
   if (!ms) return '—';
@@ -47,6 +48,7 @@ function EventCard({
   const [seedInput, setSeedInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const loadCompetitors = async () => {
     setLoadingComp(true);
@@ -68,7 +70,6 @@ function EventCard({
   };
 
   const handleCloseRegistration = async () => {
-    if (!confirm('Close registration for this event?')) return;
     setClosingReg(true);
     try {
       await closeEventRegistration(event.id);
@@ -158,7 +159,7 @@ function EventCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleCloseRegistration();
+              setShowCloseConfirm(true);
             }}
             disabled={closingReg}
             className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 disabled:opacity-50 transition"
@@ -286,6 +287,15 @@ function EventCard({
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showCloseConfirm}
+        onOpenChange={setShowCloseConfirm}
+        title="Close Registration"
+        description="Are you sure you want to close registration for this event? This action will prevent further registrations."
+        onConfirm={handleCloseRegistration}
+        confirmText="Close"
+      />
     </div>
   );
 }

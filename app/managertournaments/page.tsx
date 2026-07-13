@@ -74,8 +74,8 @@ export default function TournamentManagerOverviewPage() {
           updatedAt: '2026-04-15T12:00:00Z',
           statusCode: 'ongoing',
           events: [
-            { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-            { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
+            { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [], registrationStatusCode: 'open' },
+            { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [], registrationStatusCode: 'open' }
           ]
         },
         {
@@ -93,7 +93,7 @@ export default function TournamentManagerOverviewPage() {
           updatedAt: '2026-05-15T12:00:00Z',
           statusCode: 'registration_open',
           events: [
-            { id: 'E003', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
+            { id: 'E003', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [], registrationStatusCode: 'open' }
           ]
         },
         {
@@ -111,12 +111,12 @@ export default function TournamentManagerOverviewPage() {
           updatedAt: '2026-06-01T12:00:00Z',
           statusCode: 'published',
           events: [
-            { id: 'E004', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
+            { id: 'E004', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [], registrationStatusCode: 'open' }
           ]
         }
       ];
       setTournaments(mappedMocks);
-      setError('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
+      setError('Using mock data (Cannot connect to Backend)');
     } finally {
       setIsLoading(false);
     }
@@ -158,8 +158,8 @@ export default function TournamentManagerOverviewPage() {
 
   const statCards = [
     { label: 'Total Tournaments', value: stats.total, icon: Trophy, color: 'text-foreground', bg: 'bg-muted/50', border: 'border-border' },
-    { label: 'Ongoing', value: stats.ongoing, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
-    { label: 'Upcoming / Open', value: stats.upcoming, icon: Calendar, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/5', border: 'border-sky-500/20' },
+    { label: 'Ongoing', value: stats.ongoing, icon: Zap, color: 'text-emerald-600', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
+    { label: 'Upcoming / Open', value: stats.upcoming, icon: Calendar, color: 'text-sky-600', bg: 'bg-sky-500/5', border: 'border-sky-500/20' },
     { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
   ];
 

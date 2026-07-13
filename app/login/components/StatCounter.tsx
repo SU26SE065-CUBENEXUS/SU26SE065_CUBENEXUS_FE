@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 // Used on the visual panel to showcase platform stats.
 
 interface StatCounterProps {
-  icon: React.ComponentType<any>;
+  icon: any;
   value: string;
   label: string;
   delay: number;

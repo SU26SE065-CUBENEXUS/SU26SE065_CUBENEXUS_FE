@@ -26,6 +26,7 @@ import {
   RefreshCw,
   CheckCircle,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const QUICK_ACTIONS = [
   {
@@ -33,44 +34,60 @@ const QUICK_ACTIONS = [
     description: 'Set formats, rounds, and scoring rules',
     href: 'events',
     icon: Settings,
-    accent: 'bg-card border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/5',
+    accent: 'bg-card border-blue-500/20 text-blue-600 hover:bg-blue-500/5',
   },
   {
     title: 'Manage Registrations',
     description: 'View and override competitor seed times',
     href: 'registrations',
     icon: ClipboardList,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+    accent: 'bg-card border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5',
   },
   {
     title: 'Generate Groups & Scrambles',
     description: 'Create groups, assign stations and scrambles',
     href: 'groups',
     icon: Layers,
-    accent: 'bg-card border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/5',
+    accent: 'bg-card border-purple-500/20 text-purple-600 hover:bg-purple-500/5',
   },
   {
     title: 'Live Operations',
     description: 'Monitor stations, check-in, and active rounds',
     href: 'live',
     icon: Radio,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+    accent: 'bg-card border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5',
   },
   {
     title: 'Manage Disputes',
     description: 'Review and resolve result disputes',
     href: 'disputes',
     icon: Shield,
-    accent: 'bg-card border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/5',
+    accent: 'bg-card border-red-500/20 text-red-600 hover:bg-red-500/5',
   },
 ];
 
-function formatDateRange(start: string, end: string): string {
-  const s = new Date(start);
-  const e = new Date(end);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
-  return `${fmt(s)} – ${fmt(e)}`;
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+}
+
+function formatDateOnly(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export default function TournamentDetailDashboardPage({
@@ -117,7 +134,7 @@ export default function TournamentDetailDashboardPage({
         ]
       };
       setTournament(mockDetail);
-      setCompleteMsg('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
+      setCompleteMsg('Using mock data (Failed to connect to Backend)');
     } finally {
       setIsLoading(false);
     }
@@ -127,9 +144,10 @@ export default function TournamentDetailDashboardPage({
     fetchTournament();
   }, [id]);
 
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+
   const handleComplete = async () => {
     if (!tournament) return;
-    if (!confirm(`Mark "${tournament.name}" as Completed? This cannot be undone.`)) return;
     setIsCompleting(true);
     try {
       const res = await completeTournament(id);
@@ -194,8 +212,8 @@ export default function TournamentDetailDashboardPage({
       {completeMsg && (
         <div className={`mb-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
           completeMsg.startsWith('Error')
-            ? 'border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400'
-            : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+            ? 'border-red-500/20 bg-red-500/5 text-red-600'
+            : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600'
         }`}>
           <CheckCircle className="h-4 w-4 shrink-0" />
           {completeMsg}
@@ -222,7 +240,7 @@ export default function TournamentDetailDashboardPage({
             <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                {formatDateRange(tournament.startDate, tournament.endDate)}
+                {formatDateOnly(tournament.startDate)} – {formatDateOnly(tournament.endDate)}
               </span>
               {tournament.location && (
                 <span className="flex items-center gap-1.5">
@@ -237,7 +255,7 @@ export default function TournamentDetailDashboardPage({
             </div>
             {/* Events chips */}
             <div className="flex flex-col gap-1.5 mt-3">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Hạng mục thi đấu (Events)</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Event Categories (Events)</span>
               <div className="flex flex-wrap gap-1.5">
                 {tournament.events.map((e) => {
                   const isClosed = e.registrationStatusCode === 'CLOSED';
@@ -247,9 +265,9 @@ export default function TournamentDetailDashboardPage({
                       key={e.id}
                       className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all ${
                         isClosed
-                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
                           : isOpen
-                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-600'
                           : 'bg-muted border-border text-muted-foreground'
                       }`}
                     >
@@ -278,7 +296,7 @@ export default function TournamentDetailDashboardPage({
             {tournament.statusCode !== 'completed' && tournament.statusCode !== 'cancelled' && (
               <div className="flex flex-col items-end gap-1.5">
                 <button
-                  onClick={handleComplete}
+                  onClick={() => setShowCompleteConfirm(true)}
                   disabled={isCompleting}
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
                 >
@@ -292,7 +310,7 @@ export default function TournamentDetailDashboardPage({
                 {tournament.events.some(e => e.registrationStatusCode !== 'CLOSED') && (
                   <span className="text-[10px] font-semibold text-amber-500 flex items-center gap-1 mt-0.5">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    Cần hoàn tất tất cả hạng mục thi đấu
+                    All event categories must be completed
                   </span>
                 )}
               </div>
@@ -301,18 +319,11 @@ export default function TournamentDetailDashboardPage({
         </div>
 
         {/* Reg window */}
-        <div className="mt-5 border-t border-border pt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-          <span>
-            <span className="font-semibold text-foreground">Reg. Opens:</span>{' '}
-            {new Date(tournament.registrationOpenAt).toLocaleString('vi-VN')}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground">Reg. Closes:</span>{' '}
-            {new Date(tournament.registrationCloseAt).toLocaleString('vi-VN')}
-          </span>
-          <span>
+        <div className="mt-5 border-t border-border pt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground font-semibold">
+          <p>Registration: <span className="text-primary">{formatDate(tournament.registrationOpenAt)}</span> to <span className="text-primary">{formatDate(tournament.registrationCloseAt)}</span></p>
+          <span className="ml-0 sm:ml-4">
             <span className="font-semibold text-foreground">Created:</span>{' '}
-            {new Date(tournament.createdAt).toLocaleDateString('vi-VN')}
+            <span className="text-primary">{formatDateOnly(tournament.createdAt)}</span>
           </span>
         </div>
       </div>
@@ -350,6 +361,15 @@ export default function TournamentDetailDashboardPage({
           })}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showCompleteConfirm}
+        onOpenChange={setShowCompleteConfirm}
+        title="Complete Tournament"
+        description={`Are you sure you want to mark "${tournament.name}" as Completed? This action cannot be undone.`}
+        onConfirm={handleComplete}
+        confirmText="Complete"
+      />
     </div>
   );
 }

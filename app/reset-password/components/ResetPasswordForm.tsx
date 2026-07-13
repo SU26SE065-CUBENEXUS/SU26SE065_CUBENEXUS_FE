@@ -87,16 +87,16 @@ export default function ResetPasswordForm() {
         newPassword,
         confirmNewPassword,
       });
-      const successMsg = response.message || 'Đặt lại mật khẩu thành công.';
+      const successMsg = response.message || 'Password reset successful.';
       setSuccessMessage(successMsg);
-      toast.success(successMsg, 'Bạn đã có thể đăng nhập bằng mật khẩu mới.');
+      toast.success(successMsg, 'You can now log in with your new password.');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
       const userFriendlyMsg = message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('fetch')
         ? 'Unable to connect to server. Please check your connection.'
         : message;
       setError(userFriendlyMsg);
-      toast.error('Đặt lại mật khẩu thất bại', userFriendlyMsg);
+      toast.error('Password reset failed', userFriendlyMsg);
     } finally {
       setIsLoading(false);
     }
