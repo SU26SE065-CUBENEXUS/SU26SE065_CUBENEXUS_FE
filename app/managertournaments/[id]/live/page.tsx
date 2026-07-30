@@ -18,6 +18,7 @@ import {
   advanceRound,
   completeEvent,
   correctResult,
+  formatEvidencePhotoUrl,
 } from '@/lib/api/operations';
 import type { TournamentDetailDto, EventDetailDto } from '@/lib/api/types';
 import { StationStatusBadge, type StationState } from '@/components/tournament-manager/StationStatusBadge';
@@ -73,7 +74,7 @@ export default function LiveOperationsPage({
   const [penaltyTypes, setPenaltyTypes] = useState<
     Array<{ id: string; code: string; label: string; timeAdditionMs: number }>
   >([]);
-  const [activeTab, setActiveTab] = useState<'stations' | 'checkin' | 'traditional' | 'medley' | 'verify' | 'round'>('stations');
+  const [activeTab, setActiveTab] = useState<'stations' | 'checkin' | 'traditional' | 'medley' | 'verify' | 'round'>('traditional');
   const [isLoadingMain, setIsLoadingMain] = useState(true);
   const [errorMain, setErrorMain] = useState<string | null>(null);
 
@@ -685,9 +686,9 @@ export default function LiveOperationsPage({
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
 
   const TABS = [
+    { id: 'traditional', label: 'Live Leaderboard & Scoring', icon: ClipboardEdit },
     { id: 'stations', label: 'Station Grid', icon: Monitor },
     { id: 'checkin', label: 'Check-In', icon: QrCode },
-    { id: 'traditional', label: 'Traditional', icon: ClipboardEdit },
     { id: 'medley', label: 'Medley', icon: TimerIcon },
     { id: 'verify', label: 'Verify QR', icon: ShieldCheck },
     { id: 'round', label: 'Round Control', icon: Play },
@@ -908,9 +909,170 @@ export default function LiveOperationsPage({
         </div>
       )}
 
-      {/* ─── TAB 2: TRADITIONAL SCORE ────────────────────────── */}
+      {/* ─── TAB 1: TRADITIONAL LEADERBOARD & SCORE ────────────────────────── */}
       {activeTab === 'traditional' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* Full-width Live Leaderboard & Evidence Inspection Table */}
+          <div className="rounded-2xl border border-border p-6 space-y-4 shadow-xl" style={{ background: 'oklch(0.155 0.018 255)' }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <Trophy className="h-5 w-5" />
+                </span>
+                <div>
+                  <h2 className="text-base font-extrabold text-foreground uppercase tracking-tight">
+                    Bảng Xếp Hạng Trực Tiếp & Đối Soát Tờ Ghi Điểm Minh Chứng
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Bấm vào kết quả bất kỳ (Lượt 1…5) hoặc biểu tượng 📸 Ảnh Minh Chứng để mở tờ ghi điểm và điều chỉnh điểm.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedEventId}
+                  onChange={(e) => setSelectedEventId(e.target.value)}
+                  className="rounded-xl border border-border px-3 py-2 text-xs font-bold text-foreground outline-none"
+                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                >
+                  {traditionalEvents.map((e) => (
+                    <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">Round</span>
+                  <input
+                    type="number" min="1" value={roundNumber}
+                    onChange={(e) => setRoundNumber(e.target.value)}
+                    className="w-14 rounded-xl border border-border px-2 py-2 text-xs font-bold text-foreground text-center outline-none"
+                    style={{ background: 'oklch(0.185 0.02 256)' }}
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    if (selectedEventId) {
+                      getLiveBoardState(selectedEventId, Number(roundNumber)).then(setLiveState);
+                    }
+                  }}
+                  className="p-2 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition"
+                  title="Làm mới bảng điểm"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            {isLoadingLiveState ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : !liveState || !liveState.competitors || liveState.competitors.length === 0 ? (
+              <div className="text-center py-12 text-xs text-muted-foreground">
+                Chưa có dữ liệu bảng điểm trực tiếp cho hạng mục và round này.
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="bg-muted/40 border-b border-border">
+                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center w-10">Hạng</th>
+                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground">Thí Sinh</th>
+                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Nhóm</th>
+                      {Array.from({ length: liveState.solveCount || 5 }, (_, i) => (
+                        <th key={i} className="px-2 py-2.5 font-bold uppercase text-muted-foreground text-center">
+                          Solve #{i + 1}
+                        </th>
+                      ))}
+                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Best</th>
+                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Average</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border font-mono">
+                    {liveState.competitors.map((c: any) => {
+                      const compGroup = liveState.groups?.find((g: any) => g.groupId === c.groupId);
+                      return (
+                        <tr key={c.groupCompetitorId} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-3 py-2.5 text-center font-bold">
+                            <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${
+                              c.rank === 1 ? 'bg-yellow-500 text-yellow-950 font-black' :
+                              c.rank === 2 ? 'bg-slate-300 text-slate-900 font-black' :
+                              c.rank === 3 ? 'bg-amber-700 text-white font-black' : 'text-muted-foreground'
+                            }`}>
+                              {c.rank || '—'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 font-sans font-extrabold text-foreground">
+                            <div>
+                              <span>{c.competitorName}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono block font-normal">{c.competitorUserCode}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-sans">
+                            <span className="px-2 py-0.5 rounded bg-muted/60 text-[9px] font-bold text-muted-foreground uppercase">
+                              {compGroup?.groupName || 'Group'}
+                            </span>
+                          </td>
+                          {Array.from({ length: liveState.solveCount || 5 }, (_, i) => {
+                            const attempt = c.results?.find((r: any) => r.solveNumber === i + 1);
+                            const isDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
+                            const val = attempt ? (isDnf ? 'DNF' : formatMs(attempt.finalTimeMs)) : '—';
+                            const hasPhoto = Boolean(attempt?.evidencePhotoUrl);
+
+                            return (
+                              <td key={i} className="px-2 py-2.5 text-center">
+                                <button
+                                  type="button"
+                                  disabled={!attempt}
+                                  onClick={() => {
+                                    if (attempt) {
+                                      setEditingResult({
+                                        resultId: attempt.resultId,
+                                        competitorName: c.competitorName,
+                                        solveNumber: i + 1,
+                                        rawTimeMs: attempt.rawTimeMs || attempt.finalTimeMs,
+                                        penaltyTypeId: attempt.penaltyTypeId || 'none',
+                                        isDnf: attempt.isDnf,
+                                        penaltyCode: attempt.penaltyCode || 'OK',
+                                        evidencePhotoUrl: attempt.evidencePhotoUrl,
+                                        esignatureData: attempt.esignatureData,
+                                      });
+                                    }
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg transition-all hover:scale-105 font-bold ${
+                                    attempt
+                                      ? (isDnf ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30')
+                                      : 'text-muted-foreground/40 cursor-default'
+                                  }`}
+                                  title={
+                                    attempt
+                                      ? `Solve #${i + 1}: ${val} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
+                                      : 'Chưa thi đấu'
+                                  }
+                                >
+                                  <span>{val}</span>
+                                  {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-orange-400 ml-0.5">+2</span>}
+                                  {hasPhoto && <span className="text-[10px] ml-1" title="Có ảnh R2">📸</span>}
+                                </button>
+                              </td>
+                            );
+                          })}
+                          <td className="px-3 py-2.5 text-center font-bold text-foreground">
+                            {c.bestTimeMs ? formatMs(c.bestTimeMs) : '—'}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-bold text-primary">
+                            {c.averageTimeMs ? formatMs(c.averageTimeMs) : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-2xl border border-border p-6"
             style={{ background: 'oklch(0.155 0.018 255)' }}
           >
@@ -1122,7 +1284,7 @@ export default function LiveOperationsPage({
                         return (
                           <button key={i}
                             type="button"
-                            disabled={!result || result.isLocked}
+                            disabled={!result}
                             onClick={() => {
                               if (result) {
                                 setEditingResult({
@@ -1133,19 +1295,25 @@ export default function LiveOperationsPage({
                                   penaltyTypeId: result.penaltyTypeId || 'none',
                                   isDnf: result.isDnf,
                                   penaltyCode: result.penaltyCode || 'OK',
+                                  evidencePhotoUrl: result.evidencePhotoUrl,
+                                  esignatureData: result.esignatureData,
                                 });
+                                setEditingResultTime(result.rawTimeMs ? (result.rawTimeMs / 1000).toString() : (result.finalTimeMs / 1000).toString());
+                                setEditingResultPenalty(result.penaltyTypeId || 'none');
+                                setEditingResultReason('');
+                                setCorrectionError(null);
                               }
                             }}
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all hover:scale-105 ${
                               result ? (
                                 result.isLocked 
-                                  ? 'bg-muted/50 text-muted-foreground/60 cursor-not-allowed'
+                                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                                   : result.isDnf 
                                     ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
                                     : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                               ) : 'bg-muted/30 text-muted-foreground/40 cursor-default'
                             }`}
-                            title={result ? (result.isLocked ? "Locked (Cannot Edit)" : "Click to edit result") : "Pending attempt"}
+                            title={result ? "Bấm để xem ảnh minh chứng Cloudflare R2 / Chỉnh sửa điểm" : "Lượt thi chưa hoàn thành"}
                           >
                             {result ? (result.isDnf ? 'DNF' : `${(result.finalTimeMs / 1000).toFixed(2)}`) : `S${i + 1}`}
                           </button>
@@ -1157,6 +1325,7 @@ export default function LiveOperationsPage({
               </div>
             )}
           </div>
+        </div>
         </div>
       )}
 
@@ -1680,6 +1849,55 @@ export default function LiveOperationsPage({
                 Sửa đổi điểm thi trực tiếp của đấu thủ. Thao tác này sẽ ghi nhận lại điểm số trên Live Leaderboard.
               </p>
             </div>
+
+            {/* Evidence Photo / Scorecard Attachment */}
+            {(() => {
+              const formattedUrl = formatEvidencePhotoUrl(editingResult.evidencePhotoUrl);
+              return formattedUrl ? (
+                <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider font-mono block">📸 Ảnh Minh Chứng / Tờ Ghi Điểm Trọng Tài</span>
+                    <button
+                      type="button"
+                      onClick={() => window.open(formattedUrl, '_blank')}
+                      className="text-[10px] font-extrabold text-sky-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      Mở Ảnh Gốc Tab Mới ↗
+                    </button>
+                  </div>
+                  <div 
+                    onClick={() => window.open(formattedUrl, '_blank')}
+                    className="block group relative overflow-hidden rounded-lg border border-border cursor-pointer min-h-[120px] bg-black/40 flex items-center justify-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={formattedUrl} 
+                      alt="Evidence photo" 
+                      className="max-h-48 w-full object-contain transition group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector('.img-error-fallback')) {
+                          const fallbackDiv = document.createElement('div');
+                          fallbackDiv.className = 'img-error-fallback p-4 text-center text-xs text-amber-400 font-semibold space-y-1';
+                          fallbackDiv.innerHTML = '⚠️ Ảnh đang lưu định dạng thiết bị di động (file://).<br/><span class="text-[10px] text-muted-foreground font-normal">Trọng tài vui lòng cập nhật phiên bản app mới nhất để tải ảnh trực tiếp.</span>';
+                          parent.appendChild(fallbackDiv);
+                        }
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white">
+                      Click để mở ảnh gốc tab mới ↗
+                    </div>
+                  </div>
+                </div>
+              ) : editingResult.evidencePhotoUrl ? (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-400 font-semibold space-y-1">
+                  <p className="flex items-center gap-1.5 font-bold">⚠️ Ảnh chưa được đồng bộ</p>
+                  <p className="text-[10px] text-muted-foreground">Ảnh đang lưu trên thiết bị di động. Vui lòng nhắc trọng tài dùng ứng dụng mới nhất để tự động đồng bộ ảnh minh chứng.</p>
+                </div>
+              ) : null;
+            })()}
 
             <div className="space-y-3">
               <div>

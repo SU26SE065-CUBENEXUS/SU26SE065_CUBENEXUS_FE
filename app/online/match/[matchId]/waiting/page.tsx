@@ -29,10 +29,31 @@ export default function WaitingOpponentPage() {
 
   // Determine what opponent is doing
   let oppStatusDesc = 'Preparing battle station...';
+  let oppPillText = 'PENDING';
+  let oppPillColor = 'text-zinc-500 bg-zinc-900 border-zinc-800';
+
   if (opponentState.resultStatus === 'PENDING') {
-    oppStatusDesc = 'Currently solving Rubik\'s cube...';
-  } else if (opponentState.resultStatus === 'VALID' && opponentState.finishCheckStatus !== 'PASSED') {
-    oppStatusDesc = 'Scanning solved Rubik\'s cube faces...';
+    oppStatusDesc = "Currently solving Rubik's cube...";
+    oppPillText = 'SOLVING';
+    oppPillColor = 'text-orange-500 bg-orange-500/10 border-orange-500/20 animate-pulse';
+  } else if (opponentState.resultStatus === 'DNF') {
+    oppStatusDesc = 'Opponent submitted DNF';
+    oppPillText = 'DNF';
+    oppPillColor = 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+  } else if (opponentState.resultStatus === 'VALID') {
+    if (opponentState.finishCheckStatus === 'PASSED') {
+      oppStatusDesc = 'Opponent completed validation';
+      oppPillText = 'VERIFIED';
+      oppPillColor = 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+    } else if (opponentState.finishCheckStatus === 'FAILED') {
+      oppStatusDesc = 'Opponent validation failed';
+      oppPillText = 'FAILED';
+      oppPillColor = 'text-red-500 bg-red-500/10 border-red-500/20';
+    } else {
+      oppStatusDesc = "Scanning solved Rubik's cube faces...";
+      oppPillText = 'SCANNING';
+      oppPillColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20 animate-pulse';
+    }
   }
 
   return (
@@ -60,7 +81,14 @@ export default function WaitingOpponentPage() {
             </div>
           </div>
           <span className="text-sm font-black font-mono text-white">
-            {myState.resultStatus === 'DNF' ? 'DNF' : `${((myState.timeMs || 0) / 1000).toFixed(2)}s`}
+            {myState.resultStatus === 'DNF'
+              ? 'DNF'
+              : (() => {
+                  const ms = myState.timeMs || 0;
+                  const seconds = Math.floor(ms / 1000);
+                  const centiseconds = Math.floor((ms % 1000) / 10);
+                  return `${seconds}.${centiseconds.toString().padStart(2, '0')}s`;
+                })()}
           </span>
         </div>
 
@@ -74,8 +102,8 @@ export default function WaitingOpponentPage() {
               <span className="text-[10px] text-zinc-400">{oppStatusDesc}</span>
             </div>
           </div>
-          <span className="text-[10px] text-zinc-500 font-extrabold uppercase bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full relative z-10 animate-pulse">
-            PENDING
+          <span className={`text-[10px] font-extrabold uppercase border px-3 py-1 rounded-full relative z-10 ${oppPillColor}`}>
+            {oppPillText}
           </span>
         </div>
       </div>

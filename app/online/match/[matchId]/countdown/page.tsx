@@ -1,24 +1,16 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
-import { useCameraStream } from '@/features/online-arena/contexts/CameraStreamContext';
-import { markVideoRecordingStarted } from '@/features/online-arena/api/onlineArenaApi';
+import { useMatchLocalRecorder } from '@/features/online-arena/hooks/useMatchLocalRecorder';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
-import { Sparkles, Timer, Circle, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-
-type RecordingStatus = 'idle' | 'starting' | 'recording' | 'notified' | 'error';
+import { Sparkles, Timer, Circle, AlertCircle, CheckCircle2, Loader2, UploadCloud } from 'lucide-react';
 
 export default function CountdownPage() {
-  const { matchId, state, refetch } = useMatchContext();
-  const { stream, acquireStream } = useCameraStream();
+  const { matchId, state } = useMatchContext();
+  const { status: recordingStatus, error: recordingError, uploadTask, startRecording } = useMatchLocalRecorder();
 
   const [secondsLeft, setSecondsLeft] = useState<number>(5);
-  const [recordingStatus, setRecordingStatus] = useState<RecordingStatus>('idle');
-  const [recordingError, setRecordingError] = useState<string | null>(null);
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordingStartedRef = useRef(false);
 
   const userId = useMemo(() => {
     const token = getAccessToken();
@@ -34,17 +26,27 @@ export default function CountdownPage() {
   // ----------------------------------------------------------------
   // Server-corrected countdown timer
   // ----------------------------------------------------------------
+  const skewRef = useRef<number | null>(null);
+
+  const parseUtc = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
+    return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
+  };
+
   useEffect(() => {
-    if (!state?.countdownEndsAt) {
-      setSecondsLeft(5);
+    if (!state?.countdownEndsAt || !state?.serverNow) {
       return;
     }
 
-    const serverSkew = Date.now() - new Date(state.serverNow).getTime();
-    const targetTime = new Date(state.countdownEndsAt).getTime();
+    if (skewRef.current === null) {
+      skewRef.current = Date.now() - parseUtc(state.serverNow);
+    }
+
+    const targetTime = parseUtc(state.countdownEndsAt);
 
     const updateTimer = () => {
-      const correctedNow = Date.now() - serverSkew;
+      const correctedNow = Date.now() - (skewRef.current ?? 0);
       const diff = Math.max(0, Math.ceil((targetTime - correctedNow) / 1000));
       setSecondsLeft(diff);
     };
@@ -52,100 +54,26 @@ export default function CountdownPage() {
     updateTimer();
     const interval = setInterval(updateTimer, 200);
     return () => clearInterval(interval);
-  }, [state?.countdownEndsAt, state?.serverNow]);
+  }, [state?.countdownEndsAt]);
 
   // ----------------------------------------------------------------
-  // Start MediaRecorder and notify backend
-  // ----------------------------------------------------------------
-  const startRecording = useCallback(async (mediaStream: MediaStream) => {
-    if (recordingStartedRef.current) return;
-    recordingStartedRef.current = true;
-    setRecordingStatus('starting');
-
-    try {
-      // Choose best supported mimeType
-      const mimeType = [
-        'video/webm;codecs=vp9,opus',
-        'video/webm;codecs=vp8,opus',
-        'video/webm',
-        'video/mp4',
-      ].find((m) => MediaRecorder.isTypeSupported(m)) ?? '';
-
-      const recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : {});
-      mediaRecorderRef.current = recorder;
-
-      recorder.onerror = (e: any) => {
-        console.error('[MediaRecorder] error', e);
-        setRecordingStatus('error');
-        setRecordingError('Recording device error: ' + (e?.error?.message ?? 'unknown'));
-      };
-
-      recorder.onstart = async () => {
-        setRecordingStatus('recording');
-        console.log('[MediaRecorder] recording started, mime:', recorder.mimeType);
-
-        // Notify backend — this may trigger INSPECTION transition if opponent also recording
-        try {
-          await markVideoRecordingStarted(matchId, recorder.mimeType || mimeType);
-          setRecordingStatus('notified');
-          await refetch();
-        } catch (err: any) {
-          console.error('[MediaRecorder] markVideoRecordingStarted failed', err);
-          setRecordingStatus('error');
-          setRecordingError(err?.message ?? 'Failed to notify server of recording start.');
-        }
-      };
-
-      recorder.start(1000); // collect chunks every 1s
-    } catch (err: any) {
-      console.error('[MediaRecorder] start failed', err);
-      setRecordingStatus('error');
-      setRecordingError(err?.message ?? 'Failed to start MediaRecorder.');
-      recordingStartedRef.current = false;
-    }
-  }, [matchId, refetch]);
-
-  // ----------------------------------------------------------------
-  // On mount: ensure camera stream available, then start recording
+  // Trigger match-level recording start on mount
   // ----------------------------------------------------------------
   useEffect(() => {
-    if (myState?.recordingStarted) {
-      setRecordingStatus('notified');
-      return; // already done
+    if (matchId && recordingStatus === 'idle') {
+      void startRecording(matchId);
     }
-
-    const tryRecord = async () => {
-      let mediaStream = stream;
-      if (!mediaStream || !mediaStream.active) {
-        mediaStream = await acquireStream();
-      }
-      if (mediaStream) {
-        await startRecording(mediaStream);
-      } else {
-        setRecordingStatus('error');
-        setRecordingError('Camera unavailable. Cannot start recording.');
-      }
-    };
-
-    tryRecord();
-  }, [myState?.recordingStarted, stream, acquireStream, startRecording]);
-
-  // Stop recorder when unmounted
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    };
-  }, []);
+  }, [matchId, recordingStatus, startRecording]);
 
   const displayVal = secondsLeft === 0 ? 'GO!' : secondsLeft.toString();
 
   const recLabel =
-    recordingStatus === 'notified' || recordingStatus === 'recording'
+    recordingStatus === 'recording' || recordingStatus === 'buffering'
       ? 'Recording Active'
       : recordingStatus === 'starting'
       ? 'Starting recorder...'
+      : recordingStatus === 'finished'
+      ? 'Local recording saved'
       : recordingStatus === 'error'
       ? 'Recording Error'
       : 'Awaiting stream';
@@ -190,10 +118,10 @@ export default function CountdownPage() {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {recordingStatus === 'notified' ? (
+            {recordingStatus === 'recording' || recordingStatus === 'buffering' ? (
               <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-            ) : recordingStatus === 'recording' ? (
-              <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+            ) : recordingStatus === 'finished' ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             ) : recordingStatus === 'error' ? (
               <AlertCircle className="h-4 w-4 text-rose-400" />
             ) : (
@@ -201,14 +129,16 @@ export default function CountdownPage() {
             )}
             <span
               className={`text-xs font-bold uppercase ${
-                recordingStatus === 'notified' || recordingStatus === 'recording'
+                recordingStatus === 'recording' || recordingStatus === 'buffering'
                   ? 'text-rose-400'
+                  : recordingStatus === 'finished'
+                  ? 'text-emerald-400'
                   : recordingStatus === 'error'
                   ? 'text-rose-400'
                   : 'text-zinc-400'
               }`}
             >
-              {recordingStatus === 'notified' || recordingStatus === 'recording' ? '● ' : ''}
+              {recordingStatus === 'recording' || recordingStatus === 'buffering' ? '● ' : ''}
               {recLabel}
             </span>
           </div>
@@ -217,14 +147,7 @@ export default function CountdownPage() {
           {recordingStatus === 'error' && (
             <button
               onClick={() => {
-                recordingStartedRef.current = false;
-                setRecordingStatus('idle');
-                setRecordingError(null);
-                const tryRetry = async () => {
-                  const mediaStream = stream ?? (await acquireStream());
-                  if (mediaStream) await startRecording(mediaStream);
-                };
-                tryRetry();
+                if (matchId) void startRecording(matchId);
               }}
               className="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xl uppercase"
             >

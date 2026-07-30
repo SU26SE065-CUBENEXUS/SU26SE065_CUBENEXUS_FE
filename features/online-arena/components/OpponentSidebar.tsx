@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Shield, User, Video, VideoOff, Wifi, Award, Activity } from 'lucide-react';
 import type { OnlineMatchRecoveryStateDto } from '../types';
+import { useWebRtcContext } from '../contexts/WebRtcContext';
 
 interface OpponentSidebarProps {
   state: OnlineMatchRecoveryStateDto | null;
@@ -10,6 +11,19 @@ interface OpponentSidebarProps {
 }
 
 export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
+  const { remoteStream, status } = useWebRtcContext();
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Attach remote stream to video element whenever it changes
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch((err) => {
+        console.warn('[WebRTC] Opponent video play error:', err);
+      });
+    }
+  }, [remoteStream]);
+
   if (!state) {
     return (
       <div className="w-80 bg-zinc-950/80 border-l border-zinc-800 p-6 flex flex-col justify-center items-center text-zinc-500 animate-pulse">
@@ -62,7 +76,12 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
     oppState.resultStatus === 'DNF'
       ? 'DNF'
       : oppState.timeMs !== null
-      ? `${(oppState.timeMs / 1000).toFixed(2)}s`
+      ? (() => {
+          const ms = oppState.timeMs;
+          const seconds = Math.floor(ms / 1000);
+          const centiseconds = Math.floor((ms % 1000) / 10);
+          return `${seconds}.${centiseconds.toString().padStart(2, '0')}s`;
+        })()
       : null;
 
   return (
@@ -96,22 +115,48 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
         {/* Live Camera Feed */}
         <div className="aspect-video w-full rounded-2xl bg-zinc-900 border border-zinc-800/60 overflow-hidden relative group">
-          {/* Status Overlay */}
-          <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-3.5 z-10">
-            <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full w-fit">
-              <Wifi className="h-3.5 w-3.5 animate-pulse" /> LIVE FEED
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-              <span className="text-[10px] text-zinc-300 font-bold">WebRTC Connected</span>
+          {/* Actual remote video stream */}
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className={`absolute inset-0 w-full h-full object-cover ${remoteStream ? 'block' : 'hidden'}`}
+          />
+
+          {/* Placeholder when stream not yet received */}
+          {!remoteStream && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80">
+              {status === 'connected' ? (
+                // Connected but track hasn't arrived yet — very brief
+                <Video className="h-8 w-8 text-emerald-600 animate-pulse" />
+              ) : (
+                <Video className="h-8 w-8 text-zinc-700 animate-pulse" />
+              )}
             </div>
+          )}
+
+          {/* Overlay: LIVE FEED badge + connection status */}
+          <div className="absolute inset-0 bg-black/20 flex flex-col justify-between p-3.5 z-10 pointer-events-none">
+            <span className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-0.5 rounded-full w-fit border ${
+              remoteStream
+                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                : status === 'connected'
+                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 animate-pulse'
+                : 'text-zinc-500 bg-zinc-800/50 border-zinc-700/50'
+            }`}>
+              <Wifi className="h-3.5 w-3.5" />
+              {remoteStream ? 'LIVE FEED' : status === 'connected' ? 'BUFFERING...' : 'WAITING...'}
+            </span>
+            {(remoteStream || status === 'connected') && (
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="text-[10px] text-zinc-300 font-bold">WebRTC Connected</span>
+              </div>
+            )}
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/60 text-zinc-600">
-            <Video className="h-8 w-8 text-zinc-700 animate-pulse" />
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Live Status Indicators */}

@@ -14,6 +14,12 @@ import type {
   PuzzleTypeResponseDto,
   TournamentRegistrationDetailDto,
   RegistrationResultDto,
+  TournamentJudgeDto,
+  CreateTournamentJudgeDto,
+  BatchCreateTournamentJudgeDto,
+  UpdateTournamentJudgeDto,
+  ResetJudgePasswordDto,
+  ShuffleTournamentJudgesDto,
 } from './types';
 
 // ---------- Public ----------
@@ -41,6 +47,14 @@ export async function createTournament(dto: CreateTournamentDto): Promise<Tourna
     method: 'POST',
     body: JSON.stringify(dto),
   });
+}
+
+/** POST /api/tournament-management/tournaments/{id}/close-registration — Đóng cổng đăng ký giải đấu */
+export async function closeRegistration(tournamentId: string): Promise<TournamentDetailDto> {
+  return apiFetch<TournamentDetailDto>(
+    `/api/tournament-management/tournaments/${tournamentId}/close-registration`,
+    { method: 'POST' }
+  );
 }
 
 /** POST /api/tournament-management/tournaments/{id}/complete — Hoàn thành giải đấu */
@@ -120,3 +134,58 @@ export async function checkInRegistration(registrationId: string): Promise<Regis
     method: 'POST',
   });
 }
+
+// ---------- Tournament Judges ----------
+
+/** GET /api/tournament-management/tournaments/{tournamentId}/judges — Lấy danh sách Trọng tài */
+export async function getTournamentJudges(tournamentId: string): Promise<TournamentJudgeDto[]> {
+  return apiFetch<TournamentJudgeDto[]>(`/api/tournament-management/tournaments/${tournamentId}/judges`);
+}
+
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges — Tạo 1 Trọng tài */
+export async function createTournamentJudge(tournamentId: string, dto: CreateTournamentJudgeDto): Promise<TournamentJudgeDto> {
+  return apiFetch<TournamentJudgeDto>(`/api/tournament-management/tournaments/${tournamentId}/judges`, {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+}
+
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges/batch — Tạo HÀNG LOẠT Trọng tài 1-click */
+export async function batchCreateTournamentJudges(tournamentId: string, dto: BatchCreateTournamentJudgeDto): Promise<TournamentJudgeDto[]> {
+  return apiFetch<TournamentJudgeDto[]>(`/api/tournament-management/tournaments/${tournamentId}/judges/batch`, {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+}
+
+/** PUT /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId} — Sửa tên Trọng tài */
+export async function updateTournamentJudge(tournamentId: string, judgeUserId: string, dto: UpdateTournamentJudgeDto): Promise<TournamentJudgeDto> {
+  return apiFetch<TournamentJudgeDto>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}`, {
+    method: 'PUT',
+    body: JSON.stringify(dto),
+  });
+}
+
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId}/reset-password — Đặt lại mật khẩu */
+export async function resetTournamentJudgePassword(tournamentId: string, judgeUserId: string, dto: ResetJudgePasswordDto): Promise<TournamentJudgeDto> {
+  return apiFetch<TournamentJudgeDto>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+}
+
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges/shuffle — Đổi vị trí / Tráo ngẫu nhiên vai trò & bàn thi */
+export async function shuffleTournamentJudges(tournamentId: string, dto: ShuffleTournamentJudgesDto): Promise<TournamentJudgeDto[]> {
+  return apiFetch<TournamentJudgeDto[]>(`/api/tournament-management/tournaments/${tournamentId}/judges/shuffle`, {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+}
+
+/** DELETE /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId} — Xóa Trọng tài */
+export async function deleteTournamentJudge(tournamentId: string, judgeUserId: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}`, {
+    method: 'DELETE',
+  });
+}
+

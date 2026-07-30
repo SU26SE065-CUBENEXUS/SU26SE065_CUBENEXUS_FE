@@ -84,12 +84,16 @@ export async function apiFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getAccessToken();
+  const isFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> | undefined),
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string> | undefined) ?? {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+
+  if (!isFormDataBody && !Object.keys(headers).some((key) => key.toLowerCase() === 'content-type')) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   let response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,

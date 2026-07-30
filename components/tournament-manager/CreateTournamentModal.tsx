@@ -14,7 +14,8 @@ import {
   Info, 
   Clock, 
   FileText, 
-  Trophy 
+  Trophy,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ interface EventFormState {
   timeLimitSec: string;
   cutoffTimeSec: string;
   solveCount: number;
+  maxCapacity: string;
   medleyPuzzles: Array<{ puzzleTypeId: string }>;
 }
 
@@ -96,6 +98,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [maxParticipants, setMaxParticipants] = useState('');
+  const [bannerPhoto, setBannerPhoto] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [regOpen, setRegOpen] = useState('');
@@ -107,6 +111,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       timeLimitSec: '',
       cutoffTimeSec: '',
       solveCount: 5,
+      maxCapacity: '',
       medleyPuzzles: [],
     },
   ]);
@@ -125,6 +130,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               timeLimitSec: '',
               cutoffTimeSec: '',
               solveCount: 5,
+              maxCapacity: '',
               medleyPuzzles: [
                 { puzzleTypeId: types[0].id },
                 { puzzleTypeId: types[1]?.id || types[0].id },
@@ -150,6 +156,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         timeLimitSec: '',
         cutoffTimeSec: '',
         solveCount: 5,
+        maxCapacity: '',
         medleyPuzzles: [
           { puzzleTypeId: firstId },
           { puzzleTypeId: secondId },
@@ -234,10 +241,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       }
     }
 
+    const tourMaxPart = maxParticipants ? Number(maxParticipants) : null;
+
     // Validate events
     events.forEach((ev, idx) => {
       const timeLimitVal = Number(ev.timeLimitSec);
       const cutoffVal = Number(ev.cutoffTimeSec);
+      const evMaxCap = ev.maxCapacity ? Number(ev.maxCapacity) : null;
 
       if (ev.timeLimitSec && (isNaN(timeLimitVal) || timeLimitVal <= 0)) {
         errs[`event_${idx}_timeLimit`] = 'Time limit must be greater than 0';
@@ -250,6 +260,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       }
       if (ev.solveCount <= 0) {
         errs[`event_${idx}_solveCount`] = 'Solve count must be greater than 0';
+      }
+      if (evMaxCap && tourMaxPart && evMaxCap > tourMaxPart) {
+        errs[`event_${idx}_maxCapacity`] = `Event capacity (${evMaxCap}) cannot exceed overall tournament limit (${tourMaxPart})`;
       }
     });
 
@@ -277,6 +290,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         name,
         description: description || undefined,
         location: location || undefined,
+        maxParticipants: maxParticipants ? Number(maxParticipants) : undefined,
+        bannerPhotoData: bannerPhoto || undefined,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
         registrationOpenAt: new Date(regOpen).toISOString(),
@@ -291,6 +306,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               timeLimitMs: ev.timeLimitSec ? Number(ev.timeLimitSec) * 1000 : undefined,
               cutoffTimeMs: ev.cutoffTimeSec ? Number(ev.cutoffTimeSec) * 1000 : undefined,
               solveCount: isMedley ? 1 : ev.solveCount,
+              maxCapacity: ev.maxCapacity ? Number(ev.maxCapacity) : undefined,
               sortOrder: i + 1,
               medleyPuzzles: isMedley
                 ? ev.medleyPuzzles
@@ -414,6 +430,62 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                   placeholder="Introduce the tournament rules, schedules, sponsors..."
                   className="w-full rounded-xl border border-border/80 bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition resize-none"
                 />
+              </div>
+
+              {/* Max Participants */}
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1.5">
+                  Competitor Limit (Max Participants)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(e.target.value)}
+                  placeholder="e.g. 100 (Leave empty for unlimited)"
+                  className="w-full rounded-xl border border-border/80 bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                />
+              </div>
+
+              {/* Tournament Banner Image */}
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-xs font-medium text-foreground">
+                  Tournament Banner Image (Ảnh Banner / Poster)
+                </label>
+                {!bannerPhoto ? (
+                  <label className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted/10 p-6 text-center cursor-pointer hover:border-primary/50 transition">
+                    <span className="text-2xl">🖼️</span>
+                    <span className="text-xs font-semibold text-foreground">Upload Banner / Poster Image</span>
+                    <span className="text-[10px] text-muted-foreground">JPG, PNG, WEBP supported</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setBannerPhoto(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className="relative rounded-2xl overflow-hidden border border-border max-h-48 group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={bannerPhoto} alt="Banner Preview" className="w-full h-44 object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setBannerPhoto(null)}
+                        className="px-3 py-1.5 rounded-xl bg-destructive text-destructive-foreground text-xs font-bold shadow-lg"
+                      >
+                        Remove Photo
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -633,9 +705,11 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       </div>
                     </div>
 
+                    {/* WCA Scoring & Rules */}
                     <div className="grid gap-4 md:grid-cols-3">
                       <div>
                         <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
                           Time Limit (seconds)
                         </label>
                         <input
@@ -643,7 +717,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                           value={ev.timeLimitSec}
                           onChange={(e) => updateEvent(i, 'timeLimitSec', e.target.value)}
                           placeholder="e.g. 600"
-                          className={`w-full rounded-xl border ${errors[`event_${i}_timeLimit`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary transition`}
+                          className={`w-full rounded-xl border ${errors[`event_${i}_timeLimit`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
                         />
                         <span className="text-[10px] text-muted-foreground/80 mt-1 block">
                           Leave blank for no limit
@@ -666,7 +740,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                               value={ev.cutoffTimeSec}
                               onChange={(e) => updateEvent(i, 'cutoffTimeSec', e.target.value)}
                               placeholder="e.g. 60"
-                              className={`w-full rounded-xl border ${errors[`event_${i}_cutoffTime`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary transition`}
+                              className={`w-full rounded-xl border ${errors[`event_${i}_cutoffTime`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
                             />
                             <span className="text-[10px] text-muted-foreground/80 mt-1 block">
                               Must be less than limit
@@ -686,7 +760,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                               type="number"
                               value={ev.solveCount}
                               onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
-                              className={`w-full rounded-xl border ${errors[`event_${i}_solveCount`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary transition`}
+                              className={`w-full rounded-xl border ${errors[`event_${i}_solveCount`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
                               min="1"
                               max="5"
                             />
@@ -701,6 +775,34 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                           </div>
                         </>
                       )}
+                    </div>
+
+                    {/* Event Capacity Limit */}
+                    <div className="pt-3 border-t border-border/40">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                            <Users className="h-3.5 w-3.5 text-primary" />
+                            Event Capacity Limit (Max Competitors)
+                          </label>
+                          <input
+                            type="number"
+                            value={ev.maxCapacity}
+                            onChange={(e) => updateEvent(i, 'maxCapacity', e.target.value)}
+                            placeholder="e.g. 16 (Leave empty for no limit)"
+                            className={`w-full rounded-xl border ${errors[`event_${i}_maxCapacity`] ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2 text-xs text-foreground outline-none focus:ring-2 transition`}
+                            min="1"
+                          />
+                          <p className="text-[11px] text-muted-foreground mt-1 font-normal">
+                            Leave empty for no custom limit (uses overall tournament limit)
+                          </p>
+                          {errors[`event_${i}_maxCapacity`] && (
+                            <p className="text-xs text-destructive font-medium mt-1 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" /> {errors[`event_${i}_maxCapacity`]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Medley Relay Sub-puzzles */}

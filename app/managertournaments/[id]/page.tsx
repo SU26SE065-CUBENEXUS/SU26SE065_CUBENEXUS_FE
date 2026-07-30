@@ -6,6 +6,8 @@ import { DashboardCard } from '@/components/tournament-manager/DashboardCard';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
 import { getTournamentById, completeTournament } from '@/lib/api/tournaments';
 import type { TournamentDetailDto } from '@/lib/api/types';
+import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
   ChevronRight,
   Users,
@@ -13,21 +15,35 @@ import {
   CheckCircle2,
   AlertCircle,
   Settings,
-  QrCode,
-  Zap,
-  Shield,
   Radio,
   ClipboardList,
   Calendar,
   MapPin,
   User2,
+  UserCheck,
   Loader2,
   Trophy,
   RefreshCw,
   CheckCircle,
+  ZoomIn,
+  Zap,
 } from 'lucide-react';
 
 const QUICK_ACTIONS = [
+  {
+    title: 'Live Operations',
+    description: 'Monitor stations, check-in, and active rounds',
+    href: 'live',
+    icon: Radio,
+    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+  },
+  {
+    title: 'Manage Judges',
+    description: 'Create referee accounts and 1-click batch credentials handover',
+    href: 'judges',
+    icon: UserCheck,
+    accent: 'bg-card border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/5',
+  },
   {
     title: 'Configure Events',
     description: 'Set formats, rounds, and scoring rules',
@@ -48,20 +64,6 @@ const QUICK_ACTIONS = [
     href: 'groups',
     icon: Layers,
     accent: 'bg-card border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/5',
-  },
-  {
-    title: 'Live Operations',
-    description: 'Monitor stations, check-in, and active rounds',
-    href: 'live',
-    icon: Radio,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
-  },
-  {
-    title: 'Manage Disputes',
-    description: 'Review and resolve result disputes',
-    href: 'disputes',
-    icon: Shield,
-    accent: 'bg-card border-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/5',
   },
 ];
 
@@ -84,6 +86,7 @@ export default function TournamentDetailDashboardPage({
   const [error, setError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [completeMsg, setCompleteMsg] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fetchTournament = async () => {
     setIsLoading(true);
@@ -127,17 +130,19 @@ export default function TournamentDetailDashboardPage({
     fetchTournament();
   }, [id]);
 
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
+
   const handleComplete = async () => {
     if (!tournament) return;
-    if (!confirm(`Mark "${tournament.name}" as Completed? This cannot be undone.`)) return;
     setIsCompleting(true);
     try {
       const updated = await completeTournament(id);
       setTournament(updated);
-      setCompleteMsg('Tournament marked as completed!');
+      setCompleteMsg('Giải đấu đã được đánh dấu HOÀN THÀNH thành công!');
+      setShowConfirmComplete(false);
     } catch (err) {
       setCompleteMsg(
-        `Error: ${err instanceof Error ? err.message : 'Failed to complete tournament'}`
+        `Lỗi: ${err instanceof Error ? err.message : 'Không thể đánh dấu hoàn thành'}`
       );
     } finally {
       setIsCompleting(false);
@@ -200,128 +205,176 @@ export default function TournamentDetailDashboardPage({
       )}
 
       {/* Tournament Overview Card */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm p-6 mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <StatusBadge status={tournament.statusCode} />
-              <span className="text-xs text-muted-foreground font-mono">
-                {tournament.id.slice(0, 8)}…
-              </span>
-            </div>
-            <h1 className="text-xl font-black text-foreground tracking-tight leading-tight">
-              {tournament.name}
-            </h1>
-            {tournament.description && (
-              <p className="text-sm text-muted-foreground mt-1">{tournament.description}</p>
-            )}
-            <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-primary" />
-                {formatDateRange(tournament.startDate, tournament.endDate)}
-              </span>
-              {tournament.location && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-primary" />
-                  {tournament.location}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <User2 className="h-3.5 w-3.5 text-primary" />
-                {tournament.createdByUserName}
-              </span>
-            </div>
-            {/* Events chips */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {tournament.events.map((e) => (
-                <span
-                  key={e.id}
-                  className="rounded-md bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
-                >
-                  {e.puzzleTypeName || e.puzzleTypeCode}
-                  {e.eventFormatCode === 'MEDLEY' && ' (Medley)'}
-                </span>
-              ))}
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mb-8">
+        {/* Banner Poster Header */}
+        {tournament.bannerUrl && (
+          <div
+            onClick={() => setPreviewImage(tournament.bannerUrl!)}
+            className="relative h-48 w-full overflow-hidden bg-black/60 cursor-pointer group/img border-b border-border/80"
+            title="Bấm để xem ảnh phóng to"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={tournament.bannerUrl}
+              alt={tournament.name}
+              className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute bottom-3 right-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white border border-white/20 text-xs font-extrabold flex items-center gap-1.5 opacity-90 group-hover/img:opacity-100 transition">
+              <ZoomIn className="h-4 w-4 text-primary" /> Xem Ảnh Phóng To
             </div>
           </div>
+        )}
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={fetchTournament}
-              disabled={isLoading}
-              className="rounded-xl border border-border bg-card p-2.5 text-muted-foreground shadow-sm transition hover:bg-muted/50 hover:text-foreground"
-              title="Refresh"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
-            {tournament.statusCode !== 'completed' && tournament.statusCode !== 'cancelled' && (
-              <button
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
-              >
-                {isCompleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <StatusBadge status={tournament.statusCode} />
+                {tournament.maxParticipants && (
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    Max: {tournament.maxParticipants} thi đấu
+                  </span>
                 )}
-                Complete Tournament
+                <span className="text-xs text-muted-foreground font-mono">
+                  {tournament.id.slice(0, 8)}…
+                </span>
+              </div>
+              <h1 className="text-xl font-black text-foreground tracking-tight leading-tight">
+                {tournament.name}
+              </h1>
+              {tournament.description && (
+                <p className="text-sm text-muted-foreground mt-1">{tournament.description}</p>
+              )}
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-primary" />
+                  {formatDateRange(tournament.startDate, tournament.endDate)}
+                </span>
+                {tournament.location && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    {tournament.location}
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5">
+                  <User2 className="h-3.5 w-3.5 text-primary" />
+                  {tournament.createdByUserName}
+                </span>
+              </div>
+              {/* Events chips */}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {tournament.events.map((e) => (
+                  <span
+                    key={e.id}
+                    className="rounded-md bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+                  >
+                    {e.puzzleTypeName || e.puzzleTypeCode}
+                    {e.eventFormatCode === 'MEDLEY' && ' (Medley)'}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={fetchTournament}
+                disabled={isLoading}
+                className="rounded-xl border border-border bg-card p-2.5 text-muted-foreground shadow-sm transition hover:bg-muted/50 hover:text-foreground"
+                title="Refresh"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
-            )}
+              {tournament.statusCode !== 'completed' && tournament.statusCode !== 'cancelled' && (
+                <button
+                  onClick={() => setShowConfirmComplete(true)}
+                  disabled={isCompleting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
+                >
+                  {isCompleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                  Complete Tournament
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Reg window */}
+          <div className="mt-5 border-t border-border pt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+            <span>
+              <span className="font-semibold text-foreground">Reg. Opens:</span>{' '}
+              {new Date(tournament.registrationOpenAt).toLocaleString('vi-VN')}
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">Reg. Closes:</span>{' '}
+              {new Date(tournament.registrationCloseAt).toLocaleString('vi-VN')}
+            </span>
+            <span>
+              <span className="font-semibold text-foreground">Created:</span>{' '}
+              {new Date(tournament.createdAt).toLocaleDateString('vi-VN')}
+            </span>
           </div>
         </div>
 
-        {/* Reg window */}
-        <div className="mt-5 border-t border-border pt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
-          <span>
-            <span className="font-semibold text-foreground">Reg. Opens:</span>{' '}
-            {new Date(tournament.registrationOpenAt).toLocaleString('vi-VN')}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground">Reg. Closes:</span>{' '}
-            {new Date(tournament.registrationCloseAt).toLocaleString('vi-VN')}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground">Created:</span>{' '}
-            {new Date(tournament.createdAt).toLocaleDateString('vi-VN')}
-          </span>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 mb-8">
+          <DashboardCard title="Events" value={tournament.events.length} icon={Zap} accent="blue" />
+          <DashboardCard title="Groups" value="—" icon={Layers} accent="purple" />
+          <DashboardCard title="Registrations" value="—" icon={Users} accent="yellow" />
+          <DashboardCard title="Live Operations" value="Active" icon={Radio} accent="emerald" />
+        </div>
+
+        {/* Quick Action Cards */}
+        <div>
+          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {QUICK_ACTIONS.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.title}
+                  href={`/managertournaments/${id}/${action.href}`}
+                  className={`rounded-2xl border p-5 transition-all shadow-sm hover:shadow-md group ${action.accent}`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p className="font-bold text-[13px] leading-tight text-foreground">{action.title}</p>
+                  <p className="text-[11px] mt-1 text-muted-foreground leading-snug">{action.description}</p>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 mb-8">
-        <DashboardCard title="Events" value={tournament.events.length} icon={Zap} accent="blue" />
-        <DashboardCard title="Groups" value="—" icon={Layers} accent="purple" />
-        <DashboardCard title="Registrations" value="—" icon={Users} accent="yellow" />
-        <DashboardCard title="Pending Disputes" value="—" icon={AlertCircle} accent="red" />
-      </div>
+      {/* Full-Screen Image Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={Boolean(previewImage)}
+        imageUrl={previewImage}
+        title={tournament ? `Poster Banner — ${tournament.name}` : 'Poster Giải Đấu'}
+        onClose={() => setPreviewImage(null)}
+      />
 
-      {/* Quick Action Cards */}
-      <div>
-        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {QUICK_ACTIONS.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={action.title}
-                href={`/managertournaments/${id}/${action.href}`}
-                className={`rounded-2xl border p-5 transition-all shadow-sm hover:shadow-md group ${action.accent}`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p className="font-bold text-[13px] leading-tight text-foreground">{action.title}</p>
-                <p className="text-[11px] mt-1 text-muted-foreground leading-snug">{action.description}</p>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Confirm Modal for Complete Tournament */}
+      <ConfirmModal
+        isOpen={showConfirmComplete}
+        title="Đánh Dấu Hoàn Thành Giải Đấu"
+        description={`Bạn có chắc chắn muốn kết thúc và đánh dấu giải đấu "${tournament.name}" là HOÀN THÀNH? Thao tác này không thể hoàn tác.`}
+        confirmText="Xác Nhận Hoàn Thành"
+        cancelText="Hủy Bỏ"
+        variant="primary"
+        isLoading={isCompleting}
+        onConfirm={handleComplete}
+        onClose={() => setShowConfirmComplete(false)}
+      />
     </div>
   );
 }

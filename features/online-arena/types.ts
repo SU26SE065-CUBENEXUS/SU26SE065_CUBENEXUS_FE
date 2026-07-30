@@ -75,6 +75,7 @@ export interface OnlineMatchRecoveryStateDto {
   inspectionDeadlineAt: string | null;
   solveDeadlineAt: string | null;
   outcome: string | null;
+  cancelReason?: string | null;
   winnerId: string | null;
   player1EloBefore: number | null;
   player2EloBefore: number | null;
@@ -139,7 +140,7 @@ export interface OpponentDto {
 }
 
 export interface MatchmakingStatusDto {
-  status: 'IDLE' | 'QUEUED' | 'MATCH_FOUND' | 'MATCH_CONFIRMING' | 'MATCHED' | 'COOLDOWN';
+  status: 'IDLE' | 'QUEUED' | 'MATCH_FOUND' | 'MATCH_CONFIRMING' | 'MATCHED' | 'COOLDOWN' | 'IN_ACTIVE_MATCH';
   confirmationId?: string;
   opponent?: OpponentDto;
   confirmDeadlineAt?: string;
@@ -147,4 +148,5 @@ export interface MatchmakingStatusDto {
   player2Confirmed?: boolean;
   remainingSeconds?: number;
   serverNow?: string;
+  matchId?: string;
 }

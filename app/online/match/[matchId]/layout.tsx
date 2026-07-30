@@ -1,21 +1,22 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { MatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { CameraStreamProvider } from '@/features/online-arena/contexts/CameraStreamContext';
+import { MatchLocalRecordingProvider } from '@/features/online-arena/contexts/MatchLocalRecordingContext';
+import { WebRtcProvider } from '@/features/online-arena/contexts/WebRtcContext';
 import { useOnlineMatchState } from '@/features/online-arena/hooks/useOnlineMatchState';
 import { useOnlineArenaSignalR } from '@/features/online-arena/hooks/useOnlineArenaSignalR';
-import { routeForNextUiState } from '@/features/online-arena/utils/navigation';
 import { OpponentSidebar } from '@/features/online-arena/components/OpponentSidebar';
 import { Header } from '@/components/header';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
+import { markWebRtcConnected } from '@/features/online-arena/api/onlineArenaApi';
 
 export default function MatchLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const matchId = (params?.matchId as string) || '';
-  const pathname = usePathname();
   const router = useRouter();
 
   const userId = useMemo(() => {
@@ -43,15 +44,55 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     onChecklistUpdated: async () => { await refetch(); },
   });
 
-  useEffect(() => {
-    if (state?.me?.nextUiState) {
-      const targetRoute = routeForNextUiState(matchId, state.me.nextUiState);
-      if (pathname && pathname !== targetRoute) {
-        console.log(`[Rerouting nextUiState] Current: ${pathname}, Target: ${targetRoute}`);
-        router.replace(targetRoute);
-      }
+  // ── WebRTC props derived from match state ─────────────────────────────────
+  const isP1 = useMemo(
+    () => state?.player1?.userId === userId,
+    [state?.player1?.userId, userId],
+  );
+
+  const myState = isP1 ? state?.player1 : state?.player2;
+  const opponentUserId = isP1 ? (state?.player2?.userId ?? null) : (state?.player1?.userId ?? null);
+
+  const handleWebRtcConnected = useCallback(async () => {
+    try {
+      await markWebRtcConnected(matchId);
+      await refetch();
+    } catch (e) {
+      console.error('[Layout] markWebRtcConnected failed:', e);
     }
-  }, [state?.me?.nextUiState, pathname, matchId, router]);
+  }, [matchId, refetch]);
+
+  /** Activate WebRTC signaling once BOTH players have their timer ready */
+  const shouldActivateWebRtc = Boolean(
+    state
+      && !['COMPLETED', 'CANCELLED', 'DRAW', 'NEEDS_REVIEW'].includes(state.statusCode)
+      && state.player1?.timerReady
+      && state.player2?.timerReady,
+  );
+  const alreadyWebRtcConnected = Boolean(myState?.webRtcConnected);
+
+  // Prefetch match routes for production chunk loading
+  // AND trigger eager compilation in dev mode via background fetch
+  useEffect(() => {
+    if (!matchId || !router) return;
+    const subroutes = ['countdown', 'inspection', 'solving', 'result', 'waiting', 'finish', 'review', 'scramble', 'setup'];
+
+    // Next.js prefetch — effective in production
+    subroutes.forEach((sub) => {
+      router.prefetch(`/online/match/${matchId}/${sub}`);
+    });
+
+    // Background fetch — forces dev-mode compilation of all subroutes up-front
+    // so time-sensitive pages (countdown, inspection) are ready instantly
+    if (process.env.NEXT_PUBLIC_EAGER_ROUTE_COMPILE === 'true') subroutes.forEach((sub) => {
+      fetch(`/online/match/${matchId}/${sub}`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(30_000),
+      }).catch(() => {
+        // Ignore — we only care about triggering compilation, not the response
+      });
+    });
+  }, [matchId, router]);
 
   if (isLoading && !state) {
     return (
@@ -90,30 +131,44 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
 
   return (
     <CameraStreamProvider>
-      <MatchContext.Provider
-        value={{
-          matchId,
-          state,
-          isLoading,
-          error,
-          refetch,
-          isConnected,
-          connection,
-        }}
-      >
-        <main className="min-h-screen bg-zinc-950 text-white flex flex-col">
-          <Header />
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.5_0.15_40_/_0.06),transparent_50%)]" />
-              <div className="max-w-4xl mx-auto h-full flex flex-col justify-center relative z-10">
-                {children}
+      <MatchLocalRecordingProvider>
+        <WebRtcProvider
+          matchId={matchId}
+          isP1={isP1}
+          opponentUserId={opponentUserId}
+          connection={connection}
+          alreadyConnected={alreadyWebRtcConnected}
+          onConnected={handleWebRtcConnected}
+          shouldActivate={shouldActivateWebRtc}
+        >
+          <MatchContext.Provider
+            value={{
+              matchId,
+              state,
+              isLoading,
+              error,
+              refetch,
+              isConnected,
+              connection,
+            }}
+          >
+            <main className="min-h-screen bg-zinc-950 text-white flex flex-col">
+              <Header />
+              <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.5_0.15_40_/_0.06),transparent_50%)]" />
+                  <div className="max-w-4xl mx-auto h-full flex flex-col justify-center relative z-10">
+                    {children}
+                  </div>
+                </div>
+                {state?.me?.nextUiState !== 'SCRAMBLE_CHECK' && state?.me?.nextUiState !== 'FINISH_SCANNING' && (
+                  <OpponentSidebar state={state} userId={userId} />
+                )}
               </div>
-            </div>
-            <OpponentSidebar state={state} userId={userId} />
-          </div>
-        </main>
-      </MatchContext.Provider>
+            </main>
+          </MatchContext.Provider>
+        </WebRtcProvider>
+      </MatchLocalRecordingProvider>
     </CameraStreamProvider>
   );
 }

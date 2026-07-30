@@ -81,6 +81,9 @@ export interface TournamentDetailDto {
   name: string;
   description?: string;
   location?: string;
+  maxParticipants?: number;
+  currentParticipants?: number;  // 0 when not populated (e.g. manager mock data)
+  bannerUrl?: string;
   startDate: string;
   endDate: string;
   registrationOpenAt: string;
@@ -99,6 +102,7 @@ export interface EventDetailDto {
   puzzleTypeName: string;
   puzzleTypeCode: string;
   eventFormatCode: string; // 'TRADITIONAL' | 'MEDLEY'
+  registrationStatusCode?: string;
   timeLimitMs?: number;
   cutoffTimeMs?: number;
   solveCount: number;
@@ -136,6 +140,9 @@ export interface CreateTournamentDto {
   name: string;
   description?: string;
   location?: string;
+  maxParticipants?: number;
+  bannerUrl?: string;
+  bannerPhotoData?: string;
   startDate: string;
   endDate: string;
   registrationOpenAt: string;
@@ -255,12 +262,14 @@ export interface SubmitTraditionalResultDto {
   penaltyTypeId?: string | null;
   scrambleId: string;
   esignatureData?: string | null;
+  evidencePhotoData?: string | null;
 }
 
 export interface SubmitMedleyResultDto {
   groupCompetitorId: string;
   solveNumber: number;
   esignatureData?: string | null;
+  evidencePhotoData?: string | null;
   details: MedleyDetailSubmissionDto[];
 }
 
@@ -365,3 +374,54 @@ export interface SimStationCompetitorDto {
   qrToken: string;
   competitorStatus: string;
 }
+
+// ---------- Tournament Judges ----------
+
+export interface TournamentJudgeDto {
+  id: string;
+  userId: string;
+  tournamentId: string;
+  displayName: string;
+  username: string;
+  email: string;
+  userCode: string;
+  roleCode?: string;
+  assignedStationNumber?: number | null;
+  assignedAt: string;
+  rawPassword?: string | null;
+}
+
+export interface CreateTournamentJudgeDto {
+  displayName: string;
+  username?: string;
+  password?: string;
+  roleCode?: string;
+  assignedStationNumber?: number | null;
+}
+
+export interface BatchCreateTournamentJudgeDto {
+  checkInCount?: number;
+  stationCount?: number;
+  judgesPerStation?: number;
+  count?: number;
+  namePrefix?: string;
+  customNames?: string[];
+}
+
+export interface UpdateTournamentJudgeDto {
+  displayName: string;
+  roleCode?: string;
+  assignedStationNumber?: number | null;
+}
+
+export interface ResetJudgePasswordDto {
+  newPassword?: string;
+}
+
+export interface ShuffleTournamentJudgesDto {
+  checkInCount: number;
+  stationCount: number;
+  judgesPerStation: number;
+}
+
+

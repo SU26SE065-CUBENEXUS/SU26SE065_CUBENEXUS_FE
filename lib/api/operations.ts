@@ -19,6 +19,44 @@ import type {
   SimStationCompetitorDto,
 } from './types';
 
+/** Format evidence photo URL to handle Base64 strings, R2 object keys, or relative paths */
+export function formatEvidencePhotoUrl(url?: string | null): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return null;
+
+  // Case 1: Full HTTP/HTTPS URL
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  // Case 2: Data URI (base64 with data:image prefix)
+  if (trimmed.startsWith('data:image/')) {
+    return trimmed;
+  }
+
+  // Case 3: Local device file path from mobile camera (file://, ph://, content://) - cannot load on web
+  if (trimmed.startsWith('file://') || trimmed.startsWith('ph://') || trimmed.startsWith('content://')) {
+    return null;
+  }
+
+  // Case 4: Raw base64 string without data:image prefix
+  if (
+    trimmed.startsWith('/9j/') ||
+    trimmed.startsWith('iVBORw') ||
+    trimmed.startsWith('R0lGOD') ||
+    trimmed.startsWith('UklGR') ||
+    (!trimmed.includes('/') && !trimmed.includes('.') && trimmed.length > 50)
+  ) {
+    return `data:image/jpeg;base64,${trimmed}`;
+  }
+
+  // Case 5: R2 object key or relative backend path (e.g., "evidence/tournaments/gc_...jpg")
+  const r2PublicDomain = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-f9f0382bc7dd4c9c84e77214ef801b09.r2.dev';
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${r2PublicDomain}${cleanPath}`;
+}
+
 /** GET /api/tournament-operation/competitor/qr-ticket — Lấy QR ticket cho đấu thủ */
 export async function getCompetitorQrTicket(tournamentId: string): Promise<CompetitorQrTicketDto> {
   return apiFetch<CompetitorQrTicketDto>(`/api/tournament-operation/competitor/qr-ticket?tournamentId=${tournamentId}`);
@@ -189,6 +227,8 @@ export async function getLiveBoardState(
       isDnf: boolean;
       isLocked: boolean;
       submittedAt: string;
+      evidencePhotoUrl?: string;
+      esignatureData?: string;
     }>;
   }>;
 }> {

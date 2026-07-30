@@ -62,9 +62,11 @@ export default function PublicLiveTournamentsPage() {
     // Status filter
     if (!matchesSearch) return false;
     if (statusFilter === 'ALL') return true;
-    if (statusFilter === 'LIVE') return t.isLive;
-    if (statusFilter === 'UPCOMING') return t.status === 'REGISTRATION_OPEN' || t.status === 'PUBLISHED';
-    if (statusFilter === 'COMPLETED') return t.status === 'COMPLETED';
+
+    const s = (t.status || '').toUpperCase();
+    if (statusFilter === 'LIVE') return t.isLive || s === 'ONGOING';
+    if (statusFilter === 'UPCOMING') return s === 'REGISTRATION_OPEN' || s === 'REGISTRATION_CLOSED' || s === 'PUBLISHED' || s === 'DRAFT';
+    if (statusFilter === 'COMPLETED') return s === 'COMPLETED';
     return true;
   });
 
@@ -170,24 +172,44 @@ export default function PublicLiveTournamentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTournaments.map((t) => {
               // Custom badge styling depending on state
-              let statusText = 'Upcoming';
+              let statusText = 'Sắp Diễn Ra';
               let badgeStyle = 'border-blue-500/20 text-blue-400 bg-blue-500/5';
               let ctaStyle = 'bg-primary hover:bg-primary/90 text-primary-foreground';
-              let ctaLabel = 'View Schedule';
+              let ctaLabel = 'Xem Lịch Thi Đấu';
+
+              const codeUpper = (t.status || '').toUpperCase();
 
               if (t.isLive) {
-                statusText = 'LIVE NOW';
+                statusText = 'ĐANG THI ĐẤU (LIVE)';
                 badgeStyle = 'border-red-500/30 text-red-500 bg-red-500/8 animate-pulse-glow';
                 ctaStyle = 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20';
-                ctaLabel = 'Watch Live Board';
-              } else if (t.status === 'COMPLETED') {
-                statusText = 'Completed';
+                ctaLabel = 'Xem Bảng Live';
+              } else if (codeUpper === 'ONGOING') {
+                statusText = 'Đang Thi Đấu';
+                badgeStyle = 'border-purple-500/20 text-purple-400 bg-purple-500/5';
+                ctaStyle = 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20';
+                ctaLabel = 'Xem Bảng Live';
+              } else if (codeUpper === 'COMPLETED') {
+                statusText = 'Đã Hoàn Thành';
                 badgeStyle = 'border-muted-foreground/20 text-muted-foreground bg-muted/5';
                 ctaStyle = 'bg-muted hover:bg-muted/80 text-foreground';
-                ctaLabel = 'View Results';
-              } else if (t.status === 'REGISTRATION_OPEN') {
-                statusText = 'Registration Open';
+                ctaLabel = 'Xem Kết Quả';
+              } else if (codeUpper === 'REGISTRATION_OPEN') {
+                statusText = 'Mở Đăng Ký';
                 badgeStyle = 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5';
+                ctaLabel = 'Xem Chi Tiết';
+              } else if (codeUpper === 'REGISTRATION_CLOSED') {
+                statusText = 'Đóng Đăng Ký';
+                badgeStyle = 'border-amber-500/20 text-amber-400 bg-amber-500/5';
+                ctaLabel = 'Xem Lịch Thi Đấu';
+              } else if (codeUpper === 'CANCELLED') {
+                statusText = 'Đã Hủy';
+                badgeStyle = 'border-red-500/20 text-red-400 bg-red-500/5';
+                ctaLabel = 'Xem Chi Tiết';
+              } else if (codeUpper === 'PUBLISHED') {
+                statusText = 'Công Bố / Sắp Khởi Tranh';
+                badgeStyle = 'border-blue-500/20 text-blue-400 bg-blue-500/5';
+                ctaLabel = 'Xem Lịch Thi Đấu';
               }
 
               return (

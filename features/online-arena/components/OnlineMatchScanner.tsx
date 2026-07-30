@@ -1,9 +1,17 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { startScanner, observeScannerFrame, retryScannerFace, resetScanner } from '../api/onlineArenaApi';
-import type { ScannerStartResponseDto } from '../types';
-import { Camera, RefreshCw, AlertTriangle, CheckCircle, Video, Play, Loader2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
+import {
+  startScanner,
+  getScannerSession,
+  retryScannerFace,
+  resetScanner,
+  completeScannerSession,
+  submitScrambleBatch,
+} from '../api/onlineArenaApi';
+import { observeScannerTestFrame } from '../../rubik-scanner-test/api/onlineScannerTestApi';
+import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
+import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen } from 'lucide-react';
 
 interface OnlineMatchScannerProps {
   matchId: string;
@@ -11,260 +19,1375 @@ interface OnlineMatchScannerProps {
   onSuccess?: (data: any) => void;
 }
 
-const FACE_NAMES = ['U', 'R', 'F', 'D', 'L', 'B'];
+export interface ScannerAcceptedFaceDto {
+  faceIndex: number;
+  faceCode: string;
+  expectedCenterColor: string;
+  observedCenterColor?: string | null;
+  grid3x3?: string[][] | null;
+  acceptedAt: string;
+}
 
-export function OnlineMatchScanner({ matchId, validationType, onSuccess }: OnlineMatchScannerProps) {
+export interface ScannerStickerDto {
+  color: string;
+  confidence: number;
+  bbox: number[];
+}
+
+export interface CubeScanStickerMismatchDto {
+  face: string;
+  row: number;
+  column: number;
+  expected: string;
+  observed: string;
+}
+
+export interface ScannerValidationDto {
+  status: string;
+  matched: boolean;
+  matchedStickerCount: number;
+  mismatchedStickerCount: number;
+  playerStatus: string;
+  mismatches: CubeScanStickerMismatchDto[];
+}
+
+export interface ScannerSessionDto {
+  message: string;
+  matchId: string;
+  playerId: string;
+  validationType: string;
+  scanSessionId: string;
+  aiSessionId: string;
+  scanGeneration: number;
+  scanStatus: string;
+  scannerState: string;
+  matchStatus: string;
+  requestedFaceIndex: number;
+  requestedFaceCode: string;
+  requestedFaceLabel: string;
+  requestedCenterColor: string;
+  capturedFaceCount: number;
+  requestId?: string | null;
+  stableObservationCount: number;
+  requiredStableObservations: number;
+  detectedStickers: number;
+  confidence: number;
+  inferMs: number;
+  decodeMs: number;
+  preprocessMs: number;
+  postprocessMs: number;
+  totalMs: number;
+  modelVersion: string;
+  reason?: string | null;
+  observedCenterColor?: string | null;
+  grid3x3?: string[][] | null;
+  stickers: ScannerStickerDto[];
+  faces: ScannerAcceptedFaceDto[];
+  validation?: ScannerValidationDto | null;
+}
+
+interface ScannerPreviewDto {
+  scannerState: string;
+  stableObservationCount: number;
+  requiredStableObservations: number;
+  detectedStickers: number;
+  inferMs: number;
+  modelVersion: string;
+  reason?: string | null;
+  observedCenterColor?: string | null;
+  stickers: ScannerStickerDto[];
+}
+
+interface ScannerObservationDto {
+  status: string;
+  scannerState: string;
+  scanSessionId: string;
+  scanGeneration: number;
+  requestId?: string | null;
+  targetFaceIndex: number;
+  requestedFaceIndex: number;
+  requestedFaceLabel: string;
+  centerColor?: string | null;
+  grid3x3?: string[][] | null;
+  stickers: ScannerStickerDto[];
+  detectedStickers: number;
+  confidence: number;
+  inferMs: number;
+  decodeMs: number;
+  preprocessMs: number;
+  postprocessMs: number;
+  totalMs: number;
+  stableObservationCount: number;
+  requiredStableObservations: number;
+  modelVersion: string;
+  reason?: string | null;
+}
+
+const SLOT_FACE_CODES = ['U', 'R', 'F', 'D', 'L', 'B'];
+
+const COLOR_STYLE: Record<string, string> = {
+  white: '#f8fafc',
+  yellow: '#facc15',
+  red: '#ef4444',
+  orange: '#fb923c',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  unknown: '#27272a',
+};
+
+const UI_MESSAGE: Record<string, string> = {
+  POSITION_FACE: 'Show one full cube face inside the guide. In scramble mode, any unscanned center color is valid.',
+  SCANNING: 'Keep all 9 stickers inside the guide and hold still.',
+  STABLE: 'AI is tracking the face. Keep holding steady.',
+  ACCEPTED: 'Face accepted. Rotate to the next face.',
+  DUPLICATE_FACE: 'This center color has already been scanned. Rotate to an unscanned face.',
+  RETRY: 'Detection unstable. Adjust the cube position and click Scan / Accept Next Face to try again.',
+  AI_BUSY: 'AI service is currently busy. Please wait a moment.',
+  AI_UNAVAILABLE: 'AI service is unavailable. Please check the backend connection.',
+  CAMERA_ERROR: 'Unable to read camera frame. Restart camera and retry.',
+};
+
+// ─── Stability Progress Bar ─────────────────────────────────────────────────
+function StabilityBar({
+  stable,
+  required,
+  detectedStickers,
+  isScanning,
+}: {
+  stable: number;
+  required: number;
+  detectedStickers: number;
+  isScanning: boolean;
+}) {
+  if (!isScanning) return null;
+
+  const pct = Math.min(100, Math.round((stable / Math.max(required, 1)) * 100));
+  const missingStickers = detectedStickers > 0 && detectedStickers < 9;
+  const noStickers = isScanning && detectedStickers === 0;
+
+  return (
+    <div className="space-y-1.5">
+      {/* Stability label + count */}
+      <div className="flex items-center justify-between text-[10px] font-bold">
+        <span className="text-zinc-400 uppercase tracking-widest">Stability</span>
+        <span
+          className={`font-mono font-black ${
+            stable >= required ? 'text-emerald-400' : stable > 0 ? 'text-orange-400' : 'text-zinc-500'
+          }`}
+        >
+          {stable} / {required}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-200 ${
+            stable >= required ? 'bg-emerald-500' : stable > 0 ? 'bg-orange-500' : 'bg-zinc-600'
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      {/* Dot indicators */}
+      <div className="flex gap-1.5">
+        {Array.from({ length: required }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-2 flex-1 rounded-full transition-all duration-150 ${
+              i < stable
+                ? stable >= required
+                  ? 'bg-emerald-500'
+                  : 'bg-orange-500'
+                : 'bg-zinc-700'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Warnings */}
+      {missingStickers && (
+        <div className="flex items-center gap-1.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5">
+          <AlertTriangle className="h-3 w-3 text-yellow-400 shrink-0" />
+          <span className="text-[10px] font-bold text-yellow-300">
+            Chỉ thấy {detectedStickers}/9 sticker — nhích nhẹ khối Rubik hoặc giảm chói sáng
+          </span>
+        </div>
+      )}
+      {noStickers && (
+        <div className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-1.5">
+          <AlertTriangle className="h-3 w-3 text-rose-400 shrink-0" />
+          <span className="text-[10px] font-bold text-rose-300">
+            AI chưa thấy mặt nào — đặt toàn bộ 9 ô vào trong khung viền cam
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const OVERLAY_INSET_RATIO = 0.08;
+const SNAPSHOT_MAX_WIDTH = 800;
+const SNAPSHOT_QUALITY = 0.82;
+const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
+const CAPTURE_INTERVAL_MS = 220;
+// RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
+const TERMINAL_SCANNER_STATES = new Set(['ACCEPTED', 'DUPLICATE_FACE', 'RETRY', 'AI_UNAVAILABLE', 'CAMERA_ERROR']);
+
+function createRequestId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// buildScannerRequestFormData removed — observe calls now go directly to Python AI service
+// via the C# Dev proxy (same as Sandbox), bypassing the production match proxy entirely.
+
+/**
+ * Update session state ngay tại client khi nhận ACCEPTED observation.
+ * Không cần chờ commitScannerObservation round-trip để hiển thị face slot.
+ * Port từ applyAcceptedObservation() trong test-client-vite.
+ */
+function applyAcceptedObservationClientSide(
+  current: ScannerSessionDto | null,
+  observation: ScannerObservationDto,
+  targetCount: number = 6,
+): ScannerSessionDto | null {
+  if (
+    !current
+    || !observation.grid3x3
+    || !observation.centerColor
+    || observation.targetFaceIndex !== current.requestedFaceIndex
+  ) {
+    return current;
+  }
+
+  const newFace: ScannerAcceptedFaceDto = {
+    faceIndex: observation.targetFaceIndex,
+    faceCode: current.requestedFaceCode,
+    expectedCenterColor: current.requestedCenterColor,
+    observedCenterColor: observation.centerColor,
+    grid3x3: observation.grid3x3,
+    acceptedAt: new Date().toISOString(),
+  };
+
+  // Check if face with same center color already exists
+  const existingByCenter = current.faces.findIndex(
+    (f) => (f.observedCenterColor || '').toLowerCase() === observation.centerColor!.toLowerCase()
+  );
+
+  const nextFaces = [...current.faces];
+  if (existingByCenter >= 0) {
+    nextFaces[existingByCenter] = newFace;
+  } else {
+    const existingFaceIdx = current.faces.findIndex((f) => f.faceIndex === newFace.faceIndex);
+    if (existingFaceIdx >= 0) {
+      nextFaces[existingFaceIdx] = newFace;
+    } else {
+      nextFaces.push(newFace);
+    }
+  }
+
+  const capturedFaceCount = nextFaces.length;
+  const completed = capturedFaceCount >= targetCount;
+  const nextFaceIndex = Math.min(capturedFaceCount + 1, targetCount);
+
+  return {
+    ...current,
+    faces: nextFaces,
+    capturedFaceCount,
+    scannerState: 'ACCEPTED',
+    scanStatus: completed ? 'COMPLETED' : current.scanStatus,
+    requestedFaceIndex: nextFaceIndex,
+    requestedFaceLabel: `Face ${nextFaceIndex} of ${targetCount}`,
+    observedCenterColor: observation.centerColor,
+    message: completed ? `All ${targetCount} faces captured.` : 'Face accepted. Rotate to a different center color.',
+  };
+}
+
+function getSessionFingerprint(session: ScannerSessionDto | null) {
+  if (!session) return 'empty';
+
+  return JSON.stringify({
+    scanGeneration: session.scanGeneration,
+    scanStatus: session.scanStatus,
+    scannerState: session.scannerState,
+    requestedFaceIndex: session.requestedFaceIndex,
+    capturedFaceCount: session.capturedFaceCount,
+    stableObservationCount: session.stableObservationCount,
+    requiredStableObservations: session.requiredStableObservations,
+    detectedStickers: session.detectedStickers,
+    reason: session.reason,
+    observedCenterColor: session.observedCenterColor,
+    faces: session.faces.map((face) => ({
+      faceIndex: face.faceIndex,
+      observedCenterColor: face.observedCenterColor,
+      acceptedAt: face.acceptedAt,
+    })),
+    validation: session.validation
+      ? {
+          status: session.validation.status,
+          matched: session.validation.matched,
+          mismatchedStickerCount: session.validation.mismatchedStickerCount,
+        }
+      : null,
+  });
+}
+
+function extractPreview(session: ScannerSessionDto | null): ScannerPreviewDto | null {
+  if (!session) {
+    return null;
+  }
+
+  return {
+    scannerState: session.scannerState,
+    stableObservationCount: session.stableObservationCount,
+    requiredStableObservations: session.requiredStableObservations,
+    detectedStickers: session.detectedStickers,
+    inferMs: session.inferMs,
+    modelVersion: session.modelVersion,
+    reason: session.reason,
+    observedCenterColor: session.observedCenterColor,
+    stickers: session.stickers ?? [],
+  };
+}
+
+function extractPreviewFromObservation(observation: ScannerObservationDto): ScannerPreviewDto {
+  return {
+    scannerState: observation.scannerState,
+    stableObservationCount: observation.stableObservationCount,
+    requiredStableObservations: observation.requiredStableObservations,
+    detectedStickers: observation.detectedStickers,
+    inferMs: observation.inferMs,
+    modelVersion: observation.modelVersion,
+    reason: observation.reason,
+    observedCenterColor: observation.centerColor,
+    stickers: observation.stickers ?? [],
+  };
+}
+
+function createScanningPreview(modelVersion: string): ScannerPreviewDto {
+  return {
+    scannerState: 'SCANNING',
+    stableObservationCount: 0,
+    requiredStableObservations: 3,
+    detectedStickers: 0,
+    inferMs: 0,
+    modelVersion,
+    reason: null,
+    observedCenterColor: null,
+    stickers: [],
+  };
+}
+
+function getRemainingCenterColors(session: ScannerSessionDto | null) {
+  const allCenters = ['white', 'red', 'green', 'yellow', 'orange', 'blue'];
+  const captured = new Set((session?.faces ?? []).map((face) => (face.observedCenterColor || face.expectedCenterColor || '').toLowerCase()));
+  return allCenters.filter((color) => !captured.has(color));
+}
+
+function getColorLabel(color: string) {
+  return color.charAt(0).toUpperCase() + color.slice(1);
+}
+
+function getScannerGuidance(session: ScannerSessionDto | null, validationType: 'SCRAMBLE' | 'FINISH') {
+  if (!session) {
+    return validationType === 'SCRAMBLE'
+      ? 'Scramble mode scans any face whose center color has not been accepted yet.'
+      : 'Finish mode scans all six faces of the solved cube.';
+  }
+
+  const remaining = getRemainingCenterColors(session);
+  if (session.scanStatus === 'COMPLETED') {
+    return validationType === 'SCRAMBLE'
+      ? 'All six center colors were captured. The backend is now comparing the observed cube state with your assigned scramble.'
+      : 'All six faces were captured. The backend is now checking whether the cube is solved.';
+  }
+
+  if (validationType === 'SCRAMBLE') {
+    return remaining.length > 0
+      ? `Scan any remaining face with one of these center colors: ${remaining.map(getColorLabel).join(', ')}. The stickers on that face may be mixed because the cube is scrambled.`
+      : 'All center colors appear to be captured.';
+  }
+
+  return 'Scan any face that has not been accepted yet and keep the full 3x3 grid visible.';
+}
+
+async function captureSnapshot(
+  video: HTMLVideoElement | null,
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
+): Promise<Blob> {
+  if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+    throw new Error('Camera preview is not ready.');
+  }
+
+  const sourceWidth = video.videoWidth;
+  const sourceHeight = video.videoHeight;
+  const width = Math.min(SNAPSHOT_MAX_WIDTH, sourceWidth);
+  const height = Math.round((sourceHeight / sourceWidth) * width);
+
+  const canvas = canvasRef.current ?? document.createElement('canvas');
+  canvasRef.current = canvas;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas 2D context is not available.');
+  }
+
+  context.imageSmoothingEnabled = true;
+  context.drawImage(video, 0, 0, width, height);
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
+  });
+
+  if (!blob) {
+    throw new Error('Failed to capture a camera snapshot.');
+  }
+
+  return blob;
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function runScannerBurst<TObservation>({
+  capture,
+  observe,
+  onObservation,
+  shouldStop,
+  shouldAbort,
+  maxBurstMs,
+  sampleIntervalMs,
+}: {
+  capture: () => Promise<Blob>;
+  observe: (snapshot: Blob) => Promise<TObservation>;
+  onObservation?: (observation: TObservation) => void;
+  shouldStop: (observation: TObservation) => boolean;
+  shouldAbort: () => boolean;
+  maxBurstMs: number;
+  sampleIntervalMs: number;
+}): Promise<{ reason: 'terminal' | 'timeout' | 'aborted'; observation?: TObservation | null }> {
+  const startedAt = performance.now();
+  let lastObservation: TObservation | null = null;
+
+  while (performance.now() - startedAt < maxBurstMs) {
+    if (shouldAbort()) {
+      return { reason: 'aborted', observation: lastObservation };
+    }
+
+    const snapshot = await capture();
+    const tickStartedAt = performance.now();
+    lastObservation = await observe(snapshot);
+    const duration = performance.now() - tickStartedAt;
+    
+    onObservation?.(lastObservation);
+
+    if (shouldStop(lastObservation)) {
+      return { reason: 'terminal', observation: lastObservation };
+    }
+
+    if (shouldAbort()) {
+      return { reason: 'aborted', observation: lastObservation };
+    }
+
+    // Không dùng adaptive delay — AI inference đã đồng bộ (await observe()),
+    // mỗi vòng lặp đã tự chờ AI xong mới tiếp tục. Chỉ cần khoảng nghỉ tối thiểu
+    // để tránh spam quá nhanh nếu AI trả về ngay lập tức.
+    await delay(sampleIntervalMs);
+  }
+
+  return { reason: 'timeout', observation: lastObservation };
+}
+
+function isScannerSessionResponse(value: any): value is ScannerSessionDto {
+  return !!value && typeof value.scanSessionId === 'string' && typeof value.scanStatus === 'string';
+}
+
+function isCurrentScannerSession(
+  response: ScannerSessionDto,
+  expected: { scanSessionId: string; scanGeneration: number; targetFaceIndex: number },
+) {
+  return response.scanSessionId === expected.scanSessionId
+    && response.scanGeneration >= expected.scanGeneration
+    && (
+      response.requestedFaceIndex === expected.targetFaceIndex
+      || response.requestedFaceIndex === expected.targetFaceIndex + 1
+      || response.capturedFaceCount >= expected.targetFaceIndex
+    );
+}
+
+function isCurrentObservation(
+  observation: ScannerObservationDto,
+  expected: { scanSessionId: string; scanGeneration: number; targetFaceIndex: number },
+) {
+  return observation.scanSessionId === expected.scanSessionId
+    && observation.scanGeneration === expected.scanGeneration
+    && observation.targetFaceIndex === expected.targetFaceIndex;
+}
+
+export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, validationType, onSuccess }: OnlineMatchScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const captureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const activeScanAbortRef = useRef<AbortController | null>(null);
+  const activeScanIdentityRef = useRef<{
+    scanSessionId: string;
+    scanGeneration: number;
+    targetFaceIndex: number;
+  } | null>(null);
+  const sessionRef = useRef<ScannerSessionDto | null>(null);
+  const sessionFingerprintRef = useRef('empty');
 
-  const [session, setSession] = useState<ScannerStartResponseDto | null>(null);
+  const [session, setSession] = useState<ScannerSessionDto | null>(null);
+  const [localObservations, setLocalObservations] = useState<any[]>([]);
+  const completionInFlightRef = useRef(false);
+  const [preview, setPreview] = useState<ScannerPreviewDto | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState<'idle' | 'starting' | 'ready' | 'failed'>('idle');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isScanningFace, setIsScanningFace] = useState(false);
+  const [isPreparingSession, setIsPreparingSession] = useState(false);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastReason, setLastReason] = useState<string | null>(null);
-  const [scannedFacesCount, setScannedFacesCount] = useState(0);
+  const [scannerState, setScannerState] = useState<string>('POSITION_FACE');
+  const [statusMessage, setStatusMessage] = useState<string>('Start Camera, then Start Scan Session to begin the online match scanner.');
 
-  // Initialize session and camera on mount
+  const effectiveFaces = session?.faces ?? [];
+  const remainingCenters = React.useMemo(() => getRemainingCenterColors(session), [session]);
+  const scannerGuidance = getScannerGuidance(session, validationType);
+  const effectiveObservedCenter = (preview?.observedCenterColor ?? session?.observedCenterColor ?? '').toLowerCase();
+  const effectiveStickers = preview?.stickers ?? session?.stickers ?? [];
+  const effectiveScannerState = preview?.scannerState ?? session?.scannerState ?? 'POSITION_FACE';
+  const effectiveStableObservationCount = preview?.stableObservationCount ?? session?.stableObservationCount ?? 0;
+  const effectiveRequiredStableObservations = preview?.requiredStableObservations ?? session?.requiredStableObservations ?? 3;
+  const effectiveDetectedStickers = preview?.detectedStickers ?? session?.detectedStickers ?? 0;
+  const effectiveInferMs = preview?.inferMs ?? session?.inferMs ?? 0;
+  const effectiveCapturedFaceCount = session?.capturedFaceCount ?? 0;
+  const effectiveModelVersion = preview?.modelVersion || session?.modelVersion || '-';
+  const effectiveAiHealth = error || cameraError ? 'degraded' : effectiveModelVersion !== '-' ? 'healthy' : 'unknown';
+  const targetTotalFaces = validationType === 'SCRAMBLE' ? 5 : 6;
+  const progressText = `${effectiveCapturedFaceCount} / ${targetTotalFaces}`;
+  const stableText = `${effectiveStableObservationCount} / ${effectiveRequiredStableObservations}`;
+  const observedCenterText = effectiveObservedCenter ? effectiveObservedCenter.toUpperCase() : '-';
+  const remainingCenterLabels = remainingCenters.map(getColorLabel);
+
+  /**
+   * applySessionFull: Dùng khi start/load/reset session.
+   * Reset toàn bộ: session + preview + state.
+   */
+  const applySessionFull = (nextSession: ScannerSessionDto, fallbackReason?: string) => {
+    const nextFingerprint = getSessionFingerprint(nextSession);
+    sessionRef.current = nextSession;
+    sessionFingerprintRef.current = nextFingerprint;
+    setSession(nextSession);
+    setPreview(extractPreview(nextSession));
+    setScannerState(nextSession.scannerState);
+    const nextMessage = nextSession.reason || nextSession.message || UI_MESSAGE[nextSession.scannerState] || fallbackReason || 'Scanner session updated.';
+    setLastReason(nextMessage);
+    setStatusMessage(nextMessage);
+  };
+
+  /**
+   * applySessionCommit: Dùng sau commitScannerObservation.
+   * CHỈ update session state — KHÔNG overwrite preview để giữ sticker bbox overlay.
+   * Điều này ngăn hiện tượng sticker biến mất sau khi face được ACCEPTED.
+   */
+  const applySessionCommit = (nextSession: ScannerSessionDto, fallbackReason?: string) => {
+    const nextFingerprint = getSessionFingerprint(nextSession);
+    sessionRef.current = nextSession;
+    sessionFingerprintRef.current = nextFingerprint;
+    setSession(nextSession);
+    // Không gọi setPreview ở đây — giữ nguyên preview có sticker bbox từ burst scan
+    setScannerState(nextSession.scannerState);
+    const nextMessage = nextSession.reason || nextSession.message || UI_MESSAGE[nextSession.scannerState] || fallbackReason || 'Scanner observation committed.';
+    setLastReason(nextMessage);
+    setStatusMessage(nextMessage);
+  };
+
   useEffect(() => {
-    let active = true;
+    sessionRef.current = session;
+    sessionFingerprintRef.current = getSessionFingerprint(session);
+  }, [session]);
 
-    const initScanner = async () => {
-      try {
-        setError(null);
-        // 1. Start scanner session on backend
-        const res = await startScanner(matchId, validationType);
-        if (active) {
-          setSession(res);
-          setScannedFacesCount(res.requestedFaceIndex - 1);
-        }
-
-        // 2. Start local camera feed
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
-        });
-
-        if (active) {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play();
-          }
-          streamRef.current = stream;
-          setCameraActive(true);
-          setIsScanning(true);
-        }
-      } catch (err: any) {
-        if (active) {
-          console.error(err);
-          setError(err.message || 'Failed to start camera or scanner session.');
-        }
-      }
-    };
-
-    initScanner();
-
+  useEffect(() => {
     return () => {
-      active = false;
-      if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
+      activeScanAbortRef.current?.abort();
+      activeScanIdentityRef.current = null;
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    activeScanAbortRef.current?.abort();
+    activeScanIdentityRef.current = null;
+    setSession(null);
+    setPreview(null);
+    setLocalObservations([]);
+    completionInFlightRef.current = false;
+    sessionRef.current = null;
+    sessionFingerprintRef.current = 'empty';
+    setError(null);
+    setScannerState('POSITION_FACE');
+    setLastReason('Load an existing session or start a new scan session.');
+    setStatusMessage('Start Camera, then Start Scan Session to begin the online match scanner.');
   }, [matchId, validationType]);
 
-  // Automated capture loop
+  // Chỉ cập nhật kích thước canvas một lần khi video bắt đầu phát hoặc thay đổi kích thước.
+  // Điều này ngăn chặn việc trình duyệt khởi tạo lại buffer bộ nhớ của Canvas liên tục mỗi 300ms gây lag UI.
   useEffect(() => {
-    if (isScanning && cameraActive && session) {
-      captureIntervalRef.current = setInterval(() => {
-        captureFrame();
-      }, 2000);
-    } else {
-      if (captureIntervalRef.current) {
-        clearInterval(captureIntervalRef.current);
-        captureIntervalRef.current = null;
+    const video = videoRef.current;
+    const canvas = overlayCanvasRef.current;
+    if (!video || !canvas || cameraStatus !== 'ready') return;
+
+    const handleResize = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+    };
+
+    handleResize();
+    video.addEventListener('loadedmetadata', handleResize);
+    video.addEventListener('resize', handleResize);
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleResize);
+      video.removeEventListener('resize', handleResize);
+    };
+  }, [cameraStatus]);
+
+  useEffect(() => {
+    const canvas = overlayCanvasRef.current;
+    if (!canvas || !cameraActive) return;
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    const inset = Math.round(Math.min(width, height) * OVERLAY_INSET_RATIO);
+    const observedCenter = preview?.observedCenterColor || session?.observedCenterColor || '';
+    const secondaryCenters = remainingCenters.length > 0
+      ? `Remaining: ${remainingCenters.map((color) => color.toUpperCase()).join(', ')}`
+      : 'All 6 centers captured';
+
+    context.clearRect(0, 0, width, height);
+    context.strokeStyle = 'rgba(249, 115, 22, 0.72)';
+    context.lineWidth = 3;
+    context.setLineDash([8, 8]);
+    context.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
+    context.setLineDash([]);
+
+    context.fillStyle = 'rgba(9, 9, 11, 0.85)';
+    context.fillRect(16, 16, Math.min(320, width - 32), 48);
+    context.fillStyle = '#ffffff';
+    context.font = 'bold 11px sans-serif';
+    context.fillText(
+      observedCenter ? `Observed center: ${observedCenter.toUpperCase()}` : 'Observed center: waiting',
+      24,
+      34,
+    );
+    context.fillStyle = 'rgba(161, 161, 170, 1)';
+    context.font = '10px sans-serif';
+    context.fillText(secondaryCenters, 24, 50);
+
+    for (const [index, sticker] of effectiveStickers.entries()) {
+      const [x1, y1, x2, y2] = sticker.bbox;
+      if ([x1, y1, x2, y2].some((value) => typeof value !== 'number')) {
+        continue;
+      }
+
+      context.strokeStyle = 'rgba(250, 204, 21, 0.95)';
+      context.lineWidth = 2;
+      context.strokeRect(x1, y1, x2 - x1, y2 - y1);
+      context.fillStyle = 'rgba(15, 23, 42, 0.84)';
+      context.fillRect(x1, Math.max(0, y1 - 18), 92, 16);
+      context.fillStyle = '#f8fafc';
+      context.font = '10px sans-serif';
+      context.fillText(`${index + 1}. ${sticker.color}`, x1 + 4, Math.max(11, y1 - 6));
+    }
+  }, [cameraActive, effectiveStickers, preview?.observedCenterColor, remainingCenters, session?.observedCenterColor]);
+
+  const backendUrl = useMemo(() => resolveBackendUrl(), []);
+
+  const scanCurrentFace = async () => {
+    if (!videoRef.current || isScanningFace) return;
+
+  if (cameraStatus !== 'ready') {
+      setError('Start the camera before scanning.');
+      setScannerState('CAMERA_ERROR');
+      setStatusMessage(UI_MESSAGE.CAMERA_ERROR);
+      setLastReason(UI_MESSAGE.CAMERA_ERROR);
+      return;
+    }
+
+    let currentSession = sessionRef.current;
+    if (!currentSession) {
+      try {
+        const created = await startScanner(matchId, validationType) as unknown as ScannerSessionDto;
+        currentSession = created;
+        applySessionFull(created, 'Scanner session ready. Hold one face steady, then press Scan / Accept Next Face.');
+      } catch (err: any) {
+        setError(err?.message || 'Failed to start scanner session.');
+        setScannerState('AI_UNAVAILABLE');
+        setStatusMessage(UI_MESSAGE.AI_UNAVAILABLE);
+        setLastReason(UI_MESSAGE.AI_UNAVAILABLE);
+        return;
       }
     }
 
-    return () => {
-      if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
-    };
-  }, [isScanning, cameraActive, session]);
+    if (!currentSession) {
+      return;
+    }
 
-  const captureFrame = async () => {
-    if (!videoRef.current || !session) return;
+    if (currentSession.scanStatus === 'COMPLETED') {
+      setLastReason('This scanner session is already completed.');
+      return;
+    }
+
+    // FIX #4: Không gọi retryScannerFace() BE trước khi scan (tốn 1 round-trip).
+    // Reset state client-side ngay lập tức — BE retry chỉ cần khi user bấm nút Retry riêng.
+    const currentScannerState = preview?.scannerState ?? currentSession.scannerState;
+    if (currentScannerState === 'RETRY' || currentScannerState === 'DUPLICATE_FACE') {
+      setScannerState('SCANNING');
+      setPreview(createScanningPreview(currentSession.modelVersion));
+      setStatusMessage(`Re-scanning ${currentSession.requestedFaceLabel}. Hold steady.`);
+      setLastReason(`Re-scanning ${currentSession.requestedFaceLabel}. Hold steady.`);
+    }
+
+    const abortController = new AbortController();
+    activeScanAbortRef.current?.abort();
+    activeScanAbortRef.current = abortController;
+    const scanGeneration = currentSession.scanGeneration;
+    const scanIdentity = {
+      scanSessionId: currentSession.aiSessionId,
+      scanGeneration,
+      targetFaceIndex: currentSession.requestedFaceIndex,
+    };
+    activeScanIdentityRef.current = scanIdentity;
 
     try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 480;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      setIsScanningFace(true);
+      setError(null);
+      setPreview(createScanningPreview(currentSession.modelVersion));
+      setScannerState('SCANNING');
+      setStatusMessage(`Scanning ${currentSession.requestedFaceLabel}. Hold the cube still for stable reads.`);
+      setLastReason(`Scanning ${currentSession.requestedFaceLabel}. Hold the cube still for stable reads.`);
 
-      // Draw active video frame
-      ctx.drawImage(videoRef.current, 0, 0, 640, 480);
+      // ─── Sandbox-identical frame scan ────────────────────────────────────────
+      // Gọi đúng Python /observe qua C# Dev proxy (backendUrl = '' = relative URL).
+      // Đây là y chang cách Sandbox /online/sandbox hoạt động:
+      //   observeScannerTestFrame → /api/dev/ai/scanner-test/sessions/{aiSessionId}/observe
+      //   → C# AiScannerTestController (transparent proxy, không cần auth)
+      //   → Python /ai/scanner-test/session/{aiSessionId}/observe
+      //   → Python cộng dồn stable_observation_count trong RAM, trả ACCEPTED sau 3 frame
+      // Không còn lỗi 401, session mismatch, hay RETRY giả do gọi sai endpoint.
+      const result = await runScannerBurst<ScannerObservationDto>({
+        capture: async () => captureSnapshot(videoRef.current, captureCanvasRef),
+        observe: async (snapshot) => {
+          const requestId = createRequestId();
+          return observeScannerTestFrame({
+            backendUrl,                                  // Bypasses dev proxy if local
+            sessionId: currentSession!.aiSessionId,     // Python session ID (route param)
+            snapshot,
+            scanSessionId: currentSession!.aiSessionId, // Python session ID (form field)
+            scanGeneration,
+            requestId,
+            targetFaceIndex: currentSession!.requestedFaceIndex,
+            signal: abortController.signal,
+          }) as unknown as ScannerObservationDto;
+        },
+        onObservation: (nextResponse) => {
+          if (!isCurrentObservation(nextResponse, scanIdentity)) {
+            return;
+          }
 
-      // Convert to blob and upload
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
+          setError(null);
+          setScannerState(nextResponse.scannerState);
+          // FIX #2: Luôn giữ sticker bbox overlay — cập nhật preview sau mỗi frame
+          setPreview(extractPreviewFromObservation(nextResponse));
+          const nextMessage = nextResponse.reason || UI_MESSAGE[nextResponse.scannerState] || 'Scanner observation updated.';
+          setStatusMessage(nextMessage);
+          setLastReason(nextMessage);
 
-        const formData = new FormData();
-        formData.append('Snapshot', blob, 'snapshot.jpg');
-        formData.append('ScanSessionId', session.scanSessionId);
-        formData.append('ScanGeneration', session.scanGeneration.toString());
-        formData.append('RequestId', crypto.randomUUID());
-        formData.append('TargetFaceIndex', session.requestedFaceIndex.toString());
+          // FIX #2: Khi ACCEPTED, update face slot ngay lập tức client-side
+          // Không chờ commitScannerObservation round-trip mới hiện face
+          if (nextResponse.scannerState === 'ACCEPTED') {
+            setSession((current) => applyAcceptedObservationClientSide(current, nextResponse));
+          }
+        },
+        shouldStop: (nextResponse) => isCurrentObservation(nextResponse, scanIdentity)
+          && TERMINAL_SCANNER_STATES.has(nextResponse.scannerState),
+        shouldAbort: () => abortController.signal.aborted,
+        maxBurstMs: MAX_SCAN_BURST_MS,
+        sampleIntervalMs: CAPTURE_INTERVAL_MS,
+      });
+
+      if (result.reason === 'aborted') {
+        return;
+      }
+
+      const terminalResponse = result.observation;
+      if (!terminalResponse) {
+        setLastReason('No scanner observation was returned. Try again.');
+        return;
+      }
+
+      if (result.reason === 'timeout') {
+        // Timeout: giữ preview cuối (có sticker bbox) nhưng đổi state sang RETRY
+        if (terminalResponse) {
+          setPreview({
+            ...extractPreviewFromObservation(terminalResponse),
+            scannerState: 'RETRY',
+            reason: terminalResponse.reason || 'Detection unstable. Adjust the cube & retry.',
+          });
+        }
+        setScannerState('RETRY');
+        const retryMsg = terminalResponse?.reason || 'Detection unstable. Adjust the cube & retry.';
+        setStatusMessage(retryMsg);
+        setLastReason(retryMsg);
+        return;
+      }
+
+      if (!terminalResponse) {
+        setLastReason('No scanner observation was returned. Try again.');
+        return;
+      }
+
+      if (!isCurrentObservation(terminalResponse, scanIdentity)) {
+        setLastReason('Scanner returned a stale response. Please scan again.');
+        return;
+      }
+
+      if (terminalResponse.scannerState !== 'ACCEPTED') {
+        setLastReason(terminalResponse.reason || UI_MESSAGE[terminalResponse.scannerState] || 'Scanner requires another attempt.');
+        return;
+      }
+
+      // Store face observation locally and update UI state instantly
+      const nextObservations = [...localObservations, terminalResponse];
+      setLocalObservations(nextObservations);
+
+      const targetTotalFaces = validationType === 'SCRAMBLE' ? 5 : 6;
+      const nextSession = applyAcceptedObservationClientSide(currentSession, terminalResponse, targetTotalFaces);
+      if (nextSession) {
+        applySessionCommit(nextSession, 'Face accepted locally. Rotate to a different center color.');
+      }
+
+      // If SCRAMBLE mode and we have collected 5 faces with distinct center colors:
+      if (validationType === 'SCRAMBLE' && nextSession && nextSession.faces.length >= 5) {
+        if (completionInFlightRef.current) return;
+        completionInFlightRef.current = true;
+
+        setStatusMessage('Submitting 5 faces for scramble validation...');
+        setIsScanningFace(true);
 
         try {
-          const res = await observeScannerFrame(matchId, validationType, formData);
-          console.log('[AI Scanner Frame Observation]', res);
-          
-          if (res.reason) {
-            setLastReason(res.reason);
+          const batchFaces = nextSession.faces.slice(0, 5).map((f) => ({
+            centerColor: f.observedCenterColor || f.expectedCenterColor,
+            grid3x3: f.grid3x3 || undefined,
+          }));
+
+          const response = await submitScrambleBatch(matchId, {
+            sessionId: currentSession.scanSessionId,
+            faces: batchFaces,
+          });
+
+          if (response.status === 'PASSED') {
+            setStatusMessage('SCRAMBLE_CHECK PASSED!');
+            if (onSuccess) onSuccess(response);
+            return;
           }
 
-          // Check if progress updated
-          if (res.requestedFaceIndex !== undefined) {
-            setSession(prev => prev ? {
-              ...prev,
-              requestedFaceIndex: res.requestedFaceIndex
-            } : null);
-            setScannedFacesCount(res.requestedFaceIndex - 1);
-          }
+          if (response.status === 'MISMATCHED') {
+            const mismatchedColors: string[] = response.mismatchedCenterColors || [];
+            const mismatchedUpper = new Set(mismatchedColors.map((c) => c.toUpperCase()));
 
-          // Check if completion is reported
-          if (res.nextUiState || res.scanStatus === 'COMPLETED' || res.finishCheckStatus) {
-            setIsScanning(false);
-            if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
-            if (onSuccess) onSuccess(res);
+            // Keep valid faces in local session, remove mismatched ones
+            const filteredFaces = nextSession.faces.filter(
+              (f) => !mismatchedUpper.has((f.observedCenterColor || f.expectedCenterColor || '').toUpperCase())
+            );
+
+            const updatedSession: ScannerSessionDto = {
+              ...nextSession,
+              faces: filteredFaces,
+              capturedFaceCount: filteredFaces.length,
+              requestedFaceIndex: filteredFaces.length + 1,
+              scannerState: 'POSITION_FACE',
+              message: `Mismatched faces: ${mismatchedColors.join(', ')}. Please re-scan those faces.`,
+            };
+
+            applySessionFull(updatedSession, `Mismatched faces: ${mismatchedColors.join(', ')}. Please re-scan those faces.`);
+            setError(`Faces [${mismatchedColors.join(', ')}] did not match scramble. Please re-scan them.`);
+            return;
           }
         } catch (err: any) {
-          console.warn('Frame submission ignored due to error:', err);
+          setError(err?.message || 'Failed to validate scramble batch.');
+        } finally {
+          completionInFlightRef.current = false;
+          setIsScanningFace(false);
         }
-      }, 'image/jpeg', 0.85);
-    } catch (err) {
-      console.error('Frame capture failed:', err);
+      }
+
+      // If FINISH mode and we have collected all 6 faces:
+      if (validationType === 'FINISH' && nextSession && nextSession.faces.length >= 6) {
+        if (completionInFlightRef.current) return;
+        completionInFlightRef.current = true;
+
+        setStatusMessage('Submitting all 6 faces for finish validation...');
+        setIsScanningFace(true);
+
+        try {
+          const committed = await completeScannerSession(matchId, validationType, {
+            scanSessionId: currentSession.scanSessionId,
+            scanGeneration: currentSession.scanGeneration,
+            requestId: terminalResponse.requestId || createRequestId(),
+            observations: nextObservations,
+          });
+
+          if (isScannerSessionResponse(committed)) {
+            applySessionFull(committed, committed.reason || committed.message || 'Scanner session completed.');
+            if ((committed.scanStatus === 'COMPLETED' || !!committed.validation) && onSuccess) {
+              onSuccess(committed);
+            }
+            return;
+          }
+        } catch (err: any) {
+          setError(err?.message || 'Failed to complete scanner session.');
+        } finally {
+          completionInFlightRef.current = false;
+          setIsScanningFace(false);
+        }
+      }
+    } catch (err: any) {
+      if (!abortController.signal.aborted) {
+        const message = err?.message || 'Error occurred during scan.';
+        if (currentSession) {
+          sessionRef.current = currentSession;
+          sessionFingerprintRef.current = getSessionFingerprint(currentSession);
+          setSession(currentSession);
+          setPreview(extractPreview(currentSession));
+        }
+        setError(message);
+        setScannerState('AI_UNAVAILABLE');
+        setStatusMessage(message);
+        setLastReason(message);
+      }
+    } finally {
+      if (activeScanAbortRef.current === abortController) {
+        activeScanAbortRef.current = null;
+      }
+      if (activeScanIdentityRef.current?.scanGeneration === scanIdentity.scanGeneration) {
+        activeScanIdentityRef.current = null;
+      }
+      setIsScanningFace(false);
+    }
+  };
+
+  const handleStartCamera = async () => {
+    if (cameraActive) {
+      setCameraStatus('ready');
+      setLastReason('Camera is already running.');
+      return;
+    }
+
+    try {
+      setIsStartingCamera(true);
+      setCameraStatus('starting');
+      setError(null);
+      setCameraError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30 },
+          facingMode: 'environment',
+          resizeMode: 'none',
+        } as any,
+        audio: false,
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      streamRef.current = stream;
+      setCameraActive(true);
+      setCameraStatus('ready');
+      const track = stream.getVideoTracks()[0];
+      const settings = track?.getSettings?.();
+      const resolution = settings?.width && settings?.height ? `${settings.width}x${settings.height}` : 'unknown resolution';
+      const nextMessage = `Camera started (${resolution}). Hold one full face steady, then press Scan / Accept Next Face.`;
+      setLastReason(nextMessage);
+      setStatusMessage(nextMessage);
+    } catch (err: any) {
+      console.error(err);
+      setCameraStatus('failed');
+      setCameraError(err?.message || 'Failed to start camera.');
+      setError(err?.message || 'Failed to start camera.');
+    } finally {
+      setIsStartingCamera(false);
+    }
+  };
+
+  const handleStopCamera = () => {
+    activeScanAbortRef.current?.abort();
+    activeScanIdentityRef.current = null;
+    if (streamRef.current) {
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setCameraActive(false);
+    setCameraStatus('idle');
+    setIsScanningFace(false);
+    setPreview(null);
+    setStatusMessage('Camera stopped.');
+    setLastReason('Camera stopped.');
+  };
+
+  const handleLoadExistingSession = async () => {
+    setIsPreparingSession(true);
+    try {
+      setError(null);
+      const res = await getScannerSession(matchId, validationType) as unknown as ScannerSessionDto;
+      applySessionFull(res, 'Scanner session loaded.');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load scanner session.');
+    } finally {
+      setIsPreparingSession(false);
+    }
+  };
+
+  const handleStartSession = async () => {
+    activeScanAbortRef.current?.abort();
+    setIsPreparingSession(true);
+    try {
+      setError(null);
+      const res = await startScanner(matchId, validationType) as unknown as ScannerSessionDto;
+      applySessionFull(res, 'Scanner session ready. Hold one face steady, then press Scan / Accept Next Face.');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to start scanner session.');
+    } finally {
+      setIsPreparingSession(false);
     }
   };
 
   const handleRetryFace = async () => {
+    if (!session) return;
+    activeScanAbortRef.current?.abort();
+    setScannerState('POSITION_FACE');
+    setPreview(null);
+    setStatusMessage('Resetting current face...');
+
+    // Client-side: pop the last accepted observation
+    const nextObs = [...localObservations];
+    nextObs.pop();
+    setLocalObservations(nextObs);
+
+    // Re-calculate session locally
+    const targetIdxToRemove = session.requestedFaceIndex - 1;
+    const nextFaces = session.faces.filter((f) => f.faceIndex !== targetIdxToRemove);
+    const nextSession = {
+      ...session,
+      faces: nextFaces,
+      capturedFaceCount: nextFaces.length,
+      requestedFaceIndex: Math.max(1, session.requestedFaceIndex - 1),
+      requestedFaceLabel: `Face ${Math.max(1, session.requestedFaceIndex - 1)} of 6`,
+    };
+
+    setSession(nextSession);
+    setPreview(extractPreview(nextSession));
+
     try {
       setError(null);
-      await retryScannerFace(matchId, validationType);
-      // Refetch starting configuration
-      const res = await startScanner(matchId, validationType);
-      setSession(res);
-      setScannedFacesCount(res.requestedFaceIndex - 1);
-      setIsScanning(true);
-      setLastReason('Current face reset. Ready to scan.');
+      const res = await retryScannerFace(matchId, validationType) as unknown as ScannerSessionDto;
+      setSession((curr) => {
+        if (!curr) return nextSession;
+        return {
+          ...nextSession,
+          scanGeneration: res.scanGeneration,
+          aiSessionId: res.aiSessionId,
+        };
+      });
     } catch (err: any) {
-      setError(err.message || 'Failed to retry face.');
+      console.warn('Failed to sync retry with backend:', err);
     }
   };
 
   const handleReset = async () => {
+    if (!session) return;
+    activeScanAbortRef.current?.abort();
+    setScannerState('POSITION_FACE');
+    setPreview(null);
+    setLocalObservations([]);
+    completionInFlightRef.current = false;
+    setStatusMessage('Resetting scanner session...');
     try {
       setError(null);
-      await resetScanner(matchId, validationType);
-      const res = await startScanner(matchId, validationType);
-      setSession(res);
-      setScannedFacesCount(res.requestedFaceIndex - 1);
-      setIsScanning(true);
-      setLastReason('Scanner reset. Start from Face 1.');
+      const res = await resetScanner(matchId, validationType) as unknown as ScannerSessionDto;
+      applySessionFull(res, 'Scanner reset. Start from Face 1.');
     } catch (err: any) {
-      setError(err.message || 'Failed to reset scanner.');
+      setError(err?.message || 'Failed to reset scanner.');
     }
   };
 
-  const targetFaceName = FACE_NAMES[scannedFacesCount] || 'Done';
-
   return (
     <div className="space-y-6">
-      {/* Scanner viewfinder */}
-      <div className="aspect-video w-full max-w-2xl mx-auto rounded-3xl bg-zinc-900 border border-zinc-800/80 overflow-hidden relative shadow-2xl">
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-
-        {/* Framing Grid Guides */}
-        <div className="absolute inset-0 border-[3px] border-orange-500/20 pointer-events-none flex items-center justify-center">
-          <div className="w-48 h-48 border-2 border-dashed border-orange-500/50 rounded-2xl flex items-center justify-center relative">
-            {/* Grid inner dividers */}
-            <div className="absolute inset-y-0 left-1/3 w-[1px] bg-orange-500/35" />
-            <div className="absolute inset-y-0 right-1/3 w-[1px] bg-orange-500/35" />
-            <div className="absolute inset-x-0 top-1/3 h-[1px] bg-orange-500/35" />
-            <div className="absolute inset-x-0 bottom-1/3 h-[1px] bg-orange-500/35" />
-
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-orange-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded tracking-widest uppercase">
-              Align Face
-            </div>
+      <section className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/60 shadow-2xl">
+        <div className="aspect-[4/3] w-full bg-black">
+          <div className="relative h-full w-full">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 z-0 block h-full w-full object-cover bg-black"
+            />
+            <canvas
+              ref={overlayCanvasRef}
+              className="absolute inset-0 z-10 block h-full w-full object-cover pointer-events-none"
+            />
           </div>
         </div>
 
-        {/* Viewfinder Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[9px] font-black text-orange-500 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              <Camera className="h-3.5 w-3.5 animate-pulse" /> AI Computer Vision Active
-            </span>
-
-            <span className="text-[10px] text-zinc-300 font-bold bg-zinc-950/80 px-2.5 py-1 rounded-lg">
-              Face {scannedFacesCount + 1} / 6 ({targetFaceName})
-            </span>
-          </div>
-
-          <div className="space-y-1 relative z-10">
-            <span className="block text-[9px] text-zinc-400 font-black tracking-widest uppercase">Scanner Status</span>
-            <p className="text-xs text-white font-bold max-w-sm truncate leading-relaxed">
-              {lastReason || 'Ready. Hold the cube face aligned to the scanner guide.'}
+        <div className="space-y-5 p-5">
+          <div className="space-y-2">
+            <h3 className="text-lg font-black text-white uppercase tracking-wide">
+              OnlineArena Match Scanner
+            </h3>
+            <p className="text-sm text-zinc-300">{statusMessage}</p>
+            <p className="text-xs text-zinc-500">
+              1. Start Camera. 2. Start Scan Session. 3. Hold one full face with 9 stickers. 4. Press Scan / Accept Next Face.
             </p>
+
+            {/* Live Stability Bar — shown during burst scan */}
+            <StabilityBar
+              stable={effectiveStableObservationCount}
+              required={effectiveRequiredStableObservations}
+              detectedStickers={effectiveDetectedStickers}
+              isScanning={isScanningFace}
+            />
+          </div>
+
+          {cameraError ? (
+            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+              {cameraError}
+            </div>
+          ) : null}
+          {error ? (
+            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleLoadExistingSession}
+              disabled={isPreparingSession || isScanningFace}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              {isPreparingSession ? 'Loading...' : 'Load Session'}
+            </button>
+            <button
+              onClick={handleStartCamera}
+              disabled={cameraStatus === 'starting' || isScanningFace}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              {cameraStatus === 'starting' ? 'Starting...' : 'Start Camera'}
+            </button>
+            <button
+              onClick={handleStartSession}
+              disabled={isPreparingSession || isScanningFace}
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
+            >
+              <Play className="h-3.5 w-3.5" />
+              {isPreparingSession ? 'Preparing...' : 'Start Scan Session'}
+            </button>
+            <button
+              onClick={scanCurrentFace}
+              disabled={cameraStatus !== 'ready' || isScanningFace || isPreparingSession}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
+            >
+              {isScanningFace ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              {isScanningFace ? 'Scanning...' : 'Scan / Accept Next Face'}
+            </button>
+            <button
+              onClick={handleRetryFace}
+              disabled={!session || isScanningFace}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Retry Current Face
+            </button>
+            <button
+              onClick={handleReset}
+              disabled={isScanningFace}
+              className="rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
+            >
+              Reset Session
+            </button>
+            <button
+              onClick={handleStopCamera}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800"
+            >
+              <Square className="h-3.5 w-3.5" />
+              Stop Camera
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
+            <StatusItem label="Mode" value={validationType.toLowerCase()} />
+            <StatusItem label="Camera" value={cameraStatus} />
+            <StatusItem label="AI health" value={effectiveAiHealth} />
+            <StatusItem label="Model" value={effectiveModelVersion} />
+            <StatusItem
+              label="Face Target"
+              value={
+                validationType === 'SCRAMBLE'
+                  ? `Face ${Math.min(effectiveCapturedFaceCount + 1, 5)} of 5`
+                  : (session?.requestedFaceLabel ?? 'Not started')
+              }
+            />
+            <StatusItem label="Progress" value={`${progressText} Captured`} />
+            <StatusItem label="Stability Check" value={`${stableText} Matches`} />
+            <StatusItem label="AI Infer Time" value={effectiveInferMs > 0 ? `${effectiveInferMs.toFixed(0)} ms` : '-'} />
+            <StatusItem label="State" value={scannerState} />
+            <StatusItem label="Stickers" value={`${effectiveDetectedStickers} / 9`} />
+            <StatusItem label="Observed center" value={observedCenterText} />
+          </div>
+
+          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <strong className="text-sm font-bold text-white">Remaining Center Colors</strong>
+              <span className="text-xs font-bold text-zinc-400">
+                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'Completed'}
+              </span>
+            </div>
+            <p className="text-sm text-zinc-200">
+              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 6 center colors captured.'}
+            </p>
+            {validationType === 'SCRAMBLE' ? (
+              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                Scramble mode does not require a solid-color face. As long as AI sees 9 stickers and the center color has not been accepted yet, the face can be accepted.
+              </p>
+            ) : (
+              <p className="mt-2 text-xs leading-relaxed text-zinc-400">{scannerGuidance}</p>
+            )}
           </div>
         </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, idx) => {
+          const face = effectiveFaces.find((item) => item.faceIndex === idx + 1);
+          const isActive = session ? !face && idx === effectiveCapturedFaceCount : false;
+
+          return (
+            <div
+              key={idx}
+              className={`p-3 bg-zinc-950/60 border rounded-2xl flex flex-col gap-2 transition-all duration-300 ${
+                isActive
+                  ? 'border-orange-500 bg-orange-500/5'
+                  : face
+                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    : 'border-zinc-800/80'
+              }`}
+            >
+              <header className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-400">
+                <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
+                <span className={face?.observedCenterColor ? 'text-orange-500 font-bold' : 'text-zinc-600'}>
+                  {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'pending'}
+                </span>
+              </header>
+              <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-zinc-900 p-1.5 rounded-xl border border-zinc-800/60">
+                {Array.from({ length: 9 }).map((_, cellIndex) => {
+                  const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
+                  return (
+                    <span
+                      key={cellIndex}
+                      className="rounded-sm transition-all duration-300"
+                      style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Progress indicators */}
-      <div className="bg-zinc-900/40 border border-zinc-800/80 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {FACE_NAMES.map((name, idx) => {
-            const isCompleted = idx < scannedFacesCount;
-            const isActive = idx === scannedFacesCount;
-
-            return (
-              <div
-                key={name}
-                className={`h-8 w-8 rounded-xl border flex items-center justify-center font-bold text-xs transition-all ${
-                  isCompleted
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                    : isActive
-                    ? 'bg-orange-500/20 border-orange-500 text-orange-400 animate-pulse'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-600'
-                }`}
-              >
-                {name}
-              </div>
-            );
-          })}
+      {session ? (
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/60">
+          <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+            <strong className="text-sm font-bold text-white">{session.scanStatus}</strong>
+            <span className="text-xs text-zinc-500">
+              {session.matchStatus}
+            </span>
+          </div>
+          <pre className="max-h-96 overflow-auto p-4 text-xs leading-relaxed text-zinc-300">
+            {JSON.stringify(session, null, 2)}
+          </pre>
         </div>
+      ) : null}
 
-        {/* Scan Actions */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRetryFace}
-            className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl border border-zinc-700/50 transition-all uppercase tracking-wider"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Retry Face
-          </button>
+      {session?.validation && !session.validation.matched && (
+        <div className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-3xl space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
+            <h4 className="text-xs font-black text-rose-500 uppercase tracking-widest">Cube State Mismatch Detected</h4>
+          </div>
+          <p className="text-[11px] text-zinc-400 leading-relaxed">
+            The scanned sticker states do not match the expected state of the scramble sequence.
+            Compare the mismatched slots below and scramble your cube again if necessary:
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-[10px] font-bold text-zinc-400">
+              <thead>
+                <tr className="border-b border-zinc-800 uppercase tracking-wider text-zinc-500">
+                  <th className="py-2">Face</th>
+                  <th className="py-2">Sticker Pos</th>
+                  <th className="py-2 text-rose-400">Expected</th>
+                  <th className="py-2 text-orange-400">Observed</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-900 font-mono">
+                {session.validation.mismatches.map((mismatch, idx) => (
+                  <tr key={idx} className="hover:bg-zinc-950/40">
+                    <td className="py-2 uppercase font-sans font-extrabold text-white">{mismatch.face}</td>
+                    <td className="py-2">Row {mismatch.row + 1}, Col {mismatch.column + 1}</td>
+                    <td className="py-2 uppercase text-rose-400">{mismatch.expected}</td>
+                    <td className="py-2 uppercase text-orange-400">{mismatch.observed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <button
             onClick={handleReset}
-            className="px-4 py-2 bg-zinc-950 hover:bg-zinc-900 text-zinc-500 hover:text-rose-400 font-bold text-xs rounded-xl border border-zinc-800 hover:border-rose-500/20 transition-all uppercase tracking-wider"
+            className="w-fit px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl uppercase transition-all"
           >
-            Reset All
+            Reset Session & Re-scan
           </button>
         </div>
-      </div>
+      )}
 
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3">
@@ -275,6 +1398,15 @@ export function OnlineMatchScanner({ matchId, validationType, onSuccess }: Onlin
           </div>
         </div>
       )}
+    </div>
+  );
+});
+
+function StatusItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="block text-[11px] uppercase tracking-wide text-zinc-500">{label}</span>
+      <strong className="mt-1 block text-sm font-bold text-white">{value}</strong>
     </div>
   );
 }

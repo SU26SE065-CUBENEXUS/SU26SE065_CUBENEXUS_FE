@@ -21,6 +21,12 @@ export default function MatchmakingPage() {
   const [hasConfirmed, setHasConfirmed] = useState(false);
   const [myElo, setMyElo] = useState<number | null>(null);
 
+  const parseUtc = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
+    return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
+  };
+
   // Fetch current user ELO rating
   useEffect(() => {
     let active = true;
@@ -61,8 +67,8 @@ export default function MatchmakingPage() {
       
       // Calculate remaining countdown
       if (payload.confirmDeadlineAt) {
-        const deadline = new Date(payload.confirmDeadlineAt).getTime();
-        const serverNow = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        const deadline = parseUtc(payload.confirmDeadlineAt);
+        const serverNow = payload.serverNow ? parseUtc(payload.serverNow) : Date.now();
         const diff = Math.max(0, Math.floor((deadline - serverNow) / 1000));
         setCountdown(diff);
       } else {
@@ -77,8 +83,8 @@ export default function MatchmakingPage() {
         player2Confirmed: payload.player2Confirmed,
       } : null);
       if (payload.confirmDeadlineAt) {
-        const deadline = new Date(payload.confirmDeadlineAt).getTime();
-        const serverNow = payload.serverNow ? new Date(payload.serverNow).getTime() : Date.now();
+        const deadline = parseUtc(payload.confirmDeadlineAt);
+        const serverNow = payload.serverNow ? parseUtc(payload.serverNow) : Date.now();
         const diff = Math.max(0, Math.floor((deadline - serverNow) / 1000));
         setCountdown(diff);
       }
@@ -86,8 +92,9 @@ export default function MatchmakingPage() {
     onMatchConfirmed: (payload) => {
       console.log('SignalR: Match Confirmed!', payload);
       setStatus('MATCHED');
-      // Navigate to match setup room
-      router.push(`/online/match/${payload.matchId}/setup`);
+      // Navigate to root match arena — root page.tsx renders the correct phase
+      // via its switch statement, avoiding per-subroute lazy compilation delays
+      router.push(`/online/match/${payload.matchId}`);
     },
     onMatchConfirmationExpired: (payload) => {
       console.log('SignalR: Match Confirmation Expired', payload);
@@ -113,9 +120,16 @@ export default function MatchmakingPage() {
           setMatchmakingInfo(res);
           if (res.status) {
             setStatus(res.status);
-            if (res.status === 'MATCH_FOUND' && res.confirmDeadlineAt) {
-              const deadline = new Date(res.confirmDeadlineAt).getTime();
-              const serverNow = res.serverNow ? new Date(res.serverNow).getTime() : Date.now();
+            if (res.status === 'MATCH_CONFIRMING') {
+              setHasConfirmed(true);
+            }
+            if ((res.status === 'MATCHED' || res.status === 'IN_ACTIVE_MATCH') && res.matchId) {
+              router.push(`/online/match/${res.matchId}`);
+              return;
+            }
+            if ((res.status === 'MATCH_FOUND' || res.status === 'MATCH_CONFIRMING') && res.confirmDeadlineAt) {
+              const deadline = parseUtc(res.confirmDeadlineAt);
+              const serverNow = res.serverNow ? parseUtc(res.serverNow) : Date.now();
               const diff = Math.max(0, Math.floor((deadline - serverNow) / 1000));
               setCountdown(diff);
             }
@@ -137,11 +151,11 @@ export default function MatchmakingPage() {
     return () => {
       active = false;
     };
-  }, [isConnected]);
+  }, [isConnected, router]);
 
   // Handle countdown timer
   useEffect(() => {
-    if (status === 'MATCH_FOUND') {
+    if (status === 'MATCH_FOUND' || status === 'MATCH_CONFIRMING') {
       countdownIntervalRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
@@ -207,6 +221,18 @@ export default function MatchmakingPage() {
           </div>
         )}
 
+        {(status === 'IN_ACTIVE_MATCH' || status === 'MATCHED') && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="relative h-20 w-20 mx-auto flex items-center justify-center">
+              <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
+            </div>
+            <h2 className="text-lg font-black text-white uppercase tracking-wider">RESUMING MATCH SESSION</h2>
+            <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+              Redirecting you to the active duel arena...
+            </p>
+          </div>
+        )}
+
         {status === 'QUEUED' && (
           <div className="space-y-8 animate-fade-in">
             {/* Animated Radar Scanning Effect */}
@@ -241,7 +267,7 @@ export default function MatchmakingPage() {
           </div>
         )}
 
-        {status === 'MATCH_FOUND' && matchmakingInfo && (
+        {(status === 'MATCH_FOUND' || status === 'MATCH_CONFIRMING') && matchmakingInfo && (
           <div className="bg-zinc-900/60 border border-zinc-800 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-2xl animate-fade-in text-center space-y-6">
             <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
             
@@ -334,6 +360,35 @@ export default function MatchmakingPage() {
               ) : (
                 'ACCEPT DUEL'
               )}
+            </button>
+          </div>
+        )}
+
+        {status === 'COOLDOWN' && (
+          <div className="bg-zinc-900/60 border border-zinc-800 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-2xl animate-fade-in text-center space-y-6">
+            <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 via-transparent to-transparent pointer-events-none" />
+            <div className="h-16 w-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-500">
+              <Clock className="h-8 w-8 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-white uppercase tracking-wider">Queue Cooldown</h2>
+              <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+                You have been temporarily suspended from the matchmaking queue for failing to confirm a match.
+              </p>
+            </div>
+            {matchmakingInfo?.remainingSeconds !== undefined && (
+              <div className="bg-zinc-950/60 border border-zinc-800/80 p-4 rounded-xl flex items-center justify-between">
+                <span className="text-zinc-400 text-xs">Remaining Cooldown</span>
+                <span className="text-lg font-black font-mono text-rose-500">
+                  {matchmakingInfo.remainingSeconds}s
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => router.push('/online')}
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-3.5 px-4 rounded-xl border border-zinc-700/80 transition-all uppercase tracking-widest"
+            >
+              Return to Lobby
             </button>
           </div>
         )}

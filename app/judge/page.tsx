@@ -109,6 +109,20 @@ export default function JudgePage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
 
+  // Evidence photo state
+  const [evidencePhoto, setEvidencePhoto] = useState<string | null>(null); // base64 data URL
+  const evidenceInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleEvidencePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setEvidencePhoto(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // ─── Initial Data Loading ──────────────────────────────────
   useEffect(() => {
     async function loadInitialData() {
@@ -425,6 +439,8 @@ export default function JudgePage() {
     setHasSignature(false);
     setResultSummary(null);
     setMedleySolves([]);
+    setEvidencePhoto(null);
+    if (evidenceInputRef.current) evidenceInputRef.current.value = '';
     if (canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
@@ -490,6 +506,7 @@ export default function JudgePage() {
           groupCompetitorId: verifiedCompetitor.groupCompetitorId,
           solveNumber: solveProgress.nextSolveNumber || 1,
           esignatureData: esig,
+          evidencePhotoData: evidencePhoto,
           details: detailsPayload
         });
 
@@ -512,7 +529,8 @@ export default function JudgePage() {
           rawTimeMs,
           penaltyTypeId: pType?.id || null,
           scrambleId,
-          esignatureData: esig
+          esignatureData: esig,
+          evidencePhotoData: evidencePhoto
         });
 
         const displayTime = res.isDnf ? 'DNF' : `${((res.finalTimeMs || 0) / 1000).toFixed(2)}s`;
@@ -847,93 +865,182 @@ export default function JudgePage() {
             </div>
           </Card>
 
-          {/* Card 2: Solve Time Inputs */}
-          <Card className="p-6 border border-border/60 bg-card rounded-2xl flex flex-col justify-between shadow-sm space-y-4 hover:border-primary/20 transition-all duration-300">
-            <div className="space-y-4">
-              <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <Timer className="h-4 w-4" /> 2. Stackmat Solve
-              </h3>
-              
+          {/* Card 2: Solve Time + Evidence Photo */}
+          <Card className="p-6 border border-border/60 bg-card rounded-2xl flex flex-col gap-5 shadow-sm hover:border-primary/20 transition-all duration-300">
+            {/* ── Step 1: Enter Time + Penalty ── */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                  style={{ background: 'oklch(0.72 0.21 42)', color: '#fff' }}>1</div>
+                <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Timer className="h-4 w-4" /> Nhập Kết Quả
+                </h3>
+              </div>
+
               {activeEvent?.eventFormatCode !== 'MEDLEY' ? (
-                <div className="space-y-3 pt-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Timer Duration (Seconds)</label>
-                    <input 
-                      value={stackmat} 
-                      onChange={(e) => setStackmat(e.target.value)} 
-                      disabled={!verifiedCompetitor}
-                      placeholder="e.g. 10.42"
-                      className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary font-mono font-bold" 
-                    />
+                <div className="space-y-3 pt-1">
+                  {/* Time input row */}
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Thời Gian (giây)</label>
+                      <input
+                        value={stackmat}
+                        onChange={(e) => setStackmat(e.target.value)}
+                        disabled={!verifiedCompetitor}
+                        placeholder="Vd: 8.35"
+                        className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary font-mono font-bold"
+                      />
+                    </div>
+                    {/* Quick penalty buttons */}
+                    <div className="flex gap-1 pb-0.5">
+                      {(['None', '+2', 'DNF'] as PenaltyMode[]).map((p) => (
+                        <button
+                          key={p}
+                          disabled={!verifiedCompetitor}
+                          onClick={() => setPenalty(p)}
+                          className="px-3 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all border"
+                          style={penalty === p ? {
+                            background: p === 'DNF' ? 'oklch(0.55 0.22 25)' : p === '+2' ? 'oklch(0.72 0.21 42)' : 'oklch(0.70 0.19 145)',
+                            borderColor: 'transparent',
+                            color: '#fff',
+                            boxShadow: '0 0 12px currentColor'
+                          } : {
+                            background: 'oklch(0.15 0.018 255)',
+                            borderColor: 'oklch(0.24 0.02 256)',
+                            color: 'oklch(0.55 0.02 256)'
+                          }}
+                        >
+                          {p === 'None' ? 'OK' : p}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">WCA Penalty Adjustments</label>
-                    <select 
-                      value={penalty} 
-                      onChange={(e) => setPenalty(e.target.value as PenaltyMode)} 
-                      disabled={!verifiedCompetitor}
-                      className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary font-semibold"
+
+                  {/* Live result display */}
+                  <div className="rounded-2xl p-4 text-center relative overflow-hidden"
+                    style={{
+                      background: penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.1)' : 'oklch(0.70 0.19 145 / 0.06)',
+                      border: `1px solid ${penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.35)' : 'oklch(0.70 0.19 145 / 0.25)'}`
+                    }}
+                  >
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Kết Quả Sau Penalty</p>
+                    <p className="text-5xl font-black leading-none time-display"
+                      style={{ color: penalty === 'DNF' ? 'oklch(0.65 0.22 25)' : 'oklch(0.70 0.19 145)', textShadow: '0 0 30px currentColor' }}
                     >
-                      <option value="None">None (Clean Solve)</option>
-                      <option value="+2">+2 Seconds Penalty</option>
-                      <option value="DNF">Did Not Finish (DNF)</option>
-                    </select>
+                      {finalTime}
+                    </p>
+                    {penalty !== 'None' && penalty !== 'DNF' && (
+                      <p className="text-[10px] text-muted-foreground mt-1">{stackmat || '0'}s + 2s penalty = <strong>{finalTime}</strong></p>
+                    )}
                   </div>
-                  
+
                   {verifiedCompetitor && (
-                    <div className="flex gap-2 pt-2">
-                      <Button 
+                    <div className="flex gap-2">
+                      <Button
                         onClick={() => emitStationState('INSPECTING', verifiedCompetitor.groupName)}
                         variant="outline"
                         className="flex-1 text-[10px] py-1 border-primary/30 text-primary hover:bg-primary/10 font-bold"
                       >
-                        SIMULATE INSPECT
+                        INSPECT
                       </Button>
-                      <Button 
+                      <Button
                         onClick={() => emitStationState('SOLVING', verifiedCompetitor.groupName)}
                         variant="outline"
                         className="flex-1 text-[10px] py-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-bold"
                       >
-                        SIMULATE SOLVING
+                        SOLVING
                       </Button>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="rounded-xl bg-primary/5 border border-primary/25 p-4 text-xs text-muted-foreground leading-relaxed">
-                  Medley Relay active. Use the special Medley Panel below to enter solve values for each puzzle type.
+                  Medley Relay active. Dùng Medley Panel bên dưới.
                 </div>
               )}
             </div>
 
-            {activeEvent?.eventFormatCode !== 'MEDLEY' && (
-              <div className="rounded-xl border border-border/60 p-4 bg-muted/5 text-center">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Adjusted Solved Time</p>
-                <p className="mt-1 text-3xl font-black text-primary time-display">{finalTime}</p>
+            {/* ── Step 2: Evidence Photo ── */}
+            <div className="space-y-3 pt-3 border-t border-border/40">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                  style={{ background: 'oklch(0.62 0.19 265)', color: '#fff' }}>2</div>
+                <h3 className="font-extrabold text-xs uppercase tracking-wider" style={{ color: 'oklch(0.72 0.19 265)' }}>
+                  Đính Kèm Ảnh Bằng Chứng
+                </h3>
               </div>
-            )}
+
+              <input
+                ref={evidenceInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleEvidencePhotoChange}
+              />
+
+              {!evidencePhoto ? (
+                <button
+                  disabled={!verifiedCompetitor}
+                  onClick={() => evidenceInputRef.current?.click()}
+                  className="w-full flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed py-5 text-xs font-bold transition-all"
+                  style={{
+                    borderColor: verifiedCompetitor ? 'oklch(0.62 0.19 265 / 0.5)' : 'oklch(0.24 0.02 256)',
+                    color: verifiedCompetitor ? 'oklch(0.72 0.19 265)' : 'oklch(0.45 0.02 256)',
+                    background: verifiedCompetitor ? 'oklch(0.62 0.19 265 / 0.05)' : 'transparent'
+                  }}
+                >
+                  <span className="text-xl">📷</span>
+                  <span>Chụp hoặc chọn ảnh bằng chứng</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">Camera · Thư viện ảnh</span>
+                </button>
+              ) : (
+                <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'oklch(0.62 0.19 265 / 0.4)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={evidencePhoto} alt="Evidence" className="w-full max-h-36 object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                    <span className="text-[10px] text-white font-bold">✓ Ảnh đã đính kèm</span>
+                    <button
+                      onClick={() => { setEvidencePhoto(null); if (evidenceInputRef.current) evidenceInputRef.current.value = ''; }}
+                      className="text-[10px] text-white/80 hover:text-white font-bold px-2 py-0.5 rounded bg-black/40"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
 
-          {/* Card 3: Signatures and submission */}
-          <Card className="p-6 border border-border/60 bg-card rounded-2xl flex flex-col justify-between shadow-sm space-y-4 hover:border-primary/20 transition-all duration-300">
-            <div className="space-y-4">
-              <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <Signature className="h-4 w-4" /> 3. Player Auths
-              </h3>
-              
-              <div className="space-y-3 pt-2">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase">Competitor E-Signature</label>
-                  <button 
-                    onClick={clearCanvas} 
+          {/* Card 3: Step 3 – Signature + Step 4 – Submit */}
+          <Card className="p-6 border border-border/60 bg-card rounded-2xl flex flex-col gap-5 shadow-sm hover:border-primary/20 transition-all duration-300">
+
+            {/* ── Step 3: Player Signature ── */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                  style={{ background: 'oklch(0.72 0.21 42)', color: '#fff' }}>3</div>
+                <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Signature className="h-4 w-4" /> Player Ký Xác Nhận
+                </h3>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                <div className="flex justify-between items-center">
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase">Chữ Ký Điện Tử</label>
+                  <button
+                    onClick={clearCanvas}
                     className="text-[10px] font-extrabold text-primary uppercase tracking-wider hover:underline flex items-center gap-1"
                   >
-                    <RotateCcw className="h-3 w-3" /> Clear
+                    <RotateCcw className="h-3 w-3" /> Xóa
                   </button>
                 </div>
-                
-                {/* Signature canvas board */}
-                <div className="relative border border-border bg-black/40 rounded-xl overflow-hidden h-[120px] transition-all focus-within:border-primary">
+
+                {/* Signature canvas */}
+                <div className="relative border-2 bg-black/40 rounded-xl overflow-hidden h-[130px] transition-all"
+                  style={{ borderColor: hasSignature ? 'oklch(0.72 0.21 42 / 0.6)' : 'oklch(0.24 0.02 256)' }}
+                >
                   <canvas
                     ref={canvasRef}
                     onMouseDown={startDrawing}
@@ -943,43 +1050,86 @@ export default function JudgePage() {
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="w-full h-full cursor-crosshair block"
+                    className="w-full h-full cursor-crosshair block touch-none"
                     width={350}
-                    height={120}
+                    height={130}
                   />
                   {!hasSignature && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
-                      <Signature className="h-5 w-5 text-muted-foreground mb-1 animate-pulse" />
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Sign within this box</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-35">
+                      <Signature className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Player ký vào đây</span>
+                    </div>
+                  )}
+                  {hasSignature && (
+                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-black"
+                      style={{ background: 'oklch(0.72 0.21 42 / 0.15)', color: 'oklch(0.72 0.21 42)' }}
+                    >
+                      ✓ Đã ký
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase">Or Type Initials (Fallback)</label>
-                  <input 
-                    value={signature} 
-                    onChange={(e) => setSignature(e.target.value)} 
-                    placeholder="Enter competitor initials" 
-                    className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary font-bold" 
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase">Hoặc gõ tên viết tắt (Dự phòng)</label>
+                  <input
+                    value={signature}
+                    onChange={(e) => setSignature(e.target.value)}
+                    placeholder="Nhập chữ viết tắt"
+                    className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary font-bold"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3 pt-4">
-              <Button 
+            {/* ── Step 4: Submit ── */}
+            <div className="space-y-3 pt-3 border-t border-border/40">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                  style={{ background: 'oklch(0.70 0.19 145)', color: '#fff' }}>4</div>
+                <h3 className="font-extrabold text-xs uppercase tracking-wider" style={{ color: 'oklch(0.70 0.19 145)' }}>
+                  Lưu Kết Quả
+                </h3>
+              </div>
+
+              {/* Checklist summary before submit */}
+              <div className="rounded-xl p-3 space-y-1.5 text-[10px] font-semibold"
+                style={{ background: 'oklch(0.155 0.018 255)', border: '1px solid oklch(0.22 0.02 256)' }}
+              >
+                {[
+                  { label: 'Competitor đã xác minh', done: !!verifiedCompetitor },
+                  { label: 'Thời gian đã nhập', done: !!stackmat || penalty === 'DNF' || activeEvent?.eventFormatCode === 'MEDLEY' },
+                  { label: 'Ảnh bằng chứng', done: !!evidencePhoto, optional: true },
+                  { label: 'Player đã ký', done: hasSignature || !!signature.trim() },
+                ].map(({ label, done, optional }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-base leading-none" style={{ color: done ? 'oklch(0.70 0.19 145)' : optional ? 'oklch(0.72 0.21 42 / 0.5)' : 'oklch(0.45 0.02 256)' }}>
+                      {done ? '✓' : optional ? '○' : '○'}
+                    </span>
+                    <span style={{ color: done ? 'oklch(0.75 0.02 256)' : 'oklch(0.45 0.02 256)' }}>
+                      {label}{optional && !done ? <span className="text-[9px] ml-1 opacity-60">(tùy chọn)</span> : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
                 onClick={submitResult}
                 disabled={isSubmitting || !verifiedCompetitor}
-                className="w-full bg-primary hover:opacity-90 text-primary-foreground font-extrabold rounded-xl py-5 text-xs border-none shadow-lg shadow-primary/10 transition-all"
+                className="w-full font-extrabold rounded-xl py-5 text-xs border-none shadow-lg transition-all"
+                style={{
+                  background: !verifiedCompetitor ? 'oklch(0.24 0.02 256)' : 'oklch(0.70 0.19 145)',
+                  color: !verifiedCompetitor ? 'oklch(0.45 0.02 256)' : '#fff',
+                  boxShadow: verifiedCompetitor ? '0 4px 20px oklch(0.70 0.19 145 / 0.3)' : 'none'
+                }}
               >
                 {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                {isSubmitting ? 'SUBMITTING ATTEMPT...' : 'SUBMIT ATTEMPT RESULT'}
+                {isSubmitting ? 'ĐANG LƯU KẾT QUẢ...' : '✓ XÁC NHẬN & LƯU KẾT QUẢ'}
               </Button>
+
               {resultSummary && (
                 <div className={`rounded-xl border p-3.5 text-[11px] font-bold leading-relaxed flex items-start gap-2 ${
-                  resultSummary.includes('Success') 
-                    ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400' 
+                  resultSummary.includes('Success')
+                    ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400'
                     : 'border-rose-500/20 bg-rose-500/8 text-rose-400'
                 }`}>
                   {resultSummary.includes('Success') ? (

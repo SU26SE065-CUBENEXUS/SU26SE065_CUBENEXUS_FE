@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   User,
   Users,
+  UserCheck,
   Settings,
   Layers,
   Radio,
@@ -47,12 +48,12 @@ function Sidebar({
   };
 
   const navItems = [
-    { label: 'Overview', href: selectedId ? `/managertournaments/${selectedId}` : '#', icon: Trophy, exact: true },
-    { label: 'Registrations', href: selectedId ? `/managertournaments/${selectedId}/registrations` : '#', icon: Users, exact: false },
-    { label: 'Events & Cutoffs', href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
-    { label: 'Groups & Scrambles', href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
     { label: 'Live Operations', href: selectedId ? `/managertournaments/${selectedId}/live` : '#', icon: Radio, exact: false },
-    { label: 'Disputes & Audits', href: selectedId ? `/managertournaments/${selectedId}/disputes` : '#', icon: Shield, exact: false },
+    { label: 'Overview', href: selectedId ? `/managertournaments/${selectedId}` : '#', icon: Trophy, exact: true },
+    { label: 'Manage Judges', href: selectedId ? `/managertournaments/${selectedId}/judges` : '#', icon: UserCheck, exact: false },
+    { label: 'Registrations', href: selectedId ? `/managertournaments/${selectedId}/registrations` : '#', icon: Users, exact: false },
+    { label: 'Events & Competitors', href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
+    { label: 'Groups & Scrambles', href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
   ];
 
   return (
@@ -236,10 +237,9 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
   const pageLabels: Record<string, string> = {
     managertournaments: 'Dashboard',
     registrations: 'Registrations',
-    events: 'Events & Cutoffs',
+    events: 'Events & Competitors',
     groups: 'Groups & Scrambles',
     live: 'Live Operations',
-    disputes: 'Disputes & Audits',
     judges: 'Judge Management',
   };
   const pageLabel = pageLabels[lastSegment] || (selectedTournamentName ? 'Overview' : 'Dashboard');

@@ -124,15 +124,15 @@ export default function OnlineLobbyPage() {
 
             {/* History Card */}
             <div
-              onClick={() => alert('Battle Records feature is coming soon!')}
-              className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-zinc-800/80 hover:border-zinc-700/80 rounded-2xl p-6 cursor-pointer flex items-center gap-4 transition-all duration-200"
+              onClick={() => router.push('/online/history')}
+              className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-zinc-800/80 hover:border-orange-500/50 rounded-2xl p-6 cursor-pointer flex items-center gap-4 transition-all duration-200 group"
             >
-              <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-orange-500/10 group-hover:bg-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 transition-all">
                 <History className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Battle Records</h4>
-                <p className="text-zinc-500 text-[10px] sm:text-xs">Review past matches, times, and ELO changes.</p>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider group-hover:text-orange-400 transition-colors">Match History</h4>
+                <p className="text-zinc-500 text-[10px] sm:text-xs">Review past matches, times, ELO changes, and video replays.</p>
               </div>
             </div>
 

@@ -8,6 +8,7 @@ import React, {
   useCallback,
   type ReactNode,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { loginApi, logoutApi } from '@/lib/api/auth';
 import {
   getAccessToken,
@@ -52,7 +53,7 @@ function buildUserFromToken(token: string): AuthUser | null {
     '';
 
   const email = (payload['email'] as string) || '';
-  const displayName = (payload['display_name'] as string) || '';
+  const displayName = (payload['displayName'] as string) || (payload['display_name'] as string) || '';
 
   return { id, email, displayName, role };
 }
@@ -62,6 +63,7 @@ function buildUserFromToken(token: string): AuthUser | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -84,10 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logoutApi();
     clearTokens();
     setUser(null);
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-  }, []);
+    router.push('/login');
+  }, [router]);
 
   return (
     <AuthContext.Provider

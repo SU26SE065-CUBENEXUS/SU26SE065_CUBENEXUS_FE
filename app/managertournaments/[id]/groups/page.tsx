@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { getTournamentById, generateGroups, generateScrambles } from '@/lib/api/tournaments';
+import { getTournamentById, getTournamentJudges, generateGroups, generateScrambles } from '@/lib/api/tournaments';
 import {
   startRound,
   lockRoundResults,
@@ -12,7 +12,7 @@ import {
   getLiveBoardState,
   getGroupScrambles,
 } from '@/lib/api/operations';
-import type { TournamentDetailDto, EventDetailDto } from '@/lib/api/types';
+import type { TournamentDetailDto, EventDetailDto, TournamentJudgeDto } from '@/lib/api/types';
 import {
   ChevronRight,
   ChevronLeft,
@@ -34,10 +34,13 @@ import {
   Clipboard,
   FileText,
   Check,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
 
-function msToDisplay(ms?: number | null): string {
-  if (!ms) return '—';
+function msToDisplay(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return '-';
+  if (ms === 999999999) return 'DNF';
   const totalSec = ms / 1000;
   if (totalSec >= 60) {
     const min = Math.floor(totalSec / 60);
@@ -47,15 +50,27 @@ function msToDisplay(ms?: number | null): string {
   return `${totalSec.toFixed(2)}s`;
 }
 
-function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tournamentId: string }) {
+function EventGroupPanel({
+  event,
+  tournamentId,
+  defaultStationCount = 4,
+}: {
+  event: EventDetailDto;
+  tournamentId: string;
+  defaultStationCount?: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'groups' | 'scrambles' | 'control'>('groups');
   const [roundNumber, setRoundNumber] = useState('1');
 
   // Form configurations
   const [groupSize, setGroupSize] = useState('8');
-  const [stationCount, setStationCount] = useState('4');
+  const [stationCount, setStationCount] = useState(defaultStationCount.toString());
   const [advanceCount, setAdvanceCount] = useState('8');
+
+  useEffect(() => {
+    setStationCount(defaultStationCount.toString());
+  }, [defaultStationCount]);
 
   // Live board data state
   const [liveBoard, setLiveBoard] = useState<any>(null);
@@ -369,16 +384,29 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
               {!groupsExist ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/5 rounded-2xl border border-dashed border-border p-6">
                   <Shuffle className="h-10 w-10 text-muted-foreground/35 mb-3" />
-                  <p className="font-bold text-sm text-foreground">No groups generated for this round yet.</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mb-4">
-                    Before starting the round, you must generate groups and allocate competitor solving stations.
-                  </p>
-                  <button
-                    onClick={() => setIsGenerateGroupsOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-500 transition shadow-sm"
-                  >
-                    <Shuffle className="h-3.5 w-3.5" /> Generate Groups
-                  </button>
+                  {Number(roundNumber) > 1 ? (
+                    <>
+                      <p className="font-bold text-sm text-foreground">Vòng {roundNumber} chưa có Nhóm thi đấu</p>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-md mb-4 leading-relaxed">
+                        Danh sách thí sinh ở <strong>Vòng {roundNumber}</strong> phải được tuyển chọn từ kết quả xuất sắc của <strong>Vòng {Number(roundNumber) - 1}</strong>.
+                        <br />
+                        Vui lòng chuyển sang <strong>Vòng {Number(roundNumber) - 1}</strong>, hoàn thành thi đấu và chọn nút <strong className="text-orange-400">"Advance Round"</strong> để tuyển chọn thí sinh tiến vào Vòng {roundNumber}.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-sm text-foreground">Chưa tạo nhóm thi đấu cho Vòng 1</p>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-sm mb-4">
+                        Trước khi bắt đầu thi đấu Vòng 1, bạn cần tạo các nhóm thi đấu và phân bổ bàn thi cho các thí sinh.
+                      </p>
+                      <button
+                        onClick={() => setIsGenerateGroupsOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-500 transition shadow-sm cursor-pointer"
+                      >
+                        <Shuffle className="h-3.5 w-3.5" /> Tạo Nhóm Thi Đấu Vòng 1
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -696,195 +724,213 @@ function EventGroupPanel({ event, tournamentId }: { event: EventDetailDto; tourn
                 </div>
               </div>
 
-              {/* Complete Event Entirely */}
-              <div className="pt-4 border-t border-border mt-2">
-                <button
-                  disabled={isLoading}
-                  onClick={() => {
-                    if (!confirm(`Mark all rounds of "${event.puzzleTypeName || event.puzzleTypeCode}" as completed? This cannot be undone.`)) return;
-                    doAction(() => completeEvent(event.id), 'Event completed!');
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/45 px-3 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 disabled:opacity-60 transition"
-                >
-                  <Flag className="h-3.5 w-3.5 text-red-400" />
-                  Terminate & Complete Event
-                </button>
-              </div>
+
             </div>
           )}
         </div>
       )}
-
-      {/* GENERATE GROUPS MODAL */}
-      {isGenerateGroupsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-md p-6 bg-card border border-border rounded-2xl shadow-xl">
-            <h3 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
-              <Shuffle className="h-4.5 w-4.5 text-orange-500" />
-              Generate Groups Configuration
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Configure parameters for Round {roundNumber} of {event.puzzleTypeName || event.puzzleTypeCode}.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase">Group Size</label>
-                <input
-                  type="number"
-                  value={groupSize}
-                  onChange={(e) => setGroupSize(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase">Station Count</label>
-                <input
-                  type="number"
-                  value={stationCount}
-                  onChange={(e) => setStationCount(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setIsGenerateGroupsOpen(false)}
-                className="px-3.5 py-2 rounded-lg border border-border hover:bg-muted text-xs font-bold text-foreground transition"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={isLoading}
-                onClick={() => {
-                  setIsGenerateGroupsOpen(false);
-                  doAction(
-                    () => generateGroups(event.id, {
-                      roundNumber: Number(roundNumber),
-                      competitorsPerGroup: Number(groupSize),
-                      stationCount: Number(stationCount)
-                    }),
-                    'Groups generated successfully!'
-                  );
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-500 transition shadow-sm"
-              >
-                Confirm & Generate
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ADVANCE ROUND CONFIRMATION MODAL */}
-      {isAdvanceOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl p-6 bg-card border border-border rounded-2xl shadow-xl flex flex-col max-h-[85vh]">
-            <h3 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
-              <Zap className="h-4.5 w-4.5 text-orange-500" />
-              Advance Round Configuration
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1 mb-4">
-              Advance the top performing competitors from Round {roundNumber} to Round {Number(roundNumber) + 1}.
-            </p>
-
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase">Top N (Advance Count)</label>
-                <input
-                  type="number"
-                  value={advanceCount}
-                  onChange={(e) => setAdvanceCount(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase">Next Round Group Size</label>
-                <input
-                  type="number"
-                  value={groupSize}
-                  onChange={(e) => setGroupSize(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase">Next Round Stations</label>
-                <input
-                  type="number"
-                  value={stationCount}
-                  onChange={(e) => setStationCount(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Advance Ranking Preview */}
-            <div className="flex-1 overflow-y-auto mb-4 border border-border rounded-xl bg-muted/5">
-              <div className="p-3 bg-muted/20 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
-                Advancing Competitors Preview
-              </div>
-
-              {advancingCompetitors.length === 0 ? (
-                <div className="p-8 text-center text-xs text-muted-foreground italic flex flex-col items-center gap-1.5">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  No competitors have rank records yet, or preview is unavailable. Click Advance to calculate on backend.
+               {/* GENERATE GROUPS MODAL */}
+          {isGenerateGroupsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+              <div className="relative w-full max-w-md p-6 md:p-8 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl space-y-6 overflow-hidden">
+                <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+                  <div className="flex items-center gap-2.5 text-amber-400">
+                    <Shuffle className="h-6 w-6 text-amber-400" />
+                    <h3 className="text-lg font-black text-white tracking-tight">Cấu Hình Tạo Nhóm Thi Đấu</h3>
+                  </div>
+                  <button
+                    onClick={() => setIsGenerateGroupsOpen(false)}
+                    className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-              ) : (
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/10">
-                      <th className="p-2 font-mono text-[10px] font-bold text-muted-foreground">Rank</th>
-                      <th className="p-2 font-mono text-[10px] font-bold text-muted-foreground">Competitor</th>
-                      <th className="p-2 font-mono text-[10px] font-bold text-muted-foreground">Best Time</th>
-                      <th className="p-2 font-mono text-[10px] font-bold text-muted-foreground">Average</th>
-                      <th className="p-2 font-mono text-[10px] font-bold text-muted-foreground">Solves</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {advancingCompetitors.map((c: any) => (
-                      <tr key={c.groupCompetitorId} className="border-b border-border hover:bg-muted/10">
-                        <td className="p-2 font-bold font-mono text-primary">#{c.rank}</td>
-                        <td className="p-2 font-bold text-foreground">{c.competitorName}</td>
-                        <td className="p-2 font-mono">{msToDisplay(c.bestTimeMs)}</td>
-                        <td className="p-2 font-mono font-bold">{msToDisplay(c.averageTimeMs)}</td>
-                        <td className="p-2 text-muted-foreground font-mono">{c.completedSolves} solves</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
 
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setIsAdvanceOpen(false)}
-                className="px-3.5 py-2 rounded-lg border border-border hover:bg-muted text-xs font-bold text-foreground transition"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={isLoading}
-                onClick={() => {
-                  setIsAdvanceOpen(false);
-                  doAction(
-                    () => advanceRound(event.id, Number(roundNumber), {
-                      nextRoundNumber: Number(roundNumber) + 1,
-                      topN: Number(advanceCount),
-                      competitorsPerGroup: Number(groupSize),
-                      stationCount: Number(stationCount)
-                    }),
-                    `Successfully advanced top ${advanceCount} competitors to Round ${Number(roundNumber) + 1}!`
-                  );
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white hover:bg-orange-500 transition shadow-sm"
-              >
-                Confirm & Advance Round
-              </button>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-amber-400">Vòng {roundNumber}</strong> - Môn <strong className="text-white">{event.puzzleTypeName || event.puzzleTypeCode}</strong>.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-2">
+                      Số lượng thí sinh trong 1 nhóm
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={groupSize}
+                      onChange={(e) => setGroupSize(e.target.value)}
+                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white font-bold outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                      placeholder="Ví dụ: 8 thí sinh / nhóm"
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs space-y-2 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-zinc-300 font-medium">
+                        <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
+                        <span>Số bàn thi đấu hiện có:</span>
+                      </div>
+                      <span className="font-bold text-xs bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
+                        {stationCount} Bàn khả dụng
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      💡 Thí sinh sẽ được chia đều để lượt thi diễn ra liên tục trên {stationCount} bàn trọng tài.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsGenerateGroupsOpen(false)}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    disabled={isLoading}
+                    onClick={() => {
+                      setIsGenerateGroupsOpen(false);
+                      doAction(
+                        () => generateGroups(event.id, {
+                          roundNumber: Number(roundNumber),
+                          competitorsPerGroup: Number(groupSize),
+                          stationCount: Number(stationCount)
+                        }),
+                        'Đã khởi tạo thành công các Nhóm thi đấu!'
+                      );
+                    }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white text-white" />}
+                    Xác Nhận Tạo Nhóm
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {/* ADVANCE ROUND CONFIRMATION MODAL */}
+          {isAdvanceOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+              <div className="relative w-full max-w-2xl p-6 md:p-8 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col max-h-[85vh] space-y-5 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                  <div className="flex items-center gap-2.5 text-amber-400">
+                    <Zap className="h-6 w-6 text-amber-400 fill-amber-400" />
+                    <h3 className="text-lg font-black text-white tracking-tight">Cấu Hình Tăng Vòng (Advance Round)</h3>
+                  </div>
+                  <button
+                    onClick={() => setIsAdvanceOpen(false)}
+                    className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-zinc-400">
+                  Tuyển chọn các thí sinh có thứ hạng xuất sắc nhất Vòng {roundNumber} tiến vào <strong className="text-amber-400">Vòng {Number(roundNumber) + 1}</strong>.
+                </p>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Số Lấy Vào (Top N)</label>
+                    <input
+                      type="number"
+                      value={advanceCount}
+                      onChange={(e) => setAdvanceCount(e.target.value)}
+                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Size Nhóm Mới</label>
+                    <input
+                      type="number"
+                      value={groupSize}
+                      onChange={(e) => setGroupSize(e.target.value)}
+                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Số Bàn Thi</label>
+                    <input
+                      type="number"
+                      value={stationCount}
+                      onChange={(e) => setStationCount(e.target.value)}
+                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                    />
+                  </div>
+                </div>
+
+                {/* Advance Ranking Preview */}
+                <div className="flex-1 overflow-y-auto border border-zinc-800 rounded-2xl bg-zinc-950">
+                  <div className="p-3 bg-zinc-900/80 border-b border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                    Danh Sách Thí Sinh Dự Kiến Đi Tiếp (Top {advanceCount})
+                  </div>
+
+                  {advancingCompetitors.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-zinc-500 italic flex flex-col items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán từ bảng thành tích.
+                    </div>
+                  ) : (
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-zinc-800 bg-zinc-900/40 text-zinc-400 font-bold text-[10px] uppercase">
+                          <th className="p-3 font-mono">Hạng</th>
+                          <th className="p-3 font-mono">Thí Sinh</th>
+                          <th className="p-3 font-mono">Best</th>
+                          <th className="p-3 font-mono">Average</th>
+                          <th className="p-3 font-mono">Số Lượt</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-800/50">
+                        {advancingCompetitors.map((c: any) => (
+                          <tr key={c.groupCompetitorId} className="hover:bg-zinc-800/30">
+                            <td className="p-3 font-bold font-mono text-amber-400">#{c.rank}</td>
+                            <td className="p-3 font-bold text-white">{c.competitorName}</td>
+                            <td className="p-3 font-mono text-zinc-300">{msToDisplay(c.bestTimeMs)}</td>
+                            <td className="p-3 font-mono font-bold text-amber-300">{msToDisplay(c.averageTimeMs)}</td>
+                            <td className="p-3 text-zinc-400 font-mono">{c.completedSolves} lượt</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setIsAdvanceOpen(false)}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    disabled={isLoading}
+                    onClick={() => {
+                      setIsAdvanceOpen(false);
+                      doAction(
+                        () => advanceRound(event.id, Number(roundNumber), {
+                          nextRoundNumber: Number(roundNumber) + 1,
+                          topN: Number(advanceCount),
+                          competitorsPerGroup: Number(groupSize),
+                          stationCount: Number(stationCount)
+                        }),
+                        `Đã chuyển thành công Top ${advanceCount} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
+                      );
+                    }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white text-white" />}
+                    Xác Nhận Chuyển Vòng
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
     </div>
   );
 }
@@ -899,14 +945,14 @@ function CollapsibleRoster({ list }: { list: any[] }) {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between text-left text-xs font-bold text-muted-foreground hover:text-foreground transition-colors p-1"
       >
-        <span className="font-mono">Roster List ({list.length})</span>
+        <span className="font-mono">Danh Sách Thí Sinh ({list.length})</span>
         {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
       </button>
 
       {open && (
         <div className="mt-2.5 space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
           {list.length === 0 ? (
-            <p className="text-[10px] text-muted-foreground italic p-2 bg-muted/20 rounded">No competitors assigned to this group.</p>
+            <p className="text-[10px] text-muted-foreground italic p-2 bg-muted/20 rounded">Chưa có thí sinh nào được xếp vào nhóm này.</p>
           ) : (
             list.map((c: any) => (
               <div key={c.groupCompetitorId} className="flex items-center justify-between p-1.5 rounded bg-card border border-border/40 text-[10px]">
@@ -942,14 +988,19 @@ export default function GroupHeatManagementPage({
 }) {
   const { id } = use(params);
   const [tournament, setTournament] = useState<TournamentDetailDto | null>(null);
+  const [judges, setJudges] = useState<TournamentJudgeDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await getTournamentById(id);
-        setTournament(data);
+        const [tData, jData] = await Promise.all([
+          getTournamentById(id),
+          getTournamentJudges(id).catch(() => []),
+        ]);
+        setTournament(tData);
+        setJudges(jData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load tournament');
       } finally {
@@ -957,6 +1008,11 @@ export default function GroupHeatManagementPage({
       }
     })();
   }, [id]);
+
+  const assignedStations = judges
+    .map((j) => j.assignedStationNumber)
+    .filter((s): s is number => typeof s === 'number' && s > 0);
+  const detectedStations = assignedStations.length > 0 ? Math.max(...assignedStations) : 4;
 
   if (isLoading) {
     return (
@@ -1010,7 +1066,7 @@ export default function GroupHeatManagementPage({
           {tournament.events
             .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
             .map((event) => (
-              <EventGroupPanel key={event.id} event={event} tournamentId={id} />
+              <EventGroupPanel key={event.id} event={event} tournamentId={id} defaultStationCount={detectedStations} />
             ))}
         </div>
       )}

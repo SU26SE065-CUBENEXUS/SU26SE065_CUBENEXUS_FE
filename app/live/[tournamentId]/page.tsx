@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { getPublicLiveTournamentDetail, type PublicLiveTournamentDetailDto, type PublicLiveEventDto } from '@/lib/api/live';
-import { getLiveBoardState } from '@/lib/api/operations';
+import { getLiveBoardState, formatEvidencePhotoUrl } from '@/lib/api/operations';
 import { formatMs } from '@/components/tournament-manager/TimerDisplay';
 import * as signalR from '@microsoft/signalr';
 import {
@@ -29,7 +29,11 @@ import {
   Flame,
   CheckCircle,
   Timer,
-  Award
+  Award,
+  Camera,
+  ExternalLink,
+  X,
+  FileText,
 } from 'lucide-react';
 
 function formatDateRange(start: string, end: string): string {
@@ -84,6 +88,22 @@ export default function PublicLiveBoardDetailPage({
   // ─── Visual Update Highlights ──────────────────────────────
   const [updatedCompetitorIds, setUpdatedCompetitorIds] = useState<Set<string>>(new Set());
   const prevCompetitorsRef = useRef<Record<string, { completedSolves: number; bestTimeMs?: number; averageTimeMs?: number }>>({});
+
+  // ─── Evidence Photo Inspection Modal State ──────────────────
+  const [selectedInspectSolve, setSelectedInspectSolve] = useState<{
+    competitorName: string;
+    competitorUserCode: string;
+    solveNumber: number;
+    eventName: string;
+    roundNumber: number;
+    rawTimeMs?: number;
+    finalTimeMs?: number;
+    penaltyCode: string;
+    isDnf: boolean;
+    submittedAt?: string;
+    evidencePhotoUrl?: string;
+    esignatureData?: string;
+  } | null>(null);
 
   // Get active event details
   const activeEvent = tournament?.events.find((e) => e.id === selectedEventId);
@@ -389,15 +409,31 @@ export default function PublicLiveBoardDetailPage({
                   <div className="flex flex-wrap items-center gap-3">
                     {tournament.isLive ? (
                       <span className="rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-[10px] font-extrabold text-red-500 flex items-center gap-1.5 uppercase animate-pulse">
-                        <Flame className="h-3.5 w-3.5" /> LIVE WATCHING
+                        <Flame className="h-3.5 w-3.5" /> ĐANG THI ĐẤU (LIVE)
+                      </span>
+                    ) : tournament.status === 'ONGOING' ? (
+                      <span className="rounded-full bg-purple-500/10 border border-purple-500/30 px-3 py-1 text-[10px] font-extrabold text-purple-400 uppercase">
+                        ĐANG DIỄN RA
                       </span>
                     ) : tournament.status === 'COMPLETED' ? (
                       <span className="rounded-full bg-muted border border-border px-3 py-1 text-[10px] font-extrabold text-muted-foreground uppercase">
-                        FINISHED
+                        ĐÃ HOÀN THÀNH
+                      </span>
+                    ) : tournament.status === 'REGISTRATION_OPEN' ? (
+                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[10px] font-extrabold text-emerald-400 uppercase">
+                        MỞ ĐĂNG KÝ
+                      </span>
+                    ) : tournament.status === 'REGISTRATION_CLOSED' ? (
+                      <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-[10px] font-extrabold text-amber-400 uppercase">
+                        ĐÓNG ĐĂNG KÝ
+                      </span>
+                    ) : tournament.status === 'CANCELLED' ? (
+                      <span className="rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-[10px] font-extrabold text-red-400 uppercase">
+                        ĐÃ HỦY
                       </span>
                     ) : (
                       <span className="rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-[10px] font-extrabold text-blue-400 uppercase">
-                        UPCOMING
+                        SẮP DIỄN RA
                       </span>
                     )}
                     <span className="text-[10px] text-muted-foreground/60 font-semibold uppercase flex items-center gap-1">
@@ -464,18 +500,33 @@ export default function PublicLiveBoardDetailPage({
               })}
             </div>
 
-            {/* State handlers if Tournament is Upcoming */}
+            {/* State handlers if Tournament is Upcoming / Not Ongoing / Not Completed */}
             {tournament.status !== 'ONGOING' && tournament.status !== 'COMPLETED' ? (
               <div className="text-center py-20 bg-card/20 border border-dashed border-border rounded-3xl max-w-xl mx-auto space-y-4">
-                <CalendarDays className="h-12 w-12 text-blue-400/30 mx-auto" />
-                <h3 className="font-extrabold text-lg uppercase tracking-tight">Tournament Has Not Started</h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                  This tournament is currently scheduled to begin on <strong>{new Date(tournament.startTime).toLocaleDateString('vi-VN')}</strong>.
-                  Please check back later for live standings and solve updates.
+                <CalendarDays className="h-12 w-12 text-primary/40 mx-auto" />
+                <h3 className="font-extrabold text-lg uppercase tracking-tight text-foreground">
+                  {tournament.status === 'REGISTRATION_CLOSED'
+                    ? 'Giải Đấu Đã Đóng Đăng Ký — Sắp Khởi Tranh'
+                    : tournament.status === 'REGISTRATION_OPEN'
+                    ? 'Giải Đấu Đang Mở Đăng Ký Thi Đấu'
+                    : 'Giải Đấu Chưa Khởi Tranh'}
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  {tournament.status === 'REGISTRATION_CLOSED'
+                    ? `Cổng đăng ký đã khép lại. Giải đấu sẽ chính thức khởi tranh vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Hãy quay lại khi giải bắt đầu để xem kết quả Live trực tiếp!`
+                    : tournament.status === 'REGISTRATION_OPEN'
+                    ? `Giải đấu đang mở cổng đăng ký cho các thí sinh. Thời gian thi đấu chính thức bắt đầu từ ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}.`
+                    : `Giải đấu dự kiến bắt đầu vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Vui lòng quay lại sau để xem bảng xếp hạng trực tiếp.`}
                 </p>
                 <div className="pt-2">
-                  <span className="inline-flex rounded-xl bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-xs font-bold text-blue-400">
-                    STATUS: {tournament.status.replace('_', ' ')}
+                  <span className="inline-flex rounded-xl bg-primary/10 border border-primary/20 px-4 py-2 text-xs font-bold text-primary uppercase">
+                    TRẠNG THÁI: {
+                      tournament.status === 'REGISTRATION_OPEN' ? 'ĐANG MỞ ĐĂNG KÝ' :
+                      tournament.status === 'REGISTRATION_CLOSED' ? 'ĐÃ ĐÓNG ĐĂNG KÝ' :
+                      tournament.status === 'PUBLISHED' ? 'CÔNG BỐ / SẮP KHỞI TRANH' :
+                      tournament.status === 'DRAFT' ? 'BẢN NHÁP' :
+                      tournament.status.replace('_', ' ')
+                    }
                   </span>
                 </div>
               </div>
@@ -782,13 +833,40 @@ export default function PublicLiveBoardDetailPage({
                                       
                                       return (
                                         <td key={i} className="px-3 py-3.5 text-center font-mono text-xs">
-                                          <span className={`${isAttemptDnf ? 'text-red-400 font-bold' : isAttemptDns ? 'text-muted-foreground/80 font-bold' : 'text-foreground'} relative group/tooltip`}>
-                                            {val}
-                                            {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-orange-400 font-semibold ml-0.5">+2</span>}
-                                            {attempt?.isLocked && (
-                                              <span className="text-[7px] text-emerald-400 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
-                                            )}
-                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedInspectSolve({
+                                                competitorName: c.competitorName,
+                                                competitorUserCode: c.competitorUserCode,
+                                                solveNumber: i + 1,
+                                                eventName: activeEvent?.puzzleTypeName || 'Event',
+                                                roundNumber: selectedRoundNumber,
+                                                rawTimeMs: attempt?.rawTimeMs || attempt?.finalTimeMs,
+                                                finalTimeMs: attempt?.finalTimeMs,
+                                                penaltyCode: attempt?.penaltyCode || 'OK',
+                                                isDnf: Boolean(isAttemptDnf),
+                                                submittedAt: attempt?.submittedAt,
+                                                evidencePhotoUrl: attempt?.evidencePhotoUrl,
+                                                esignatureData: attempt?.esignatureData,
+                                              });
+                                            }}
+                                            className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-primary/10 cursor-pointer ${
+                                              attempt ? 'font-bold' : 'text-muted-foreground/60'
+                                            }`}
+                                            title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
+                                          >
+                                            <span className={`${isAttemptDnf ? 'text-red-400 font-bold' : isAttemptDns ? 'text-muted-foreground/80 font-bold' : 'text-foreground'} relative group/tooltip`}>
+                                              {val}
+                                              {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-orange-400 font-semibold ml-0.5">+2</span>}
+                                              {attempt?.evidencePhotoUrl && (
+                                                <span className="text-[9px] ml-1" title="Có ảnh tờ ghi điểm R2">📸</span>
+                                              )}
+                                              {attempt?.isLocked && (
+                                                <span className="text-[7px] text-emerald-400 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
+                                              )}
+                                            </span>
+                                          </button>
                                         </td>
                                       );
                                     })}
@@ -898,6 +976,158 @@ export default function PublicLiveBoardDetailPage({
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* ─── Evidence Photo Inspection Modal ─────────────────── */}
+        {selectedInspectSolve && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="relative w-full max-w-xl rounded-3xl border border-border bg-card shadow-2xl overflow-hidden p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                    <Camera className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-black text-foreground uppercase tracking-tight leading-tight">
+                      📸 Tờ Ghi Điểm Minh Chứng — Solve #{selectedInspectSolve.solveNumber}
+                    </h3>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                      Thí sinh: <strong className="text-foreground">{selectedInspectSolve.competitorName}</strong> ({selectedInspectSolve.competitorUserCode})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedInspectSolve(null)}
+                  className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Details Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono text-center">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Hạng Mục</p>
+                  <p className="font-extrabold text-foreground mt-0.5 truncate">{selectedInspectSolve.eventName}</p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Lượt Thi</p>
+                  <p className="font-extrabold text-foreground mt-0.5">Solve #{selectedInspectSolve.solveNumber}</p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Hình Phạt</p>
+                  <p className={`font-extrabold mt-0.5 ${selectedInspectSolve.isDnf ? 'text-red-400' : selectedInspectSolve.penaltyCode === 'PLUS_2' ? 'text-orange-400' : 'text-emerald-400'}`}>
+                    {selectedInspectSolve.penaltyCode || 'OK'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
+                  <p className="text-[10px] text-primary font-sans uppercase font-bold">Kết Quả Cuối</p>
+                  <p className="font-black text-primary text-sm mt-0.5">
+                    {formatDisplayTime(selectedInspectSolve.finalTimeMs, selectedInspectSolve.isDnf)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Cloudflare R2 Image Container */}
+              <div>
+                {(() => {
+                  const formattedUrl = formatEvidencePhotoUrl(selectedInspectSolve.evidencePhotoUrl);
+                  return (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                          <FileText className="h-4 w-4 text-primary" />
+                          Ảnh Tờ Ghi Điểm Trọng Tài Minh Chứng
+                        </label>
+                        {formattedUrl && (
+                          <button
+                            onClick={() => window.open(formattedUrl, '_blank')}
+                            className="inline-flex items-center gap-1 text-[11px] font-extrabold text-primary hover:underline"
+                          >
+                            Mở Ảnh Gốc Tab Mới <ExternalLink className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+
+                      {formattedUrl ? (
+                        <div
+                          onClick={() => window.open(formattedUrl, '_blank')}
+                          className="group relative rounded-2xl border border-primary/40 bg-black/80 overflow-hidden cursor-pointer shadow-2xl hover:border-primary transition-all duration-300 min-h-[220px] flex items-center justify-center p-2"
+                          title="Click trực tiếp để mở ảnh gốc ở tab mới với độ phân giải cao nhất"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={formattedUrl}
+                            alt="Evidence scorecard photo"
+                            className="w-full max-h-[350px] object-contain group-hover:scale-105 transition-transform duration-300"
+                            onLoad={(e) => {
+                              // Make sure image is visible after successful load
+                              (e.target as HTMLElement).style.display = '';
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent && !parent.querySelector('.img-error-fallback')) {
+                                const fallbackDiv = document.createElement('div');
+                                fallbackDiv.className = 'img-error-fallback p-6 text-center text-xs text-amber-400 font-semibold space-y-1';
+                                const url = formattedUrl || '';
+                                const isLocal = url.startsWith('file://') || url.startsWith('ph://') || url.startsWith('content://');
+                                const isBase64 = url.startsWith('data:image');
+                                if (isLocal) {
+                                  fallbackDiv.innerHTML = '⚠️ Đường dẫn ảnh lưu ở bộ nhớ máy di động.<br/><span class="text-[10px] text-gray-400 font-normal">Trọng tài cần sử dụng phiên bản ứng dụng di động mới nhất để tải ảnh trực tiếp.</span>';
+                                } else if (isBase64) {
+                                  fallbackDiv.innerHTML = '⚠️ Ảnh quá lớn, trình duyệt không thể hiển thị trực tiếp.<br/><span class="text-[10px] text-gray-400 font-normal">Vui lòng bấm "Mở Ảnh Gốc Tab Mới" bên trên để xem ảnh.</span>';
+                                } else {
+                                  fallbackDiv.innerHTML = '⚠️ Tạm thời không tải được ảnh minh chứng.<br/><span class="text-[10px] text-gray-400 font-normal">Vui lòng thử lại sau.</span>';
+                                }
+                                parent.appendChild(fallbackDiv);
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-extrabold gap-2">
+                            <ExternalLink className="h-5 w-5 text-primary" /> Click để mở ảnh gốc độ phân giải cao (Tab Mới)
+                          </div>
+                          <div className="absolute bottom-2.5 right-2.5 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[10px] text-white font-extrabold border border-white/20 flex items-center gap-1 shadow-lg">
+                            <ExternalLink className="h-3 w-3 text-primary" /> Click Phóng To Ảnh Gốc
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-border/80 bg-muted/10 py-10 px-4 text-center space-y-2">
+                          <Camera className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+                          <p className="text-xs font-bold text-muted-foreground">Chưa có ảnh tờ ghi điểm minh chứng cho lượt thi này.</p>
+                          <p className="text-[10px] text-muted-foreground/60">Trọng tài đã nhập trực tiếp điểm số qua ứng dụng di động.</p>
+                        </div>
+                      )}
+
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Digital Signature */}
+              {selectedInspectSolve.esignatureData && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Chữ Ký Trọng Tài / Thí Sinh:</p>
+                  <div className="rounded-xl border border-border bg-black/40 p-2 flex justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selectedInspectSolve.esignatureData} alt="Digital Signature" className="max-h-16 object-contain" />
+                  </div>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <div className="pt-2">
+                <button
+                  onClick={() => setSelectedInspectSolve(null)}
+                  className="w-full rounded-xl bg-muted py-2.5 text-xs font-bold text-foreground hover:bg-muted/80 transition"
+                >
+                  Đóng Khung Xem
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

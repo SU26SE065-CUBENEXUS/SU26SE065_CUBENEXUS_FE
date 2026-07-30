@@ -1,29 +1,44 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
-import { submitMobileTimerTime } from '@/features/online-arena/api/onlineArenaApi';
+import { useMatchLocalRecorder } from '@/features/online-arena/hooks/useMatchLocalRecorder';
+import { submitMobileTimerTime, mockFinishPass } from '@/features/online-arena/api/onlineArenaApi';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
 import { Timer, ArrowRight, Loader2, Sparkles, AlertCircle, Cpu, Clock, Wifi, WifiOff } from 'lucide-react';
 
 function useCountdown(deadlineIso: string | null, serverNowIso: string): string {
+  const skewRef = React.useRef<number | null>(null);
+
+  const parseUtc = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
+    return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
+  };
+
   const [remaining, setRemaining] = useState<number>(() => {
     if (!deadlineIso) return 0;
-    const skew = Date.now() - new Date(serverNowIso).getTime();
-    return Math.max(0, Math.floor((new Date(deadlineIso).getTime() - Date.now() + skew) / 1000));
+    const skew = Date.now() - parseUtc(serverNowIso);
+    skewRef.current = skew;
+    return Math.max(0, Math.floor((parseUtc(deadlineIso) - Date.now() + skew) / 1000));
   });
 
   useEffect(() => {
     if (!deadlineIso) return;
-    const skew = Date.now() - new Date(serverNowIso).getTime();
+
+    if (skewRef.current === null) {
+      skewRef.current = Date.now() - parseUtc(serverNowIso);
+    }
+    const stableSkew = skewRef.current;
+
     const tick = () => {
-      const secs = Math.max(0, Math.floor((new Date(deadlineIso).getTime() - Date.now() + skew) / 1000));
+      const secs = Math.max(0, Math.floor((parseUtc(deadlineIso) - Date.now() + stableSkew) / 1000));
       setRemaining(secs);
     };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [deadlineIso, serverNowIso]);
+  }, [deadlineIso]);
 
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
@@ -32,7 +47,7 @@ function useCountdown(deadlineIso: string | null, serverNowIso: string): string 
 
 export default function SolvingPage() {
   const { matchId, state, refetch } = useMatchContext();
-  const [elapsed, setElapsed] = useState<number>(0);
+  const { stopRecordingWithBuffer, uploadTask } = useMatchLocalRecorder();
   const [isSimulating, setIsSimulating] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
   const [isDev, setIsDev] = useState(false);
@@ -58,17 +73,31 @@ export default function SolvingPage() {
     return state.player1.userId === userId ? state.player1 : state.player2;
   }, [state, userId]);
 
-  // Run a local visual stopwatch
+  const resultStatusRef = useRef(myState?.resultStatus);
   useEffect(() => {
-    if (myState?.resultStatus !== 'PENDING') return;
-
-    const start = Date.now();
-    const interval = setInterval(() => {
-      setElapsed(Date.now() - start);
-    }, 47);
-
-    return () => clearInterval(interval);
+    resultStatusRef.current = myState?.resultStatus;
   }, [myState?.resultStatus]);
+
+  // When my solve status transitions away from PENDING, hold 3s buffer and stop recording
+  useEffect(() => {
+    if (myState && myState.resultStatus !== 'PENDING') {
+      console.log(`[REC] Solve finished for current player (status=${myState.resultStatus}). Holding 3s reaction buffer...`);
+      void stopRecordingWithBuffer(3000);
+    }
+  }, [myState?.resultStatus, stopRecordingWithBuffer]);
+
+  // Safety net: when SolvingPage unmounts, ONLY trigger stop if the solve was actually finished!
+  useEffect(() => {
+    return () => {
+      if (resultStatusRef.current && resultStatusRef.current !== 'PENDING') {
+        console.log('[REC] SolvingPage unmounted after solve completion — ensuring recording finalized.');
+        void stopRecordingWithBuffer(1000);
+      } else {
+        console.log('[REC] SolvingPage unmounted while solve still PENDING — recording continues unaffected.');
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const countdownStr = useCountdown(
     state?.solveDeadlineAt ?? null,
@@ -78,8 +107,9 @@ export default function SolvingPage() {
   if (!state || !myState) return null;
 
   const formatTime = (ms: number) => {
-    const totalSecs = ms / 1000;
-    return `${totalSecs.toFixed(2)}s`;
+    const seconds = Math.floor(ms / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return `${seconds}.${centiseconds.toString().padStart(2, '0')}s`;
   };
 
   // Simulation handler for devs
@@ -99,9 +129,25 @@ export default function SolvingPage() {
       await refetch();
     } catch (err: any) {
       console.error(err);
-      setSimError(err.message || 'Simulation submission failed.');
+      setSimError(err.message || 'Simulation submission failed. Session IDs must match paired mobile session.');
     } finally {
       setIsSimulating(false);
+    }
+  };
+
+  const [isMockingFinish, setIsMockingFinish] = useState(false);
+  const handleMockFinish = async () => {
+    if (isMockingFinish) return;
+    setIsMockingFinish(true);
+    setSimError(null);
+    try {
+      await mockFinishPass(matchId);
+      await refetch();
+    } catch (err: any) {
+      console.error(err);
+      setSimError(err.message || 'Mock finish submission failed.');
+    } finally {
+      setIsMockingFinish(false);
     }
   };
 
@@ -133,19 +179,28 @@ export default function SolvingPage() {
         </div>
       )}
 
-      {/* Gigantic visual stopwatch */}
+      {/* Visual status panel */}
       <div className="bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-3xl backdrop-blur-md shadow-2xl space-y-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 via-transparent to-transparent pointer-events-none" />
 
         <div className="space-y-2">
           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">
-            ESTIMATED ELAPSED TIME
+            {myState.resultStatus !== 'PENDING' ? 'OFFICIAL SOLVE TIME' : 'SOLVE TIME'}
           </span>
-          <span className="font-mono text-7xl font-black text-white tracking-tighter block select-none">
-            {myState.resultStatus !== 'PENDING' && myState.timeMs !== null
-              ? formatTime(myState.timeMs)
-              : formatTime(elapsed)}
-          </span>
+          {myState.resultStatus !== 'PENDING' && myState.timeMs !== null ? (
+            <span className="font-mono text-7xl font-black text-emerald-400 tracking-tighter block select-none animate-fade-in">
+              {formatTime(myState.timeMs)}
+            </span>
+          ) : (
+            <div className="py-2 flex flex-col items-center justify-center gap-1">
+              <span className="font-mono text-7xl font-black text-zinc-650 tracking-tighter block select-none animate-pulse">
+                --.--
+              </span>
+              <span className="text-[9px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                Awaiting Mobile Timer
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-2xl flex items-center justify-center gap-3">
@@ -204,6 +259,14 @@ export default function SolvingPage() {
               {isSimulating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Simulate DNF Stop'}
             </button>
           </div>
+
+          <button
+            onClick={handleMockFinish}
+            disabled={isMockingFinish}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isMockingFinish ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Dev: Mock Finish Solve'}
+          </button>
 
           {simError && (
             <div className="flex items-start gap-2 bg-rose-500/5 border border-rose-500/15 p-3 rounded-lg text-rose-400 text-[10px] leading-relaxed font-semibold">

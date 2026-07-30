@@ -41,8 +41,9 @@ import {
 import { getTournaments, saveTournaments, getCompetitors, saveCompetitors, Tournament, Competitor } from '@/lib/tournament-store';
 import { useAuth } from '@/contexts/auth-context';
 import { getPublicTournaments } from '@/lib/api/tournaments';
-import { registerTournament, getMyRegistrations } from '@/lib/api/registrations';
+import { registerTournament, getMyRegistrations, type RegistrationDetailDto } from '@/lib/api/registrations';
 import { getLiveBoardState } from '@/lib/api/operations';
+import * as signalR from '@microsoft/signalr';
 
 // ─── Types ────────────────────────────────────────────────────
 type ActiveTab = 'explore' | 'my-tournaments' | 'live-results';
@@ -92,6 +93,18 @@ function TournamentCard({ tour, onDetails, onRegister }: {
       {/* Top accent bar */}
       <div className={`h-0.5 w-full ${isLive ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-primary/60 to-transparent'}`} />
 
+      {/* Top Banner Image if available */}
+      {(tour as any).bannerUrl && (
+        <div className="relative h-36 w-full overflow-hidden border-b border-border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={(tour as any).bannerUrl} alt={tour.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-400 border border-amber-400/30 text-[10px] font-black shadow-md">
+            👥 {tour.participants} / {tour.maxParticipants} thí sinh
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="p-5 border-b border-border/60">
         <div className="flex items-start justify-between gap-3 mb-2">
@@ -109,13 +122,13 @@ function TournamentCard({ tour, onDetails, onRegister }: {
       {/* Info */}
       <div className="p-5 flex-1 space-y-2.5 text-xs text-muted-foreground">
         <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />{tour.date}</p>
-        <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />Ho Chi Minh City, Vietnam</p>
-        <p className="flex items-center gap-2"><Users className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />{tour.participants} / {tour.maxParticipants} competitors</p>
+        <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />TP. Hồ Chí Minh, Việt Nam</p>
+        <p className="flex items-center gap-2 font-bold text-foreground"><Users className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />{tour.participants} / {tour.maxParticipants} Thí sinh đã đăng ký</p>
         <p className="flex items-center gap-2 text-[11px]"><Zap className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />{tour.format}</p>
 
         {/* Participant bar */}
-        <div>
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'oklch(0.22 0.02 256)' }}>
+        <div className="pt-1">
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.22 0.02 256)' }}>
             <div
               className="h-full rounded-full transition-all"
               style={{
@@ -124,7 +137,10 @@ function TournamentCard({ tour, onDetails, onRegister }: {
               }}
             />
           </div>
-          <p className="text-[9px] text-muted-foreground/60 mt-0.5">{Math.round((tour.participants / tour.maxParticipants) * 100)}% full</p>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 font-medium">
+            <span>Đã đầy {Math.round((tour.participants / tour.maxParticipants) * 100)}%</span>
+            <span className="text-amber-500 font-bold">Còn {Math.max(0, tour.maxParticipants - tour.participants)} suất</span>
+          </div>
         </div>
       </div>
 
@@ -151,12 +167,27 @@ function TournamentCard({ tour, onDetails, onRegister }: {
 }
 
 // ─── My Registration Card ─────────────────────────────────────
-function RegistrationCard({ ticket, tour }: { ticket: Competitor; tour?: Tournament }) {
+function RegistrationCard({ reg, tournamentName }: { reg: RegistrationDetailDto; tournamentName: string }) {
   const [expiry, setExpiry] = useState<string | null>(null);
+  const [checkinInfo, setCheckinInfo] = useState<{
+    assignments: Array<{ eventName: string; groupName: string; stationNumber?: number | null }>;
+    checkedInAt: string;
+  } | null>(() => {
+    // Pre-populate if already checked in (from initial API response)
+    if (reg.checkedInAt && reg.events.length > 0) {
+      return {
+        assignments: [],  // will be empty until real-time push or refresh
+        checkedInAt: reg.checkedInAt,
+      };
+    }
+    return null;
+  });
+  const [hubConn, setHubConn] = useState<signalR.HubConnection | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     try {
-      const parsed = JSON.parse(ticket.qrCode);
+      const parsed = JSON.parse(reg.qrToken);
       if (parsed?.ExpiresAt) {
         const date = new Date(parsed.ExpiresAt);
         setExpiry(date.toLocaleString());
@@ -164,46 +195,170 @@ function RegistrationCard({ ticket, tour }: { ticket: Competitor; tour?: Tournam
     } catch (e) {
       // Not JSON
     }
-  }, [ticket.qrCode]);
+  }, [reg.qrToken]);
+
+  // Connect SignalR and subscribe to competitor group
+  useEffect(() => {
+    let conn: signalR.HubConnection | null = null;
+
+    async function connectHub() {
+      setIsConnecting(true);
+      try {
+        conn = new signalR.HubConnectionBuilder()
+          .withUrl('/hubs/tournament')
+          .withAutomaticReconnect([0, 2000, 5000])
+          .build();
+
+        conn.on('CompetitorCheckedIn', (payload: any) => {
+          if (payload?.registrationId === reg.id || payload?.RegistrationId === reg.id) {
+            setCheckinInfo({
+              assignments: (payload.assignments ?? payload.Assignments ?? []).map((a: any) => ({
+                eventName: a.eventName ?? a.EventName ?? '',
+                groupName: a.groupName ?? a.GroupName ?? '',
+                stationNumber: a.stationNumber ?? a.StationNumber ?? null,
+              })),
+              checkedInAt: payload.checkedInAt ?? payload.CheckedInAt ?? new Date().toISOString(),
+            });
+          }
+        });
+
+        await conn.start();
+        await conn.invoke('RegisterCompetitor', reg.id);
+        setHubConn(conn);
+      } catch {
+        // Hub connection is best-effort
+      } finally {
+        setIsConnecting(false);
+      }
+    }
+
+    connectHub();
+    return () => {
+      conn?.stop().catch(() => undefined);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reg.id]);
+
+  const isCheckedIn = !!checkinInfo || !!reg.checkedInAt;
 
   return (
-    <div className="relative rounded-2xl border border-border overflow-hidden"
-      style={{ background: 'oklch(0.155 0.018 255)' }}
+    <div className="relative rounded-2xl border overflow-hidden transition-all"
+      style={{
+        background: 'oklch(0.155 0.018 255)',
+        borderColor: isCheckedIn ? 'oklch(0.70 0.19 145 / 0.5)' : 'oklch(0.24 0.02 256)',
+        boxShadow: isCheckedIn ? '0 0 30px oklch(0.70 0.19 145 / 0.12)' : 'none',
+      }}
     >
-      <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, oklch(0.72 0.21 42), oklch(0.78 0.185 85))' }} />
+      {/* Top gradient bar */}
+      <div className="h-0.5 w-full" style={{
+        background: isCheckedIn
+          ? 'linear-gradient(90deg, oklch(0.70 0.19 145), oklch(0.80 0.21 160))'
+          : 'linear-gradient(90deg, oklch(0.72 0.21 42), oklch(0.78 0.185 85))'
+      }} />
+
       <div className="p-5 space-y-4">
+        {/* Header */}
         <div className="flex justify-between items-start">
           <div>
             <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider"
-              style={{ background: 'oklch(0.72 0.21 42 / 0.12)', border: '1px solid oklch(0.72 0.21 42 / 0.25)', color: 'oklch(0.72 0.21 42)' }}
+              style={{
+                background: isCheckedIn ? 'oklch(0.70 0.19 145 / 0.12)' : 'oklch(0.72 0.21 42 / 0.12)',
+                border: `1px solid ${isCheckedIn ? 'oklch(0.70 0.19 145 / 0.3)' : 'oklch(0.72 0.21 42 / 0.25)'}`,
+                color: isCheckedIn ? 'oklch(0.70 0.19 145)' : 'oklch(0.72 0.21 42)',
+              }}
             >
-              Confirmed
+              {isCheckedIn ? '✓ Đã Check-in' : 'Đã Đăng Ký'}
             </span>
-            <h4 className="mt-2 text-sm font-black text-foreground">{tour?.name || 'Tournament'}</h4>
+            <h4 className="mt-2 text-sm font-black text-foreground">{tournamentName}</h4>
           </div>
-          <QrCode className="h-8 w-8 opacity-60" style={{ color: 'oklch(0.72 0.21 42)' }} />
+          <div className="flex items-center gap-2">
+            {isConnecting && (
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            )}
+            <QrCode className="h-8 w-8 opacity-60" style={{ color: 'oklch(0.72 0.21 42)' }} />
+          </div>
         </div>
 
-        <div className="space-y-1 text-xs text-muted-foreground">
-          <p className="font-bold text-foreground">Competitor: <span className="text-muted-foreground font-normal">{ticket.name}</span></p>
-          {expiry && <p className="text-[10px] text-amber-500/80">Expires: {expiry}</p>}
-        </div>
+        {/* ─── Station Assignment Banner (shows after check-in) ──── */}
+        {checkinInfo && checkinInfo.assignments.length > 0 && (
+          <div className="rounded-xl overflow-hidden animate-fade-in"
+            style={{ background: 'oklch(0.70 0.19 145 / 0.08)', border: '1px solid oklch(0.70 0.19 145 / 0.3)' }}
+          >
+            <div className="px-3 py-2 flex items-center gap-2"
+              style={{ background: 'oklch(0.70 0.19 145 / 0.15)', borderBottom: '1px solid oklch(0.70 0.19 145 / 0.2)' }}
+            >
+              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: 'oklch(0.70 0.19 145)' }} />
+              <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'oklch(0.70 0.19 145)' }}>
+                Vị Trí Thi Đấu Của Bạn
+              </p>
+            </div>
+            <div className="divide-y" style={{ borderColor: 'oklch(0.70 0.19 145 / 0.15)' }}>
+              {checkinInfo.assignments.map((a, i) => (
+                <div key={i} className="px-3 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">{a.eventName}</p>
+                    <p className="text-xs font-black text-foreground mt-0.5">Nhóm {a.groupName}</p>
+                  </div>
+                  {a.stationNumber ? (
+                    <div className="text-center">
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase">Bàn Thi</p>
+                      <p className="text-3xl font-black leading-none" style={{ color: 'oklch(0.72 0.21 42)', textShadow: '0 0 20px oklch(0.72 0.21 42 / 0.5)' }}>
+                        #{a.stationNumber}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground italic">Chờ phân bổ</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* QR visual placeholder */}
+        {/* ─── Waiting for check-in state ─────────────────────── */}
+        {!isCheckedIn && (
+          <div className="rounded-xl p-3 flex items-center gap-3"
+            style={{ background: 'oklch(0.72 0.21 42 / 0.06)', border: '1px solid oklch(0.72 0.21 42 / 0.15)' }}
+          >
+            <Bell className="h-4 w-4 shrink-0" style={{ color: 'oklch(0.72 0.21 42)' }} />
+            <div>
+              <p className="text-[10px] font-bold" style={{ color: 'oklch(0.72 0.21 42)' }}>Chờ Check-in</p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                Khi Trọng tài quét QR của bạn, thông tin bàn thi đấu sẽ hiện ra ngay tại đây.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Already checked in (from initial API, no assignments yet) */}
+        {isCheckedIn && (!checkinInfo || checkinInfo.assignments.length === 0) && (
+          <div className="rounded-xl p-3 flex items-center gap-3"
+            style={{ background: 'oklch(0.70 0.19 145 / 0.08)', border: '1px solid oklch(0.70 0.19 145 / 0.25)' }}
+          >
+            <CheckCircle className="h-4 w-4 shrink-0" style={{ color: 'oklch(0.70 0.19 145)' }} />
+            <div>
+              <p className="text-[10px] font-bold" style={{ color: 'oklch(0.70 0.19 145)' }}>Đã Check-in thành công</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Hãy hỏi Trọng tài hoặc chờ thông báo bàn thi.</p>
+            </div>
+          </div>
+        )}
+
+        {/* QR Code */}
         <div className="pt-3 border-t border-border/60">
           <div className="flex flex-col items-center justify-center p-4 rounded-2xl mx-auto w-fit"
             style={{ background: 'white' }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(ticket.qrCode)}`}
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(reg.qrToken)}`}
               alt="Competitor QR Code"
               className="w-36 h-36 object-contain"
             />
           </div>
           <p className="text-[10px] text-center text-muted-foreground mt-3 font-semibold uppercase tracking-wider">
-            Present QR to Judge at Solving Station
+            Đưa QR cho Trọng Tài Check-in quét
           </p>
+          {expiry && <p className="text-[9px] text-center text-amber-500/70 mt-1">Hết hạn: {expiry}</p>}
         </div>
       </div>
     </div>
@@ -224,7 +379,7 @@ function TournamentsPageContent() {
   const [activeDetailTab, setActiveDetailTab] = useState<DetailSubTab>('overview');
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationDetailDto[]>([]);
   const [isLoadingTournaments, setIsLoadingTournaments] = useState(true);
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -242,7 +397,15 @@ function TournamentsPageContent() {
   // ─── Load Tournaments ─────────────────────────────────────
   useEffect(() => {
     async function loadRealTournaments() {
-      setIsLoadingTournaments(true);
+      // Stale-while-revalidate: show cached data instantly, fetch fresh in background
+      const cached = getTournaments();
+      if (cached.length > 0) {
+        setTournaments(cached);
+        setIsLoadingTournaments(false); // Show cached immediately, no spinner
+      } else {
+        setIsLoadingTournaments(true);
+      }
+
       try {
         const publicList = await getPublicTournaments();
         const mappedList: Tournament[] = publicList.map((t) => {
@@ -266,10 +429,11 @@ function TournamentsPageContent() {
           return {
             id: t.id as any,
             name: t.name,
+            bannerUrl: t.bannerUrl,
             status: statusText,
             date: new Date(t.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + new Date(t.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            participants: Math.max(t.events.length * 8, 12),
-            maxParticipants: 500,
+            participants: t.currentParticipants ?? 0,
+            maxParticipants: t.maxParticipants || 40,
             prizePool: '$5,000',
             format: formatString,
             formatType: isMedley ? 'Medley' : 'Traditional',
@@ -282,14 +446,15 @@ function TournamentsPageContent() {
         if (mappedList.length > 0) {
           setTournaments(mappedList);
           saveTournaments(mappedList);
-        } else {
-          // Fallback: load from local store
+        } else if (cached.length === 0) {
           const stored = getTournaments();
           setTournaments(stored);
         }
       } catch {
-        const stored = getTournaments();
-        setTournaments(stored);
+        if (cached.length === 0) {
+          const stored = getTournaments();
+          setTournaments(stored);
+        }
       } finally {
         setIsLoadingTournaments(false);
       }
@@ -302,20 +467,11 @@ function TournamentsPageContent() {
     if (!isAuthenticated) return;
     try {
       const list = await getMyRegistrations();
-      const tickets: Competitor[] = list.map((reg) => ({
-        qrCode: reg.qrToken,
-        name: user?.displayName || 'Competitor',
-        email: user?.email || '',
-        tournamentId: Number(reg.tournamentId) || 0,
-        solves: [],
-      }));
-      setCompetitors(tickets);
-      saveCompetitors(tickets);
+      setRegistrations(list);
     } catch {
-      const stored = getCompetitors();
-      setCompetitors(stored);
+      setRegistrations([]);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) loadMyRegistrations();
@@ -496,8 +652,27 @@ function TournamentsPageContent() {
           </div>
 
           {isLoadingTournaments ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} />
+            // Skeleton shimmer loading cards
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="rounded-2xl border border-border overflow-hidden animate-pulse" style={{ background: 'oklch(0.155 0.018 255)' }}>
+                  <div className="h-0.5 w-full bg-primary/20" />
+                  <div className="h-32 bg-border/30" />
+                  <div className="p-5 border-b border-border/60 space-y-2">
+                    <div className="h-2.5 w-1/3 rounded-full bg-border/50" />
+                    <div className="h-4 w-3/4 rounded-full bg-border/50" />
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <div className="h-3 w-1/2 rounded-full bg-border/40" />
+                    <div className="h-3 w-2/3 rounded-full bg-border/40" />
+                    <div className="h-3 w-3/5 rounded-full bg-border/40" />
+                    <div className="h-1.5 w-full rounded-full bg-border/30 mt-2" />
+                  </div>
+                  <div className="border-t border-border/60 p-4">
+                    <div className="h-8 rounded-xl bg-border/30" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredTournaments.length === 0 ? (
             <div className="py-20 text-center rounded-2xl border border-dashed border-border">
@@ -541,25 +716,31 @@ function TournamentsPageContent() {
           ) : (
             <div className="space-y-6">
               <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'oklch(0.72 0.21 42)' }}>
-                <Ticket className="h-4 w-4" /> My Registered Tournaments
+                <Ticket className="h-4 w-4" /> Vé Tham Dự Của Tôi
               </h2>
 
-              {competitors.length > 0 ? (
+              {registrations.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {competitors.map((ticket) => {
-                    const tour = tournaments.find((t) => String(t.id) === String(ticket.tournamentId));
-                    return <RegistrationCard key={ticket.qrCode} ticket={ticket} tour={tour} />;
+                  {registrations.map((reg) => {
+                    const tour = tournaments.find((t) => String(t.id) === reg.tournamentId);
+                    return (
+                      <RegistrationCard
+                        key={reg.id}
+                        reg={reg}
+                        tournamentName={tour?.name || reg.tournamentName || 'Tournament'}
+                      />
+                    );
                   })}
                 </div>
               ) : (
                 <div className="py-16 text-center rounded-2xl border border-dashed border-border">
                   <Ticket className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                  <p className="text-xs font-semibold text-muted-foreground">No registered tournaments yet.</p>
+                  <p className="text-xs font-semibold text-muted-foreground">Bạn chưa đăng ký giải đấu nào.</p>
                   <button onClick={() => setActiveTab('explore')}
                     className="mt-3 text-xs font-bold underline"
                     style={{ color: 'oklch(0.72 0.21 42)' }}
                   >
-                    Browse tournaments
+                    Khám phá giải đấu
                   </button>
                 </div>
               )}
@@ -663,10 +844,10 @@ function TournamentsPageContent() {
               <div className="space-y-4 text-xs">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {[
-                    { label: 'Location', value: 'Ho Chi Minh City, Vietnam' },
-                    { label: 'Status', value: selectedTourDetails?.status || '—' },
-                    { label: 'Date', value: selectedTourDetails?.date || '—' },
-                    { label: 'Competitors', value: `${selectedTourDetails?.participants} / ${selectedTourDetails?.maxParticipants}` },
+                    { label: 'Địa điểm', value: (selectedTourDetails as any)?.location || 'TP. Hồ Chí Minh, Việt Nam' },
+                    { label: 'Trạng thái', value: selectedTourDetails?.status || '—' },
+                    { label: 'Thời gian', value: selectedTourDetails?.date || '—' },
+                    { label: 'Thí sinh đăng ký', value: `${selectedTourDetails?.participants} / ${selectedTourDetails?.maxParticipants} người` },
                   ].map(({ label, value }) => (
                     <div key={label} className="rounded-xl p-3 space-y-0.5" style={{ background: 'oklch(0.185 0.02 256)', border: '1px solid oklch(0.24 0.02 256)' }}>
                       <p className="text-[9px] font-bold text-muted-foreground uppercase">{label}</p>

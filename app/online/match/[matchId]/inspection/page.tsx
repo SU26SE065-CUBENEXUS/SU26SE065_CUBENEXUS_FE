@@ -1,33 +1,40 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { Timer, AlertCircle } from 'lucide-react';
 
 export default function InspectionPage() {
   const { state } = useMatchContext();
   const [secondsLeft, setSecondsLeft] = useState<number>(15);
+  const router = useRouter();
+  const params = useParams();
+  const matchId = params?.matchId as string;
+  const hasRoutedRef = useRef(false);
+
+  const parseUtc = (dateStr: string | null | undefined): number => {
+    if (!dateStr) return 0;
+    const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
+    return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
+  };
 
   useEffect(() => {
-    if (!state?.inspectionDeadlineAt) {
-      setSecondsLeft(15);
+    if (!state?.inspectionDeadlineAt || !state?.serverNow) {
       return;
     }
 
-    const serverSkew = Date.now() - new Date(state.serverNow).getTime();
-    const targetTime = new Date(state.inspectionDeadlineAt).getTime();
+    const deadline = parseUtc(state.inspectionDeadlineAt);
+    const serverNow = parseUtc(state.serverNow);
+    const initialSeconds = Math.max(0, Math.ceil((deadline - serverNow) / 1000));
+    setSecondsLeft(initialSeconds);
 
-    const updateTimer = () => {
-      const correctedNow = Date.now() - serverSkew;
-      const diff = Math.max(0, Math.ceil((targetTime - correctedNow) / 1000));
-      setSecondsLeft(diff);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 200);
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [state?.inspectionDeadlineAt, state?.serverNow]);
+  }, [state?.inspectionDeadlineAt]);
 
   return (
     <div className="space-y-8 animate-fade-in max-w-xl mx-auto w-full text-center">

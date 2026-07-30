@@ -95,6 +95,21 @@ export default function LoginForm() {
 
       if (role.toUpperCase() === 'MANAGER' || role.toUpperCase() === 'ADMIN') {
         router.push('/managertournaments');
+      } else if (role.toUpperCase() === 'JUDGE') {
+        const assignedId = (res as any).assignedTournamentId || (payload?.['tournament_id'] as string);
+        const judgeRole = (res as any).judgeRoleCode;
+        const stationNum = (res as any).assignedStationNumber;
+        if (assignedId) {
+          if (judgeRole === 'CHECKIN_JUDGE') {
+            router.push(`/managertournaments/${assignedId}/checkin`);
+          } else if (stationNum) {
+            router.push(`/managertournaments/${assignedId}/live?station=${stationNum}`);
+          } else {
+            router.push(`/managertournaments/${assignedId}`);
+          }
+        } else {
+          router.push('/');
+        }
       } else {
         router.push('/');
       }
