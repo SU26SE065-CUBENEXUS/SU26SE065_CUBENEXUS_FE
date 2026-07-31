@@ -808,6 +808,11 @@ export default function PublicLiveBoardDetailPage({
                                         </div>
                                         <div>
                                           <span className="text-sm font-extrabold text-foreground">{c.competitorName}</span>
+                                          {c.isCutoffReached && (
+                                            <span className="inline-flex items-center rounded-md bg-orange-500/10 border border-orange-500/30 px-1.5 py-0.5 text-[9px] font-extrabold text-orange-400 uppercase tracking-wider ml-2">
+                                              CUTOFF
+                                            </span>
+                                          )}
                                           <span className="text-[10px] text-muted-foreground/60 font-mono tracking-tight block mt-0.5">
                                             {c.competitorUserCode || 'No Code'}
                                           </span>

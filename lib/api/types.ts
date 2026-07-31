@@ -291,6 +291,7 @@ export interface SubmitProgressDto {
   solveCount: number;
   nextSolveNumber?: number | null;
   canSubmitNext: boolean;
+  isCutoffReached?: boolean;
 }
 
 export interface SubmitResultResponseDto {
@@ -315,6 +316,7 @@ export interface SolveProgressDto {
   submittedCount: number;
   nextSolveNumber?: number | null;
   canSubmit: boolean;
+  isCutoffReached?: boolean;
   reason?: string | null;
   currentScramble?: ScrambleInfoDto | null;
 }
@@ -339,6 +341,7 @@ export interface VerifyJudgeStationResponseDto {
   nextSolveNumber?: number | null;
   solveCount?: number | null;
   canSubmit: boolean;
+  isCutoffReached?: boolean;
   currentScramble?: ScrambleInfoDto | null;
 }
 

@@ -555,7 +555,11 @@ export default function JudgePage() {
           }
           await emitStationState('VERIFIED', verifiedCompetitor.groupName);
         } else {
-          setResultSummary(`Success: Completed all ${solveProgress.solveCount} solves for this round!`);
+          if (res.progress?.isCutoffReached) {
+            setResultSummary(`Thí sinh dừng thi do không đạt mốc Cutoff Time. Phần thi hoàn tất.`);
+          } else {
+            setResultSummary(`Success: Completed all ${solveProgress.solveCount} solves for this round!`);
+          }
           await emitStationState('DONE');
           resetLane();
         }
