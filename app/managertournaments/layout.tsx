@@ -58,7 +58,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 overflow-hidden bg-white border-r border-slate-200 shadow-xs ${
+      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 z-40 bg-white border-r border-slate-200 shadow-xs ${
         collapsed ? 'w-[68px]' : 'w-60'
       }`}
     >
@@ -90,7 +90,7 @@ function Sidebar({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute top-[18px] -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900"
+        className="absolute top-[18px] -right-3 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 shadow-md transition-all hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
         aria-label="Toggle sidebar"
       >
         <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
@@ -178,9 +178,6 @@ function Sidebar({
                   {!collapsed && (
                     <span className="flex-1 truncate">{item.label}</span>
                   )}
-                  {collapsed && (
-                    <span className="text-[10px] font-bold text-slate-700">{item.label.charAt(0)}</span>
-                  )}
                   {!collapsed && isLive && selectedId && (
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   )}
@@ -189,7 +186,7 @@ function Sidebar({
             );
           })}
         </ul>
-      </nav>
+      </nav>`
 
       {/* Bottom info */}
       {!collapsed && (
