@@ -411,14 +411,14 @@ function EventGroupPanel({
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground font-bold font-mono">
+                    <span className="text-xs text-slate-500 font-bold font-mono">
                       Groups Structure Board ({groupsCount} groups)
                     </span>
                     <button
                       onClick={() => setIsGenerateGroupsOpen(true)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-2xs cursor-pointer"
                     >
-                      <Shuffle className="h-3 w-3" /> Re-generate Groups
+                      <Shuffle className="h-3 w-3 text-indigo-600" /> Re-generate Groups
                     </button>
                   </div>
 
@@ -436,24 +436,24 @@ function EventGroupPanel({
                         : group.statusCode === 'COMPLETED' ? 'Completed'
                         : group.statusCode;
 
-                      const groupStatusColor = group.statusCode === 'PENDING' ? 'text-gray-400 bg-gray-500/10'
-                        : group.statusCode === 'ONGOING' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                        : group.statusCode === 'LOCKED' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                        : group.statusCode === 'COMPLETED' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20'
-                        : 'text-gray-400 bg-gray-500/10';
+                      const groupStatusColor = group.statusCode === 'PENDING' ? 'text-slate-600 bg-slate-100 border-slate-200'
+                        : group.statusCode === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                        : group.statusCode === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
+                        : group.statusCode === 'COMPLETED' ? 'text-blue-700 bg-blue-50 border-blue-200'
+                        : 'text-slate-600 bg-slate-100 border-slate-200';
 
                       return (
-                        <div key={group.groupId} className="rounded-xl border border-border bg-muted/5 p-4 flex flex-col justify-between">
+                        <div key={group.groupId} className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col justify-between shadow-2xs text-slate-900">
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-black text-sm text-foreground">{group.groupName}</span>
+                              <span className="font-bold text-sm text-slate-900">{group.groupName}</span>
                               <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider font-mono ${groupStatusColor}`}>
                                 {groupStatusText}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-4">
-                              <Users className="h-3.5 w-3.5" />
-                              <span>{groupComps.length} Competitors</span>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mb-4">
+                              <Users className="h-3.5 w-3.5 text-indigo-600" />
+                              <span>{groupComps.length} Thí sinh</span>
                               <span>·</span>
                               <span>{stationRange}</span>
                             </div>
@@ -473,17 +473,17 @@ function EventGroupPanel({
           {activeTab === 'scrambles' && !isLiveBoardLoading && (
             <div className="space-y-4">
               {!groupsExist ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/5 rounded-2xl border border-dashed border-border p-6">
-                  <Shuffle className="h-10 w-10 text-muted-foreground/35 mb-3" />
-                  <p className="font-bold text-sm text-foreground">Scrambles cannot be generated yet.</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mb-4">
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
+                  <Shuffle className="h-10 w-10 text-slate-300 mb-3" />
+                  <p className="font-bold text-sm text-slate-900">Scrambles cannot be generated yet.</p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mb-4">
                     Please generate Groups first in order to allocate scramble sets to specific heats.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground font-bold font-mono">
+                    <span className="text-xs text-slate-500 font-bold font-mono">
                       Scrambles Sets Management
                     </span>
                     <button
@@ -492,10 +492,10 @@ function EventGroupPanel({
                         () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
                         'Scrambles generated successfully!'
                       )}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
                         isScramblesReady
-                          ? 'bg-purple-500/10 border border-purple-500/30 text-purple-400 cursor-not-allowed'
-                          : 'bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-60'
+                          ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
+                          : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
                       }`}
                     >
                       {isLoading ? (
@@ -513,17 +513,17 @@ function EventGroupPanel({
                     {liveBoard.groups.map((group: any) => {
                       const scrambles = groupScrambles[group.groupId];
                       return (
-                        <div key={group.groupId} className="p-4 rounded-xl border border-border bg-muted/5">
+                        <div key={group.groupId} className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-bold text-foreground">{group.groupName}</span>
+                            <span className="text-xs font-bold text-slate-900">{group.groupName}</span>
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider font-mono ${
-                              scrambles ? 'text-purple-400 bg-purple-500/10 border-purple-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                              scrambles ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-amber-700 bg-amber-50 border-amber-200'
                             }`}>
                               {scrambles ? 'Generated' : 'Missing'}
                             </span>
                           </div>
 
-"                          {isScramblesLoading ? (
+                          {isScramblesLoading ? (
                             <div className="flex items-center justify-center py-6">
                               <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
                             </div>
@@ -553,7 +553,7 @@ function EventGroupPanel({
                 </div>
               )}
             </div>
-          )}
+          )}`
 
           {/* TAB 3: ROUND CONTROL (LIFE CYCLE WORKFLOW STEPPER) */}
           {activeTab === 'control' && !isLiveBoardLoading && (
@@ -566,20 +566,20 @@ function EventGroupPanel({
                 {/* 1. Generate Groups */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
-                      stepStatus.groups === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 border border-slate-200 text-slate-600'
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
+                      stepStatus.groups === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 border border-slate-200 text-slate-700'
                     }`}>
-                      {stepStatus.groups === 'Done' ? <Check className="h-3 w-3" /> : '1'}
+                      {stepStatus.groups === 'Done' ? <Check className="h-3.5 w-3.5" /> : '1'}
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">1. Tạo Nhóm Thi & Trạm Bàn Thi (Generate Groups & Stations)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
                     </div>
                   </div>
                   <button
                     disabled={isLoading}
                     onClick={() => setIsGenerateGroupsOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
                   >
                     <Shuffle className="h-3.5 w-3.5" />
                     {groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
@@ -589,15 +589,15 @@ function EventGroupPanel({
                 {/* 2. Generate Scrambles */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
                       stepStatus.scrambles === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.scrambles === 'Ready' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
+                      : (stepStatus.scrambles === 'Ready' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
                     }`}>
-                      {stepStatus.scrambles === 'Done' ? <Check className="h-3 w-3" /> : '2'}
+                      {stepStatus.scrambles === 'Done' ? <Check className="h-3.5 w-3.5" /> : '2'}
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">2. Tạo Chuỗi Scramble (Generate Scrambles)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">
                         {isScramblesReady ? 'Đã khởi tạo xong chuỗi xáo trộn cho toàn bộ các nhóm.' : 'Sinh ngẫu nhiên bộ scramble chính thức cho vòng đấu này.'}
                       </p>
                     </div>
@@ -608,7 +608,7 @@ function EventGroupPanel({
                       () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
                       'Scrambles generated!'
                     )}
-                    className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${
+                    className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs cursor-pointer ${
                       isScramblesReady
                         ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
                         : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
@@ -622,15 +622,15 @@ function EventGroupPanel({
                 {/* 3. Start Round */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
                       stepStatus.start === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.start === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-600')
+                      : (stepStatus.start === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700')
                     }`}>
-                      {stepStatus.start === 'Done' ? <Check className="h-3 w-3" /> : '3'}
+                      {stepStatus.start === 'Done' ? <Check className="h-3.5 w-3.5" /> : '3'}
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">3. Khai Mạc Vòng Đấu (Start Active Round)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
                     </div>
                   </div>
                   <button
@@ -639,7 +639,7 @@ function EventGroupPanel({
                       () => startRound(event.id, Number(roundNumber), {}),
                       `Round ${roundNumber} started!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow-2xs"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
                   >
                     <Play className="h-3.5 w-3.5" />
                     Start Round
@@ -649,15 +649,15 @@ function EventGroupPanel({
                 {/* 4. Lock Results */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
                       stepStatus.lock === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.lock === 'Ready' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
+                      : (stepStatus.lock === 'Ready' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
                     }`}>
-                      {stepStatus.lock === 'Done' ? <Check className="h-3 w-3" /> : '4'}
+                      {stepStatus.lock === 'Done' ? <Check className="h-3.5 w-3.5" /> : '4'}
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">4. Khóa Bảng Điểm (Lock Round Results)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
                     </div>
                   </div>
                   <button
@@ -666,7 +666,7 @@ function EventGroupPanel({
                       () => lockRoundResults(event.id, Number(roundNumber)),
                       `Round ${roundNumber} results locked!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition shadow-2xs"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
                   >
                     <Lock className="h-3.5 w-3.5" />
                     Lock Results
@@ -676,15 +676,15 @@ function EventGroupPanel({
                 {/* 5. Complete Round */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
                       stepStatus.complete === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.complete === 'Ready' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
+                      : (stepStatus.complete === 'Ready' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
                     }`}>
-                      {stepStatus.complete === 'Done' ? <Check className="h-3 w-3" /> : '5'}
+                      {stepStatus.complete === 'Done' ? <Check className="h-3.5 w-3.5" /> : '5'}
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">5. Hoàn Tất Vòng Đấu (Complete Round)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
                     </div>
                   </div>
                   <button
@@ -693,7 +693,7 @@ function EventGroupPanel({
                       () => completeRound(event.id, Number(roundNumber)),
                       `Round ${roundNumber} completed!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition shadow-2xs"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Complete Round
@@ -703,26 +703,26 @@ function EventGroupPanel({
                 {/* 6. Advance Round */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
-                      stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-600'
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
+                      stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700'
                     }`}>
                       6
                     </span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">6. Thăng Hạng Thí Sinh Vào Vòng Kế (Advance Competitors)</p>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
                     </div>
                   </div>
                   <button
                     disabled={isLoading || stepStatus.advance !== 'Ready'}
                     onClick={() => setIsAdvanceOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
                   >
                     <Zap className="h-3.5 w-3.5" />
                     Advance Round
                   </button>
                 </div>
-              </div>
+              </div>`
             </div>
           )}
 
@@ -929,34 +929,34 @@ function CollapsibleRoster({ list }: { list: any[] }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-t border-border/60 pt-3 mt-1">
+    <div className="border-t border-slate-200 pt-3 mt-1">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between text-left text-xs font-bold text-muted-foreground hover:text-foreground transition-colors p-1"
+        className="w-full flex items-center justify-between text-left text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors p-1 cursor-pointer"
       >
-        <span className="font-mono">Danh Sách Thí Sinh ({list.length})</span>
-        {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        <span className="font-mono text-slate-800">Danh Sách Thí Sinh ({list.length})</span>
+        {open ? <ChevronUp className="h-3.5 w-3.5 text-slate-500" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-500" />}
       </button>
 
       {open && (
-        <div className="mt-2.5 space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+        <div className="mt-2.5 space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
           {list.length === 0 ? (
-            <p className="text-[10px] text-muted-foreground italic p-2 bg-muted/20 rounded">Chưa có thí sinh nào được xếp vào nhóm này.</p>
+            <p className="text-xs text-slate-500 italic p-2 bg-slate-50 border border-slate-200 rounded-lg">Chưa có thí sinh nào được xếp vào nhóm này.</p>
           ) : (
             list.map((c: any) => (
-              <div key={c.groupCompetitorId} className="flex items-center justify-between p-1.5 rounded bg-card border border-border/40 text-[10px]">
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-foreground">{c.competitorName}</span>
-                  <span className="text-[8px] text-muted-foreground bg-muted border border-border px-1 rounded font-mono uppercase shrink-0">
+              <div key={c.groupCompetitorId} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900">{c.competitorName}</span>
+                  <span className="text-[9px] text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded font-mono font-semibold uppercase shrink-0">
                     {c.competitorUserCode}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground font-mono">Station {c.stationNumber ?? 'TBD'}</span>
-                  <span className={`px-1.5 rounded-[3px] font-bold uppercase font-mono ${
-                    c.competitorStatus === 'DONE' ? 'text-emerald-500 bg-emerald-500/10'
-                    : c.competitorStatus === 'COMPETING' ? 'text-primary bg-primary/10'
-                    : 'text-gray-400 bg-gray-500/10'
+                  <span className="text-slate-600 font-mono text-[11px] font-medium">Station {c.stationNumber ?? 'TBD'}</span>
+                  <span className={`px-2 py-0.5 rounded font-bold uppercase font-mono text-[9px] ${
+                    c.competitorStatus === 'DONE' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                    : c.competitorStatus === 'COMPETING' ? 'text-indigo-700 bg-indigo-50 border border-indigo-200'
+                    : 'text-slate-600 bg-slate-100 border border-slate-200'
                   }`}>
                     {c.competitorStatus}
                   </span>

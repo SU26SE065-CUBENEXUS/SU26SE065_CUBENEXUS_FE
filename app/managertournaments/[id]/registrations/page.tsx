@@ -449,15 +449,15 @@ export default function RegistrationManagementPage({
                     const isCheckedIn = reg.checkedInAt || reg.statusCode === 'CHECKED_IN';
                     
                     return (
-                      <tr key={reg.registrationId} className="hover:bg-muted/20 transition">
-                        <td className="px-4 py-3.5 text-center text-xs text-muted-foreground font-medium">
+                      <tr key={reg.registrationId} className="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-bold">
                           {index + 1}
                         </td>
                         
                         {/* Profile Info */}
                         <td className="px-4 py-3.5 font-bold">
                           <div className="flex items-center gap-3">
-                            <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 overflow-hidden shrink-0 flex items-center justify-center text-[10px] font-extrabold text-primary">
+                            <div className="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-indigo-700 shadow-2xs">
                               {reg.competitorAvatarUrl ? (
                                 <img src={reg.competitorAvatarUrl} alt={reg.competitorName} className="h-full w-full object-cover" />
                               ) : (
@@ -465,8 +465,8 @@ export default function RegistrationManagementPage({
                               )}
                             </div>
                             <div>
-                              <span className="text-xs font-extrabold text-foreground">{reg.competitorName}</span>
-                              <span className="text-[9px] text-muted-foreground/60 font-mono tracking-tight block">
+                              <span className="text-xs font-bold text-slate-900 block">{reg.competitorName}</span>
+                              <span className="text-[10px] text-slate-500 font-mono tracking-tight block">
                                 {reg.competitorUserCode || 'No Code'}
                               </span>
                             </div>
@@ -474,17 +474,17 @@ export default function RegistrationManagementPage({
                         </td>
 
                         {/* Email */}
-                        <td className="px-4 py-3.5 text-xs text-muted-foreground max-w-[150px] truncate">
+                        <td className="px-4 py-3.5 text-xs text-slate-700 font-medium max-w-[170px] truncate">
                           {reg.email}
                         </td>
 
                         {/* Registration Status */}
                         <td className="px-4 py-3.5 text-center">
                           <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ring-1 ring-inset ${
-                            reg.statusCode === 'CONFIRMED' ? 'bg-emerald-500/10 text-emerald-500 ring-emerald-500/20' :
-                            reg.statusCode === 'CHECKED_IN' ? 'bg-blue-500/10 text-blue-400 ring-blue-500/20' :
-                            reg.statusCode === 'CANCELLED' ? 'bg-red-500/10 text-red-500 ring-red-500/20' :
-                            'bg-amber-500/10 text-amber-500 ring-amber-500/20'
+                            reg.statusCode === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
+                            reg.statusCode === 'CHECKED_IN' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
+                            reg.statusCode === 'CANCELLED' ? 'bg-red-50 text-red-700 ring-red-200' :
+                            'bg-amber-50 text-amber-700 ring-amber-200'
                           }`}>
                             {reg.statusCode}
                           </span>
@@ -501,19 +501,19 @@ export default function RegistrationManagementPage({
                                 <div 
                                   key={ev.registrationEventId} 
                                   className={`rounded-lg border px-2 py-1 flex items-center gap-1.5 text-[10px] font-medium transition ${
-                                    isWithdrawn ? 'bg-muted/30 border-dashed border-border/40 text-muted-foreground/45 line-through' :
-                                    isDisqualified ? 'bg-red-500/5 border-red-500/10 text-red-400/70' :
-                                    'bg-card border-border text-foreground shadow-sm'
+                                    isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
+                                    isDisqualified ? 'bg-red-50 border-red-200 text-red-700' :
+                                    'bg-slate-900 border-slate-800 text-white shadow-2xs'
                                   }`}
                                 >
-                                  <span>{ev.puzzleTypeName}</span>
+                                  <span className="font-semibold">{ev.puzzleTypeName}</span>
                                   {!isWithdrawn && !isDisqualified && (
                                     <>
-                                      <span className="text-muted-foreground/40">|</span>
+                                      <span className="opacity-40">|</span>
                                       {ev.seedTimeMs ? (
-                                        <span className="font-mono text-primary font-bold" title="Seed Time">Seed: {msToDisplay(ev.seedTimeMs)}</span>
+                                        <span className="font-mono text-amber-300 font-bold" title="Seed Time">Seed: {msToDisplay(ev.seedTimeMs)}</span>
                                       ) : (
-                                        <span className="text-amber-500 font-bold flex items-center gap-0.5" title="No seed time configured!">
+                                        <span className="text-amber-400 font-bold flex items-center gap-0.5" title="No seed time configured!">
                                           <AlertTriangle className="h-3 w-3" /> No Seed
                                         </span>
                                       )}
@@ -529,26 +529,26 @@ export default function RegistrationManagementPage({
                         <td className="px-4 py-3.5 text-center">
                           {isCheckedIn ? (
                             <div className="flex flex-col items-center">
-                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
+                              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200">
                                 Checked In
                               </span>
                               {reg.checkedInAt && (
-                                <span className="text-[8px] text-muted-foreground/60 font-mono mt-0.5">
+                                <span className="text-[10px] text-slate-500 font-mono mt-0.5">
                                   {new Date(reg.checkedInAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[9px] font-bold text-muted-foreground">
+                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-600">
                               Absent
                             </span>
                           )}
                         </td>
 
                         {/* Registered At */}
-                        <td className="px-4 py-3.5 text-center text-xs text-muted-foreground font-mono">
+                        <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-mono font-medium">
                           {formatDate(reg.registeredAt)}
-                        </td>
+                        </td>`
 
                         {/* Manager Action Options */}
                         <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">

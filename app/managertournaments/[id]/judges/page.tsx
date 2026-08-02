@@ -329,7 +329,7 @@ export default function JudgeManagementPage({
     const matchesSearch =
       j.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       j.username.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (!matchesSearch) return false;
     if (roleFilter === 'CHECKIN') return j.roleCode === 'CHECKIN_JUDGE';
     if (roleFilter === 'STATION') return j.roleCode === 'STATION_JUDGE' || j.assignedStationNumber;
@@ -428,25 +428,22 @@ export default function JudgeManagementPage({
         <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 p-1 rounded-lg">
           <button
             onClick={() => setRoleFilter('ALL')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              roleFilter === 'ALL' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${roleFilter === 'ALL' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Tất Cả ({judges.length})
           </button>
           <button
             onClick={() => setRoleFilter('CHECKIN')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              roleFilter === 'CHECKIN' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${roleFilter === 'CHECKIN' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Check-in ({judges.filter(j => j.roleCode === 'CHECKIN_JUDGE').length})
           </button>
           <button
             onClick={() => setRoleFilter('STATION')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
-              roleFilter === 'STATION' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${roleFilter === 'STATION' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Trạm Bàn ({judges.filter(j => j.roleCode !== 'CHECKIN_JUDGE').length})
           </button>
@@ -866,7 +863,7 @@ export default function JudgeManagementPage({
                   onClick={copyAllHandover}
                   className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white shadow-2xs transition"
                 >
-                  {isAllCopied ? '✓ Đã Copy Tất Cả!' : 'Copy Tất Cả (Zalo/Excel)'}
+                  {isAllCopied ? '✓ Đã Copy Tất Cả!' : 'Copy Tất Cả'}
                 </button>
                 <button
                   onClick={() => setShowHandoverModal(false)}
