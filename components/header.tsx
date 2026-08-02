@@ -59,8 +59,12 @@ export function Header() {
             >
               {/* Trigger Avatar Button */}
               <button className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 shadow-sm transition-all hover:border-accent/50 focus:outline-none">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground shadow-sm">
-                  {user?.displayName?.charAt(0)?.toUpperCase() ?? 'U'}
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground shadow-sm overflow-hidden shrink-0">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    user?.displayName?.charAt(0)?.toUpperCase() ?? 'U'
+                  )}
                 </div>
                 <div className="hidden flex-col text-left sm:flex">
                   <span className="text-xs font-bold text-foreground leading-tight">{user?.displayName}</span>
@@ -76,14 +80,23 @@ export function Header() {
                 <div className="absolute right-0 top-full pt-2 z-50">
                   <div className="w-56 rounded-2xl border border-border bg-card p-2 shadow-xl animate-fade-in">
                     {/* User Details header */}
-                    <div className="px-3 py-2 border-b border-border/60">
-                      <p className="text-xs font-extrabold text-foreground truncate">{user?.displayName}</p>
-                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
-                      {user?.role?.toUpperCase() !== 'COMPETITOR' && (
-                        <span className="mt-1.5 inline-block rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
-                          {user?.role}
-                        </span>
-                      )}
+                    <div className="px-3 py-2 border-b border-border/60 flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground shadow-sm overflow-hidden shrink-0">
+                        {user?.avatarUrl ? (
+                          <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
+                        ) : (
+                          user?.displayName?.charAt(0)?.toUpperCase() ?? 'U'
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-extrabold text-foreground truncate">{user?.displayName}</p>
+                        <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
+                        {user?.role?.toUpperCase() !== 'COMPETITOR' && (
+                          <span className="mt-1 inline-block rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
+                            {user?.role}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Action items */}

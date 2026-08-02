@@ -9,7 +9,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginApi, logoutApi } from '@/lib/api/auth';
+import { loginApi, logoutApi, getMyProfileApi } from '@/lib/api/auth';
 import {
   getAccessToken,
   parseJwt,
@@ -25,6 +25,8 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (data: LoginRequest) => Promise<LoginResponse>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  updateUser: (fields: Partial<AuthUser>) => void;
 }
 
 // ---------- Create Context ----------
@@ -65,20 +67,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
+  // Refresh user profile from BE API
+  const refreshUser = useCallback(async () => {
     const token = getAccessToken();
-    if (token) {
-      const parsed = buildUserFromToken(token);
-      setUser(parsed);
+    if (!token) {
+      setUser(null);
+      return;
     }
-    setIsLoading(false);
+    try {
+      const profile = await getMyProfileApi();
+      setUser({
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.displayName || 'User',
+        role: profile.userRole || 'COMPETITOR',
+        avatarUrl: profile.avatarUrl || undefined,
+      });
+    } catch (err) {
+      console.warn('Failed to refresh user profile from API, falling back to JWT:', err);
+      const parsed = buildUserFromToken(token);
+      if (parsed) setUser(parsed);
+    }
+  }, []);
+
+  const updateUser = useCallback((fields: Partial<AuthUser>) => {
+    setUser((prev) => (prev ? { ...prev, ...fields } : null));
+  }, []);
+
+  // Hydrate from localStorage and API on mount
+  useEffect(() => {
+    async function initAuth() {
+      const token = getAccessToken();
+      if (token) {
+        const parsed = buildUserFromToken(token);
+        setUser(parsed);
+        // Async fetch full profile to get avatarUrl
+        try {
+          const profile = await getMyProfileApi();
+          setUser({
+            id: profile.id,
+            email: profile.email,
+            displayName: profile.displayName || parsed?.displayName || 'User',
+            role: profile.userRole || parsed?.role || 'COMPETITOR',
+            avatarUrl: profile.avatarUrl || undefined,
+          });
+        } catch {
+          // ignore, token fallback remains
+        }
+      }
+      setIsLoading(false);
+    }
+    initAuth();
   }, []);
 
   const login = useCallback(async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await loginApi(data);
     const parsed = buildUserFromToken(response.accessToken);
     setUser(parsed);
+    // Fetch profile immediately after login for avatar
+    try {
+      const profile = await getMyProfileApi();
+      setUser({
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.displayName || response.displayName,
+        role: profile.userRole || parsed?.role || 'COMPETITOR',
+        avatarUrl: profile.avatarUrl || undefined,
+      });
+    } catch {
+      // Keep parsed
+    }
     return response;
   }, []);
 
@@ -97,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
+        refreshUser,
+        updateUser,
       }}
     >
       {children}

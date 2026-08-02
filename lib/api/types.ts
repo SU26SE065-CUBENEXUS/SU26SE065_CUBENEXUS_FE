@@ -87,6 +87,7 @@ export interface AuthUser {
   email: string;
   displayName: string;
   role: 'MANAGER' | 'ADMIN' | 'COMPETITOR' | 'JUDGE' | string;
+  avatarUrl?: string;
 }
 
 // ---------- Tournament ----------

@@ -246,9 +246,13 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
           className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-2xs"
         >
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold bg-indigo-600 text-white shadow-2xs"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold bg-indigo-600 text-white shadow-2xs overflow-hidden shrink-0"
           >
-            {user?.displayName?.charAt(0)?.toUpperCase() ?? 'M'}
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
+            ) : (
+              user?.displayName?.charAt(0)?.toUpperCase() ?? 'M'
+            )}
           </div>
           <div className="hidden flex-col text-left sm:flex">
             <span className="text-xs font-bold text-slate-900 leading-tight">{user?.displayName}</span>
@@ -262,12 +266,21 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
         {isDropdownOpen && (
           <div className="absolute right-0 top-full pt-1.5 z-50">
             <div className="w-52 rounded-xl p-1.5 bg-white border border-slate-200 shadow-xl animate-fade-in">
-              <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900 truncate">{user?.displayName}</p>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{user?.email}</p>
-                <span className="mt-1.5 inline-block rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  {user?.role}
-                </span>
+              <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white shadow-2xs overflow-hidden shrink-0">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
+                  ) : (
+                    user?.displayName?.charAt(0)?.toUpperCase() ?? 'M'
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-900 truncate">{user?.displayName}</p>
+                  <p className="text-[10px] text-slate-500 truncate mt-0.5">{user?.email}</p>
+                  <span className="mt-1 inline-block rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {user?.role}
+                  </span>
+                </div>
               </div>
               <div className="mt-1 space-y-0.5">
                 <Link
