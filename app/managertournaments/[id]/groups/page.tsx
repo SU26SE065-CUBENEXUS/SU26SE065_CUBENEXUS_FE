@@ -205,25 +205,25 @@ function EventGroupPanel({
     : [];
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
       {/* Event Header Panel */}
-      <div className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition">
+      <div className="flex items-center justify-between px-5 py-4 hover:bg-slate-50/70 transition">
         <button
           onClick={() => setExpanded((v) => !v)}
           className="flex-1 flex items-center justify-between text-left"
         >
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-foreground text-base tracking-tight">
+              <span className="font-bold text-slate-900 text-base tracking-tight">
                 {event.puzzleTypeName || event.puzzleTypeCode}
               </span>
               {event.eventFormatCode === 'MEDLEY' && (
-                <span className="rounded-full bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-bold text-purple-600 dark:text-purple-400">
+                <span className="rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
                   MEDLEY
                 </span>
               )}
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">
+            <div className="text-xs text-slate-500 mt-0.5 font-medium">
               {event.solveCount} solves · Limit: {msToDisplay(event.timeLimitMs)}
               {event.cutoffTimeMs ? ` · Cutoff: ${msToDisplay(event.cutoffTimeMs)}` : ''}
             </div>
@@ -235,30 +235,30 @@ function EventGroupPanel({
           {expanded && (
             <div className="flex items-center gap-2">
               {/* Round Switcher */}
-              <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-lg border border-border">
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                 <button
                   disabled={Number(roundNumber) <= 1 || isLoading || isLiveBoardLoading}
                   onClick={() => setRoundNumber((prev) => String(Math.max(1, Number(prev) - 1)))}
-                  className="p-1 rounded hover:bg-muted text-foreground disabled:opacity-40 transition-colors"
+                  className="p-1 rounded hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="h-3 w-3" />
                 </button>
-                <span className="text-[10px] font-bold px-2 text-foreground font-mono">Round {roundNumber}</span>
+                <span className="text-[10px] font-bold px-2 text-slate-800 font-mono">Round {roundNumber}</span>
                 <button
                   disabled={isLoading || isLiveBoardLoading}
                   onClick={() => setRoundNumber((prev) => String(Number(prev) + 1))}
-                  className="p-1 rounded hover:bg-muted text-foreground transition-colors"
+                  className="p-1 rounded hover:bg-slate-200 text-slate-700 transition-colors"
                 >
                   <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
 
               {/* Status Badge */}
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider font-mono ${
-                roundStatus === 'ONGOING' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                : roundStatus === 'LOCKED' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                : roundStatus === 'COMPLETED' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20'
-                : 'text-gray-400 bg-gray-500/10 border-border'
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                : roundStatus === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
+                : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                : 'text-slate-500 bg-slate-100 border-slate-200'
               }`}>
                 {roundStatus}
               </span>
@@ -298,47 +298,47 @@ function EventGroupPanel({
 
           {/* 1. Overview Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="rounded-xl border border-border bg-muted/15 p-4 flex flex-col justify-between">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Current Round</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Current Round</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-black text-foreground">Round {roundNumber}</span>
+                <span className="text-2xl font-bold text-slate-900">Round {roundNumber}</span>
               </div>
-              <span className="text-xs text-muted-foreground mt-1">Status: {roundStatus}</span>
+              <span className="text-xs text-slate-500 mt-1">Trạng thái: <strong className="text-slate-900">{roundStatus}</strong></span>
             </div>
 
-            <div className="rounded-xl border border-border bg-muted/15 p-4 flex flex-col justify-between">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Participants & Groups</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Participants & Groups</span>
               <div className="mt-2">
-                <span className="text-2xl font-black text-foreground">{totalCompetitors}</span>
-                <span className="text-xs text-muted-foreground font-semibold ml-1">competitors</span>
+                <span className="text-2xl font-bold text-slate-900">{totalCompetitors}</span>
+                <span className="text-xs text-slate-500 font-semibold ml-1">thí sinh</span>
               </div>
-              <span className="text-xs text-muted-foreground mt-1">{groupsCount} groups · {activeStations} stations</span>
+              <span className="text-xs text-slate-500 mt-1">{groupsCount} nhóm · {activeStations} bàn thi</span>
             </div>
 
-            <div className="rounded-xl border border-border bg-muted/15 p-4 flex flex-col justify-between">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Scramble Status</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Scramble Status</span>
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-2xl font-black text-foreground">
+                <span className="text-2xl font-bold text-slate-900">
                   {scramblesStatus === 'Generated' ? 'Ready' : (scramblesStatus === 'Missing' ? 'Missing' : 'None')}
                 </span>
                 <span className={`inline-block w-2.5 h-2.5 rounded-full ${
-                  scramblesStatus === 'Generated' ? 'bg-purple-500' : 'bg-amber-500'
+                  scramblesStatus === 'Generated' ? 'bg-emerald-500' : 'bg-amber-500'
                 }`} />
               </div>
-              <span className="text-xs text-purple-400 mt-1">Group sets generated</span>
+              <span className="text-xs text-indigo-600 font-semibold mt-1">Đã tạo chuỗi Scramble</span>
             </div>
 
-            <div className="rounded-xl border border-border bg-muted/15 p-4 flex flex-col justify-between">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Submissions Progress</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Submissions Progress</span>
               <div className="mt-2">
-                <span className="text-2xl font-black text-foreground">{progressPercentage}%</span>
-                <span className="text-xs text-muted-foreground font-semibold ml-2">
+                <span className="text-2xl font-bold text-indigo-600">{progressPercentage}%</span>
+                <span className="text-xs text-slate-500 font-semibold ml-2">
                   ({submittedSolves}/{totalSolves})
                 </span>
               </div>
-              <div className="w-full bg-border h-1.5 rounded-full overflow-hidden mt-2">
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2 border border-slate-200">
                 <div
-                  className="bg-primary h-full rounded-full transition-all duration-300"
+                  className="bg-indigo-600 h-full rounded-full transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
@@ -346,15 +346,15 @@ function EventGroupPanel({
           </div>
 
           {/* Segmented Tab Headers */}
-          <div className="flex border-b border-border mb-5 gap-4">
+          <div className="flex border-b border-slate-200 mb-5 gap-6">
             {(['groups', 'scrambles', 'control'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
                   activeTab === tab
-                    ? 'border-primary text-primary font-black'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    ? 'border-indigo-600 text-indigo-600 font-bold'
+                    : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {tab === 'groups' ? 'Groups Board' : tab === 'scrambles' ? 'Scrambles' : 'Round Control'}
@@ -363,10 +363,10 @@ function EventGroupPanel({
             <button
               onClick={() => fetchLiveBoard(Number(roundNumber))}
               disabled={isLiveBoardLoading}
-              className="ml-auto flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground p-1 transition"
+              className="ml-auto flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 p-1 transition cursor-pointer"
             >
-              <RefreshCw className={`h-3 w-3 ${isLiveBoardLoading ? 'animate-spin text-primary' : ''}`} />
-              Sync Data
+              <RefreshCw className={`h-3 w-3 ${isLiveBoardLoading ? 'animate-spin text-indigo-600' : ''}`} />
+              Đồng Bộ Dữ Liệu
             </button>
           </div>
 
@@ -523,27 +523,27 @@ function EventGroupPanel({
                             </span>
                           </div>
 
-                          {isScramblesLoading ? (
+"                          {isScramblesLoading ? (
                             <div className="flex items-center justify-center py-6">
-                              <Loader2 className="h-4 w-4 animate-spin text-purple-500" />
+                              <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
                             </div>
                           ) : scrambles && scrambles.length > 0 ? (
                             <div className="space-y-2">
                               {scrambles.map((s: any) => (
-                                <div key={s.id} className="text-xs flex flex-col sm:flex-row items-start gap-2 p-2 bg-card rounded border border-border">
-                                  <span className="font-bold text-purple-400 min-w-[60px] font-mono">Solve {s.solveNumber}:</span>
-                                  <span className="font-mono break-all text-foreground/90 select-all tracking-wider">{s.sequence}</span>
+                                <div key={s.id} className="text-xs flex flex-col sm:flex-row items-center justify-between gap-2 p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                                  <span className="font-bold text-indigo-600 min-w-[70px] font-mono">Solve #{s.solveNumber}:</span>
+                                  <span className="font-mono break-all text-slate-900 font-semibold select-all tracking-wider text-xs">{s.sequence}</span>
                                 </div>
                               ))}
                             </div>
                           ) : scrambles ? (
-                            <p className="text-xs text-muted-foreground italic py-2">
+                            <p className="text-xs text-slate-500 italic py-2">
                               Scrambles generated, details unavailable from current API.
                             </p>
                           ) : (
-                            <p className="text-xs text-amber-500 italic py-2 flex items-center gap-1.5">
+                            <p className="text-xs text-amber-600 italic py-2 flex items-center gap-1.5">
                               <AlertCircle className="h-3.5 w-3.5" />
-                              No scrambles generated for this group yet. Click Generate Scrambles above.
+                              Chưa tạo chuỗi Scramble cho nhóm này. Bấm nút Tạo Scrambles phía trên.
                             </p>
                           )}
                         </div>
@@ -557,29 +557,29 @@ function EventGroupPanel({
 
           {/* TAB 3: ROUND CONTROL (LIFE CYCLE WORKFLOW STEPPER) */}
           {activeTab === 'control' && !isLiveBoardLoading && (
-            <div className="space-y-4">
-              <span className="text-xs text-muted-foreground font-bold font-mono block mb-2">
-                Workflow Lifecycle Stepper
+            <div className="space-y-4 max-w-4xl mx-auto w-full">
+              <span className="text-xs text-slate-500 font-bold font-mono block mb-2">
+                QUY TRÌNH ĐIỀU HÀNH VÒNG THI (LIFECYCLE STEPPER)
               </span>
 
               <div className="space-y-3">
                 {/* 1. Generate Groups */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.groups === 'Done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-muted border border-border text-muted-foreground'
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.groups === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 border border-slate-200 text-slate-600'
                     }`}>
                       {stepStatus.groups === 'Done' ? <Check className="h-3 w-3" /> : '1'}
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Generate Groups & Stations</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Define group parameters and allocate target competitor slots.</p>
+                      <p className="text-xs font-bold text-slate-900">1. Tạo Nhóm Thi & Trạm Bàn Thi (Generate Groups & Stations)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
                     </div>
                   </div>
                   <button
                     disabled={isLoading}
                     onClick={() => setIsGenerateGroupsOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-500 disabled:opacity-60 transition"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs"
                   >
                     <Shuffle className="h-3.5 w-3.5" />
                     {groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
@@ -587,18 +587,18 @@ function EventGroupPanel({
                 </div>
 
                 {/* 2. Generate Scrambles */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.scrambles === 'Done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : (stepStatus.scrambles === 'Ready' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-muted border border-border text-muted-foreground')
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.scrambles === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : (stepStatus.scrambles === 'Ready' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
                     }`}>
                       {stepStatus.scrambles === 'Done' ? <Check className="h-3 w-3" /> : '2'}
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Generate Scrambles</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {isScramblesReady ? 'Scrambles generated for all groups.' : 'Generate solve scramble sequences for all competitors in this round.'}
+                      <p className="text-xs font-bold text-slate-900">2. Tạo Chuỗi Scramble (Generate Scrambles)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {isScramblesReady ? 'Đã khởi tạo xong chuỗi xáo trộn cho toàn bộ các nhóm.' : 'Sinh ngẫu nhiên bộ scramble chính thức cho vòng đấu này.'}
                       </p>
                     </div>
                   </div>
@@ -608,10 +608,10 @@ function EventGroupPanel({
                       () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
                       'Scrambles generated!'
                     )}
-                    className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                    className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${
                       isScramblesReady
-                        ? 'bg-purple-500/10 border border-purple-500/30 text-purple-400 cursor-not-allowed'
-                        : 'bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-60'
+                        ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
+                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
                     }`}
                   >
                     {isScramblesReady ? <Check className="h-3.5 w-3.5" /> : <Zap className="h-3.5 w-3.5" />}
@@ -620,17 +620,17 @@ function EventGroupPanel({
                 </div>
 
                 {/* 3. Start Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.start === 'Done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : (stepStatus.start === 'Ready' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse' : 'bg-muted border border-border text-muted-foreground')
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.start === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : (stepStatus.start === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-600')
                     }`}>
                       {stepStatus.start === 'Done' ? <Check className="h-3 w-3" /> : '3'}
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Start Active Round</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Activate solving station Hub connection pipelines and open competitor scan flow.</p>
+                      <p className="text-xs font-bold text-slate-900">3. Khai Mạc Vòng Đấu (Start Active Round)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
                     </div>
                   </div>
                   <button
@@ -639,7 +639,7 @@ function EventGroupPanel({
                       () => startRound(event.id, Number(roundNumber), {}),
                       `Round ${roundNumber} started!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-60 transition"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow-2xs"
                   >
                     <Play className="h-3.5 w-3.5" />
                     Start Round
@@ -647,17 +647,17 @@ function EventGroupPanel({
                 </div>
 
                 {/* 4. Lock Results */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.lock === 'Done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : (stepStatus.lock === 'Ready' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-muted border border-border text-muted-foreground')
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.lock === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : (stepStatus.lock === 'Ready' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
                     }`}>
                       {stepStatus.lock === 'Done' ? <Check className="h-3 w-3" /> : '4'}
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Lock Round Results</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Block station scoring modifications and sign-off result submissions.</p>
+                      <p className="text-xs font-bold text-slate-900">4. Khóa Bảng Điểm (Lock Round Results)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
                     </div>
                   </div>
                   <button
@@ -666,7 +666,7 @@ function EventGroupPanel({
                       () => lockRoundResults(event.id, Number(roundNumber)),
                       `Round ${roundNumber} results locked!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-500 disabled:opacity-60 transition"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition shadow-2xs"
                   >
                     <Lock className="h-3.5 w-3.5" />
                     Lock Results
@@ -674,17 +674,17 @@ function EventGroupPanel({
                 </div>
 
                 {/* 5. Complete Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.complete === 'Done' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : (stepStatus.complete === 'Ready' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-muted border border-border text-muted-foreground')
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.complete === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : (stepStatus.complete === 'Ready' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 border border-slate-200 text-slate-600')
                     }`}>
                       {stepStatus.complete === 'Done' ? <Check className="h-3 w-3" /> : '5'}
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Complete Round</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Confirm submission checks and finalize rankings for competitor advancement.</p>
+                      <p className="text-xs font-bold text-slate-900">5. Hoàn Tất Vòng Đấu (Complete Round)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
                     </div>
                   </div>
                   <button
@@ -693,7 +693,7 @@ function EventGroupPanel({
                       () => completeRound(event.id, Number(roundNumber)),
                       `Round ${roundNumber} completed!`
                     )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60 transition"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition shadow-2xs"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Complete Round
@@ -701,58 +701,52 @@ function EventGroupPanel({
                 </div>
 
                 {/* 6. Advance Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-card">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                   <div className="flex items-start gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black font-mono ${
-                      stepStatus.advance === 'Ready' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 animate-pulse' : 'bg-muted border border-border text-muted-foreground'
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                      stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-600'
                     }`}>
                       6
                     </span>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Advance Competitors to Next Round</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Move top ranked competitors to the next round structure and generate new groups.</p>
+                      <p className="text-xs font-bold text-slate-900">6. Thăng Hạng Thí Sinh Vào Vòng Kế (Advance Competitors)</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
                     </div>
                   </div>
                   <button
                     disabled={isLoading || stepStatus.advance !== 'Ready'}
                     onClick={() => setIsAdvanceOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-500 disabled:opacity-60 transition"
+                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs"
                   >
                     <Zap className="h-3.5 w-3.5" />
                     Advance Round
                   </button>
                 </div>
               </div>
-
-
             </div>
           )}
-        </div>
-      )}
-               {/* GENERATE GROUPS MODAL */}
+
+          {/* GENERATE GROUPS MODAL */}
           {isGenerateGroupsOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-              <div className="relative w-full max-w-md p-6 md:p-8 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl space-y-6 overflow-hidden">
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-                  <div className="flex items-center gap-2.5 text-amber-400">
-                    <Shuffle className="h-6 w-6 text-amber-400" />
-                    <h3 className="text-lg font-black text-white tracking-tight">Cấu Hình Tạo Nhóm Thi Đấu</h3>
-                  </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="relative w-full max-w-md p-6 bg-white border border-slate-200 rounded-xl shadow-2xl space-y-4 text-slate-900 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tạo Nhóm Thi Đấu</h3>
                   <button
                     onClick={() => setIsGenerateGroupsOpen(false)}
-                    className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
 
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-amber-400">Vòng {roundNumber}</strong> - Môn <strong className="text-white">{event.puzzleTypeName || event.puzzleTypeCode}</strong>.
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{event.puzzleTypeName || event.puzzleTypeCode}</strong>.
                 </p>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
                       Số lượng thí sinh trong 1 nhóm
                     </label>
                     <input
@@ -761,32 +755,29 @@ function EventGroupPanel({
                       max="50"
                       value={groupSize}
                       onChange={(e) => setGroupSize(e.target.value)}
-                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white font-bold outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                       placeholder="Ví dụ: 8 thí sinh / nhóm"
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs space-y-2 shadow-sm">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-zinc-300 font-medium">
-                        <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
-                        <span>Số bàn thi đấu hiện có:</span>
-                      </div>
-                      <span className="font-bold text-xs bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
+                      <span className="text-slate-600 font-medium">Số bàn thi đấu hiện có:</span>
+                      <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded border border-indigo-200 font-mono">
                         {stationCount} Bàn khả dụng
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-400 leading-snug">
-                      💡 Thí sinh sẽ được chia đều để lượt thi diễn ra liên tục trên {stationCount} bàn trọng tài.
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Thí sinh sẽ được chia đều để lượt thi diễn ra liên tục trên {stationCount} bàn trọng tài.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setIsGenerateGroupsOpen(false)}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                    className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                   >
                     Hủy Bỏ
                   </button>
@@ -803,9 +794,9 @@ function EventGroupPanel({
                         'Đã khởi tạo thành công các Nhóm thi đấu!'
                       );
                     }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white text-white" />}
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     Xác Nhận Tạo Nhóm
                   </button>
                 </div>
@@ -815,85 +806,81 @@ function EventGroupPanel({
 
           {/* ADVANCE ROUND CONFIRMATION MODAL */}
           {isAdvanceOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-              <div className="relative w-full max-w-2xl p-6 md:p-8 bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl flex flex-col max-h-[85vh] space-y-5 overflow-hidden">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                  <div className="flex items-center gap-2.5 text-amber-400">
-                    <Zap className="h-6 w-6 text-amber-400 fill-amber-400" />
-                    <h3 className="text-lg font-black text-white tracking-tight">Cấu Hình Tăng Vòng (Advance Round)</h3>
-                  </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="relative w-full max-w-2xl p-6 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[85vh] space-y-4 text-slate-900 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tăng Vòng (Advance Round)</h3>
                   <button
                     onClick={() => setIsAdvanceOpen(false)}
-                    className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
 
-                <p className="text-xs text-zinc-400">
-                  Tuyển chọn các thí sinh có thứ hạng xuất sắc nhất Vòng {roundNumber} tiến vào <strong className="text-amber-400">Vòng {Number(roundNumber) + 1}</strong>.
+                <p className="text-xs text-slate-500">
+                  Tuyển chọn các thí sinh có thứ hạng xuất sắc nhất Vòng {roundNumber} tiến vào <strong className="text-indigo-600">Vòng {Number(roundNumber) + 1}</strong>.
                 </p>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Số Lấy Vào (Top N)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Số Lấy Vào (Top N)</label>
                     <input
                       type="number"
                       value={advanceCount}
                       onChange={(e) => setAdvanceCount(e.target.value)}
-                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Size Nhóm Mới</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Size Nhóm Mới</label>
                     <input
                       type="number"
                       value={groupSize}
                       onChange={(e) => setGroupSize(e.target.value)}
-                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">Số Bàn Thi</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Số Bàn Thi</label>
                     <input
                       type="number"
                       value={stationCount}
                       onChange={(e) => setStationCount(e.target.value)}
-                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-500/60 font-bold"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                     />
                   </div>
                 </div>
 
                 {/* Advance Ranking Preview */}
-                <div className="flex-1 overflow-y-auto border border-zinc-800 rounded-2xl bg-zinc-950">
-                  <div className="p-3 bg-zinc-900/80 border-b border-zinc-800 text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-mono">
+                <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-white">
+                  <div className="p-2.5 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
                     Danh Sách Thí Sinh Dự Kiến Đi Tiếp (Top {advanceCount})
                   </div>
 
                   {advancingCompetitors.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-zinc-500 italic flex flex-col items-center gap-1.5">
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <div className="p-6 text-center text-xs text-slate-500 italic">
                       Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán từ bảng thành tích.
                     </div>
                   ) : (
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-zinc-800 bg-zinc-900/40 text-zinc-400 font-bold text-[10px] uppercase">
-                          <th className="p-3 font-mono">Hạng</th>
-                          <th className="p-3 font-mono">Thí Sinh</th>
-                          <th className="p-3 font-mono">Best</th>
-                          <th className="p-3 font-mono">Average</th>
-                          <th className="p-3 font-mono">Số Lượt</th>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
+                          <th className="p-2.5 font-mono">Hạng</th>
+                          <th className="p-2.5 font-mono">Thí Sinh</th>
+                          <th className="p-2.5 font-mono">Best</th>
+                          <th className="p-2.5 font-mono">Average</th>
+                          <th className="p-2.5 font-mono">Số Lượt</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-800/50">
+                      <tbody className="divide-y divide-slate-100">
                         {advancingCompetitors.map((c: any) => (
-                          <tr key={c.groupCompetitorId} className="hover:bg-zinc-800/30">
-                            <td className="p-3 font-bold font-mono text-amber-400">#{c.rank}</td>
-                            <td className="p-3 font-bold text-white">{c.competitorName}</td>
-                            <td className="p-3 font-mono text-zinc-300">{msToDisplay(c.bestTimeMs)}</td>
-                            <td className="p-3 font-mono font-bold text-amber-300">{msToDisplay(c.averageTimeMs)}</td>
-                            <td className="p-3 text-zinc-400 font-mono">{c.completedSolves} lượt</td>
+                          <tr key={c.groupCompetitorId} className="hover:bg-slate-50/80">
+                            <td className="p-2.5 font-bold font-mono text-indigo-600">#{c.rank}</td>
+                            <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
+                            <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
+                            <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
+                            <td className="p-2.5 text-slate-500 font-mono">{c.completedSolves} lượt</td>
                           </tr>
                         ))}
                       </tbody>
@@ -901,10 +888,10 @@ function EventGroupPanel({
                   )}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-2">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
                     onClick={() => setIsAdvanceOpen(false)}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                    className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                   >
                     Hủy Bỏ
                   </button>
@@ -922,15 +909,17 @@ function EventGroupPanel({
                         `Đã chuyển thành công Top ${advanceCount} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
                       );
                     }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white text-white" />}
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     Xác Nhận Chuyển Vòng
                   </button>
                 </div>
               </div>
             </div>
           )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1034,32 +1023,31 @@ export default function GroupHeatManagementPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-7 flex-wrap">
-        <Trophy className="h-3.5 w-3.5" />
-        <Link href="/managertournaments" className="hover:text-foreground transition-colors">Tournaments</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/managertournaments/${id}`} className="hover:text-foreground transition-colors">
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-semibold font-mono">Dashboard Operations</span>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-bold">Quản Lý Nhóm & Scramble</span>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Round Operations Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage groups layout, check scramble sequences details, start round pipelines, and advance top ranked competitors.
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Vòng Thi & Nhóm Thi</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">Quản Lý Nhóm & Scramble</h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Khởi tạo nhóm thi đấu, xem chuỗi Scramble chính thức, bắt đầu vòng thi và thăng hạng thí sinh.
           </p>
         </div>
       </div>
 
       {tournament.events.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card py-16 text-center shadow-sm">
-          <Layers className="h-10 w-10 text-muted-foreground/35 mx-auto mb-3" />
-          <p className="text-muted-foreground font-semibold text-sm">No events configured for this tournament.</p>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center shadow-2xs">
+          <p className="text-slate-400 font-semibold text-sm">Chưa có hạng mục thi đấu nào cho giải này.</p>
         </div>
       ) : (
         <div className="space-y-4">

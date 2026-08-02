@@ -336,127 +336,115 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-background/90 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl bg-card border border-border/80 shadow-2xl text-foreground overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-xl bg-white border border-slate-200 shadow-2xl text-slate-900 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/60 bg-card/60 backdrop-blur-md px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
-              <Trophy className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-foreground">Create Tournament</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Configure details, timeline, and puzzle events for your competition.</p>
-            </div>
+        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Tạo Giải Đấu Mới</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Cấu hình thông tin chi tiết, lịch trình và các hạng mục thi đấu.</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl p-2 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <form noValidate onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8">
+        <form noValidate onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           {error && (
-            <div className="flex items-start gap-2.5 rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
-              <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-200 p-3.5 text-xs text-red-700 font-medium">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold">Creation failed:</span> {error}
+                <span className="font-bold">Lỗi khởi tạo:</span> {error}
               </div>
             </div>
           )}
 
           {/* Section 1: Basic Information */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-              <FileText className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Basic Information</h3>
+            <div className="pb-2 border-b border-slate-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Thông Tin Cơ Bản</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-foreground mb-1.5">
-                  Tournament Name <span className="text-destructive/80 font-bold">*</span>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Tên Giải Đấu <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. CubeNexus Open 2026"
-                  className={`w-full rounded-xl border ${errors.name ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
+                  placeholder="Ví dụ: CubeNexus Open 2026"
+                  className={`w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
                 {errors.name && (
-                  <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.name}
                   </p>
                 )}
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-foreground mb-1.5">
-                  Location <span className="text-destructive/80 font-bold">*</span>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Địa Điểm <span className="text-red-500 font-bold">*</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground/75">
-                    <MapPin className="h-4 w-4" />
-                  </span>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. FPT University, Ho Chi Minh City"
-                    className={`w-full rounded-xl border ${errors.location ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 pl-10 pr-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ví dụ: Đại học FPT, TP. Hồ Chí Minh"
+                  className={`w-full rounded-lg border ${errors.location ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
+                />
                 {errors.location && (
-                  <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.location}
                   </p>
                 )}
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-foreground mb-1.5">Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Mô Tả Giải Đấu</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="Introduce the tournament rules, schedules, sponsors..."
-                  className="w-full rounded-xl border border-border/80 bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition resize-none"
+                  placeholder="Giới thiệu quy định, lịch trình, nhà tài trợ..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition resize-none"
                 />
               </div>
 
               {/* Max Participants */}
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">
-                  Competitor Limit (Max Participants)
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Giới Hạn Thí Sinh (Tối Đa)
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={maxParticipants}
                   onChange={(e) => setMaxParticipants(e.target.value)}
-                  placeholder="e.g. 100 (Leave empty for unlimited)"
-                  className="w-full rounded-xl border border-border/80 bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                  placeholder="Để trống nếu không giới hạn"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
               </div>
 
               {/* Tournament Banner Image */}
               <div className="md:col-span-2 space-y-2">
-                <label className="block text-xs font-medium text-foreground">
-                  Tournament Banner Image (Ảnh Banner / Poster)
+                <label className="block text-xs font-semibold text-slate-700">
+                  Ảnh Banner / Poster
                 </label>
                 {!bannerPhoto ? (
-                  <label className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted/10 p-6 text-center cursor-pointer hover:border-primary/50 transition">
-                    <span className="text-2xl">🖼️</span>
-                    <span className="text-xs font-semibold text-foreground">Upload Banner / Poster Image</span>
-                    <span className="text-[10px] text-muted-foreground">JPG, PNG, WEBP supported</span>
+                  <label className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer hover:bg-slate-50 transition">
+                    <span className="text-xs font-semibold text-slate-700">Tải lên ảnh Banner / Poster</span>
+                    <span className="text-[10px] text-slate-400">Hỗ trợ JPG, PNG, WEBP</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -472,16 +460,16 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     />
                   </label>
                 ) : (
-                  <div className="relative rounded-2xl overflow-hidden border border-border max-h-48 group">
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200 max-h-48 group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={bannerPhoto} alt="Banner Preview" className="w-full h-44 object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                       <button
                         type="button"
                         onClick={() => setBannerPhoto(null)}
-                        className="px-3 py-1.5 rounded-xl bg-destructive text-destructive-foreground text-xs font-bold shadow-lg"
+                        className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold shadow-2xs"
                       >
-                        Remove Photo
+                        Xóa Ảnh Banner
                       </button>
                     </div>
                   </div>
@@ -492,130 +480,121 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
           {/* Section 2: Schedule */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-              <Calendar className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Schedule Timeline</h3>
+            <div className="pb-2 border-b border-slate-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Lịch Trình Thời Gian</h3>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {/* Registration Open */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-foreground">
-                    Registration Opens <span className="text-destructive/80 font-bold">*</span>
-                  </label>
-                </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Mở Đăng Ký <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="datetime-local"
                   value={regOpen}
                   onChange={(e) => setRegOpen(e.target.value)}
-                  className={`w-full rounded-xl border ${errors.regOpen ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
+                  className={`w-full rounded-lg border ${errors.regOpen ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
-                <div className="flex flex-wrap gap-1.5 mt-1">
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setRegOpen(getPresetDate('now'))}
-                    className="text-[10px] bg-muted/65 hover:bg-muted text-muted-foreground px-2 py-0.5 rounded-md transition font-medium"
+                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Now
+                    Bây giờ
                   </button>
                   <button
                     type="button"
                     onClick={() => setRegOpen(getPresetDate('tomorrow_9'))}
-                    className="text-[10px] bg-muted/65 hover:bg-muted text-muted-foreground px-2 py-0.5 rounded-md transition font-medium"
+                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Tomorrow 9:00
+                    Sáng mai 9:00
                   </button>
                 </div>
                 {errors.regOpen && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.regOpen}
                   </p>
                 )}
               </div>
 
               {/* Registration Close */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-foreground">
-                    Registration Closes <span className="text-destructive/80 font-bold">*</span>
-                  </label>
-                </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Đóng Đăng Ký <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="datetime-local"
                   value={regClose}
                   onChange={(e) => setRegClose(e.target.value)}
-                  className={`w-full rounded-xl border ${errors.regClose ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
+                  className={`w-full rounded-lg border ${errors.regClose ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
-                <div className="flex flex-wrap gap-1.5 mt-1">
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setRegClose(getPresetDate('in_7_days'))}
-                    className="text-[10px] bg-muted/65 hover:bg-muted text-muted-foreground px-2 py-0.5 rounded-md transition font-medium"
+                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    In 7 Days
+                    Sau 7 ngày
                   </button>
                 </div>
                 {errors.regClose && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.regClose}
                   </p>
                 )}
               </div>
 
               {/* Start Date */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-foreground">
-                    Tournament Starts <span className="text-destructive/80 font-bold">*</span>
-                  </label>
-                </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Bắt Đầu Giải Đấu <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="datetime-local"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className={`w-full rounded-xl border ${errors.startDate ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
+                  className={`w-full rounded-lg border ${errors.startDate ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
-                <div className="flex flex-wrap gap-1.5 mt-1">
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setStartDate(getPresetDate('next_sat_9'))}
-                    className="text-[10px] bg-muted/65 hover:bg-muted text-muted-foreground px-2 py-0.5 rounded-md transition font-medium"
+                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Next Sat 9:00
+                    Thứ 7 tuần tới 9:00
                   </button>
                 </div>
                 {errors.startDate && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.startDate}
                   </p>
                 )}
               </div>
 
               {/* End Date */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-foreground">
-                    Tournament Ends <span className="text-destructive/80 font-bold">*</span>
-                  </label>
-                </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Kết Thúc Giải Đấu <span className="text-red-500 font-bold">*</span>
+                </label>
                 <input
                   type="datetime-local"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className={`w-full rounded-xl border ${errors.endDate ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2.5 text-sm text-foreground outline-none focus:ring-2 transition`}
+                  className={`w-full rounded-lg border ${errors.endDate ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
-                <div className="flex flex-wrap gap-1.5 mt-1">
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setEndDate(getPresetDate('next_sun_17'))}
-                    className="text-[10px] bg-muted/65 hover:bg-muted text-muted-foreground px-2 py-0.5 rounded-md transition font-medium"
+                    className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Next Sun 17:00
+                    Chủ nhật tuần tới 17:00
                   </button>
                 </div>
                 {errors.endDate && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  <p className="text-xs text-red-600 flex items-center gap-1 font-medium">
                     <AlertCircle className="h-3 w-3" /> {errors.endDate}
                   </p>
                 )}
@@ -625,44 +604,38 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
           {/* Section 3: Events */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-border/40">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Events Configuration</h3>
-              </div>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Cấu Hình Môn Thi</h3>
               <button
                 type="button"
                 onClick={addEvent}
-                className="inline-flex items-center gap-1 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition"
+                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Add Event
+                + Thêm Môn Thi
               </button>
             </div>
 
             {errors.events && (
-              <p className="text-xs text-destructive flex items-center gap-1">
+              <p className="text-xs text-red-600 flex items-center gap-1 font-medium">
                 <AlertCircle className="h-3 w-3" /> {errors.events}
               </p>
             )}
 
             <div className="space-y-4">
               {events.map((ev, i) => (
-                <div key={i} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div key={i} className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
                   {/* Event Card Header */}
-                  <div className="flex items-center justify-between bg-muted/30 px-4 py-3 border-b border-border/40">
-                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      Event #{i + 1}
+                  <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5 border-b border-slate-200">
+                    <span className="text-xs font-bold text-slate-800">
+                      Môn Thi #{i + 1}
                     </span>
                     {events.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeEvent(i)}
-                        className="inline-flex items-center gap-1 text-[11px] text-destructive/80 hover:text-destructive transition font-medium px-2 py-1 rounded-lg hover:bg-destructive/10"
+                        className="text-[11px] text-red-600 hover:bg-red-50 font-medium px-2 py-1 rounded transition"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Remove
+                        Xóa Môn Thi
                       </button>
                     )}
                   </div>
@@ -671,16 +644,16 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                   <div className="p-4 space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">
-                          Puzzle Type <span className="text-destructive/80 font-bold">*</span>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Loại Rubik <span className="text-red-500 font-bold">*</span>
                         </label>
                         <select
                           value={ev.puzzleTypeId}
                           onChange={(e) => updateEvent(i, 'puzzleTypeId', e.target.value)}
-                          className="w-full rounded-xl border border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary transition"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                         >
                           {puzzleTypes.length === 0 ? (
-                            <option value="">No puzzle types found</option>
+                            <option value="">Không tìm thấy loại Rubik</option>
                           ) : (
                             puzzleTypes.map((p) => (
                               <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
@@ -690,13 +663,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">
-                          Format
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Thể Thức Thi Đấu
                         </label>
                         <select
                           value={ev.eventFormatCode}
                           onChange={(e) => updateEvent(i, 'eventFormatCode', e.target.value)}
-                          className="w-full rounded-xl border border-border/80 bg-muted/20 px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary transition"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                         >
                           {FORMAT_OPTIONS.map((f) => (
                             <option key={f.value} value={f.value}>{f.label}</option>
@@ -708,22 +681,18 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     {/* WCA Scoring & Rules */}
                     <div className="grid gap-4 md:grid-cols-3">
                       <div>
-                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          Time Limit (seconds)
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Time Limit (Giây)
                         </label>
                         <input
                           type="number"
                           value={ev.timeLimitSec}
                           onChange={(e) => updateEvent(i, 'timeLimitSec', e.target.value)}
-                          placeholder="e.g. 600"
-                          className={`w-full rounded-xl border ${errors[`event_${i}_timeLimit`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
+                          placeholder="Ví dụ: 600"
+                          className={`w-full rounded-lg border ${errors[`event_${i}_timeLimit`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                         />
-                        <span className="text-[10px] text-muted-foreground/80 mt-1 block">
-                          Leave blank for no limit
-                        </span>
                         {errors[`event_${i}_timeLimit`] && (
-                          <p className="text-[10px] text-destructive mt-1.5">
+                          <p className="text-[10px] text-red-600 mt-1 font-medium">
                             {errors[`event_${i}_timeLimit`]}
                           </p>
                         )}
@@ -732,43 +701,37 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       {ev.eventFormatCode === 'TRADITIONAL' && (
                         <>
                           <div>
-                            <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">
-                              Cutoff Time (seconds)
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                              Cutoff Time (Giây)
                             </label>
                             <input
                               type="number"
                               value={ev.cutoffTimeSec}
                               onChange={(e) => updateEvent(i, 'cutoffTimeSec', e.target.value)}
-                              placeholder="e.g. 60"
-                              className={`w-full rounded-xl border ${errors[`event_${i}_cutoffTime`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
+                              placeholder="Ví dụ: 60"
+                              className={`w-full rounded-lg border ${errors[`event_${i}_cutoffTime`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                             />
-                            <span className="text-[10px] text-muted-foreground/80 mt-1 block">
-                              Must be less than limit
-                            </span>
                             {errors[`event_${i}_cutoffTime`] && (
-                              <p className="text-[10px] text-destructive mt-1.5">
+                              <p className="text-[10px] text-red-600 mt-1 font-medium">
                                 {errors[`event_${i}_cutoffTime`]}
                               </p>
                             )}
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">
-                              Solve Count
+                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                              Số Lượt Thử (Solve Count)
                             </label>
                             <input
                               type="number"
                               value={ev.solveCount}
                               onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
-                              className={`w-full rounded-xl border ${errors[`event_${i}_solveCount`] ? 'border-destructive' : 'border-border/80'} bg-muted/20 px-3.5 py-2.5 text-xs text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition`}
+                              className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                               min="1"
                               max="5"
                             />
-                            <span className="text-[10px] text-muted-foreground/80 mt-1 block">
-                              Typically 5 (ao5) or 3 (bo3)
-                            </span>
                             {errors[`event_${i}_solveCount`] && (
-                              <p className="text-[10px] text-destructive mt-1.5">
+                              <p className="text-[10px] text-red-600 mt-1 font-medium">
                                 {errors[`event_${i}_solveCount`]}
                               </p>
                             )}
@@ -778,27 +741,23 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     </div>
 
                     {/* Event Capacity Limit */}
-                    <div className="pt-3 border-t border-border/40">
+                    <div className="pt-3 border-t border-slate-100">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                          <label className="block text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                            <Users className="h-3.5 w-3.5 text-primary" />
-                            Event Capacity Limit (Max Competitors)
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Giới Hạn Thí Sinh Môn Thi (Tối Đa)
                           </label>
                           <input
                             type="number"
                             value={ev.maxCapacity}
                             onChange={(e) => updateEvent(i, 'maxCapacity', e.target.value)}
-                            placeholder="e.g. 16 (Leave empty for no limit)"
-                            className={`w-full rounded-xl border ${errors[`event_${i}_maxCapacity`] ? 'border-destructive focus:ring-destructive/20' : 'border-border/80 focus:border-primary focus:ring-primary/20'} bg-muted/20 px-3.5 py-2 text-xs text-foreground outline-none focus:ring-2 transition`}
+                            placeholder="Để trống nếu áp dụng chung giải đấu"
+                            className={`w-full rounded-lg border ${errors[`event_${i}_maxCapacity`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                             min="1"
                           />
-                          <p className="text-[11px] text-muted-foreground mt-1 font-normal">
-                            Leave empty for no custom limit (uses overall tournament limit)
-                          </p>
                           {errors[`event_${i}_maxCapacity`] && (
-                            <p className="text-xs text-destructive font-medium mt-1 flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" /> {errors[`event_${i}_maxCapacity`]}
+                            <p className="text-xs text-red-600 font-medium mt-1">
+                              {errors[`event_${i}_maxCapacity`]}
                             </p>
                           )}
                         </div>
@@ -807,29 +766,28 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
                     {/* Medley Relay Sub-puzzles */}
                     {ev.eventFormatCode === 'MEDLEY' && (
-                      <div className="mt-2 border-t border-border/40 pt-4 space-y-3">
+                      <div className="mt-2 border-t border-slate-100 pt-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                            <Info className="h-3.5 w-3.5 text-primary" />
-                            Relay Puzzles (Minimum 2)
+                          <span className="text-xs font-bold text-slate-700">
+                            Chuỗi Rubik Liên Hoàn (Tối thiểu 2)
                           </span>
                           <button
                             type="button"
                             onClick={() => addMedleyPuzzle(i)}
-                            className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 hover:bg-muted px-2.5 py-1 text-[10px] font-semibold text-foreground transition"
+                            className="rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-700 transition"
                           >
-                            <Plus className="h-3 w-3" /> Add Puzzle
+                            + Thêm Rubik
                           </button>
                         </div>
                         
                         <div className="grid gap-2">
                           {ev.medleyPuzzles.map((mp, mpIdx) => (
                             <div key={mpIdx} className="flex items-center gap-2">
-                              <span className="text-[10px] text-muted-foreground w-12 font-mono">#{mpIdx + 1}</span>
+                              <span className="text-xs text-slate-400 font-mono w-8">#{mpIdx + 1}</span>
                               <select
                                 value={mp.puzzleTypeId}
                                 onChange={(e) => updateMedleyPuzzle(i, mpIdx, e.target.value)}
-                                className="flex-1 rounded-xl border border-border/80 bg-muted/20 px-3 py-2 text-xs text-foreground outline-none focus:border-primary transition"
+                                className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                               >
                                 {puzzleTypes.map((p) => (
                                   <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
@@ -839,9 +797,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => removeMedleyPuzzle(i, mpIdx)}
-                                  className="text-destructive/80 hover:text-destructive hover:bg-destructive/10 p-1.5 rounded-lg transition"
+                                  className="text-red-600 hover:bg-red-50 p-1 rounded text-xs transition font-medium"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  Xóa
                                 </button>
                               )}
                             </div>
@@ -857,22 +815,21 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-border/60 bg-card/60 backdrop-blur-md px-6 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-white px-6 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-muted-foreground shadow-sm transition hover:bg-muted/80"
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
           >
-            Cancel
+            Hủy Bỏ
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={isLoading || puzzleTypes.length === 0}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/95 disabled:opacity-60"
+            className="rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white shadow-2xs transition disabled:opacity-60"
           >
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isLoading ? 'Creating…' : 'Create Tournament'}
+            {isLoading ? 'Đang Tạo…' : 'Tạo Giải Đấu'}
           </button>
         </div>
       </div>

@@ -8,24 +8,14 @@ import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
   ChevronRight,
-  Trophy,
-  Clock,
-  Scissors,
   ChevronDown,
   ChevronUp,
   Loader2,
   AlertCircle,
   RefreshCw,
-  Lock,
-  Users,
-  Edit3,
   CheckCircle2,
-  Sliders,
-  Award,
-  Zap,
   Check,
   X,
-  ShieldCheck,
 } from 'lucide-react';
 
 function msToDisplay(ms?: number | null): string {
@@ -140,69 +130,47 @@ function EventCard({
     : `Best of ${event.solveCount}`;
 
   return (
-    <div className="rounded-xl border border-border bg-card/60 backdrop-blur-sm shadow-sm overflow-hidden transition-all">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden transition-all">
       {/* Header */}
-      <div className="p-4 sm:p-5 border-b border-border/50 bg-card/40">
+      <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Title Row */}
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h2 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" />
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
                 {event.puzzleTypeName || event.puzzleTypeCode}
               </h2>
-              {isMedley ? (
-                <span className="rounded-md bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-bold text-purple-400 flex items-center gap-1">
-                  <Zap className="h-2.5 w-2.5" /> MEDLEY
-                </span>
-              ) : (
-                <span className="rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-400">
-                  {formatLabel}
+              {isMedley && (
+                <span className="rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+                  Medley Relay
                 </span>
               )}
               {isEventRegistrationClosed ? (
-                <span className="rounded-md bg-red-500/10 border border-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400 flex items-center gap-1">
-                  <ShieldCheck className="h-3 w-3" /> Cổng Đăng Ký Đã Khóa
+                <span className="rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                  Đã Khóa Đăng Ký
                 </span>
               ) : (
-                <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Đang Mở Đăng Ký
+                <span className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  Đang Mở Đăng Ký
                 </span>
               )}
             </div>
 
             {/* WCA Rules Summary Line */}
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground font-normal">
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3 text-muted-foreground" />
-                Time Limit: <strong className="text-foreground font-mono font-medium">{msToDisplay(event.timeLimitMs)}</strong>
-              </span>
-              <span className="text-border">•</span>
-              <span className="flex items-center gap-1">
-                <Scissors className="h-3 w-3 text-orange-400" />
-                Cutoff: <strong className="text-orange-400 font-mono font-medium">{msToDisplay(event.cutoffTimeMs)}</strong>
-              </span>
-              <span className="text-border">•</span>
-              <span>Số Lượt: <strong className="text-foreground font-mono font-medium">{event.solveCount} solves</strong></span>
-              <span className="text-border">•</span>
-              <span className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-emerald-400" />
-                Chỉ tiêu môn: <strong className="text-foreground font-mono font-medium">
-                  {competitors.length} {event.maxCapacity && event.maxCapacity > 0 ? `/ ${event.maxCapacity} thí sinh` : 'thí sinh (Không giới hạn)'}
-                </strong>
-              </span>
-            </div>
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              {formatLabel} • Limit: <strong className="text-slate-700 font-mono">{msToDisplay(event.timeLimitMs)}</strong> • Cutoff: <strong className="text-slate-700 font-mono">{msToDisplay(event.cutoffTimeMs)}</strong> • Số lượt: <strong className="text-slate-700 font-mono">{event.solveCount} solves</strong> • Đăng ký: <strong className="text-indigo-600 font-mono">{competitors.length}{event.maxCapacity && event.maxCapacity > 0 ? ` / ${event.maxCapacity}` : ''}</strong>
+            </p>
 
             {/* Medley Puzzle Chain */}
             {isMedley && event.medleyPuzzles && event.medleyPuzzles.length > 0 && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                <span className="text-[11px] text-muted-foreground">Chuỗi Rubik:</span>
+                <span className="text-[11px] text-slate-400">Chuỗi Rubik:</span>
                 {event.medleyPuzzles
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((p, idx) => (
                     <span
                       key={p.id}
-                      className="rounded bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300"
+                      className="rounded bg-purple-50 border border-purple-200 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700"
                     >
                       #{idx + 1} {p.puzzleTypeName}
                     </span>
@@ -211,130 +179,124 @@ function EventCard({
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 self-start lg:self-center">
+          <div className="flex items-center gap-2 shrink-0">
             {!isEventRegistrationClosed && (
               <button
                 onClick={() => setShowConfirmClose(true)}
-                disabled={closingReg}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-400 hover:bg-orange-500/20 disabled:opacity-50 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition cursor-pointer"
+                title="Khóa cổng đăng ký cho môn này"
               >
-                {closingReg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lock className="h-3.5 w-3.5" />}
-                Khóa Đăng Ký
+                Khóa Đăng Ký Môn Thi
               </button>
             )}
+
             <button
               onClick={() => setExpanded(!expanded)}
-              className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted/50 text-muted-foreground transition"
-              title={expanded ? 'Thu gọn' : 'Mở rộng'}
+              className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-2xs"
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
           </div>
         </div>
+
+        {/* Feedback messages */}
+        {message && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-xs text-emerald-700 font-medium">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>{message}</span>
+            <button onClick={() => setMessage(null)} className="ml-auto text-xs underline">Đóng</button>
+          </div>
+        )}
+        {error && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-2.5 text-xs text-red-700 font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-auto text-xs underline">Đóng</button>
+          </div>
+        )}
       </div>
 
-      {/* Body: Competitor List Table */}
+      {/* Expanded Competitor List */}
       {expanded && (
-        <div className="p-4 sm:p-5">
-          {message && (
-            <div className="mb-3 flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-400 font-medium">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-              {message}
-              <button onClick={() => setMessage(null)} className="ml-auto text-xs underline">Đóng</button>
-            </div>
-          )}
-          {error && (
-            <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-xs text-red-400 font-medium">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              {error}
-              <button onClick={() => setError(null)} className="ml-auto text-xs underline">Đóng</button>
-            </div>
-          )}
-
-          {/* Section Sub-Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs font-bold text-foreground">
-                Thí Sinh Đã Đăng Ký ({competitors.length})
-              </span>
-            </div>
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Thí Sinh Đã Đăng Ký ({competitors.length})
+            </p>
             <button
               onClick={loadCompetitors}
               disabled={loadingComp}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-medium"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition"
             >
-              <RefreshCw className={`h-3 w-3 ${loadingComp ? 'animate-spin' : ''}`} />
-              Làm mới
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingComp ? 'animate-spin' : ''}`} />
+              Tải lại
             </button>
           </div>
 
-          {loadingComp ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          ) : competitors.length === 0 ? (
-            <p className="text-center py-6 text-xs text-muted-foreground">Chưa có thí sinh đăng ký cho môn thi này.</p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-border bg-card/40">
-              <table className="w-full text-left text-xs border-collapse">
+          {loadingComp && (
+            <div className="py-8 text-center text-xs text-slate-400">Đang tải danh sách thí sinh…</div>
+          )}
+
+          {!loadingComp && competitors.length === 0 && (
+            <div className="py-8 text-center text-xs text-slate-400">Chưa có thí sinh nào đăng ký cho môn này.</div>
+          )}
+
+          {!loadingComp && competitors.length > 0 && (
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-xs text-left border-collapse">
                 <thead>
-                  <tr className="bg-muted/30 border-b border-border text-[11px] font-semibold text-muted-foreground">
-                    <th className="px-3 py-2 text-center w-10">STT</th>
-                    <th className="px-3 py-2">Họ & Tên Thí Sinh</th>
-                    <th className="px-3 py-2">Email</th>
-                    <th className="px-3 py-2">Thành Tích Hạt Giống</th>
-                    <th className="px-3 py-2 text-right">Tùy Chọn Hạt Giống</th>
+                  <tr className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider">
+                    <th className="py-2.5 px-4 w-12 text-center">STT</th>
+                    <th className="py-2.5 px-4">Thí Sinh</th>
+                    <th className="py-2.5 px-4">Email</th>
+                    <th className="py-2.5 px-4">Seed Time Ban Đầu</th>
+                    <th className="py-2.5 px-4 text-right">Thao Tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/50">
-                  {competitors.map((c, i) => (
-                    <tr key={c.registrationEventId} className="hover:bg-muted/20 transition">
-                      <td className="px-3 py-2.5 text-center text-muted-foreground font-mono">{i + 1}</td>
-                      <td className="px-3 py-2.5 font-semibold text-foreground">{c.displayName}</td>
-                      <td className="px-3 py-2.5 text-muted-foreground font-mono">{c.email || '—'}</td>
-                      <td className="px-3 py-2.5">
-                        {c.seedTimeMs && c.seedTimeMs > 0 ? (
-                          <span className="font-mono font-semibold text-primary">{msToDisplay(c.seedTimeMs)}</span>
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground/70 italic">Mặc định (Chưa có seed)</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
+                <tbody className="divide-y divide-slate-100">
+                  {competitors.map((c, idx) => (
+                    <tr key={c.registrationEventId} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">{idx + 1}</td>
+                      <td className="py-2.5 px-4 font-semibold text-slate-900">{c.displayName}</td>
+                      <td className="py-2.5 px-4 text-slate-500">{c.email || '—'}</td>
+                      <td className="py-2.5 px-4 font-mono font-medium text-slate-700">
                         {editSeedId === c.registrationEventId ? (
-                          <div className="flex items-center gap-1 justify-end">
+                          <div className="flex items-center gap-1.5">
                             <input
                               type="text"
                               value={seedInput}
                               onChange={(e) => setSeedInput(e.target.value)}
                               placeholder="15.50"
-                              className="w-20 rounded border border-primary bg-card px-2 py-0.5 text-xs text-foreground font-mono outline-none"
-                              autoFocus
+                              className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 outline-none focus:border-indigo-600"
                             />
                             <button
                               onClick={() => handleSaveSeed(c.registrationEventId)}
-                              className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-emerald-500"
+                              className="p-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                              title="Lưu Hạt Giống"
                             >
-                              Lưu
+                              <Check className="h-3 w-3" />
                             </button>
                             <button
                               onClick={() => setEditSeedId(null)}
-                              className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted/50"
+                              className="p-1 rounded bg-slate-200 text-slate-600 hover:bg-slate-300 transition"
                             >
-                              ✕
+                              <X className="h-3 w-3" />
                             </button>
                           </div>
                         ) : (
+                          <span>{msToDisplay(c.seedTimeMs)}</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-4 text-right">
+                        {editSeedId !== c.registrationEventId && (
                           <button
                             onClick={() => {
                               setEditSeedId(c.registrationEventId);
-                              setSeedInput(c.seedTimeMs ? (c.seedTimeMs / 1000).toFixed(2) : '');
+                              setSeedInput(c.seedTimeMs ? (c.seedTimeMs / 1000).toString() : '');
                             }}
-                            className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/50 transition cursor-pointer"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs transition"
                           >
-                            <Edit3 className="h-3 w-3" />
-                            Sửa Hạt Giống
+                            Đổi Seed Time
                           </button>
                         )}
                       </td>
@@ -347,11 +309,11 @@ function EventCard({
         </div>
       )}
 
-      {/* Confirm Modal */}
+      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={showConfirmClose}
-        title="Khóa Đăng Ký Hạng Mục"
-        description={`Xác nhận khóa cổng đăng ký môn "${event.puzzleTypeName || event.puzzleTypeCode}"? Thao tác này giúp chốt danh sách để tạo nhóm thi đấu.`}
+        title="Khóa Cổng Đăng Ký Môn Thi"
+        description={`Bạn có chắc muốn đóng cổng đăng ký cho môn thi "${event.puzzleTypeName || event.puzzleTypeCode}"?`}
         confirmText="Xác Nhận Khóa"
         cancelText="Hủy Bỏ"
         variant="warning"
@@ -389,7 +351,7 @@ export default function EventConfigurationPage({
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -397,7 +359,7 @@ export default function EventConfigurationPage({
   if (error || !tournament) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center text-red-600 dark:text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
           <p className="font-semibold">{error ?? 'Không tìm thấy giải đấu'}</p>
         </div>
@@ -406,27 +368,26 @@ export default function EventConfigurationPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-6 flex-wrap">
-        <Trophy className="h-3.5 w-3.5 text-amber-500" />
-        <Link href="/managertournaments" className="hover:text-foreground transition-colors">Giải Đấu</Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/managertournaments/${id}`} className="hover:text-foreground transition-colors">
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-semibold">Cấu Hình Hạng Mục & Thí Sinh</span>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-bold">Cấu Hình Hạng Mục & Thí Sinh</span>
       </div>
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
-            <Award className="h-6 w-6 text-primary" />
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Hạng Mục & Quy Tắc</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
             Cấu Hình Hạng Mục & Thí Sinh
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Quản lý quy định luật WCA (Time Limit, Cutoff) và theo dõi danh sách đăng ký thí sinh cho từng hạng mục.
           </p>
         </div>
@@ -434,28 +395,21 @@ export default function EventConfigurationPage({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tổng Hạng Mục</span>
-            <Trophy className="h-4 w-4 text-amber-500" />
-          </div>
-          <p className="text-xl font-bold text-foreground mt-2 font-mono">{tournament.events.length} Môn Thi</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tổng Hạng Mục</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{tournament.events.length} Môn Thi</p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Quy Chuẩn Thi Đấu</span>
-            <Sliders className="h-4 w-4 text-blue-500" />
-          </div>
-          <p className="text-xl font-bold text-foreground mt-2">Luật Thi WCA</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Quy Chuẩn Thi Đấu</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">Luật Thi WCA</p>
         </div>
       </div>
 
       {/* Main Content List */}
       {tournament.events.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card py-16 text-center text-muted-foreground shadow-sm">
-          <Trophy className="h-8 w-8 mx-auto mb-2 opacity-30" />
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center text-slate-400 shadow-2xs">
           <p className="font-semibold text-sm">Chưa có hạng mục thi đấu nào được cấu hình.</p>
         </div>
       ) : (

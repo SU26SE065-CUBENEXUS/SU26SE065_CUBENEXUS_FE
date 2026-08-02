@@ -157,107 +157,102 @@ export default function TournamentManagerOverviewPage() {
   };
 
   const statCards = [
-    { label: 'Total Tournaments', value: stats.total, icon: Trophy, color: 'text-foreground', bg: 'bg-muted/50', border: 'border-border' },
-    { label: 'Ongoing', value: stats.ongoing, icon: Zap, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/20' },
-    { label: 'Upcoming / Open', value: stats.upcoming, icon: Calendar, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/5', border: 'border-sky-500/20' },
-    { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20' },
+    { label: 'Tổng số giải đấu', value: stats.total, color: 'text-slate-900', hint: 'Tất cả giải đấu' },
+    { label: 'Đang diễn ra', value: stats.ongoing, color: 'text-emerald-600', hint: 'Live Operations' },
+    { label: 'Sắp diễn ra / Mở đăng ký', value: stats.upcoming, color: 'text-indigo-600', hint: 'Nhận đăng ký' },
+    { label: 'Đã hoàn thành', value: stats.completed, color: 'text-slate-500', hint: 'Đã kết thúc' },
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-semibold text-primary flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> Tournament Manager
-            </span>
-          </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight sm:text-3xl uppercase">
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
+            Quản Lý Giải Đấu
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight sm:text-3xl">
             Tournament Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Create, manage and operate your offline speedcubing tournaments.
+          <p className="text-xs sm:text-sm text-slate-500 font-normal">
+            Tạo, quản lý và điều hành các giải đấu Speedcubing trực tiếp.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={fetchTournaments}
             disabled={isLoading}
-            className="rounded-xl border border-border bg-card p-2.5 text-muted-foreground shadow-sm transition hover:bg-muted/50 hover:text-foreground disabled:opacity-50"
-            title="Refresh"
+            className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+            title="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs px-5 py-3 rounded-xl shadow-lg shadow-primary/10 transition-all border-none uppercase tracking-wider"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none"
           >
             <Plus className="h-4 w-4" />
-            Create Tournament
+            Tạo Giải Đấu
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Clean Stat Cards (No Icons) */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((card) => {
-          const Icon = card.icon;
           return (
             <div
               key={card.label}
-              className={`rounded-2xl border ${card.border} ${card.bg} p-5 transition-all hover:shadow-md bg-card`}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-all"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.bg} border ${card.border}`}>
-                  <Icon className={`h-5 w-5 ${card.color}`} />
-                </div>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
+              <div className="flex items-baseline justify-between mt-2">
+                <p className={`text-3xl font-bold tracking-tight ${card.color}`}>{card.value}</p>
+                <span className="text-[11px] text-slate-400 font-medium">{card.hint}</span>
               </div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{card.label}</p>
-              <p className={`text-2xl font-black mt-1 ${card.color}`}>{card.value}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Error state */}
+      {/* Connection Warning */}
       {error && (
-        <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-400">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <div>
-            <p className="font-bold">Connection Warning</p>
-            <p className="text-red-400/80 text-xs">{error}</p>
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
+          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-900">Chế độ offline / Dữ liệu mẫu</p>
+            <p className="text-amber-700 text-[11px] mt-0.5">{error}</p>
           </div>
           <button
             onClick={fetchTournaments}
-            className="ml-auto rounded-xl border border-red-500/20 px-4 py-2 text-xs font-bold hover:bg-red-500/10 transition"
+            className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition shadow-2xs"
           >
-            Retry
+            Thử lại
           </button>
         </div>
       )}
 
       {/* Filters + Search */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-card/40 border border-border/60 p-4 rounded-2xl">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-2xs items-center justify-between">
+        <div className="relative flex-1 w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by name or location..."
+            placeholder="Tìm kiếm theo tên giải hoặc địa điểm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-muted/20 border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary transition"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-600 transition"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap w-full sm:w-auto">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value)}
-              className={`px-4 py-2.5 rounded-xl text-[11px] font-bold border transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                 activeFilter === f.value
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-border/80'
+                  ? 'border-indigo-600 bg-indigo-600 text-white shadow-2xs'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               {f.label}

@@ -664,7 +664,7 @@ export default function LiveOperationsPage({
   if (isLoadingMain) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -672,9 +672,9 @@ export default function LiveOperationsPage({
   if (errorMain || !tournament) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-semibold">{errorMain ?? 'Tournament not found'}</p>
+          <p className="font-semibold">{errorMain ?? 'Không tìm thấy giải đấu'}</p>
         </div>
       </div>
     );
@@ -686,66 +686,67 @@ export default function LiveOperationsPage({
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
 
   const TABS = [
-    { id: 'traditional', label: 'Live Leaderboard & Scoring', icon: ClipboardEdit },
-    { id: 'stations', label: 'Station Grid', icon: Monitor },
-    { id: 'checkin', label: 'Check-In', icon: QrCode },
-    { id: 'medley', label: 'Medley', icon: TimerIcon },
-    { id: 'verify', label: 'Verify QR', icon: ShieldCheck },
-    { id: 'round', label: 'Round Control', icon: Play },
+    { id: 'traditional', label: 'Bảng Xếp Hạng & Nhập Điểm', icon: ClipboardEdit },
+    { id: 'stations', label: 'Trạm Bàn Thi', icon: Monitor },
+    { id: 'checkin', label: 'Check-In Thí Sinh', icon: QrCode },
+    { id: 'medley', label: 'Thi Đấu Medley', icon: TimerIcon },
+    { id: 'verify', label: 'Xác Nhận QR', icon: ShieldCheck },
+    { id: 'round', label: 'Điều Hành Vòng Thi', icon: Play },
   ] as const;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-6 flex-wrap">
-        <Trophy className="h-3.5 w-3.5" />
-        <Link href="/managertournaments" className="hover:text-foreground transition-colors">Tournaments</Link>
-        <ChevronRight className="h-3 w-3" />
-        <Link href={`/managertournaments/${id}`} className="hover:text-foreground transition-colors">{tournament.name}</Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground font-semibold">Live Operations</span>
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">{tournament.name}</Link>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-bold">Điều Hành Trực Tiếp (Live)</span>
       </div>
 
       {/* Page Header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="live-dot" />
-            <h1 className="text-2xl font-black text-foreground tracking-tight">Live Operations</h1>
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Điều Hành Trực Tiếp</h1>
           </div>
-          <p className="text-xs text-muted-foreground ml-5">
-            Monitor stations, check-in competitors, submit scores, and control rounds.
+          <p className="text-xs text-slate-500 mt-1">
+            Theo dõi trạm bàn thi, check-in thí sinh, nhập điểm và điều hành tiến trình vòng thi thời gian thực.
           </p>
         </div>
 
         {/* SignalR Status */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border ${
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
             isHubConnected
-              ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/8'
-              : 'text-muted-foreground border-border bg-card'
+              ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+              : 'text-slate-600 border-slate-200 bg-slate-50'
           }`}>
             {isHubConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            <span>HUB: {hubStatus}</span>
+            <span>Hub: {hubStatus}</span>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border mb-6 overflow-x-auto scrollbar-thin gap-0">
+      <div className="flex border-b border-slate-200 overflow-x-auto gap-1">
         {TABS.map((tab) => {
-          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 border-b-2 text-[11px] font-bold uppercase tracking-wider transition-all -mb-[2px] whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? 'border-indigo-600 text-indigo-600 font-bold bg-indigo-50/50 rounded-t-lg'
+                  : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
               {tab.label}
             </button>
           );
@@ -756,53 +757,49 @@ export default function LiveOperationsPage({
       {activeTab === 'stations' && (
         <div className="space-y-6">
           {/* Hub Setup Card */}
-          <div className="rounded-2xl border border-border p-5"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <Radio className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} />
-              Connect to SignalR Hub
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs text-slate-900">
+            <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Radio className="h-4 w-4 text-indigo-600" />
+              Kết Nối SignalR Hub Trực Tiếp
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Event</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Môn Thi</label>
                 <select
                   value={hubEventId}
                   onChange={(e) => setHubEventId(e.target.value)}
-                  className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 >
-                  <option value="">Select Event</option>
+                  <option value="">Chọn Môn Thi</option>
                   {tournament.events.map((ev) => (
                     <option key={ev.id} value={ev.id}>{ev.puzzleTypeName} ({ev.eventFormatCode})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Round</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Vòng Thi (Round)</label>
                 <input
                   type="number" min="1" value={hubRound}
                   onChange={(e) => setHubRound(e.target.value)}
-                  className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Station Count</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Số Trạm Bàn Thi</label>
                 <input
                   type="number" min="1" max="20" value={stationCount}
                   onChange={(e) => setStationCount(e.target.value)}
-                  className="w-full rounded-lg border border-border px-2.5 py-2 text-xs text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
               </div>
               <div className="flex items-end">
                 <button
                   onClick={connectHub}
-                  className="w-full py-2 rounded-lg text-xs font-bold text-primary-foreground transition-all hover:opacity-90"
-                  style={{ background: isHubConnected ? 'oklch(0.70 0.19 145)' : 'oklch(0.72 0.21 42)' }}
+                  className={`w-full py-2 rounded-lg text-xs font-semibold text-white transition ${
+                    isHubConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
                 >
-                  {isHubConnected ? '✓ Reconnect' : 'Connect Hub'}
+                  {isHubConnected ? '✓ Kết Nối Lại Hub' : 'Kết Nối Hub'}
                 </button>
               </div>
             </div>
@@ -812,9 +809,9 @@ export default function LiveOperationsPage({
           {stations.length > 0 ? (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Monitor className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} />
-                  Station Monitor — Round {hubRound}
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Monitor className="h-4 w-4 text-indigo-600" />
+                  Trạm Trọng Tài — Round {hubRound}
                 </h2>
                 <div className="flex items-center gap-3">
                   {['EMPTY', 'VERIFIED', 'INSPECTING', 'SOLVING', 'SUBMITTING', 'DONE'].map((s) => (
@@ -836,18 +833,18 @@ export default function LiveOperationsPage({
                     }`}
                   >
                     <div className="text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Station</p>
-                      <p className="text-3xl font-black text-foreground mb-2">{station.stationNumber}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Trạm</p>
+                      <p className="text-3xl font-black text-slate-900 mb-2">{station.stationNumber}</p>
                       <StationStatusBadge state={station.state} size="sm" />
                       {station.competitorName && (
-                        <p className="mt-2 text-[10px] font-semibold text-foreground truncate" title={station.competitorName}>
+                        <p className="mt-2 text-[10px] font-semibold text-slate-900 truncate" title={station.competitorName}>
                           {station.competitorName}
                         </p>
                       )}
                     </div>
                     {station.state === 'SOLVING' && (
                       <div className="absolute top-1.5 right-1.5">
-                        <Zap className="h-3 w-3 text-orange-400 animate-pulse" />
+                        <Zap className="h-3 w-3 text-amber-500 animate-pulse" />
                       </div>
                     )}
                   </div>
@@ -855,10 +852,10 @@ export default function LiveOperationsPage({
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border py-16 text-center">
-              <Monitor className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-muted-foreground">Connect to SignalR Hub to see live station status</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Select event, round, and station count above</p>
+            <div className="rounded-xl border border-dashed border-slate-200 py-16 text-center bg-white">
+              <Monitor className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-xs font-semibold text-slate-600">Kết nối SignalR Hub để theo dõi trạng thái trạm bàn thi trực tiếp</p>
+              <p className="text-[10px] text-slate-400 mt-1">Chọn môn thi, số vòng và số lượng bàn thi ở trên</p>
             </div>
           )}
         </div>
@@ -866,42 +863,38 @@ export default function LiveOperationsPage({
 
       {/* ─── TAB 1: CHECK-IN ──────────────────────────────────── */}
       {activeTab === 'checkin' && (
-        <div className="rounded-2xl border border-border p-6 max-w-xl mx-auto w-full"
-          style={{ background: 'oklch(0.155 0.018 255)' }}
-        >
-          <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-            <QrCode className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} /> Competitor Check-In
+        <div className="rounded-xl border border-slate-200 bg-white p-6 max-w-xl mx-auto w-full shadow-2xs text-slate-900">
+          <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <QrCode className="h-4 w-4 text-indigo-600" /> Check-In Thí Sinh Sảnh Đấu
           </h2>
-          <p className="text-xs text-muted-foreground mb-5">Enter or scan the competitor's QR token to mark as physically present.</p>
+          <p className="text-xs text-slate-500 mb-5">Nhập hoặc quét mã QR thí sinh để xác nhận sự có mặt tại giải đấu.</p>
           <form onSubmit={handleCheckIn} className="space-y-3">
             <div className="relative">
-              <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text" value={qrInput} onChange={(e) => setQrInput(e.target.value)}
-                placeholder="Scan or paste QR token..."
-                className="w-full rounded-xl border border-border pl-10 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary transition"
-                style={{ background: 'oklch(0.185 0.02 256)' }}
+                placeholder="Quét mã hoặc nhập mã QR token thí sinh..."
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                 autoFocus
               />
             </div>
             <button
               type="submit" disabled={isCheckingIn || !qrInput.trim()}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-primary-foreground transition disabled:opacity-50"
-              style={{ background: 'oklch(0.72 0.21 42)', boxShadow: '0 4px 16px oklch(0.72 0.21 42 / 0.25)' }}
+              className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
             >
               {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              {isCheckingIn ? 'Processing...' : 'Confirm Check-In'}
+              {isCheckingIn ? 'Đang xác nhận...' : 'Xác Nhận Check-In'}
             </button>
           </form>
           {checkInResult && (
-            <div className={`mt-4 flex items-start gap-3 rounded-xl border p-4 text-sm ${
+            <div className={`mt-4 flex items-start gap-3 rounded-lg border p-3.5 text-xs ${
               checkInResult.success
-                ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400'
-                : 'border-red-500/20 bg-red-500/5 text-red-400'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-red-200 bg-red-50 text-red-800'
             }`}>
               {checkInResult.success ? <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /> : <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
               <div>
-                {checkInResult.displayName && <p className="font-extrabold text-foreground">{checkInResult.displayName}</p>}
+                {checkInResult.displayName && <p className="font-bold text-slate-900">{checkInResult.displayName}</p>}
                 <p className="text-xs mt-0.5">{checkInResult.message}</p>
               </div>
             </div>
@@ -913,39 +906,32 @@ export default function LiveOperationsPage({
       {activeTab === 'traditional' && (
         <div className="space-y-6">
           {/* Full-width Live Leaderboard & Evidence Inspection Table */}
-          <div className="rounded-2xl border border-border p-6 space-y-4 shadow-xl" style={{ background: 'oklch(0.155 0.018 255)' }}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
-                  <Trophy className="h-5 w-5" />
-                </span>
-                <div>
-                  <h2 className="text-base font-extrabold text-foreground uppercase tracking-tight">
-                    Bảng Xếp Hạng Trực Tiếp & Đối Soát Tờ Ghi Điểm Minh Chứng
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Bấm vào kết quả bất kỳ (Lượt 1…5) hoặc biểu tượng 📸 Ảnh Minh Chứng để mở tờ ghi điểm và điều chỉnh điểm.
-                  </p>
-                </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4 shadow-2xs text-slate-900">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+                  Bảng Xếp Hạng Trực Tiếp & Đối Soát Tờ Ghi Điểm Minh Chứng
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Bấm vào kết quả bất kỳ (Lượt 1…5) hoặc biểu tượng 📸 Ảnh Minh Chứng để mở tờ ghi điểm và điều chỉnh điểm.
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="rounded-xl border border-border px-3 py-2 text-xs font-bold text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 >
                   {traditionalEvents.map((e) => (
                     <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>
                   ))}
                 </select>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-muted-foreground uppercase">Round</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase">Round</span>
                   <input
                     type="number" min="1" value={roundNumber}
                     onChange={(e) => setRoundNumber(e.target.value)}
-                    className="w-14 rounded-xl border border-border px-2 py-2 text-xs font-bold text-foreground text-center outline-none"
-                    style={{ background: 'oklch(0.185 0.02 256)' }}
+                    className="w-14 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-900 text-center outline-none focus:bg-white focus:border-indigo-600"
                   />
                 </div>
                 <button
@@ -954,7 +940,7 @@ export default function LiveOperationsPage({
                       getLiveBoardState(selectedEventId, Number(roundNumber)).then(setLiveState);
                     }
                   }}
-                  className="p-2 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition"
                   title="Làm mới bảng điểm"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -965,51 +951,51 @@ export default function LiveOperationsPage({
             {/* Table */}
             {isLoadingLiveState ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
               </div>
             ) : !liveState || !liveState.competitors || liveState.competitors.length === 0 ? (
-              <div className="text-center py-12 text-xs text-muted-foreground">
+              <div className="text-center py-12 text-xs text-slate-500">
                 Chưa có dữ liệu bảng điểm trực tiếp cho hạng mục và round này.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-border">
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="bg-muted/40 border-b border-border">
-                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center w-10">Hạng</th>
-                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground">Thí Sinh</th>
-                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Nhóm</th>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center w-10">Hạng</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500">Thí Sinh</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center">Nhóm</th>
                       {Array.from({ length: liveState.solveCount || 5 }, (_, i) => (
-                        <th key={i} className="px-2 py-2.5 font-bold uppercase text-muted-foreground text-center">
+                        <th key={i} className="px-2 py-2 font-bold uppercase text-slate-500 text-center">
                           Solve #{i + 1}
                         </th>
                       ))}
-                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Best</th>
-                      <th className="px-3 py-2.5 font-bold uppercase text-muted-foreground text-center">Average</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center">Best</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center">Average</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border font-mono">
+                  <tbody className="divide-y divide-slate-100 font-mono">
                     {liveState.competitors.map((c: any) => {
                       const compGroup = liveState.groups?.find((g: any) => g.groupId === c.groupId);
                       return (
-                        <tr key={c.groupCompetitorId} className="hover:bg-muted/30 transition-colors">
+                        <tr key={c.groupCompetitorId} className="hover:bg-slate-50 transition-colors">
                           <td className="px-3 py-2.5 text-center font-bold">
                             <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${
-                              c.rank === 1 ? 'bg-yellow-500 text-yellow-950 font-black' :
-                              c.rank === 2 ? 'bg-slate-300 text-slate-900 font-black' :
-                              c.rank === 3 ? 'bg-amber-700 text-white font-black' : 'text-muted-foreground'
+                              c.rank === 1 ? 'bg-amber-100 text-amber-900 font-bold' :
+                              c.rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' :
+                              c.rank === 3 ? 'bg-amber-800 text-white font-bold' : 'text-slate-500'
                             }`}>
                               {c.rank || '—'}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 font-sans font-extrabold text-foreground">
+                          <td className="px-3 py-2.5 font-sans font-bold text-slate-900">
                             <div>
                               <span>{c.competitorName}</span>
-                              <span className="text-[10px] text-muted-foreground font-mono block font-normal">{c.competitorUserCode}</span>
+                              <span className="text-[10px] text-slate-400 font-mono block font-normal">{c.competitorUserCode}</span>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-center font-sans">
-                            <span className="px-2 py-0.5 rounded bg-muted/60 text-[9px] font-bold text-muted-foreground uppercase">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-600 uppercase">
                               {compGroup?.groupName || 'Group'}
                             </span>
                           </td>
@@ -1039,10 +1025,10 @@ export default function LiveOperationsPage({
                                       });
                                     }
                                   }}
-                                  className={`px-2.5 py-1 rounded-lg transition-all hover:scale-105 font-bold ${
+                                  className={`px-2 py-1 rounded transition font-semibold ${
                                     attempt
-                                      ? (isDnf ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30')
-                                      : 'text-muted-foreground/40 cursor-default'
+                                      ? (isDnf ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100')
+                                      : 'text-slate-300 cursor-default'
                                   }`}
                                   title={
                                     attempt
@@ -1051,16 +1037,16 @@ export default function LiveOperationsPage({
                                   }
                                 >
                                   <span>{val}</span>
-                                  {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-orange-400 ml-0.5">+2</span>}
+                                  {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 ml-0.5">+2</span>}
                                   {hasPhoto && <span className="text-[10px] ml-1" title="Có ảnh R2">📸</span>}
                                 </button>
                               </td>
                             );
                           })}
-                          <td className="px-3 py-2.5 text-center font-bold text-foreground">
+                          <td className="px-3 py-2.5 text-center font-bold text-slate-900">
                             {c.bestTimeMs ? formatMs(c.bestTimeMs) : '—'}
                           </td>
-                          <td className="px-3 py-2.5 text-center font-bold text-primary">
+                          <td className="px-3 py-2.5 text-center font-bold text-indigo-600">
                             {c.averageTimeMs ? formatMs(c.averageTimeMs) : '—'}
                           </td>
                         </tr>
@@ -1073,48 +1059,43 @@ export default function LiveOperationsPage({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-              <ClipboardEdit className="h-4 w-4" style={{ color: 'oklch(0.72 0.21 42)' }} /> Traditional Result Entry
+          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
+            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+              <ClipboardEdit className="h-4 w-4 text-indigo-600" /> Nhập Điểm Trực Tiếp (Traditional Result Entry)
             </h2>
-            <p className="text-xs text-muted-foreground mb-5">Submit raw times for traditional solve events.</p>
+            <p className="text-xs text-slate-500 mb-5">Nhập kết quả các lượt giải thi đấu truyền thống.</p>
 
             {traditionalEvents.length === 0 ? (
-              <p className="text-center py-10 text-xs text-muted-foreground">No Traditional events in this tournament.</p>
+              <p className="text-center py-10 text-xs text-slate-500">Không có hạng mục thi đấu truyền thống.</p>
             ) : (
               <form onSubmit={handleTraditionalSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Event</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
                     <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                     >
                       {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Round</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
                     <input type="number" min="1" value={roundNumber} onChange={(e) => setRoundNumber(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Group</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm (Group)</label>
                     {isLoadingLiveState ? (
-                      <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Loading...</div>
+                      <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
                     ) : (
                       <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}
-                        className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                        style={{ background: 'oklch(0.185 0.02 256)' }}
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
-                        <option value="">-- Choose Group --</option>
+                        <option value="">-- Chọn Nhóm Thi --</option>
                         {liveState?.groups.map((g: any) => (
                           <option key={g.groupId} value={g.groupId}>{g.groupName} ({g.statusCode})</option>
                         ))}
@@ -1122,30 +1103,26 @@ export default function LiveOperationsPage({
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Competitor</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
                     <select value={selectedGroupCompetitorId} onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
                       disabled={!selectedGroupId}
-                      className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary disabled:opacity-50"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
                     >
-                      <option value="">-- Choose Competitor --</option>
+                      <option value="">-- Chọn Thí Sinh --</option>
                       {filteredTradCompetitors.map((c: any) => (
-                        <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Station {c.stationNumber ?? '—'})</option>
+                        <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Trạm {c.stationNumber ?? '—'})</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 {selectedGroupCompetitorId && (
-                  <div className="rounded-xl border border-border p-4 space-y-4"
-                    style={{ background: 'oklch(0.17 0.018 255)' }}
-                  >
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Solve #</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve #</label>
                         <select value={attemptNumber} onChange={(e) => setAttemptNumber(e.target.value)}
-                          className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                         >
                           {[...Array(liveState?.solveCount || 5)].map((_, i) => (
                             <option key={i + 1} value={i + 1}>Solve {i + 1}</option>
@@ -1153,27 +1130,20 @@ export default function LiveOperationsPage({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">
-                          {isCorrectingMode ? 'Corrected Time (seconds)' : 'Solve Time (seconds)'}
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">
+                          {isCorrectingMode ? 'Thời Gian Sửa (Giây)' : 'Thời Gian Solve (Giây)'}
                         </label>
                         <input type="number" step="0.01" value={rawTimeMs} onChange={(e) => setRawTimeMs(e.target.value)}
-                          placeholder="e.g. 10.25"
-                          className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-mono"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          placeholder="Ví dụ: 10.25"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 font-mono"
                         />
-                        {rawTimeMs && !isNaN(parseFloat(rawTimeMs)) && (
-                          <p className="text-[10px] text-muted-foreground mt-1 font-mono">
-                            {Math.round(parseFloat(rawTimeMs) * 1000)}ms
-                          </p>
-                        )}
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Penalty</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Hình Phạt (Penalty)</label>
                         <select value={selectedPenaltyId} onChange={(e) => setSelectedPenaltyId(e.target.value)}
-                          className="w-full rounded-xl border border-border px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                         >
-                          <option value="none">OK (clean)</option>
+                          <option value="none">OK (Hợp lệ)</option>
                           {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                         </select>
                       </div>
@@ -1182,14 +1152,13 @@ export default function LiveOperationsPage({
                     {isCorrectingMode ? (
                       /* Correction Reason Input (Audit Trail) */
                       <div className="space-y-1.5 animate-in fade-in duration-200">
-                        <label className="block text-[10px] font-bold text-orange-400 uppercase font-mono">Reason for Correction (Required)</label>
+                        <label className="block text-[10px] font-bold text-amber-600 uppercase font-mono">Lý Do Đổi Điểm (Bắt buộc)</label>
                         <textarea
                           value={correctionReason}
                           onChange={(e) => setCorrectionReason(e.target.value)}
-                          placeholder="e.g. Trọng tài ghi nhầm giây trên scorecard giấy..."
+                          placeholder="Ví dụ: Trọng tài ghi nhầm giây trên scorecard giấy..."
                           rows={2}
-                          className="w-full rounded-xl border border-border px-3.5 py-2 text-xs text-foreground outline-none focus:border-primary"
-                          style={{ background: 'oklch(0.185 0.02 256)' }}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                         />
                       </div>
                     ) : (
@@ -1206,15 +1175,15 @@ export default function LiveOperationsPage({
                         {/* Signature */}
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Competitor Signature</label>
-                            <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-400 hover:underline">Clear</button>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
+                            <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
                           </div>
                           <canvas
                             ref={tradCanvasRef} width={400} height={80}
                             onMouseDown={startTradDrawing} onMouseMove={drawTrad}
                             onMouseUp={() => setIsTradDrawing(false)} onMouseLeave={() => setIsTradDrawing(false)}
-                            className="w-full rounded-xl border border-border cursor-crosshair block"
-                            style={{ background: 'oklch(0.13 0.02 255)', height: '80px' }}
+                            className="w-full rounded-lg border border-slate-200 cursor-crosshair block bg-white"
+                            style={{ height: '80px' }}
                           />
                         </div>
                       </>
@@ -1223,7 +1192,7 @@ export default function LiveOperationsPage({
                 )}
 
                 {isCorrectingMode && !isHubConnected && (
-                  <div className="mb-3 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-xs font-semibold text-red-400 animate-in fade-in duration-200">
+                  <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 animate-in fade-in duration-200">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>Yêu cầu kết nối Hub (Connected) hoạt động mới được phép sửa điểm.</span>
                   </div>
@@ -1231,11 +1200,7 @@ export default function LiveOperationsPage({
 
                 <button type="submit" 
                   disabled={isSubmittingTrad || !selectedGroupCompetitorId || (isCorrectingMode && !isHubConnected)}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
-                  style={{ 
-                    background: isCorrectingMode ? 'oklch(0.65 0.20 40)' : 'oklch(0.72 0.21 42)',
-                    boxShadow: isCorrectingMode ? '0 4px 16px oklch(0.65 0.20 40 / 0.2)' : '0 4px 16px oklch(0.72 0.21 42 / 0.2)'
-                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
                 >
                   {isSubmittingTrad ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1244,14 +1209,14 @@ export default function LiveOperationsPage({
                   ) : (
                     <ClipboardEdit className="h-4 w-4" />
                   )}
-                  {isSubmittingTrad ? 'Processing...' : isCorrectingMode ? 'Apply Result Correction' : 'Submit Solve Result'}
+                  {isSubmittingTrad ? 'Đang gửi...' : isCorrectingMode ? 'Cập Nhật Điều Chỉnh Điểm' : 'Gửi Kết Quả Thi'}
                 </button>
               </form>
             )}
 
             {submitTradResult && (
-              <div className={`mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-                submitTradResult.ok ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-red-500/20 bg-red-500/5 text-red-400'
+              <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
+                submitTradResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
               }`}>
                 {submitTradResult.ok ? <CheckCircle className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
                 {submitTradResult.message}
@@ -1260,21 +1225,19 @@ export default function LiveOperationsPage({
           </div>
 
           {/* Results Monitor sidebar */}
-          <div className="rounded-2xl border border-border p-5 h-fit"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h3 className="font-bold text-sm text-foreground mb-4 uppercase tracking-wider">Group Monitor</h3>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
+            <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Nhóm</h3>
             {isLoadingLiveState ? (
-              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} /></div>
+              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
             ) : filteredTradCompetitors.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Select a group to view competitors.</p>
+              <p className="text-xs text-slate-400">Chọn nhóm thi để xem danh sách thí sinh.</p>
             ) : (
               <div className="space-y-3">
                 {filteredTradCompetitors.map((c: any) => (
-                  <div key={c.groupCompetitorId} className="border-b border-border/60 pb-2.5 last:border-0">
+                  <div key={c.groupCompetitorId} className="border-b border-slate-100 pb-2.5 last:border-0">
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-bold text-foreground truncate mr-2">{c.competitorName}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                      <span className="font-bold text-slate-900 truncate mr-2">{c.competitorName}</span>
+                      <span className="text-[10px] text-slate-500 font-mono shrink-0">
                         {c.completedSolves}/{liveState?.solveCount}
                       </span>
                     </div>
@@ -1304,16 +1267,16 @@ export default function LiveOperationsPage({
                                 setCorrectionError(null);
                               }
                             }}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all hover:scale-105 ${
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${
                               result ? (
                                 result.isLocked 
-                                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                   : result.isDnf 
-                                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                                    : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                              ) : 'bg-muted/30 text-muted-foreground/40 cursor-default'
+                                    ? 'bg-red-50 text-red-700 border border-red-200' 
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              ) : 'bg-slate-100 text-slate-400 cursor-default'
                             }`}
-                            title={result ? "Bấm để xem ảnh minh chứng Cloudflare R2 / Chỉnh sửa điểm" : "Lượt thi chưa hoàn thành"}
+                            title={result ? "Bấm để xem ảnh minh chứng / Sửa điểm" : "Lượt thi chưa hoàn thành"}
                           >
                             {result ? (result.isDnf ? 'DNF' : `${(result.finalTimeMs / 1000).toFixed(2)}`) : `S${i + 1}`}
                           </button>
@@ -1332,48 +1295,43 @@ export default function LiveOperationsPage({
       {/* ─── TAB 3: MEDLEY SCORE ─────────────────────────────── */}
       {activeTab === 'medley' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-              <TimerIcon className="h-4 w-4" style={{ color: 'oklch(0.68 0.20 310)' }} /> Medley Relay Result Entry
+          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
+            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+              <TimerIcon className="h-4 w-4 text-indigo-600" /> Nhập Điểm Medley Relay
             </h2>
-            <p className="text-xs text-muted-foreground mb-5">Submit medley relay results with separate times per puzzle.</p>
+            <p className="text-xs text-slate-500 mb-5">Nhập kết quả thi đấu đồng đội liên hoàn theo từng loại Rubik.</p>
 
             {medleyEvents.length === 0 ? (
-              <p className="text-center py-10 text-xs text-muted-foreground">No Medley events configured.</p>
+              <p className="text-center py-10 text-xs text-slate-500">Chưa cấu hình môn thi Medley.</p>
             ) : (
               <form onSubmit={handleMedleySubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Medley Event</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi Medley</label>
                     <select value={medleyEventId} onChange={(e) => setMedleyEventId(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                     >
                       {medleyEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Round</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
                     <input type="number" min="1" value={medleyRoundNumber} onChange={(e) => setMedleyRoundNumber(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Group</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm</label>
                     {isLoadingMedleyLive ? (
-                      <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Loading...</div>
+                      <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
                     ) : (
                       <select value={medleyGroupId} onChange={(e) => setMedleyGroupId(e.target.value)}
-                        className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none"
-                        style={{ background: 'oklch(0.185 0.02 256)' }}
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
-                        <option value="">-- Choose Group --</option>
+                        <option value="">-- Chọn Nhóm --</option>
                         {medleyLiveState?.groups.map((g: any) => (
                           <option key={g.groupId} value={g.groupId}>{g.groupName}</option>
                         ))}
@@ -1381,13 +1339,12 @@ export default function LiveOperationsPage({
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Competitor</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
                     <select value={medleyCompetitorId} onChange={(e) => setMedleyCompetitorId(e.target.value)}
                       disabled={!medleyGroupId}
-                      className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none disabled:opacity-50"
-                      style={{ background: 'oklch(0.185 0.02 256)' }}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
                     >
-                      <option value="">-- Choose Competitor --</option>
+                      <option value="">-- Chọn Thí Sinh --</option>
                       {filteredMedleyCompetitors.map((c: any) => (
                         <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName}</option>
                       ))}
@@ -1396,29 +1353,24 @@ export default function LiveOperationsPage({
                 </div>
 
                 {medleyCompetitorId && (
-                  <div className="rounded-xl border border-border p-4 space-y-4"
-                    style={{ background: 'oklch(0.17 0.018 255)' }}
-                  >
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
                     <div className="space-y-3">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase border-b border-border pb-2">Puzzle Times</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200 pb-2">Thời Gian Chi Tiết Chuỗi Rubik</p>
                       {tournament.events.find((ev) => ev.id === medleyEventId)?.medleyPuzzles.map((puzzle) => {
                         const solveNum = Number(medleyAttemptNumber);
                         const scramble = medleyScrambles.find(
                           (s) => s.solveNumber === solveNum && s.puzzleTypeId === puzzle.puzzleTypeId
                         );
                         return (
-                          <div key={puzzle.id} className="rounded-xl border border-border/60 p-3 space-y-2"
-                            style={{ background: 'oklch(0.155 0.018 255)' }}
-                          >
+                          <div key={puzzle.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xs font-bold text-foreground">{puzzle.puzzleTypeName}</p>
-                                <p className="text-[10px] text-muted-foreground">Sort order: {puzzle.sortOrder}</p>
+                                <p className="text-xs font-bold text-slate-900">{puzzle.puzzleTypeName}</p>
+                                <p className="text-[10px] text-slate-500">Lượt thi: #{puzzle.sortOrder}</p>
                               </div>
                               <select value={medleyPenalties[puzzle.id] || 'none'}
                                 onChange={(e) => setMedleyPenalties((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
-                                className="rounded-lg border border-border px-2 py-1 text-[10px] text-foreground outline-none"
-                                style={{ background: 'oklch(0.185 0.02 256)' }}
+                                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-900 outline-none"
                               >
                                 <option value="none">OK</option>
                                 {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -1426,12 +1378,11 @@ export default function LiveOperationsPage({
                             </div>
                             <input type="number" value={medleyTimes[puzzle.id] || ''}
                               onChange={(e) => setMedleyTimes((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
-                              placeholder="Time in ms (e.g. 5240)"
-                              className="w-full rounded-lg border border-border px-3 py-1.5 text-xs text-foreground outline-none font-mono"
-                              style={{ background: 'oklch(0.185 0.02 256)' }}
+                              placeholder="Thời gian ms (VD: 5240)"
+                              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
                             />
                             {medleyTimes[puzzle.id] && (
-                              <p className="text-[10px] text-muted-foreground font-mono">{formatMs(Number(medleyTimes[puzzle.id]))}s</p>
+                              <p className="text-[10px] text-slate-500 font-mono">{formatMs(Number(medleyTimes[puzzle.id]))}s</p>
                             )}
                             {scramble && <ScrambleDisplay sequence={scramble.sequence} compact />}
                           </div>
@@ -1442,33 +1393,32 @@ export default function LiveOperationsPage({
                     {/* Signature */}
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Signature</label>
-                        <button type="button" onClick={clearMedleySignature} className="text-[10px] font-bold text-red-400 hover:underline">Clear</button>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
+                        <button type="button" onClick={clearMedleySignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
                       </div>
                       <canvas
                         ref={medleyCanvasRef} width={400} height={80}
                         onMouseDown={startMedleyDrawing} onMouseMove={drawMedley}
                         onMouseUp={() => setIsMedleyDrawing(false)} onMouseLeave={() => setIsMedleyDrawing(false)}
-                        className="w-full rounded-xl border border-border cursor-crosshair block"
-                        style={{ background: 'oklch(0.13 0.02 255)', height: '80px' }}
+                        className="w-full rounded-lg border border-slate-200 cursor-crosshair block bg-white"
+                        style={{ height: '80px' }}
                       />
                     </div>
                   </div>
                 )}
 
                 <button type="submit" disabled={isSubmittingMedley || !medleyCompetitorId}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
-                  style={{ background: 'oklch(0.58 0.20 290)', boxShadow: '0 4px 16px oklch(0.58 0.20 290 / 0.2)' }}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
                 >
                   {isSubmittingMedley ? <Loader2 className="h-4 w-4 animate-spin" /> : <TimerIcon className="h-4 w-4" />}
-                  {isSubmittingMedley ? 'Submitting Medley...' : 'Submit Medley Result'}
+                  {isSubmittingMedley ? 'Đang gửi...' : 'Gửi Kết Quả Medley'}
                 </button>
               </form>
             )}
 
             {submitMedleyResultStatus && (
-              <div className={`mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-                submitMedleyResultStatus.ok ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-red-500/20 bg-red-500/5 text-red-400'
+              <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
+                submitMedleyResultStatus.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
               }`}>
                 {submitMedleyResultStatus.ok ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                 {submitMedleyResultStatus.message}
@@ -1477,22 +1427,20 @@ export default function LiveOperationsPage({
           </div>
 
           {/* Medley Monitor */}
-          <div className="rounded-2xl border border-border p-5 h-fit"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h3 className="font-bold text-sm text-foreground mb-4 uppercase tracking-wider">Medley Monitor</h3>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
+            <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Medley</h3>
             {isLoadingMedleyLive ? (
-              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" style={{ color: 'oklch(0.68 0.20 310)' }} /></div>
+              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
             ) : filteredMedleyCompetitors.length === 0 ? (
-              <p className="text-xs text-muted-foreground">Select a medley group.</p>
+              <p className="text-xs text-slate-400">Chọn nhóm thi Medley.</p>
             ) : (
               <div className="space-y-3">
                 {filteredMedleyCompetitors.map((c: any) => (
-                  <div key={c.groupCompetitorId} className="border-b border-border/60 pb-2.5 last:border-0">
+                  <div key={c.groupCompetitorId} className="border-b border-slate-100 pb-2.5 last:border-0">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-foreground truncate mr-2">{c.competitorName}</span>
-                      <span className={`text-[10px] font-bold ${c.completedSolves > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                        {c.completedSolves > 0 ? 'DONE' : 'PENDING'}
+                      <span className="font-bold text-slate-900 truncate mr-2">{c.competitorName}</span>
+                      <span className={`text-[10px] font-bold ${c.completedSolves > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                        {c.completedSolves > 0 ? 'HOÀN THÀNH' : 'ĐANG THI'}
                       </span>
                     </div>
                   </div>
@@ -1505,67 +1453,60 @@ export default function LiveOperationsPage({
 
       {/* ─── TAB 4: VERIFY QR ─────────────────────────────────── */}
       {activeTab === 'verify' && (
-        <div className="rounded-2xl border border-border p-6 max-w-2xl mx-auto w-full"
-          style={{ background: 'oklch(0.155 0.018 255)' }}
-        >
-          <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" /> Verify Judge Station QR
+        <div className="rounded-xl border border-slate-200 bg-white p-6 max-w-2xl mx-auto w-full shadow-2xs text-slate-900">
+          <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Xác Nhận QR Trạm Trọng Tài
           </h2>
-          <p className="text-xs text-muted-foreground mb-5">Verify a competitor's QR token at a specific station.</p>
+          <p className="text-xs text-slate-500 mb-5">Kiểm tra thông tin thẻ QR thí sinh tại trạm bàn thi cụ thể.</p>
           <form onSubmit={handleVerifyStation} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Event</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
                 <select value={verifyForm.eventId} onChange={(e) => setVerifyForm((v) => ({ ...v, eventId: e.target.value }))}
-                  className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                 >
                   {tournament.events.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName} ({e.eventFormatCode})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Round</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
                 <input type="number" min="1" value={verifyForm.roundNumber}
                   onChange={(e) => setVerifyForm((v) => ({ ...v, roundNumber: e.target.value }))}
-                  className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Station Number</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Số Trạm Bàn Thi</label>
               <input type="number" min="1" value={verifyForm.stationNumber}
                 onChange={(e) => setVerifyForm((v) => ({ ...v, stationNumber: e.target.value }))}
-                className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none"
-                style={{ background: 'oklch(0.185 0.02 256)' }}
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">QR Token</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">QR Token Thí Sinh</label>
               <div className="relative">
-                <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input type="text" value={verifyForm.qrToken}
                   onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
-                  placeholder="Enter competitor's QR token..."
-                  className="w-full rounded-xl border border-border pl-10 pr-4 py-3 text-sm text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  placeholder="Nhập mã QR token..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
             </div>
             <button type="submit" disabled={isVerifying || !verifyForm.qrToken.trim()}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition disabled:opacity-50"
-              style={{ background: 'oklch(0.55 0.19 145)', boxShadow: '0 4px 16px oklch(0.55 0.19 145 / 0.2)' }}
+              className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
             >
               {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-              {isVerifying ? 'Verifying...' : 'Verify Station Assignment'}
+              {isVerifying ? 'Đang xác thực...' : 'Xác Thực Trạm Thi'}
             </button>
           </form>
 
           {verifyResult && (
-            <div className={`mt-5 flex items-start gap-3 rounded-xl border p-4 text-sm ${
+            <div className={`mt-5 flex items-start gap-3 rounded-lg border p-4 text-xs ${
               verifyResult.success && verifyResult.canSubmit
-                ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400'
-                : 'border-red-500/20 bg-red-500/5 text-red-400'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-red-200 bg-red-50 text-red-800'
             }`}>
               {verifyResult.success && verifyResult.canSubmit ? (
                 <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -1573,13 +1514,13 @@ export default function LiveOperationsPage({
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               )}
               <div>
-                <p className="font-extrabold text-foreground">{verifyResult.message}</p>
+                <p className="font-bold text-slate-900">{verifyResult.message}</p>
                 {verifyResult.success && (
-                  <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <p>Group Competitor ID: <strong className="text-foreground font-mono">{verifyResult.groupCompetitorId}</strong></p>
-                    <p>Event: <strong className="text-foreground">{verifyResult.eventName}</strong></p>
-                    <p>Group / Station: <strong className="text-foreground">{verifyResult.groupName} / Station {verifyResult.stationNumber}</strong></p>
-                    <p>Next Solve: <strong className="font-black" style={{ color: 'oklch(0.72 0.21 42)' }}>#{verifyResult.nextSolveNumber} of {verifyResult.solveCount}</strong></p>
+                  <div className="mt-2 space-y-1 text-xs text-slate-600">
+                    <p>Group Competitor ID: <strong className="text-slate-900 font-mono">{verifyResult.groupCompetitorId}</strong></p>
+                    <p>Event: <strong className="text-slate-900">{verifyResult.eventName}</strong></p>
+                    <p>Group / Station: <strong className="text-slate-900">{verifyResult.groupName} / Trạm {verifyResult.stationNumber}</strong></p>
+                    <p>Lượt tiếp theo: <strong className="font-bold text-indigo-600">#{verifyResult.nextSolveNumber} / {verifyResult.solveCount}</strong></p>
                     {verifyResult.currentScramble && (
                       <ScrambleDisplay sequence={verifyResult.currentScramble.sequence} solveNumber={verifyResult.nextSolveNumber} className="mt-2" />
                     )}
@@ -1595,29 +1536,25 @@ export default function LiveOperationsPage({
       {activeTab === 'round' && (
         <div className="space-y-6 max-w-4xl mx-auto w-full">
           {/* Header & Selection */}
-          <div className="rounded-2xl border border-border p-6"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
-            <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
-              <Play className="h-5 w-5" style={{ color: 'oklch(0.72 0.21 42)' }} />
-              Round Lifecycle Control
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
+            <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Play className="h-5 w-5 text-indigo-600" />
+              Điều Hành Tiến Trình Vòng Thi (Round Lifecycle)
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Select Event</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Chọn Môn Thi</label>
                 <select value={roundMgmtEventId} onChange={(e) => setRoundMgmtEventId(e.target.value)}
-                  className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                 >
-                  <option value="">Select Event</option>
+                  <option value="">Chọn Môn Thi</option>
                   {tournament.events.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName} ({e.eventFormatCode})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Round Number</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Số Vòng Thi (Round)</label>
                 <input type="number" min="1" value={roundMgmtRound} onChange={(e) => setRoundMgmtRound(e.target.value)}
-                  className="w-full rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
               </div>
             </div>
@@ -1626,36 +1563,32 @@ export default function LiveOperationsPage({
           {/* Round State Dashboard */}
           {roundMgmtEventId && (
             isLoadingRoundState ? (
-              <div className="rounded-2xl border border-border p-8 flex justify-center items-center"
-                style={{ background: 'oklch(0.155 0.018 255)' }}
-              >
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-xs text-muted-foreground ml-2">Loading round metrics...</span>
+              <div className="rounded-xl border border-slate-200 bg-white p-8 flex justify-center items-center">
+                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                <span className="text-xs text-slate-500 ml-2">Đang tải chỉ số vòng thi...</span>
               </div>
             ) : roundState ? (
-              <div className="rounded-2xl border border-border overflow-hidden"
-                style={{ background: 'oklch(0.155 0.018 255)' }}
-              >
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs text-slate-900">
                 {/* Dashboard Banner */}
-                <div className="p-6 border-b border-border/85 bg-gradient-to-r from-primary/5 via-transparent to-transparent flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-bold tracking-widest text-primary uppercase font-mono">ACTIVE DASHBOARD</span>
-                    <h3 className="text-lg font-black text-foreground mt-0.5 leading-tight">
+                    <span className="text-[10px] font-bold tracking-widest text-indigo-600 uppercase font-mono">ACTIVE DASHBOARD</span>
+                    <h3 className="text-base font-bold text-slate-900 mt-0.5 leading-tight">
                       {roundState.eventName} — Vòng {roundState.roundNumber}
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Tiến trình lượt giải của toàn bộ đấu thủ được cập nhật trực tiếp.
                     </p>
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase font-mono">Status:</span>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      roundState.roundStatus === 'ONGOING' ? 'bg-blue-500/10 border border-blue-500/30 text-blue-400 animate-pulse' :
-                      roundState.roundStatus === 'LOCKED' ? 'bg-orange-500/10 border border-orange-500/30 text-orange-400' :
-                      roundState.roundStatus === 'COMPLETED' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' :
-                      'bg-muted border border-border text-muted-foreground'
+                    <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Trạng thái:</span>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      roundState.roundStatus === 'ONGOING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                      roundState.roundStatus === 'LOCKED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      roundState.roundStatus === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      'bg-slate-100 border border-slate-200 text-slate-600'
                     }`}>
-                      {roundState.roundStatus === 'DRAFT' || roundState.roundStatus === 'None' || !roundState.roundStatus ? 'Not Started' : roundState.roundStatus}
+                      {roundState.roundStatus === 'DRAFT' || roundState.roundStatus === 'None' || !roundState.roundStatus ? 'Chưa Bắt Đầu' : roundState.roundStatus}
                     </span>
                   </div>
                 </div>
@@ -1671,61 +1604,50 @@ export default function LiveOperationsPage({
 
                   return (
                     <>
-                      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-border/80 divide-x divide-border/80">
-                        <div className="p-5">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Competitors</p>
-                          <p className="text-2xl font-black text-foreground mt-1">{totalCompetitors}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-slate-100 divide-x divide-slate-100">
+                        <div className="p-4">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Thí Sinh</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">{totalCompetitors}</p>
                         </div>
-                        <div className="p-5">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Completed Solves</p>
-                          <p className="text-2xl font-black text-foreground mt-1">
-                            {completedSolves} <span className="text-xs text-muted-foreground font-normal">/ {totalSolvesExpected}</span>
+                        <div className="p-4">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Lượt Solve Đã Thi</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">
+                            {completedSolves} <span className="text-xs text-slate-400 font-normal">/ {totalSolvesExpected}</span>
                           </p>
                         </div>
-                        <div className="p-5">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Finished / Total</p>
-                          <p className="text-2xl font-black text-foreground mt-1">
-                            {completedCompetitors} <span className="text-xs text-muted-foreground font-normal">/ {totalCompetitors}</span>
+                        <div className="p-4">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Đã Hoàn Thành</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">
+                            {completedCompetitors} <span className="text-xs text-slate-400 font-normal">/ {totalCompetitors}</span>
                           </p>
                         </div>
-                        <div className="p-5">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">Solve Progress</p>
-                          <p className="text-2xl font-black text-primary mt-1">{solvePercentage}%</p>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="px-6 py-4 bg-muted/10 border-b border-border/80">
-                        <div className="flex justify-between items-center text-xs mb-1.5">
-                          <span className="font-semibold text-muted-foreground">Tổng số lượt giải đã thực hiện:</span>
-                          <span className="font-mono font-bold text-foreground">{solvePercentage}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full shadow-[0_0_12px_var(--primary)] transition-all duration-500" style={{ width: `${solvePercentage}%` }} />
+                        <div className="p-4">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Tiến Độ Vòng Thi</p>
+                          <p className="text-xl font-bold text-indigo-600 mt-1">{solvePercentage}%</p>
                         </div>
                       </div>
 
                       {/* Active control flow steps */}
-                      <div className="p-6 space-y-4">
-                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono mb-2">OPERATIONAL CONTROL FLOW</h4>
+                      <div className="p-6 space-y-3">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">QUY TRÌNH ĐIỀU HÀNH VÒNG THI</h4>
                         
                         {/* Step 1: Start Round */}
                         <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
                           (roundStatus === 'DRAFT' || roundStatus === 'None') 
-                            ? 'border-blue-500/20 bg-blue-500/5 shadow-[0_0_15px_rgba(59,130,246,0.05)]' 
-                            : 'border-border bg-card opacity-50'
+                            ? 'border-indigo-200 bg-indigo-50/50' 
+                            : 'border-slate-200 bg-white opacity-60'
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-blue-400">STEP 1</span>
-                            <h5 className="font-bold text-sm text-foreground">Khai mạc vòng đấu (Start Round)</h5>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                            <span className="text-[10px] font-bold font-mono text-indigo-600">BƯỚC 1</span>
+                            <h5 className="font-bold text-xs text-slate-900">Khai mạc vòng đấu (Start Round)</h5>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                               Mở trạm trọng tài để bắt đầu quét mã QR và submit điểm thi đấu trực tiếp.
                             </p>
                           </div>
                           <button
                             onClick={() => handleRoundAction('start')}
                             disabled={isRoundAction || (roundStatus !== 'DRAFT' && roundStatus !== 'None')}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition shadow-lg shadow-blue-500/10"
+                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-2xs"
                           >
                             <Play className="h-3.5 w-3.5" /> Start Round
                           </button>
@@ -1734,26 +1656,20 @@ export default function LiveOperationsPage({
                         {/* Step 2: Lock Results */}
                         <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
                           roundStatus === 'ONGOING' 
-                            ? 'border-orange-500/20 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.05)]' 
-                            : 'border-border bg-card opacity-50'
+                            ? 'border-amber-200 bg-amber-50/50' 
+                            : 'border-slate-200 bg-white opacity-60'
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-orange-400">STEP 2</span>
-                            <h5 className="font-bold text-sm text-foreground">Khóa bảng điểm (Lock Results)</h5>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                            <span className="text-[10px] font-bold font-mono text-amber-600">BƯỚC 2</span>
+                            <h5 className="font-bold text-xs text-slate-900">Khóa bảng điểm (Lock Results)</h5>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                               Khóa không cho các trạm gửi thêm điểm. Cho phép Manager chỉnh sửa lỗi nhập điểm của trọng tài trước khi chốt vòng.
                             </p>
-                            {roundStatus === 'ONGOING' && completedCompetitors < totalCompetitors && (
-                              <p className="text-[10px] text-orange-400 font-semibold mt-1.5 flex items-center gap-1">
-                                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                                Lưu ý: Có {totalCompetitors - completedCompetitors} đấu thủ chưa hoàn thành lượt giải.
-                              </p>
-                            )}
                           </div>
                           <button
                             onClick={() => handleRoundAction('lock')}
                             disabled={isRoundAction || roundStatus !== 'ONGOING'}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black text-white bg-orange-600 hover:bg-orange-500 disabled:opacity-50 transition shadow-lg shadow-orange-500/10"
+                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition shadow-2xs"
                           >
                             <Lock className="h-3.5 w-3.5" /> Lock Results
                           </button>
@@ -1762,20 +1678,20 @@ export default function LiveOperationsPage({
                         {/* Step 3: Complete Round */}
                         <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
                           roundStatus === 'LOCKED' 
-                            ? 'border-purple-500/20 bg-purple-500/5 shadow-[0_0_15px_rgba(168,85,247,0.05)]' 
-                            : 'border-border bg-card opacity-50'
+                            ? 'border-purple-200 bg-purple-50/50' 
+                            : 'border-slate-200 bg-white opacity-60'
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-purple-400">STEP 3</span>
-                            <h5 className="font-bold text-sm text-foreground">Hoàn tất vòng thi (Complete Round)</h5>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                            <span className="text-[10px] font-bold font-mono text-purple-600">BƯỚC 3</span>
+                            <h5 className="font-bold text-xs text-slate-900">Hoàn tất vòng thi (Complete Round)</h5>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                               Chốt thứ hạng chính thức của vòng đấu. Thăng hạng (Advance) cho các đấu thủ top đầu vào vòng tiếp theo.
                             </p>
                           </div>
                           <button
                             onClick={() => handleRoundAction('complete')}
                             disabled={isRoundAction || roundStatus !== 'LOCKED'}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black text-white bg-purple-600 hover:bg-purple-500 disabled:opacity-50 transition shadow-lg shadow-purple-500/10"
+                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition shadow-2xs"
                           >
                             <CheckCircle className="h-3.5 w-3.5" /> Complete Round
                           </button>
@@ -1784,20 +1700,20 @@ export default function LiveOperationsPage({
                         {/* Step 4: Complete Event */}
                         <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
                           roundStatus === 'COMPLETED' 
-                            ? 'border-emerald-500/20 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.05)]' 
-                            : 'border-border bg-card opacity-50'
+                            ? 'border-emerald-200 bg-emerald-50/50' 
+                            : 'border-slate-200 bg-white opacity-60'
                         }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-emerald-400">STEP 4</span>
-                            <h5 className="font-bold text-sm text-foreground">Hoàn tất hạng mục đấu (Complete Event)</h5>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                            <span className="text-[10px] font-bold font-mono text-emerald-600">BƯỚC 4</span>
+                            <h5 className="font-bold text-xs text-slate-900">Hoàn tất hạng mục đấu (Complete Event)</h5>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                               Chốt Podium trao giải và hoàn thành hạng mục thi đấu (3x3x3, 2x2x2, Medley...) của giải.
                             </p>
                           </div>
                           <button
                             onClick={() => handleRoundAction('complete_event')}
                             disabled={isRoundAction || roundStatus !== 'COMPLETED'}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition shadow-lg shadow-emerald-500/10"
+                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition shadow-2xs"
                           >
                             <Trophy className="h-3.5 w-3.5" /> Complete Event
                           </button>
@@ -1808,24 +1724,24 @@ export default function LiveOperationsPage({
                 })()}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border py-16 text-center">
-                <AlertCircle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-muted-foreground">Không tìm thấy thông tin vòng đấu</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Vui lòng kiểm tra lại cấu hình sự kiện và số vòng thi.</p>
+              <div className="rounded-xl border border-dashed border-slate-200 py-16 text-center bg-white">
+                <AlertCircle className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-xs font-semibold text-slate-600">Không tìm thấy thông tin vòng đấu</p>
+                <p className="text-[10px] text-slate-400 mt-1">Vui lòng kiểm tra lại cấu hình sự kiện và số vòng thi.</p>
               </div>
             )
           )}
 
           {isRoundAction && (
-            <div className="mt-4 flex items-center gap-2 text-muted-foreground text-xs">
+            <div className="mt-4 flex items-center gap-2 text-slate-500 text-xs">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Processing round action...
+              Đang thực hiện thao tác...
             </div>
           )}
 
           {roundActionResult && (
-            <div className={`mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-              roundActionResult.ok ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-red-500/20 bg-red-500/5 text-red-400'
+            <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
+              roundActionResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
             }`}>
               {roundActionResult.ok ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
               {roundActionResult.message}
@@ -1836,16 +1752,14 @@ export default function LiveOperationsPage({
 
       {/* Result Correction Modal */}
       {editingResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl space-y-4"
-            style={{ background: 'oklch(0.155 0.018 255)' }}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 text-slate-900">
             <div>
-              <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest font-mono">Result Correction Desk</span>
-              <h3 className="text-base font-black text-foreground mt-0.5 leading-tight">
-                Correct {editingResult.competitorName} — Solve #{editingResult.solveNumber}
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider font-mono">BÀN ĐIỀU CHỈNH ĐIỂM</span>
+              <h3 className="text-base font-bold text-slate-900 mt-0.5 leading-tight">
+                Sửa điểm {editingResult.competitorName} — Solve #{editingResult.solveNumber}
               </h3>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Sửa đổi điểm thi trực tiếp của đấu thủ. Thao tác này sẽ ghi nhận lại điểm số trên Live Leaderboard.
               </p>
             </div>
@@ -1854,79 +1768,53 @@ export default function LiveOperationsPage({
             {(() => {
               const formattedUrl = formatEvidencePhotoUrl(editingResult.evidencePhotoUrl);
               return formattedUrl ? (
-                <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3 space-y-2">
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider font-mono block">📸 Ảnh Minh Chứng / Tờ Ghi Điểm Trọng Tài</span>
+                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">📸 Ảnh Minh Chứng / Tờ Ghi Điểm</span>
                     <button
                       type="button"
                       onClick={() => window.open(formattedUrl, '_blank')}
-                      className="text-[10px] font-extrabold text-sky-400 hover:underline inline-flex items-center gap-1"
+                      className="text-[10px] font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
                     >
-                      Mở Ảnh Gốc Tab Mới ↗
+                      Mở Tab Mới ↗
                     </button>
                   </div>
                   <div 
                     onClick={() => window.open(formattedUrl, '_blank')}
-                    className="block group relative overflow-hidden rounded-lg border border-border cursor-pointer min-h-[120px] bg-black/40 flex items-center justify-center"
+                    className="block group relative overflow-hidden rounded-lg border border-slate-200 cursor-pointer min-h-[120px] bg-slate-100 flex items-center justify-center"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={formattedUrl} 
                       alt="Evidence photo" 
                       className="max-h-48 w-full object-contain transition group-hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent && !parent.querySelector('.img-error-fallback')) {
-                          const fallbackDiv = document.createElement('div');
-                          fallbackDiv.className = 'img-error-fallback p-4 text-center text-xs text-amber-400 font-semibold space-y-1';
-                          fallbackDiv.innerHTML = '⚠️ Ảnh đang lưu định dạng thiết bị di động (file://).<br/><span class="text-[10px] text-muted-foreground font-normal">Trọng tài vui lòng cập nhật phiên bản app mới nhất để tải ảnh trực tiếp.</span>';
-                          parent.appendChild(fallbackDiv);
-                        }
-                      }}
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-xs font-bold text-white">
-                      Click để mở ảnh gốc tab mới ↗
-                    </div>
                   </div>
-                </div>
-              ) : editingResult.evidencePhotoUrl ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-400 font-semibold space-y-1">
-                  <p className="flex items-center gap-1.5 font-bold">⚠️ Ảnh chưa được đồng bộ</p>
-                  <p className="text-[10px] text-muted-foreground">Ảnh đang lưu trên thiết bị di động. Vui lòng nhắc trọng tài dùng ứng dụng mới nhất để tự động đồng bộ ảnh minh chứng.</p>
                 </div>
               ) : null;
             })()}
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Solve Time (seconds)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Thời Gian Sửa (Giây)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={editingResultTime}
                   onChange={(e) => setEditingResultTime(e.target.value)}
-                  placeholder="e.g. 12.34"
-                  className="w-full rounded-xl border border-border px-3.5 py-2.5 text-sm text-foreground font-semibold outline-none focus:border-primary font-mono"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  placeholder="Ví dụ: 12.34"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 font-mono"
                 />
-                {editingResultTime && !isNaN(parseFloat(editingResultTime)) && (
-                  <p className="text-[10px] text-muted-foreground mt-1 font-mono">
-                    Equivalent raw time: {Math.round(parseFloat(editingResultTime) * 1000)}ms
-                  </p>
-                )}
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Penalty</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Hình Phạt (Penalty)</label>
                 <select
                   value={editingResultPenalty}
                   onChange={(e) => setEditingResultPenalty(e.target.value)}
-                  className="w-full rounded-xl border border-border px-3 py-2.5 text-xs text-foreground font-semibold outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                 >
-                  <option value="none">OK (clean)</option>
+                  <option value="none">OK (Hợp lệ)</option>
                   {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => (
                     <option key={p.id} value={p.id}>{p.label}</option>
                   ))}
@@ -1934,43 +1822,42 @@ export default function LiveOperationsPage({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5 font-mono">Reason for Correction</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Lý Do Đổi Điểm</label>
                 <textarea
                   value={editingResultReason}
                   onChange={(e) => setEditingResultReason(e.target.value)}
-                  placeholder="e.g. Trọng tài nhập sai hàng chục, đối sánh với scorecard giấy..."
+                  placeholder="Ví dụ: Trọng tài nhập sai hàng chục, đối sánh với scorecard giấy..."
                   rows={2}
-                  className="w-full rounded-xl border border-border px-3.5 py-2 text-xs text-foreground outline-none focus:border-primary"
-                  style={{ background: 'oklch(0.185 0.02 256)' }}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
               </div>
             </div>
 
             {/* Error display */}
             {correctionError && (
-              <div className="flex items-center gap-1.5 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-xs text-red-400">
+              <div className="flex items-center gap-1.5 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700 font-medium">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 <span>{correctionError}</span>
               </div>
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setEditingResult(null)}
-                className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition"
+                className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
               >
-                Cancel
+                Hủy Bỏ
               </button>
               <button
                 type="button"
                 onClick={handleCorrectSubmit}
                 disabled={isCorrectingSubmit || !editingResultTime || !editingResultReason.trim()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-black text-white hover:bg-orange-500 disabled:opacity-50 transition"
+                className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition shadow-2xs"
               >
                 {isCorrectingSubmit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                Apply Correction
+                Xác Nhận Đổi Điểm
               </button>
             </div>
           </div>

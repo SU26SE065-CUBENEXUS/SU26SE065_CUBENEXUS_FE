@@ -257,21 +257,21 @@ export default function JudgeManagementPage({
   const renderRoleBadge = (j: TournamentJudgeDto) => {
     if (j.roleCode === 'CHECKIN_JUDGE') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[10px] font-bold text-cyan-400">
-          <QrCode className="h-3 w-3" /> CHECK-IN DESK
+        <span className="inline-flex items-center rounded bg-sky-50 border border-sky-200 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
+          Check-in Desk
         </span>
       );
     }
     if (j.assignedStationNumber) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
-          <ShieldCheck className="h-3 w-3" /> BÀN THI SỐ {j.assignedStationNumber}
+        <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+          Bàn Thi Số {j.assignedStationNumber}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-zinc-800 border border-zinc-700 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
-        TRỌNG TÀI DỰ PHÒNG
+      <span className="inline-flex items-center rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+        Trọng Tài Dự Phòng
       </span>
     );
   };
@@ -358,66 +358,53 @@ export default function JudgeManagementPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium flex-wrap">
-        <Trophy className="h-3.5 w-3.5 text-amber-500" />
-        <Link href="/managertournaments" className="hover:text-white transition-colors">
-          Tournaments
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
+          Giải Đấu
         </Link>
-        <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
-        <Link href={`/managertournaments/${id}`} className="hover:text-white transition-colors truncate max-w-[200px]">
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors truncate max-w-[200px]">
           {tournament.name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
-        <span className="text-amber-400 font-bold">Quản Lý Trọng Tài (Judges)</span>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-bold">Quản Lý Trọng Tài</span>
       </div>
 
-      {/* Hero Action Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-zinc-800/80 bg-zinc-900/60 p-6 md:p-8 backdrop-blur-md shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent pointer-events-none" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/5">
-              <UserCheck className="h-7 w-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full uppercase">
-                  Tournament Referee Suite
-                </span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-1">
-                Danh Sách Trọng Tài Giải Đấu
-              </h1>
-              <p className="text-xs md:text-sm text-zinc-400 mt-1">
-                Tự động khởi tạo, phân công bàn trực & bàn giao tài khoản trọng tài giải đấu.
-              </p>
-            </div>
+      {/* Header Banner */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
+              Hệ Thống Trọng Tài
+            </p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-1">
+              Danh Sách Trọng Tài Giải Đấu
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              Khởi tạo, phân công bàn trực & bàn giao tài khoản trọng tài giải đấu.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap shrink-0">
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
             <button
               onClick={() => setShowBatchModal(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 px-5 py-3 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition cursor-pointer border-none"
             >
-              <Zap className="h-4 w-4 fill-white text-white" />
-              ⚡ Tạo Hàng Loạt Theo Cấu Hình
+              Tạo Hàng Loạt Trọng Tài
             </button>
 
             <button
               onClick={() => setShowShuffleModal(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-3 text-xs font-black text-amber-400 uppercase tracking-wider transition-all cursor-pointer"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs"
               title="Tráo đổi ngẫu nhiên vị trí trọng tài"
             >
-              <Shuffle className="h-4 w-4 text-amber-400" />
-              🔀 Tráo Vị Trí
+              Tráo Vị Trí
             </button>
 
             <button
               onClick={() => setShowSingleModal(true)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 hover:bg-zinc-900 px-4 py-3 text-xs font-black text-zinc-300 uppercase tracking-wider transition-all cursor-pointer"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs"
             >
-              <Plus className="h-4 w-4 text-zinc-400" />
               + Thêm Đơn Lẻ
             </button>
           </div>
@@ -427,142 +414,136 @@ export default function JudgeManagementPage({
       {/* Search Bar & Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2 relative">
-          <Search className="absolute left-4 top-3.5 h-4 w-4 text-zinc-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm kiếm trọng tài theo tên hoặc username..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-zinc-800 bg-zinc-950/80 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-600 transition shadow-2xs"
           />
         </div>
 
         {/* Role Filter Segment */}
-        <div className="flex items-center gap-1 bg-zinc-950/80 border border-zinc-800 p-1 rounded-2xl">
+        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 p-1 rounded-lg">
           <button
             onClick={() => setRoleFilter('ALL')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-              roleFilter === 'ALL' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-400 hover:text-white'
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              roleFilter === 'ALL' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Tất Cả ({judges.length})
           </button>
           <button
             onClick={() => setRoleFilter('CHECKIN')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-              roleFilter === 'CHECKIN' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-zinc-400 hover:text-white'
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              roleFilter === 'CHECKIN' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Check-in ({judges.filter(j => j.roleCode === 'CHECKIN_JUDGE').length})
           </button>
           <button
             onClick={() => setRoleFilter('STATION')}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-              roleFilter === 'STATION' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-zinc-400 hover:text-white'
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${
+              roleFilter === 'STATION' ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Trạm Bàn ({judges.filter(j => j.roleCode !== 'CHECKIN_JUDGE').length})
           </button>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 px-5 py-3 flex items-center justify-between shadow-lg">
-          <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Tổng Trọng Tài</span>
-          <span className="text-2xl font-black text-amber-400 font-mono">{judges.length}</span>
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 flex items-center justify-between shadow-2xs">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Trọng Tài</span>
+          <span className="text-xl font-bold text-indigo-600">{judges.length}</span>
         </div>
       </div>
 
       {/* Judges List Table */}
       {filteredJudges.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-zinc-800 bg-zinc-900/40 py-16 px-6 text-center space-y-4 shadow-2xl">
-          <div className="h-16 w-16 rounded-3xl bg-zinc-800/80 border border-zinc-700 text-zinc-500 flex items-center justify-center mx-auto shadow-inner">
-            <UserCheck className="h-8 w-8 text-zinc-400" />
-          </div>
-          <div>
-            <p className="text-white font-black text-lg">Chưa có Trọng tài nào cho giải đấu này</p>
-            <p className="text-zinc-400 text-xs mt-1 max-w-md mx-auto">
-              Bấm nút <strong className="text-amber-400">"⚡ Tạo Hàng Loạt Theo Cấu Hình"</strong> ở trên để khởi tạo nhanh hệ thống Trọng tài.
-            </p>
-          </div>
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 px-6 text-center space-y-3 shadow-2xs">
+          <p className="text-slate-900 font-bold text-base">Chưa có Trọng tài nào cho giải đấu này</p>
+          <p className="text-slate-500 text-xs max-w-md mx-auto">
+            Bấm nút <strong className="text-indigo-600">"Tạo Hàng Loạt Trọng Tài"</strong> ở trên để khởi tạo nhanh hệ thống Trọng tài.
+          </p>
           <button
             onClick={() => setShowBatchModal(true)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 hover:bg-amber-600 px-5 py-3 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-semibold text-white transition shadow-2xs cursor-pointer border-none"
           >
-            <Zap className="h-4 w-4 fill-white text-white" />
             Tạo Hàng Loạt Trọng Tài
           </button>
         </div>
       ) : (
-        <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/60 shadow-2xl overflow-hidden backdrop-blur-md">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="bg-zinc-950/80 border-b border-zinc-800/80 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                  <th className="py-4 px-6 w-16 text-center">STT</th>
-                  <th className="py-4 px-6">Tên Trọng Tài</th>
-                  <th className="py-4 px-6">Vai Trò & Vị Trí Trực</th>
-                  <th className="py-4 px-6">Tài Khoản (Username)</th>
-                  <th className="py-4 px-6">Mật Khẩu Ban Đầu</th>
-                  <th className="py-4 px-6 text-right">Thao Tác</th>
+                <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3.5 px-5 w-16 text-center">STT</th>
+                  <th className="py-3.5 px-5">Tên Trọng Tài</th>
+                  <th className="py-3.5 px-5">Vai Trò & Vị Trí Trực</th>
+                  <th className="py-3.5 px-5">Tài Khoản (Username)</th>
+                  <th className="py-3.5 px-5">Mật Khẩu Ban Đầu</th>
+                  <th className="py-3.5 px-5 text-right">Thao Tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {filteredJudges.map((j, idx) => (
-                  <tr key={j.id} className="hover:bg-zinc-800/40 transition-colors">
-                    <td className="py-4 px-6 text-center font-mono font-bold text-zinc-500 text-xs">
+                  <tr key={j.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-3.5 px-5 text-center font-mono font-bold text-slate-400 text-xs">
                       {idx + 1}
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 font-black text-white text-sm shadow-md flex items-center justify-center shrink-0">
+                        <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">
                           {j.displayName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-sm">{j.displayName}</p>
-                          <span className="text-[10px] text-zinc-500 font-mono">{j.userCode}</span>
+                          <p className="font-semibold text-slate-900 text-sm">{j.displayName}</p>
+                          <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 px-5">
                       {renderRoleBadge(j)}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="font-mono font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs">
+                    <td className="py-3.5 px-5">
+                      <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded text-xs">
                         {j.username}
                       </span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-3.5 px-5">
                       {j.rawPassword ? (
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                          <span className="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
                             {visiblePasswords[j.id] ? j.rawPassword : '••••••••'}
                           </span>
                           <button
                             onClick={() => togglePasswordVisibility(j.id)}
-                            className="text-zinc-400 hover:text-white p-1 transition-colors"
+                            className="text-slate-400 hover:text-slate-700 p-1 transition-colors"
                             title="Hiện/Ẩn mật khẩu"
                           >
                             {visiblePasswords[j.id] ? (
-                              <EyeOff className="h-4 w-4" />
+                              <EyeOff className="h-3.5 w-3.5" />
                             ) : (
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3.5 w-3.5" />
                             )}
                           </button>
                         </div>
                       ) : (
-                        <span className="text-xs text-zinc-500 italic">Đã bảo mật (Hash)</span>
+                        <span className="text-xs text-slate-400 italic">Đã bảo mật (Hash)</span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
                             setSelectedJudge(j);
                             setShowResetPasswordModal(true);
                           }}
                           title="Đặt lại mật khẩu"
-                          className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 p-2 rounded-xl transition-all"
+                          className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
                         >
-                          <Key className="h-4 w-4" />
+                          <Key className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => {
@@ -573,16 +554,16 @@ export default function JudgeManagementPage({
                             setShowEditModal(true);
                           }}
                           title="Sửa thông tin trọng tài"
-                          className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 p-2 rounded-xl transition-all"
+                          className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => setJudgeToDelete(j)}
                           title="Xóa trọng tài"
-                          className="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 p-2 rounded-xl transition-all cursor-pointer"
+                          className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </td>
@@ -598,26 +579,23 @@ export default function JudgeManagementPage({
       {/* MODAL 1: ADVANCED BATCH CREATE */}
       {/* ============================================================ */}
       {showBatchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <div className="flex items-center gap-2 text-amber-400">
-                <Zap className="h-6 w-6 fill-amber-400 text-amber-400" />
-                <h3 className="text-lg font-black text-white tracking-tight">Cấu Hình Khởi Tạo Trọng Tài Hàng Loạt</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Cấu Hình Khởi Tạo Trọng Tài Hàng Loạt</h3>
               <button
                 onClick={() => setShowBatchModal(false)}
-                className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors"
+                className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleBatchCreate} className="space-y-5">
+            <form onSubmit={handleBatchCreate} className="space-y-4">
               {/* Parameter 1: Check-in Desk Count */}
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <QrCode className="h-4 w-4 text-cyan-400" /> Số Trọng Tài Bàn Check-in (Đón Tiếp)
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Số Trọng Tài Bàn Check-in (Đón Tiếp)
                 </label>
                 <input
                   type="number"
@@ -625,15 +603,15 @@ export default function JudgeManagementPage({
                   max="10"
                   value={checkInCountInput}
                   onChange={(e) => setCheckInCountInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. 1"
                 />
               </div>
 
               {/* Parameter 2: Station Count */}
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-amber-400" /> Số Bàn Thi Đấu (Stations)
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Số Bàn Thi Đấu (Stations)
                 </label>
                 <input
                   type="number"
@@ -641,15 +619,15 @@ export default function JudgeManagementPage({
                   max="20"
                   value={stationCountInput}
                   onChange={(e) => setStationCountInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. 5"
                 />
               </div>
 
               {/* Parameter 3: Judges Per Station */}
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-orange-400" /> Số Trọng Tài Trực Cho 1 Bàn Thi
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Số Trọng Tài Trực Cho 1 Bàn Thi
                 </label>
                 <input
                   type="number"
@@ -657,44 +635,40 @@ export default function JudgeManagementPage({
                   max="5"
                   value={judgesPerStationInput}
                   onChange={(e) => setJudgesPerStationInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. 2 (1 Trực chính + 1 Hỗ trợ)"
                 />
               </div>
 
               {/* Interactive Calculation Preview Card */}
-              <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-4 text-xs space-y-2">
-                <p className="font-bold text-amber-400 flex items-center gap-1.5">
-                  <Sparkles className="h-4 w-4" /> Tổng số tài khoản sẽ tự động tạo:
+              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3.5 text-xs space-y-1.5">
+                <p className="font-bold text-slate-900 text-xs">
+                  Tổng số tài khoản sẽ tự động tạo:
                 </p>
-                <div className="space-y-1 text-zinc-300 font-medium pl-1">
-                  <p>• Check-in Desk: <strong className="text-cyan-400">{checkInNum}</strong> người</p>
-                  <p>• Khu Bàn thi: <strong className="text-amber-400">{stationNum} bàn</strong> x <strong className="text-amber-400">{perStationNum} người/bàn</strong> = <strong className="text-amber-400">{stationNum * perStationNum}</strong> người</p>
-                  <p className="pt-2 border-t border-zinc-800/80 font-black text-sm text-white flex items-center justify-between">
-                    <span>⚡ TỔNG CỘNG KHỞI TẠO:</span>
-                    <span className="text-amber-400 font-mono text-base">{calculatedTotal} Trọng Tài</span>
+                <div className="space-y-1 text-slate-600 text-xs">
+                  <p>• Check-in Desk: <strong className="text-slate-900">{checkInNum}</strong> người</p>
+                  <p>• Khu Bàn thi: <strong className="text-slate-900">{stationNum} bàn</strong> x <strong className="text-slate-900">{perStationNum} người/bàn</strong> = <strong className="text-slate-900">{stationNum * perStationNum}</strong> người</p>
+                  <p className="pt-2 border-t border-slate-200 font-bold text-xs text-slate-900 flex items-center justify-between">
+                    <span>TỔNG CỘNG KHỞI TẠO:</span>
+                    <span className="text-indigo-600 font-mono text-sm">{calculatedTotal} Trọng Tài</span>
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowBatchModal(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={isBatchSubmitting}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
-                  {isBatchSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Zap className="h-4 w-4 fill-white text-white" />
-                  )}
+                  {isBatchSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Xác Nhận Tạo {calculatedTotal} Trọng Tài
                 </button>
               </div>
@@ -707,60 +681,57 @@ export default function JudgeManagementPage({
       {/* MODAL: SHUFFLE / RANDOMIZE ASSIGNMENTS */}
       {/* ============================================================ */}
       {showShuffleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <div className="flex items-center gap-2 text-amber-400">
-                <Shuffle className="h-6 w-6 text-amber-400" />
-                <h3 className="text-lg font-black text-white tracking-tight">Tráo Đổi Ngẫu Nhiên Vị Trí Trọng Tài</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Tráo Đổi Ngẫu Nhiên Vị Trí Trọng Tài</h3>
               <button
                 onClick={() => setShowShuffleModal(false)}
-                className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors"
+                className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleShuffle} className="space-y-5">
-              <p className="text-xs text-zinc-400">
+            <form onSubmit={handleShuffle} className="space-y-4">
+              <p className="text-xs text-slate-500">
                 Hệ thống sẽ giữ nguyên danh sách tài khoản & mật khẩu hiện tại, chỉ tráo đổi ngẫu nhiên vai trò (Check-in Desk vs Bàn thi số X) giữa các trọng tài.
               </p>
 
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5">Số Trọng Tài Check-in Desk</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Số Trọng Tài Check-in Desk</label>
                 <input
                   type="number" min="0" value={checkInCountInput} onChange={(e) => setCheckInCountInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-amber-500/60"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5">Số Bàn Thi Đấu</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Số Bàn Thi Đấu</label>
                 <input
                   type="number" min="1" value={stationCountInput} onChange={(e) => setStationCountInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-amber-500/60"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-1.5">Số Trọng Tài / 1 Bàn Thi</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">Số Trọng Tài / 1 Bàn Thi</label>
                 <input
                   type="number" min="1" value={judgesPerStationInput} onChange={(e) => setJudgesPerStationInput(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white px-4 py-3 text-sm font-bold outline-none focus:border-amber-500/60"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button" onClick={() => setShowShuffleModal(false)}
-                  className="bg-zinc-800 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit" disabled={isShuffleSubmitting}
-                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl uppercase cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
-                  {isShuffleSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shuffle className="h-4 w-4" />}
+                  {isShuffleSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Tráo Đổi Ngẫu Nhiên Vị Trí
                 </button>
               </div>
@@ -773,70 +744,70 @@ export default function JudgeManagementPage({
       {/* MODAL 2: SINGLE CREATE */}
       {/* ============================================================ */}
       {showSingleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <h3 className="text-lg font-black text-white tracking-tight">Thêm Trọng Tài Đơn Lẻ</h3>
-              <button onClick={() => setShowSingleModal(false)} className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors">
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Thêm Trọng Tài Đơn Lẻ</h3>
+              <button onClick={() => setShowSingleModal(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleSingleCreate} className="space-y-4">
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-                  Họ và Tên Trọng Tài <span className="text-rose-500">*</span>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Họ và Tên Trọng Tài <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={singleName}
                   onChange={(e) => setSingleName(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-600 px-4 py-3 text-sm font-semibold outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. Nguyễn Văn A"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-                  Username (Tên đăng nhập) <span className="text-zinc-500 font-normal lowercase">(Tự sinh nếu trống)</span>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Username (Tên đăng nhập) <span className="text-slate-400 font-normal lowercase">(Tự sinh nếu trống)</span>
                 </label>
                 <input
                   type="text"
                   value={singleUsername}
                   onChange={(e) => setSingleUsername(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-amber-300 font-mono placeholder:text-zinc-600 px-4 py-3 text-xs outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-mono placeholder:text-slate-400 px-3 py-2 text-xs outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. judge001"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-                  Mật Khẩu Ban Đầu <span className="text-zinc-500 font-normal lowercase">(Tự sinh nếu trống)</span>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Mật Khẩu Ban Đầu <span className="text-slate-400 font-normal lowercase">(Tự sinh nếu trống)</span>
                 </label>
                 <input
                   type="text"
                   value={singlePassword}
                   onChange={(e) => setSinglePassword(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-emerald-400 font-mono placeholder:text-zinc-600 px-4 py-3 text-xs outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-mono placeholder:text-slate-400 px-3 py-2 text-xs outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. Judge@123456"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowSingleModal(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={isSingleSubmitting}
-                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
-                  {isSingleSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isSingleSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Lưu Trọng Tài
                 </button>
               </div>
@@ -849,78 +820,57 @@ export default function JudgeManagementPage({
       {/* MODAL 3: HANDOVER CREDENTIALS (XUẤT & COPY DỮ LIỆU TÀI KHOẢN) */}
       {/* ============================================================ */}
       {showHandoverModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <div className="flex items-center gap-3 text-emerald-400">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-emerald-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-white tracking-tight">Bàn Giao Tài Khoản Trọng Tài</h3>
-                  <p className="text-xs text-zinc-400">Mật khẩu thật dưới đây sẵn sàng để gửi cho các Trọng tài.</p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Bàn Giao Tài Khoản Trọng Tài</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Mật khẩu thật dưới đây sẵn sàng để gửi cho các Trọng tài.</p>
               </div>
-              <button onClick={() => setShowHandoverModal(false)} className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors">
-                <X className="h-5 w-5" />
+              <button onClick={() => setShowHandoverModal(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="max-h-[55vh] overflow-y-auto space-y-3 pr-1">
+            <div className="max-h-[50vh] overflow-y-auto space-y-2.5 pr-1">
               {handoverJudges.map((j, idx) => (
-                <div key={j.id} className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                <div key={j.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs">
                   <div>
-                    <p className="font-bold text-white text-sm">{j.displayName}</p>
-                    <div className="flex items-center gap-3 mt-1.5 text-xs">
-                      <span className="text-zinc-400">Username: <strong className="font-mono text-amber-300">{j.username}</strong></span>
-                      <span className="text-zinc-400">Password: <strong className="font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">{j.rawPassword || 'N/A'}</strong></span>
+                    <p className="font-bold text-slate-900 text-xs">{j.displayName}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-600">
+                      <span>Username: <strong className="font-mono text-slate-900">{j.username}</strong></span>
+                      <span>Password: <strong className="font-mono text-indigo-600 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">{j.rawPassword || 'N/A'}</strong></span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => copySingleCredential(j, idx)}
-                    className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-zinc-200 transition-all shrink-0 cursor-pointer"
+                    className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition shrink-0 shadow-2xs"
                   >
                     {copiedIndex === idx ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Đã Copy</span>
-                      </>
+                      <span className="text-emerald-600 font-bold">✓ Đã Copy</span>
                     ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5 text-zinc-400" />
-                        Copy
-                      </>
+                      <span>Copy</span>
                     )}
                   </button>
                 </div>
               ))}
             </div>
 
-            <div className="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <span className="text-xs text-zinc-400">
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-slate-500">
                 Hãy sao chép và gửi danh sách thông tin này cho Trọng tài.
               </span>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={copyAllHandover}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 px-6 py-3.5 text-xs font-extrabold text-white uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white shadow-2xs transition"
                 >
-                  {isAllCopied ? (
-                    <>
-                      <CheckCircle className="h-4 w-4" />
-                      Đã Copy Tất Cả Dữ Liệu!
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-4 w-4" />
-                      📋 Copy Tất Cả (Gửi Zalo/Excel)
-                    </>
-                  )}
+                  {isAllCopied ? '✓ Đã Copy Tất Cả!' : 'Copy Tất Cả (Zalo/Excel)'}
                 </button>
                 <button
                   onClick={() => setShowHandoverModal(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Đóng
                 </button>
@@ -934,18 +884,18 @@ export default function JudgeManagementPage({
       {/* MODAL 4: EDIT NAME */}
       {/* ============================================================ */}
       {showEditModal && selectedJudge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <h3 className="text-lg font-black text-white tracking-tight">Sửa Tên Trọng Tài</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors">
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Sửa Tên Trọng Tài</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleEditJudge} className="space-y-4">
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
                   Họ và Tên Mới
                 </label>
                 <input
@@ -953,24 +903,24 @@ export default function JudgeManagementPage({
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-600 px-4 py-3 text-sm font-semibold outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={isEditSubmitting}
-                  className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
-                  {isEditSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isEditSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Cập Nhật Tên
                 </button>
               </div>
@@ -983,47 +933,47 @@ export default function JudgeManagementPage({
       {/* MODAL 5: RESET PASSWORD */}
       {/* ============================================================ */}
       {showResetPasswordModal && selectedJudge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
-              <h3 className="text-lg font-black text-white tracking-tight">Đặt Lại Mật Khẩu Trọng Tài</h3>
-              <button onClick={() => setShowResetPasswordModal(false)} className="text-zinc-400 hover:text-white rounded-xl p-1 transition-colors">
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 text-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Đặt Lại Mật Khẩu Trọng Tài</h3>
+              <button onClick={() => setShowResetPasswordModal(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleResetPassword} className="space-y-4">
-              <p className="text-xs text-zinc-400">
-                Đặt lại mật khẩu mới cho <strong className="text-white">{selectedJudge.displayName}</strong> ({selectedJudge.username}).
+              <p className="text-xs text-slate-500">
+                Đặt lại mật khẩu mới cho <strong className="text-slate-900">{selectedJudge.displayName}</strong> ({selectedJudge.username}).
               </p>
 
               <div>
-                <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
-                  Mật Khẩu Mới <span className="text-zinc-500 font-normal lowercase">(Tự sinh nếu trống)</span>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                  Mật Khẩu Mới <span className="text-slate-400 font-normal lowercase">(Tự sinh nếu trống)</span>
                 </label>
                 <input
                   type="text"
                   value={resetNewPassword}
                   onChange={(e) => setResetNewPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 text-emerald-400 font-mono placeholder:text-zinc-600 px-4 py-3 text-xs outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-mono placeholder:text-slate-400 px-3 py-2 text-xs outline-none focus:bg-white focus:border-indigo-600 transition"
                   placeholder="e.g. NewPass@123"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowResetPasswordModal(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all"
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={isResetSubmitting}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
-                  {isResetSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isResetSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Cấp Mật Khẩu Mới
                 </button>
               </div>
@@ -1036,25 +986,21 @@ export default function JudgeManagementPage({
       {/* MODAL: CONFIRM DELETE JUDGE */}
       {/* ============================================================ */}
       {judgeToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-3xl border border-rose-500/30 bg-zinc-900 p-6 md:p-8 shadow-2xl space-y-5 text-center relative overflow-hidden">
-            <div className="h-14 w-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto shadow-lg">
-              <Trash2 className="h-7 w-7" />
-            </div>
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 text-center text-slate-900">
             <div>
-              <h3 className="text-lg font-black text-white tracking-tight">Xác Nhận Xóa Trọng Tài</h3>
-              <p className="text-xs text-zinc-400 mt-2">
-                Bạn có chắc chắn muốn xóa trọng tài <strong className="text-rose-400">{judgeToDelete.displayName}</strong> (<span className="font-mono text-zinc-300">{judgeToDelete.username}</span>) khỏi giải đấu không?
+              <h3 className="text-base font-bold text-slate-900">Xác Nhận Xóa Trọng Tài</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Bạn có chắc chắn muốn xóa trọng tài <strong className="text-slate-900">{judgeToDelete.displayName}</strong> (<span className="font-mono text-slate-700">{judgeToDelete.username}</span>) khỏi giải đấu không?
               </p>
-              <p className="text-[11px] text-zinc-500 mt-1 italic">Hành động này không thể hoàn tác.</p>
+              <p className="text-[11px] text-slate-400 mt-1 italic">Hành động này không thể hoàn tác.</p>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setJudgeToDelete(null)}
-                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-extrabold text-xs py-3.5 px-5 rounded-2xl uppercase tracking-wider transition-all cursor-pointer"
+                className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
               >
                 Hủy Bỏ
               </button>
@@ -1062,9 +1008,9 @@ export default function JudgeManagementPage({
                 type="button"
                 disabled={isDeleting}
                 onClick={confirmDeleteJudge}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs py-3.5 px-5 rounded-2xl shadow-lg shadow-rose-600/20 uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
               >
-                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {isDeleting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Xóa Trọng Tài
               </button>
             </div>

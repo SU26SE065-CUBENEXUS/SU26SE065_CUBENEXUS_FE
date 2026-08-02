@@ -35,35 +35,35 @@ const QUICK_ACTIONS = [
     description: 'Monitor stations, check-in, and active rounds',
     href: 'live',
     icon: Radio,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+    accent: 'bg-white border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/30 text-emerald-700',
   },
   {
     title: 'Manage Judges',
     description: 'Create referee accounts and 1-click batch credentials handover',
     href: 'judges',
     icon: UserCheck,
-    accent: 'bg-card border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/5',
+    accent: 'bg-white border-slate-200 hover:border-amber-500 hover:bg-amber-50/30 text-amber-700',
   },
   {
     title: 'Configure Events',
     description: 'Set formats, rounds, and scoring rules',
     href: 'events',
     icon: Settings,
-    accent: 'bg-card border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/5',
+    accent: 'bg-white border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 text-indigo-700',
   },
   {
     title: 'Manage Registrations',
     description: 'View and override competitor seed times',
     href: 'registrations',
     icon: ClipboardList,
-    accent: 'bg-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5',
+    accent: 'bg-white border-slate-200 hover:border-sky-500 hover:bg-sky-50/30 text-sky-700',
   },
   {
     title: 'Generate Groups & Scrambles',
     description: 'Create groups, assign stations and scrambles',
     href: 'groups',
     icon: Layers,
-    accent: 'bg-card border-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/5',
+    accent: 'bg-white border-slate-200 hover:border-purple-500 hover:bg-purple-50/30 text-purple-700',
   },
 ];
 
@@ -180,86 +180,78 @@ export default function TournamentDetailDashboardPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-7 flex-wrap">
-        <Trophy className="h-3.5 w-3.5" />
-        <Link href="/managertournaments" className="hover:text-foreground transition-colors">
-          Tournaments
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
+          Giải Đấu
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-semibold">{tournament.name}</span>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-semibold">{tournament.name}</span>
       </div>
 
       {/* Complete success/error banner */}
       {completeMsg && (
-        <div className={`mb-5 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
+        <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
           completeMsg.startsWith('Error')
-            ? 'border-red-500/20 bg-red-500/5 text-red-600 dark:text-red-400'
-            : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+            ? 'border-red-200 bg-red-50 text-red-700'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700'
         }`}>
           <CheckCircle className="h-4 w-4 shrink-0" />
           {completeMsg}
-          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline">Dismiss</button>
+          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline">Đóng</button>
         </div>
       )}
 
       {/* Tournament Overview Card */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden mb-8">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
         {/* Banner Poster Header */}
         {tournament.bannerUrl && (
           <div
             onClick={() => setPreviewImage(tournament.bannerUrl!)}
-            className="relative h-48 w-full overflow-hidden bg-black/60 cursor-pointer group/img border-b border-border/80"
+            className="relative h-48 w-full overflow-hidden bg-slate-100 cursor-pointer border-b border-slate-200"
             title="Bấm để xem ảnh phóng to"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={tournament.bannerUrl}
               alt={tournament.name}
-              className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            <div className="absolute bottom-3 right-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white border border-white/20 text-xs font-extrabold flex items-center gap-1.5 opacity-90 group-hover/img:opacity-100 transition">
-              <ZoomIn className="h-4 w-4 text-primary" /> Xem Ảnh Phóng To
-            </div>
           </div>
         )}
 
         <div className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2.5 mb-2">
                 <StatusBadge status={tournament.statusCode} />
                 {tournament.maxParticipants && (
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    Max: {tournament.maxParticipants} thi đấu
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                    Tối đa: {tournament.maxParticipants} thí sinh
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground font-mono">
-                  {tournament.id.slice(0, 8)}…
+                <span className="text-xs text-slate-400 font-mono">
+                  #{tournament.id.slice(0, 8)}
                 </span>
               </div>
-              <h1 className="text-xl font-black text-foreground tracking-tight leading-tight">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {tournament.name}
               </h1>
               {tournament.description && (
-                <p className="text-sm text-muted-foreground mt-1">{tournament.description}</p>
+                <p className="text-sm text-slate-500 mt-1">{tournament.description}</p>
               )}
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-primary" />
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-600 font-medium">
+                <span>
                   {formatDateRange(tournament.startDate, tournament.endDate)}
                 </span>
                 {tournament.location && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-primary" />
-                    {tournament.location}
+                  <span>
+                    • {tournament.location}
                   </span>
                 )}
-                <span className="flex items-center gap-1.5">
-                  <User2 className="h-3.5 w-3.5 text-primary" />
-                  {tournament.createdByUserName}
+                <span>
+                  • Người tạo: {tournament.createdByUserName}
                 </span>
               </div>
               {/* Events chips */}
@@ -267,7 +259,7 @@ export default function TournamentDetailDashboardPage({
                 {tournament.events.map((e) => (
                   <span
                     key={e.id}
-                    className="rounded-md bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+                    className="rounded-md bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
                   >
                     {e.puzzleTypeName || e.puzzleTypeCode}
                     {e.eventFormatCode === 'MEDLEY' && ' (Medley)'}
@@ -281,8 +273,8 @@ export default function TournamentDetailDashboardPage({
               <button
                 onClick={fetchTournament}
                 disabled={isLoading}
-                className="rounded-xl border border-border bg-card p-2.5 text-muted-foreground shadow-sm transition hover:bg-muted/50 hover:text-foreground"
-                title="Refresh"
+                className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50"
+                title="Tải lại"
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
@@ -290,68 +282,64 @@ export default function TournamentDetailDashboardPage({
                 <button
                   onClick={() => setShowConfirmComplete(true)}
                   disabled={isCompleting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-500 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-emerald-700 disabled:opacity-60 border-none"
                 >
                   {isCompleting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" />
-                  )}
-                  Complete Tournament
+                  ) : null}
+                  Hoàn Thành Giải Đấu
                 </button>
               )}
             </div>
           </div>
 
           {/* Reg window */}
-          <div className="mt-5 border-t border-border pt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <div className="mt-5 border-t border-slate-100 pt-4 flex flex-wrap gap-4 text-xs text-slate-500">
             <span>
-              <span className="font-semibold text-foreground">Reg. Opens:</span>{' '}
+              <span className="font-semibold text-slate-700">Mở đăng ký:</span>{' '}
               {new Date(tournament.registrationOpenAt).toLocaleString('vi-VN')}
             </span>
             <span>
-              <span className="font-semibold text-foreground">Reg. Closes:</span>{' '}
+              <span className="font-semibold text-slate-700">Đóng đăng ký:</span>{' '}
               {new Date(tournament.registrationCloseAt).toLocaleString('vi-VN')}
             </span>
             <span>
-              <span className="font-semibold text-foreground">Created:</span>{' '}
+              <span className="font-semibold text-slate-700">Ngày tạo:</span>{' '}
               {new Date(tournament.createdAt).toLocaleDateString('vi-VN')}
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 mb-8">
-          <DashboardCard title="Events" value={tournament.events.length} icon={Zap} accent="blue" />
-          <DashboardCard title="Groups" value="—" icon={Layers} accent="purple" />
-          <DashboardCard title="Registrations" value="—" icon={Users} accent="yellow" />
-          <DashboardCard title="Live Operations" value="Active" icon={Radio} accent="emerald" />
-        </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <DashboardCard title="Hạng mục thi" value={tournament.events.length} accent="blue" />
+        <DashboardCard title="Nhóm & Scramble" value="Sẵn sàng" accent="purple" />
+        <DashboardCard title="Thí sinh đăng ký" value="Chi tiết" accent="yellow" />
+        <DashboardCard title="Điều hành Live" value="Hoạt động" accent="emerald" />
+      </div>
 
-        {/* Quick Action Cards */}
-        <div>
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {QUICK_ACTIONS.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.title}
-                  href={`/managertournaments/${id}/${action.href}`}
-                  className={`rounded-2xl border p-5 transition-all shadow-sm hover:shadow-md group ${action.accent}`}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <Icon className="h-5 w-5 flex-shrink-0" />
-                    <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <p className="font-bold text-[13px] leading-tight text-foreground">{action.title}</p>
-                  <p className="text-[11px] mt-1 text-muted-foreground leading-snug">{action.description}</p>
-                </Link>
-              );
-            })}
-          </div>
+      {/* Quick Action Cards */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          Thao Tác Nhanh
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {QUICK_ACTIONS.map((action) => {
+            return (
+              <Link
+                key={action.title}
+                href={`/managertournaments/${id}/${action.href}`}
+                className={`rounded-xl border p-5 transition-all shadow-2xs hover:shadow-xs group ${action.accent}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-bold text-sm text-slate-900">{action.title}</p>
+                  <ChevronRight className="h-4 w-4 text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-xs text-slate-500 leading-snug">{action.description}</p>
+              </Link>
+            );
+          })}
         </div>
       </div>
 

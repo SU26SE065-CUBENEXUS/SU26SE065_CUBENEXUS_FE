@@ -233,7 +233,7 @@ export default function DisputeManagementPage({
   if (isLoadingMain) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -241,67 +241,61 @@ export default function DisputeManagementPage({
   if (errorMain || !tournament) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center text-red-600 dark:text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-semibold">{errorMain ?? 'Tournament not found'}</p>
+          <p className="font-semibold">{errorMain ?? 'Không tìm thấy giải đấu'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-7 flex-wrap">
-        <Trophy className="h-3.5 w-3.5" />
-        <Link href="/managertournaments" className="hover:text-foreground transition-colors">
-          Tournaments
+      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
+          Giải Đấu
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <Link href={`/managertournaments/${id}`} className="hover:text-foreground transition-colors">
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-semibold">Disputes & Corrections</span>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+        <span className="text-slate-900 font-bold">Khiếu Nại & Đối Soát Kết Quả</span>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Disputes & Corrections</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Audit round solve times, correct entries, and resolve dispute reports.
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Đối Soát & Xử Lý Khiếu Nại</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">Khiếu Nại & Đối Soát Kết Quả</h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Đối soát thời gian làm bài, điều chỉnh kết quả nhập sai và giải quyết báo cáo khiếu nại từ thí sinh.
           </p>
         </div>
       </div>
 
       {/* Sub Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2">
         <button
-          onClick={() => {
-            setActiveSubTab('real_corrections');
-            setSubmitMessage(null);
-          }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+          onClick={() => setActiveSubTab('real_corrections')}
+          className={`px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
             activeSubTab === 'real_corrections'
-              ? 'border-primary bg-primary/5 text-primary'
-              : 'border-border bg-transparent text-muted-foreground hover:text-foreground'
+              ? 'bg-indigo-600 text-white shadow-2xs'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          Result Audits & Corrections
+          Đối Soát Điểm Trực Tiếp (Live Audit)
         </button>
         <button
-          onClick={() => {
-            setActiveSubTab('mock_disputes');
-            setSubmitMessage(null);
-          }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+          onClick={() => setActiveSubTab('mock_disputes')}
+          className={`px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
             activeSubTab === 'mock_disputes'
-              ? 'border-primary bg-primary/5 text-primary'
-              : 'border-border bg-transparent text-muted-foreground hover:text-foreground'
+              ? 'bg-indigo-600 text-white shadow-2xs'
+              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          Dispute Queue (Mock)
+          Đơn Khiếu Nại Báo Cáo ({disputes.filter((d) => d.status === 'Open').length} Đang Xử Lý)
         </button>
       </div>
 
