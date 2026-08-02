@@ -21,7 +21,9 @@ export interface RegisterRequest {
   email: string;
   password: string;
   displayName: string;
-  avatarUrl?: string;
+  phone?: string;
+  address?: string;
+  avatarFile?: File;
 }
 
 export interface RegisterResponse {
@@ -53,6 +55,29 @@ export interface ResetPasswordRequest {
 
 export interface MessageResponse {
   message: string;
+}
+
+export interface UserProfileDto {
+  id: string;
+  userCode: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  phone: string;
+  address: string;
+  userRole: string;
+}
+
+export interface UpdateProfileRequest {
+  displayName?: string;
+  phone?: string;
+  address?: string;
+  avatarUrl?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 // ---------- Decoded JWT User ----------
