@@ -71,10 +71,10 @@ export default function PublicLiveTournamentsPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Background gradients for premium wow factor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] rounded-full bg-accent/5 blur-[100px] pointer-events-none" />
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden">
+      {/* Background gradients for soft accent */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-20 left-0 w-[400px] h-[400px] rounded-full bg-amber-500/5 blur-[100px] pointer-events-none" />
       
       <Header />
 
@@ -82,46 +82,46 @@ export default function PublicLiveTournamentsPage() {
         
         {/* Banner section */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-primary mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-indigo-700 mb-4 shadow-2xs">
             <Trophy className="h-3.5 w-3.5" /> CubeNexus Live Portal
           </span>
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-foreground uppercase mb-4 leading-tight">
-            Follow Live <span className="text-primary font-extrabold">Tournaments</span>
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 uppercase mb-4 leading-tight">
+            Follow Live <span className="text-indigo-600 font-black">Tournaments</span>
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">
             Spectate official speedcubing tournaments in real-time. View group assignments, live solves, stations, and rankings instantly.
           </p>
         </div>
 
         {/* Filters and search bar */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-8 bg-card/40 backdrop-blur-md border border-border/60 p-4 rounded-2xl shadow-xl">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-8 bg-white border border-slate-200 p-4 rounded-2xl shadow-2xs">
           {/* Search Input */}
           <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search tournaments by name or location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-muted/10 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary transition"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
             />
           </div>
 
           {/* Filter tabs */}
-          <div className="flex overflow-x-auto w-full md:w-auto scrollbar-none gap-1 bg-muted/20 p-1 rounded-xl">
+          <div className="flex overflow-x-auto w-full md:w-auto scrollbar-none gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
             {(['ALL', 'LIVE', 'UPCOMING', 'COMPLETED'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setStatusFilter(tab)}
-                className={`px-4 py-2 rounded-lg text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all cursor-pointer ${
                   statusFilter === tab
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-indigo-600 text-white shadow-2xs font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
                 {tab === 'LIVE' ? (
                   <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
                     LIVE BOARD
                   </span>
                 ) : (
@@ -137,33 +137,33 @@ export default function PublicLiveTournamentsPage() {
           /* Loading skeletons */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="rounded-3xl border border-border bg-card/30 p-6 space-y-4 animate-pulse">
-                <div className="h-4 bg-muted rounded w-2/3" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-                <div className="h-12 bg-muted rounded-2xl" />
-                <div className="h-10 bg-muted rounded-xl" />
+              <div key={n} className="rounded-3xl border border-slate-200 bg-white p-6 space-y-4 animate-pulse shadow-2xs">
+                <div className="h-4 bg-slate-100 rounded w-2/3" />
+                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-12 bg-slate-100 rounded-2xl" />
+                <div className="h-10 bg-slate-100 rounded-xl" />
               </div>
             ))}
           </div>
         ) : error ? (
           /* Error State */
-          <div className="max-w-md mx-auto text-center py-16 px-4 rounded-3xl border border-red-500/10 bg-red-500/5">
-            <RefreshCw className="h-10 w-10 text-red-400 mx-auto mb-4" />
-            <h3 className="font-extrabold text-base mb-2">Could Not Load Tournaments</h3>
-            <p className="text-xs text-muted-foreground mb-6 leading-relaxed">{error}</p>
+          <div className="max-w-md mx-auto text-center py-16 px-4 rounded-3xl border border-red-200 bg-red-50">
+            <RefreshCw className="h-10 w-10 text-red-500 mx-auto mb-4" />
+            <h3 className="font-bold text-base text-red-900 mb-2">Could Not Load Tournaments</h3>
+            <p className="text-xs text-red-700 mb-6 leading-relaxed font-medium">{error}</p>
             <button
               onClick={fetchTournaments}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:opacity-90 transition shadow-lg shadow-primary/10"
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-red-700 transition shadow-2xs"
             >
               <RefreshCw className="h-3.5 w-3.5" /> Retry
             </button>
           </div>
         ) : filteredTournaments.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-20 bg-card/20 border border-dashed border-border rounded-3xl max-w-xl mx-auto">
-            <CalendarDays className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-1">No Tournaments Found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+          <div className="text-center py-20 bg-white border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto shadow-2xs">
+            <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="font-bold text-lg text-slate-900 mb-1">No Tournaments Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed font-medium">
               We couldn't find any tournaments matching your filters. Try adjusting your search query or status filter.
             </p>
           </div>
@@ -173,49 +173,49 @@ export default function PublicLiveTournamentsPage() {
             {filteredTournaments.map((t) => {
               // Custom badge styling depending on state
               let statusText = 'Sắp Diễn Ra';
-              let badgeStyle = 'border-blue-500/20 text-blue-400 bg-blue-500/5';
-              let ctaStyle = 'bg-primary hover:bg-primary/90 text-primary-foreground';
+              let badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
+              let ctaStyle = 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs';
               let ctaLabel = 'Xem Lịch Thi Đấu';
 
               const codeUpper = (t.status || '').toUpperCase();
 
               if (t.isLive) {
                 statusText = 'ĐANG THI ĐẤU (LIVE)';
-                badgeStyle = 'border-red-500/30 text-red-500 bg-red-500/8 animate-pulse-glow';
-                ctaStyle = 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20';
+                badgeStyle = 'border-red-200 text-red-700 bg-red-50 font-extrabold';
+                ctaStyle = 'bg-red-600 hover:bg-red-700 text-white shadow-2xs';
                 ctaLabel = 'Xem Bảng Live';
               } else if (codeUpper === 'ONGOING') {
                 statusText = 'Đang Thi Đấu';
-                badgeStyle = 'border-purple-500/20 text-purple-400 bg-purple-500/5';
-                ctaStyle = 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20';
+                badgeStyle = 'border-purple-200 text-purple-700 bg-purple-50 font-bold';
+                ctaStyle = 'bg-purple-600 hover:bg-purple-700 text-white shadow-2xs';
                 ctaLabel = 'Xem Bảng Live';
               } else if (codeUpper === 'COMPLETED') {
                 statusText = 'Đã Hoàn Thành';
-                badgeStyle = 'border-muted-foreground/20 text-muted-foreground bg-muted/5';
-                ctaStyle = 'bg-muted hover:bg-muted/80 text-foreground';
+                badgeStyle = 'border-slate-200 text-slate-600 bg-slate-100';
+                ctaStyle = 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200';
                 ctaLabel = 'Xem Kết Quả';
               } else if (codeUpper === 'REGISTRATION_OPEN') {
                 statusText = 'Mở Đăng Ký';
-                badgeStyle = 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5';
+                badgeStyle = 'border-emerald-200 text-emerald-700 bg-emerald-50';
                 ctaLabel = 'Xem Chi Tiết';
               } else if (codeUpper === 'REGISTRATION_CLOSED') {
                 statusText = 'Đóng Đăng Ký';
-                badgeStyle = 'border-amber-500/20 text-amber-400 bg-amber-500/5';
+                badgeStyle = 'border-amber-200 text-amber-700 bg-amber-50';
                 ctaLabel = 'Xem Lịch Thi Đấu';
               } else if (codeUpper === 'CANCELLED') {
                 statusText = 'Đã Hủy';
-                badgeStyle = 'border-red-500/20 text-red-400 bg-red-500/5';
+                badgeStyle = 'border-red-200 text-red-700 bg-red-50';
                 ctaLabel = 'Xem Chi Tiết';
               } else if (codeUpper === 'PUBLISHED') {
                 statusText = 'Công Bố / Sắp Khởi Tranh';
-                badgeStyle = 'border-blue-500/20 text-blue-400 bg-blue-500/5';
+                badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
                 ctaLabel = 'Xem Lịch Thi Đấu';
               }
 
               return (
                 <div
                   key={t.id}
-                  className="group relative rounded-3xl border border-border/80 bg-card/40 backdrop-blur-md p-6 flex flex-col justify-between hover:border-primary/40 hover:shadow-2xl transition-all duration-300"
+                  className="group relative rounded-3xl border border-slate-200 bg-white p-6 flex flex-col justify-between hover:border-indigo-300 hover:shadow-md transition-all duration-300"
                 >
                   <div className="space-y-4">
                     {/* Header: badge + isLive */}
@@ -224,38 +224,38 @@ export default function PublicLiveTournamentsPage() {
                         {t.isLive && <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping mr-0.5" />}
                         {statusText}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/40 font-mono">
+                      <span className="text-[10px] text-slate-400 font-mono font-medium">
                         {t.id.slice(0, 8)}
                       </span>
                     </div>
 
                     {/* Name and description */}
                     <div>
-                      <h2 className="text-lg font-black text-foreground group-hover:text-primary transition-colors tracking-tight leading-tight uppercase">
+                      <h2 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight leading-tight uppercase">
                         {t.name}
                       </h2>
                       {t.description && (
-                        <p className="text-[11px] text-muted-foreground/80 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed font-medium">
                           {t.description}
                         </p>
                       )}
                     </div>
 
                     {/* Metadata details */}
-                    <div className="space-y-2 pt-2 border-t border-border/40 text-xs text-muted-foreground">
+                    <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4.5 w-4.5 text-primary shrink-0" />
+                        <MapPin className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
                         <span className="truncate">{t.location || 'Offline Location'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4.5 w-4.5 text-primary shrink-0" />
+                        <Calendar className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
                         <span>
                           {formatDate(t.startTime)} – {formatDate(t.endTime)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Layers className="h-4.5 w-4.5 text-primary shrink-0" />
-                        <span>{t.eventsCount} Events configured</span>
+                        <Layers className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+                        <span>{t.eventsCount} Hạng mục thi đấu</span>
                       </div>
                     </div>
                   </div>

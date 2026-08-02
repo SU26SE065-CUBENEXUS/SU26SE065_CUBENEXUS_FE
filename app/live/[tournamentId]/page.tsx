@@ -351,9 +351,9 @@ export default function PublicLiveBoardDetailPage({
   const thirdPlace = topCompetitors.find((c: any) => c.rank === 3);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Visual wow gradients */}
-      <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[140px] pointer-events-none" />
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden">
+      {/* Visual background accents */}
+      <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-[140px] pointer-events-none" />
       
       <Header />
 
@@ -363,14 +363,14 @@ export default function PublicLiveBoardDetailPage({
         <div className="mb-6 flex justify-between items-center">
           <Link
             href="/live"
-            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors group"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors group"
           >
             <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
             Back to Tournaments
           </Link>
 
           {lastUpdated && (
-            <span className="text-[10px] text-muted-foreground/60 font-medium">
+            <span className="text-[10px] text-slate-500 font-medium font-mono">
               Last updated: {lastUpdated}
             </span>
           )}
@@ -380,19 +380,19 @@ export default function PublicLiveBoardDetailPage({
         {isLoadingDetails ? (
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Loading Live Board Details...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loading Live Board Details...</p>
             </div>
           </div>
         ) : detailsError || !tournament ? (
           /* Error State */
-          <div className="max-w-md mx-auto text-center py-16 px-4 rounded-3xl border border-red-500/10 bg-red-500/5">
-            <AlertCircle className="h-10 w-10 text-red-400 mx-auto mb-4" />
-            <h3 className="font-extrabold text-base mb-2">Error Loading Live Board</h3>
-            <p className="text-xs text-muted-foreground mb-6">{detailsError || 'Tournament not found'}</p>
+          <div className="max-w-md mx-auto text-center py-16 px-4 rounded-3xl border border-red-200 bg-red-50">
+            <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+            <h3 className="font-bold text-base text-red-900 mb-2">Error Loading Live Board</h3>
+            <p className="text-xs text-red-700 mb-6 font-medium">{detailsError || 'Tournament not found'}</p>
             <button
               onClick={() => loadTournamentDetails(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:opacity-90 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-2xs"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Retry
             </button>
@@ -402,54 +402,53 @@ export default function PublicLiveBoardDetailPage({
           <div className="space-y-6">
             
             {/* Tournament Details Banner Card */}
-            <div className="rounded-3xl border border-border bg-card/40 backdrop-blur-md p-6 relative overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.72_0.21_42_/_0.06),transparent_55%)]" />
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 relative overflow-hidden shadow-2xs">
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-3">
                     {tournament.isLive ? (
-                      <span className="rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-[10px] font-extrabold text-red-500 flex items-center gap-1.5 uppercase animate-pulse">
-                        <Flame className="h-3.5 w-3.5" /> ĐANG THI ĐẤU (LIVE)
+                      <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-extrabold text-red-700 flex items-center gap-1.5 uppercase animate-pulse">
+                        <Flame className="h-3.5 w-3.5 text-red-600" /> ĐANG THI ĐẤU (LIVE)
                       </span>
                     ) : tournament.status === 'ONGOING' ? (
-                      <span className="rounded-full bg-purple-500/10 border border-purple-500/30 px-3 py-1 text-[10px] font-extrabold text-purple-400 uppercase">
+                      <span className="rounded-full bg-purple-50 border border-purple-200 px-3 py-1 text-[10px] font-extrabold text-purple-700 uppercase">
                         ĐANG DIỄN RA
                       </span>
                     ) : tournament.status === 'COMPLETED' ? (
-                      <span className="rounded-full bg-muted border border-border px-3 py-1 text-[10px] font-extrabold text-muted-foreground uppercase">
+                      <span className="rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase">
                         ĐÃ HOÀN THÀNH
                       </span>
                     ) : tournament.status === 'REGISTRATION_OPEN' ? (
-                      <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[10px] font-extrabold text-emerald-400 uppercase">
+                      <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] font-bold text-emerald-700 uppercase">
                         MỞ ĐĂNG KÝ
                       </span>
                     ) : tournament.status === 'REGISTRATION_CLOSED' ? (
-                      <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-[10px] font-extrabold text-amber-400 uppercase">
+                      <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[10px] font-bold text-amber-700 uppercase">
                         ĐÓNG ĐĂNG KÝ
                       </span>
                     ) : tournament.status === 'CANCELLED' ? (
-                      <span className="rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-[10px] font-extrabold text-red-400 uppercase">
+                      <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold text-red-700 uppercase">
                         ĐÃ HỦY
                       </span>
                     ) : (
-                      <span className="rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-[10px] font-extrabold text-blue-400 uppercase">
+                      <span className="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[10px] font-bold text-blue-700 uppercase">
                         SẮP DIỄN RA
                       </span>
                     )}
-                    <span className="text-[10px] text-muted-foreground/60 font-semibold uppercase flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-primary" /> {tournament.location || 'Offline Venue'}
+                    <span className="text-[11px] text-slate-600 font-semibold uppercase flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-indigo-600" /> {tournament.location || 'Offline Venue'}
                     </span>
                   </div>
-                  <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground uppercase">
+                  <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 uppercase">
                     {tournament.name}
                   </h1>
                   {tournament.description && (
-                    <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                    <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed font-medium">
                       {tournament.description}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-xs text-slate-600 font-medium flex items-center gap-1 font-mono">
+                    <Calendar className="h-3.5 w-3.5 text-indigo-600" />
                     {formatDateRange(tournament.startTime, tournament.endTime)}
                   </p>
                 </div>
@@ -457,13 +456,13 @@ export default function PublicLiveBoardDetailPage({
                 {/* Hub realtime connection status */}
                 {tournament.status === 'ONGOING' && (
                   <div className="shrink-0 flex items-center gap-2">
-                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-sm ${
+                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-2xs ${
                       isHubConnected
-                        ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/8'
-                        : 'text-orange-400 border-orange-400/30 bg-orange-400/8 animate-pulse'
+                        ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+                        : 'text-amber-700 border-amber-200 bg-amber-50 animate-pulse'
                     }`}>
-                      {isHubConnected ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-                      <span className="uppercase text-[10px] tracking-wider">
+                      {isHubConnected ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-amber-600" />}
+                      <span className="uppercase text-[10px] tracking-wider font-extrabold">
                         {isHubConnected ? 'Realtime Connected' : 'Updates Paused (Auto-Polling)'}
                       </span>
                     </div>
@@ -473,7 +472,7 @@ export default function PublicLiveBoardDetailPage({
             </div>
 
             {/* Event Tabs Switcher */}
-            <div className="flex border-b border-border overflow-x-auto scrollbar-none gap-1 pt-2">
+            <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-none gap-1 pt-2">
               {tournament.events.map((ev) => {
                 const isSelected = selectedEventId === ev.id;
                 const isEvLive = ev.roundStatus === 'ONGOING';
@@ -485,10 +484,10 @@ export default function PublicLiveBoardDetailPage({
                       setSelectedEventId(ev.id);
                       setSelectedRoundNumber(ev.currentRoundNumber || 1);
                     }}
-                    className={`flex items-center gap-2 px-5 py-3.5 border-b-2 text-xs font-extrabold uppercase tracking-wider transition-all -mb-[2px] whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-5 py-3 border-b-2 text-xs font-bold uppercase tracking-wider transition-all -mb-[2px] whitespace-nowrap cursor-pointer ${
                       isSelected
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                        ? 'border-indigo-600 text-indigo-600 font-extrabold'
+                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-t-lg'
                     }`}
                   >
                     <span>{ev.puzzleTypeName}</span>
@@ -502,16 +501,16 @@ export default function PublicLiveBoardDetailPage({
 
             {/* State handlers if Tournament is Upcoming / Not Ongoing / Not Completed */}
             {tournament.status !== 'ONGOING' && tournament.status !== 'COMPLETED' ? (
-              <div className="text-center py-20 bg-card/20 border border-dashed border-border rounded-3xl max-w-xl mx-auto space-y-4">
-                <CalendarDays className="h-12 w-12 text-primary/40 mx-auto" />
-                <h3 className="font-extrabold text-lg uppercase tracking-tight text-foreground">
+              <div className="text-center py-20 bg-white border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto space-y-4 shadow-2xs">
+                <CalendarDays className="h-12 w-12 text-indigo-600/40 mx-auto" />
+                <h3 className="font-extrabold text-lg uppercase tracking-tight text-slate-900">
                   {tournament.status === 'REGISTRATION_CLOSED'
                     ? 'Giải Đấu Đã Đóng Đăng Ký — Sắp Khởi Tranh'
                     : tournament.status === 'REGISTRATION_OPEN'
                     ? 'Giải Đấu Đang Mở Đăng Ký Thi Đấu'
                     : 'Giải Đấu Chưa Khởi Tranh'}
                 </h3>
-                <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
                   {tournament.status === 'REGISTRATION_CLOSED'
                     ? `Cổng đăng ký đã khép lại. Giải đấu sẽ chính thức khởi tranh vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Hãy quay lại khi giải bắt đầu để xem kết quả Live trực tiếp!`
                     : tournament.status === 'REGISTRATION_OPEN'
@@ -519,7 +518,7 @@ export default function PublicLiveBoardDetailPage({
                     : `Giải đấu dự kiến bắt đầu vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Vui lòng quay lại sau để xem bảng xếp hạng trực tiếp.`}
                 </p>
                 <div className="pt-2">
-                  <span className="inline-flex rounded-xl bg-primary/10 border border-primary/20 px-4 py-2 text-xs font-bold text-primary uppercase">
+                  <span className="inline-flex rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-700 uppercase shadow-2xs">
                     TRẠNG THÁI: {
                       tournament.status === 'REGISTRATION_OPEN' ? 'ĐANG MỞ ĐĂNG KÝ' :
                       tournament.status === 'REGISTRATION_CLOSED' ? 'ĐÃ ĐÓNG ĐĂNG KÝ' :
@@ -532,25 +531,25 @@ export default function PublicLiveBoardDetailPage({
               </div>
             ) : !selectedEventId ? (
               /* No events config fallback */
-              <div className="text-center py-16 bg-card/20 border border-border rounded-3xl">
-                <p className="text-sm font-semibold text-muted-foreground">No events are configured for this tournament.</p>
+              <div className="text-center py-16 bg-white border border-slate-200 rounded-3xl shadow-2xs">
+                <p className="text-sm font-semibold text-slate-600">No events are configured for this tournament.</p>
               </div>
             ) : (
               /* Main dynamic live board section */
               <div className="space-y-6">
                 
                 {/* Event Round selection & details header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20 border border-border/80 p-4 rounded-2xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200 p-4 rounded-2xl shadow-2xs">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary shrink-0">
-                      <Layers className="h-4.5 w-4.5" />
+                    <span className="flex items-center justify-center h-9 w-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 shrink-0 shadow-2xs">
+                      <Layers className="h-5 w-5" />
                     </span>
                     <div>
-                      <h3 className="font-extrabold text-sm uppercase tracking-tight text-foreground">
+                      <h3 className="font-extrabold text-sm uppercase tracking-tight text-slate-900">
                         {activeEvent?.puzzleTypeName || 'Event Board'}
                       </h3>
                       {activeEvent && (
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-0.5">
                           Format: {activeEvent.eventFormatCode} · Solve Count: {activeEvent.solveCount}
                         </p>
                       )}
@@ -560,16 +559,16 @@ export default function PublicLiveBoardDetailPage({
                   {/* Round Switcher */}
                   {activeEvent && activeEvent.currentRoundNumber && (
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider">Round:</span>
+                      <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Round:</span>
                       <div className="flex gap-1">
                         {Array.from({ length: activeEvent.currentRoundNumber }, (_, i) => i + 1).map((r) => (
                           <button
                             key={r}
                             onClick={() => setSelectedRoundNumber(r)}
-                            className={`h-8 w-8 rounded-lg text-xs font-bold transition ${
+                            className={`h-8 w-8 rounded-lg text-xs font-bold transition cursor-pointer ${
                               selectedRoundNumber === r
-                                ? 'bg-primary text-primary-foreground shadow-md'
-                                : 'bg-card border border-border text-foreground hover:bg-muted/80'
+                                ? 'bg-indigo-600 text-white shadow-2xs'
+                                : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             {r}
@@ -583,14 +582,14 @@ export default function PublicLiveBoardDetailPage({
                 {/* Loading Live Board State */}
                 {isLoadingBoard ? (
                   <div className="flex justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
                   </div>
                 ) : !liveBoard ? (
                   /* Empty state for active round */
-                  <div className="text-center py-20 bg-card/25 border border-dashed border-border rounded-3xl max-w-xl mx-auto space-y-3">
-                    <Play className="h-10 w-10 text-muted-foreground/30 mx-auto" />
-                    <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">No Active Round Right Now</h3>
-                    <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                  <div className="text-center py-20 bg-white border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto space-y-3 shadow-2xs">
+                    <Play className="h-10 w-10 text-slate-300 mx-auto" />
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-slate-800">No Active Round Right Now</h3>
+                    <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed font-medium">
                       The tournament administrators have not started or initialized round {selectedRoundNumber} for this event yet.
                     </p>
                   </div>
@@ -600,43 +599,43 @@ export default function PublicLiveBoardDetailPage({
                     
                     {/* Live Stats Overview Banner */}
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                      <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Round Status</span>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Round Status</span>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`h-2 w-2 rounded-full ${
                             liveBoard.roundStatus === 'ONGOING' ? 'bg-red-500 animate-pulse' :
-                            liveBoard.roundStatus === 'COMPLETED' ? 'bg-green-500' : 'bg-orange-400'
+                            liveBoard.roundStatus === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-400'
                           }`} />
-                          <span className="font-extrabold text-sm uppercase text-foreground">{liveBoard.roundStatus}</span>
+                          <span className="font-extrabold text-sm uppercase text-slate-900">{liveBoard.roundStatus}</span>
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Completion Progress</span>
-                        <span className="font-black text-xs text-primary mt-1 leading-tight">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completion Progress</span>
+                        <span className="font-extrabold text-xs text-indigo-600 mt-1 leading-tight">
                           {typeof liveBoard.progress === 'object' && liveBoard.progress
                             ? `${liveBoard.progress.completedCompetitors ?? 0} / ${liveBoard.progress.totalCompetitors ?? 0} Competitors (${liveBoard.progress.submittedSolves ?? 0}/${liveBoard.progress.totalExpectedSolves ?? 0} Solves)`
                             : liveBoard.progress || '—'}
                         </span>
                       </div>
 
-                      <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Solving Format</span>
-                        <span className="font-extrabold text-sm text-foreground mt-1 uppercase">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Solving Format</span>
+                        <span className="font-extrabold text-sm text-slate-900 mt-1 uppercase">
                           {solveCount === 5 ? 'Average of 5 (Ao5)' : solveCount === 3 ? 'Mean of 3 (Mo3)' : `Best of ${solveCount}`}
                         </span>
                       </div>
 
-                      <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm flex flex-col justify-between">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Time Limit & Cutoff</span>
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Time Limit & Cutoff</span>
                         <div className="mt-1 text-xs font-bold space-y-0.5">
                           {activeEvent?.timeLimitMs ? (
-                            <p className="text-foreground">Limit: <span className="font-mono text-primary">{formatLimitMs(activeEvent.timeLimitMs)}</span></p>
+                            <p className="text-slate-900">Limit: <span className="font-mono text-indigo-600">{formatLimitMs(activeEvent.timeLimitMs)}</span></p>
                           ) : (
-                            <p className="text-muted-foreground/60">No Limit</p>
+                            <p className="text-slate-400">No Limit</p>
                           )}
                           {activeEvent?.cutoffTimeMs && (
-                            <p className="text-orange-400">Cutoff: <span className="font-mono">{formatLimitMs(activeEvent.cutoffTimeMs)}</span></p>
+                            <p className="text-amber-600">Cutoff: <span className="font-mono">{formatLimitMs(activeEvent.cutoffTimeMs)}</span></p>
                           )}
                         </div>
                       </div>
@@ -644,10 +643,9 @@ export default function PublicLiveBoardDetailPage({
 
                     {/* Gorgeous Podium for Completed rounds */}
                     {liveBoard.roundStatus === 'COMPLETED' && topCompetitors.length > 0 && (
-                      <div className="rounded-3xl border border-primary/20 bg-gradient-to-b from-primary/10 to-card/50 p-6 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-[200px] h-[200px] rounded-full bg-yellow-500/5 blur-[50px] pointer-events-none" />
-                        <h3 className="text-center font-black text-sm uppercase tracking-widest text-primary mb-6 flex items-center justify-center gap-1.5">
-                          <Award className="h-5 w-5 text-yellow-500" /> PODIUM STANDINGS
+                      <div className="rounded-3xl border border-indigo-200 bg-gradient-to-b from-indigo-50/60 to-white p-6 shadow-2xs relative overflow-hidden">
+                        <h3 className="text-center font-black text-sm uppercase tracking-widest text-indigo-700 mb-6 flex items-center justify-center gap-1.5">
+                          <Award className="h-5 w-5 text-amber-500" /> PODIUM STANDINGS
                         </h3>
 
                         <div className="flex flex-col sm:flex-row items-end justify-center gap-6 max-w-4xl mx-auto">
@@ -656,24 +654,24 @@ export default function PublicLiveBoardDetailPage({
                           {secondPlace && (
                             <div className="w-full sm:w-1/3 flex flex-col items-center order-2 sm:order-1 mt-4 sm:mt-0">
                               <div className="relative mb-2">
-                                <div className="h-16 w-16 rounded-full border-2 border-slate-300 bg-slate-400/20 overflow-hidden flex items-center justify-center text-xs font-black">
+                                <div className="h-16 w-16 rounded-full border-2 border-slate-300 bg-slate-100 overflow-hidden flex items-center justify-center text-xs font-black shadow-2xs">
                                   {secondPlace.competitorAvatarUrl ? (
                                     <img src={secondPlace.competitorAvatarUrl} alt={secondPlace.competitorName} className="h-full w-full object-cover" />
                                   ) : (
                                     secondPlace.competitorName.slice(0, 2).toUpperCase()
                                   )}
                                 </div>
-                                <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-slate-300 text-slate-900 text-xs font-black flex items-center justify-center shadow-md">
+                                <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-slate-300 text-slate-900 text-xs font-black flex items-center justify-center shadow-2xs">
                                   2
                                 </span>
                               </div>
-                              <h4 className="font-extrabold text-xs text-foreground uppercase tracking-tight text-center truncate w-full">{secondPlace.competitorName}</h4>
-                              <p className="text-[9px] text-muted-foreground/60 font-mono tracking-tighter">{secondPlace.competitorUserCode}</p>
+                              <h4 className="font-bold text-xs text-slate-900 uppercase tracking-tight text-center truncate w-full">{secondPlace.competitorName}</h4>
+                              <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{secondPlace.competitorUserCode}</p>
                               
-                              <div className="w-full bg-slate-400/10 border border-slate-300/20 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5">
-                                <p className="text-muted-foreground">Best: <span className="font-mono font-bold text-foreground">{formatDisplayTime(secondPlace.bestTimeMs, secondPlace.competitorStatus === 'DNF', secondPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                              <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5 shadow-2xs">
+                                <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(secondPlace.bestTimeMs, secondPlace.competitorStatus === 'DNF', secondPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
-                                  <p className="text-muted-foreground">Avg: <span className="font-mono font-bold text-primary">{formatDisplayTime(secondPlace.averageTimeMs, secondPlace.competitorStatus === 'DNF', secondPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                                  <p className="text-slate-600">Avg: <span className="font-mono font-bold text-indigo-600">{formatDisplayTime(secondPlace.averageTimeMs, secondPlace.competitorStatus === 'DNF', secondPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 )}
                               </div>
                             </div>
@@ -682,26 +680,26 @@ export default function PublicLiveBoardDetailPage({
                           {/* 1st Place */}
                           {firstPlace && (
                             <div className="w-full sm:w-1/3 flex flex-col items-center order-1 sm:order-2">
-                              <Trophy className="h-6 w-6 text-yellow-500 animate-bounce mb-1" />
+                              <Trophy className="h-6 w-6 text-amber-500 animate-bounce mb-1" />
                               <div className="relative mb-2">
-                                <div className="h-20 w-20 rounded-full border-4 border-yellow-500 bg-yellow-500/10 overflow-hidden flex items-center justify-center text-sm font-black shadow-lg shadow-yellow-500/10">
+                                <div className="h-20 w-20 rounded-full border-4 border-amber-400 bg-amber-50 overflow-hidden flex items-center justify-center text-sm font-black shadow-md">
                                   {firstPlace.competitorAvatarUrl ? (
                                     <img src={firstPlace.competitorAvatarUrl} alt={firstPlace.competitorName} className="h-full w-full object-cover" />
                                   ) : (
                                     firstPlace.competitorName.slice(0, 2).toUpperCase()
                                   )}
                                 </div>
-                                <span className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-yellow-500 text-yellow-950 text-xs font-black flex items-center justify-center shadow-lg">
+                                <span className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-amber-400 text-amber-950 text-xs font-black flex items-center justify-center shadow-2xs">
                                   1
                                 </span>
                               </div>
-                              <h4 className="font-black text-sm text-yellow-500 uppercase tracking-tight text-center truncate w-full">{firstPlace.competitorName}</h4>
-                              <p className="text-[9px] text-muted-foreground/60 font-mono tracking-tighter">{firstPlace.competitorUserCode}</p>
+                              <h4 className="font-black text-sm text-amber-700 uppercase tracking-tight text-center truncate w-full">{firstPlace.competitorName}</h4>
+                              <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{firstPlace.competitorUserCode}</p>
                               
-                              <div className="w-full bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 mt-2 text-center text-xs space-y-0.5 shadow-md">
-                                <p className="text-muted-foreground">Best: <span className="font-mono font-bold text-foreground">{formatDisplayTime(firstPlace.bestTimeMs, firstPlace.competitorStatus === 'DNF', firstPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                              <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2 text-center text-xs space-y-0.5 shadow-2xs">
+                                <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(firstPlace.bestTimeMs, firstPlace.competitorStatus === 'DNF', firstPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
-                                  <p className="text-muted-foreground">Avg: <span className="font-mono font-bold text-primary">{formatDisplayTime(firstPlace.averageTimeMs, firstPlace.competitorStatus === 'DNF', firstPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                                  <p className="text-slate-600">Avg: <span className="font-mono font-extrabold text-indigo-700">{formatDisplayTime(firstPlace.averageTimeMs, firstPlace.competitorStatus === 'DNF', firstPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 )}
                               </div>
                             </div>
@@ -711,24 +709,24 @@ export default function PublicLiveBoardDetailPage({
                           {thirdPlace && (
                             <div className="w-full sm:w-1/3 flex flex-col items-center order-3 mt-4 sm:mt-0">
                               <div className="relative mb-2">
-                                <div className="h-16 w-16 rounded-full border-2 border-amber-700 bg-amber-700/20 overflow-hidden flex items-center justify-center text-xs font-black">
+                                <div className="h-16 w-16 rounded-full border-2 border-amber-700 bg-amber-50 overflow-hidden flex items-center justify-center text-xs font-black shadow-2xs">
                                   {thirdPlace.competitorAvatarUrl ? (
                                     <img src={thirdPlace.competitorAvatarUrl} alt={thirdPlace.competitorName} className="h-full w-full object-cover" />
                                   ) : (
                                     thirdPlace.competitorName.slice(0, 2).toUpperCase()
                                   )}
                                 </div>
-                                <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-black flex items-center justify-center shadow-md">
+                                <span className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-black flex items-center justify-center shadow-2xs">
                                   3
                                 </span>
                               </div>
-                              <h4 className="font-extrabold text-xs text-foreground uppercase tracking-tight text-center truncate w-full">{thirdPlace.competitorName}</h4>
-                              <p className="text-[9px] text-muted-foreground/60 font-mono tracking-tighter">{thirdPlace.competitorUserCode}</p>
+                              <h4 className="font-bold text-xs text-slate-900 uppercase tracking-tight text-center truncate w-full">{thirdPlace.competitorName}</h4>
+                              <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{thirdPlace.competitorUserCode}</p>
                               
-                              <div className="w-full bg-amber-700/10 border border-amber-700/20 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5">
-                                <p className="text-muted-foreground">Best: <span className="font-mono font-bold text-foreground">{formatDisplayTime(thirdPlace.bestTimeMs, thirdPlace.competitorStatus === 'DNF', thirdPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                              <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5 shadow-2xs">
+                                <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(thirdPlace.bestTimeMs, thirdPlace.competitorStatus === 'DNF', thirdPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
-                                  <p className="text-muted-foreground">Avg: <span className="font-mono font-bold text-primary">{formatDisplayTime(thirdPlace.averageTimeMs, thirdPlace.competitorStatus === 'DNF', thirdPlace.competitorStatus === 'NO_SHOW')}</span></p>
+                                  <p className="text-slate-600">Avg: <span className="font-mono font-bold text-indigo-600">{formatDisplayTime(thirdPlace.averageTimeMs, thirdPlace.competitorStatus === 'DNF', thirdPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 )}
                               </div>
                             </div>
@@ -739,31 +737,31 @@ export default function PublicLiveBoardDetailPage({
                     )}
 
                     {/* Rankings Table */}
-                    <div className="rounded-2xl border border-border overflow-hidden bg-card/30 backdrop-blur-md shadow-lg">
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
                           <thead>
-                            <tr className="bg-muted/40 border-b border-border">
-                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-12 text-center">Rank</th>
-                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Competitor</th>
-                              <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center w-16">Group</th>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 w-12 text-center">Rank</th>
+                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Competitor</th>
+                              <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-center w-16">Group</th>
                               {Array.from({ length: solveCount }, (_, i) => (
-                                <th key={i} className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center">
+                                <th key={i} className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-center">
                                   #{i + 1}
                                 </th>
                               ))}
-                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center w-24">Best</th>
+                              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-center w-24">Best</th>
                               {showAverage && (
-                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center w-24">
+                                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 text-center w-24">
                                   {solveCount === 3 ? 'Mean' : 'Average'}
                                 </th>
                               )}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border">
+                          <tbody className="divide-y divide-slate-100">
                             {liveBoard.competitors && liveBoard.competitors.length === 0 ? (
                               <tr>
-                                <td colSpan={solveCount + (showAverage ? 5 : 4)} className="text-center py-10 text-xs text-muted-foreground">
+                                <td colSpan={solveCount + (showAverage ? 5 : 4)} className="text-center py-10 text-xs text-slate-500">
                                   No competitors assigned to this round.
                                 </td>
                               </tr>
@@ -775,31 +773,31 @@ export default function PublicLiveBoardDetailPage({
                                 return (
                                   <tr
                                     key={c.groupCompetitorId}
-                                    className={`transition-all duration-500 hover:bg-muted/30 ${
-                                      isUpdating ? 'bg-primary/20 scale-[0.99] font-semibold' : ''
+                                    className={`transition-all duration-500 hover:bg-slate-50 ${
+                                      isUpdating ? 'bg-indigo-50/80 font-semibold' : ''
                                     } ${
-                                      c.rank === 1 ? 'bg-yellow-500/5 hover:bg-yellow-500/8' :
-                                      c.rank === 2 ? 'bg-slate-300/5 hover:bg-slate-300/8' :
-                                      c.rank === 3 ? 'bg-amber-700/5 hover:bg-amber-700/8' : ''
+                                      c.rank === 1 ? 'bg-amber-50/40 hover:bg-amber-50/70' :
+                                      c.rank === 2 ? 'bg-slate-50/60 hover:bg-slate-100/60' :
+                                      c.rank === 3 ? 'bg-amber-100/30 hover:bg-amber-100/50' : ''
                                     }`}
                                   >
                                     {/* Rank column with medal indicator */}
                                     <td className="px-4 py-3.5 text-center font-bold">
                                       {c.rank === 1 ? (
-                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-500 text-yellow-950 text-xs font-black shadow-sm">1</span>
+                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-400 text-amber-950 text-xs font-black shadow-2xs">1</span>
                                       ) : c.rank === 2 ? (
-                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-slate-900 text-xs font-black shadow-sm">2</span>
+                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-slate-900 text-xs font-black shadow-2xs">2</span>
                                       ) : c.rank === 3 ? (
-                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-black shadow-sm">3</span>
+                                        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white text-xs font-black shadow-2xs">3</span>
                                       ) : (
-                                        <span className="text-muted-foreground text-xs">{c.rank || '—'}</span>
+                                        <span className="text-slate-500 text-xs font-medium">{c.rank || '—'}</span>
                                       )}
                                     </td>
 
                                     {/* Competitor Profile Info */}
-                                    <td className="px-4 py-3.5 font-bold text-foreground">
+                                    <td className="px-4 py-3.5 font-bold text-slate-900">
                                       <div className="flex items-center gap-3">
-                                        <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 overflow-hidden shrink-0 flex items-center justify-center text-[10px] font-extrabold text-primary shadow-inner">
+                                        <div className="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-200 overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold text-indigo-700 shadow-2xs">
                                           {c.competitorAvatarUrl ? (
                                             <img src={c.competitorAvatarUrl} alt={c.competitorName} className="h-full w-full object-cover" />
                                           ) : (
@@ -807,13 +805,13 @@ export default function PublicLiveBoardDetailPage({
                                           )}
                                         </div>
                                         <div>
-                                          <span className="text-sm font-extrabold text-foreground">{c.competitorName}</span>
+                                          <span className="text-xs font-bold text-slate-900 block">{c.competitorName}</span>
                                           {c.isCutoffReached && (
-                                            <span className="inline-flex items-center rounded-md bg-orange-500/10 border border-orange-500/30 px-1.5 py-0.5 text-[9px] font-extrabold text-orange-400 uppercase tracking-wider ml-2">
+                                            <span className="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider ml-1">
                                               CUTOFF
                                             </span>
                                           )}
-                                          <span className="text-[10px] text-muted-foreground/60 font-mono tracking-tight block mt-0.5">
+                                          <span className="text-[10px] text-slate-500 font-mono tracking-tight block mt-0.5">
                                             {c.competitorUserCode || 'No Code'}
                                           </span>
                                         </div>
@@ -822,7 +820,7 @@ export default function PublicLiveBoardDetailPage({
 
                                     {/* Group Column */}
                                     <td className="px-3 py-3.5 text-center">
-                                      <span className="inline-flex items-center rounded-md bg-muted/60 border border-border px-2 py-0.5 text-[9px] font-bold text-muted-foreground uppercase">
+                                      <span className="inline-flex items-center rounded-md bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9px] font-bold text-slate-700 uppercase">
                                         {compGroup?.groupName || 'Group'}
                                       </span>
                                     </td>
@@ -856,19 +854,19 @@ export default function PublicLiveBoardDetailPage({
                                                 esignatureData: attempt?.esignatureData,
                                               });
                                             }}
-                                            className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-primary/10 cursor-pointer ${
-                                              attempt ? 'font-bold' : 'text-muted-foreground/60'
+                                            className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-indigo-50 cursor-pointer ${
+                                              attempt ? 'font-bold' : 'text-slate-400'
                                             }`}
                                             title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
                                           >
-                                            <span className={`${isAttemptDnf ? 'text-red-400 font-bold' : isAttemptDns ? 'text-muted-foreground/80 font-bold' : 'text-foreground'} relative group/tooltip`}>
+                                            <span className={`${isAttemptDnf ? 'text-red-600 font-bold' : isAttemptDns ? 'text-slate-400 font-bold' : 'text-slate-900 font-semibold'} relative group/tooltip`}>
                                               {val}
-                                              {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-orange-400 font-semibold ml-0.5">+2</span>}
+                                              {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
                                               {attempt?.evidencePhotoUrl && (
                                                 <span className="text-[9px] ml-1" title="Có ảnh tờ ghi điểm R2">📸</span>
                                               )}
                                               {attempt?.isLocked && (
-                                                <span className="text-[7px] text-emerald-400 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
+                                                <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
                                               )}
                                             </span>
                                           </button>
@@ -877,13 +875,13 @@ export default function PublicLiveBoardDetailPage({
                                     })}
 
                                     {/* Best Time */}
-                                    <td className="px-4 py-3.5 text-center font-mono text-xs font-black text-foreground bg-muted/10">
+                                    <td className="px-4 py-3.5 text-center font-mono text-xs font-bold text-slate-900 bg-slate-50">
                                       {formatDisplayTime(c.bestTimeMs, c.competitorStatus === 'DNF', c.competitorStatus === 'NO_SHOW')}
                                     </td>
 
                                     {/* Average Time */}
                                     {showAverage && (
-                                      <td className="px-4 py-3.5 text-center font-mono text-xs font-black text-primary bg-primary/5">
+                                      <td className="px-4 py-3.5 text-center font-mono text-xs font-extrabold text-indigo-700 bg-indigo-50/50">
                                         {formatDisplayTime(c.averageTimeMs, c.competitorStatus === 'DNF', c.competitorStatus === 'NO_SHOW')}
                                       </td>
                                     )}
@@ -896,8 +894,8 @@ export default function PublicLiveBoardDetailPage({
                       </div>
                       
                       {/* Legend / Tooltips */}
-                      <div className="flex flex-wrap gap-4 px-4 py-3 bg-muted/20 border-t border-border text-[10px] text-muted-foreground/80 font-medium select-none">
-                        <span className="flex items-center gap-1"><span className="text-emerald-400 font-extrabold font-mono">✓</span> Verified</span>
+                      <div className="flex flex-wrap gap-4 px-4 py-3 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500 font-medium select-none">
+                        <span className="flex items-center gap-1"><span className="text-emerald-600 font-extrabold font-mono">✓</span> Verified</span>"
                         <span className="flex items-center gap-1"><span className="text-orange-400 font-bold font-mono">+2</span> Penalty</span>
                         <span className="flex items-center gap-1"><span className="text-red-400 font-bold font-mono">DNF</span> Did Not Finish</span>
                         <span className="flex items-center gap-1"><span className="text-muted-foreground/80 font-bold font-mono">DNS</span> Did Not Start</span>
