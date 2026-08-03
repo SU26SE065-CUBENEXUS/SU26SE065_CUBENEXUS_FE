@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import * as signalR from '@microsoft/signalr';
+import { API_BASE_URL } from '@/lib/api/config';
 import { getTournamentById } from '@/lib/api/tournaments';
 import {
   checkIn,
@@ -253,7 +254,7 @@ export default function LiveOperationsPage({
     );
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/tournament')
+      .withUrl(`${API_BASE_URL}/hubs/tournament`)
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();
 

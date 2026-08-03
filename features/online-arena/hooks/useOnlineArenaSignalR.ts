@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as signalR from '@microsoft/signalr';
-import { getAccessToken } from '@/lib/api/config';
+import { getAccessToken, API_BASE_URL } from '@/lib/api/config';
 
 interface SignalRCallbacks {
   onMatchmakingQueued?: (payload: any) => void;
@@ -49,7 +49,7 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     }
 
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hubs/online-arena', {
+      .withUrl(`${API_BASE_URL}/hubs/online-arena`, {
         accessTokenFactory: () => getAccessToken() || '',
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
