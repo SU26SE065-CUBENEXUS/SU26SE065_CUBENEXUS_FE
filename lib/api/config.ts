@@ -88,6 +88,7 @@ export async function apiFetch<T>(
 
   const headers: Record<string, string> = {
     ...((options.headers as Record<string, string> | undefined) ?? {}),
+    'ngrok-skip-browser-warning': 'true',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 

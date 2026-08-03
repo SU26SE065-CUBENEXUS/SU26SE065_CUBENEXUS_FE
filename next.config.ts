@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     proxyTimeout: 60000,
   },
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'https://perfectly-detail-gory.ngrok-free.dev';
     return [
       {
         source: '/api/ai-service/:path*',
@@ -19,11 +20,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:5212/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
       {
         source: '/hubs/:path*',
-        destination: 'http://127.0.0.1:5212/hubs/:path*',
+        destination: `${backendUrl}/hubs/:path*`,
       },
     ];
   },
