@@ -7,7 +7,7 @@ import type {
   SubmitSolveTimeResponseDto,
 } from '../types';
 
-const DIRECT_AI_SCANNER_BASE_URL = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'http://127.0.0.1:8010';
+const DIRECT_AI_SCANNER_BASE_URL = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://robena-nonapparitional-knox.ngrok-free.dev';
 
 /** POST /api/online/matchmaking/find */
 export async function findMatch(puzzleTypeId: string): Promise<MatchmakingStatusDto> {
@@ -87,6 +87,9 @@ export async function observeDirectAiScannerFrame(
     `${DIRECT_AI_SCANNER_BASE_URL}/ai/scanner-test/session/${encodeURIComponent(aiSessionId)}/observe`,
     {
       method: 'POST',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+      },
       body: formData,
       signal,
     },
