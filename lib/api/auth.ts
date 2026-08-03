@@ -2,7 +2,7 @@
 // CubeNexus API — Auth & Profile endpoints
 // ============================================================
 
-import { apiFetch, API_BASE_URL, setTokens, clearTokens } from './config';
+import { apiFetch, setTokens, clearTokens } from './config';
 import type {
   LoginRequest,
   LoginResponse,
@@ -19,18 +19,10 @@ import type {
 } from './types';
 
 export async function loginApi(data: LoginRequest): Promise<LoginResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await apiFetch<LoginResponse>('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Login failed');
-  }
-
-  const response: LoginResponse = await res.json();
   setTokens(response.accessToken, response.refreshToken);
   return response;
 }
@@ -46,17 +38,10 @@ export async function registerApi(data: RegisterRequest): Promise<RegisterRespon
     formData.append('file', data.avatarFile);
   }
 
-  const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  return apiFetch<RegisterResponse>('/api/auth/register', {
     method: 'POST',
     body: formData,
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Registration failed');
-  }
-
-  return res.json() as Promise<RegisterResponse>;
 }
 
 export async function refreshTokenApi(refreshToken: string): Promise<LoginResponse> {
@@ -67,48 +52,24 @@ export async function refreshTokenApi(refreshToken: string): Promise<LoginRespon
 }
 
 export async function forgotPasswordApi(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+  return apiFetch<ForgotPasswordResponse>('/api/auth/forgot-password', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to request password reset');
-  }
-
-  return res.json() as Promise<ForgotPasswordResponse>;
 }
 
 export async function verifyOtpApi(data: VerifyOtpRequest): Promise<MessageResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+  return apiFetch<MessageResponse>('/api/auth/verify-otp', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to verify OTP');
-  }
-
-  return res.json() as Promise<MessageResponse>;
 }
 
 export async function resetPasswordApi(data: ResetPasswordRequest): Promise<MessageResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+  return apiFetch<MessageResponse>('/api/auth/reset-password', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || 'Failed to reset password');
-  }
-
-  return res.json() as Promise<MessageResponse>;
 }
 
 export async function getMyProfileApi(): Promise<UserProfileDto> {

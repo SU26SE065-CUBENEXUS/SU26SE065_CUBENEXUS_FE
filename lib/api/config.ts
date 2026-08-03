@@ -61,7 +61,10 @@ async function tryRefreshToken(): Promise<string | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
       body: JSON.stringify({ refreshToken }),
     });
     if (!res.ok) {
