@@ -1,24 +1,43 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthProvider } from '@/contexts/auth-context'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'CubeNexus - Speedcubing Tournaments & Online Arena',
-  description: 'Join the global speedcubing arena. Solve. Compete. Inspire. Online 1v1 matches and tournament management platform.',
+  title: 'CubeNexus — Professional Speedcubing Tournament Platform',
+  description: 'The professional speedcubing tournament platform. Offline tournament management, live judge stations, online 1v1 arena, and real-time leaderboards.',
   generator: 'CubeNexus.app',
+  keywords: ['speedcubing', 'rubik', 'tournament', 'WCA', 'offline competition', 'judge station', 'live board'],
+  authors: [{ name: 'CubeNexus Team' }],
+  openGraph: {
+    title: 'CubeNexus — Professional Speedcubing Platform',
+    description: 'Join the global speedcubing arena. Compete. Inspire.',
+    type: 'website',
+  },
   icons: {
-    icon: [
-      {
-        url: '/icon.png',
-        type: 'image/png',
-      },
-    ],
+    icon: [{ url: '/icon.png', type: 'image/png' }],
     apple: '/icon.png',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#ffffff',
 }
 
 export default function RootLayout({
@@ -27,9 +46,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
-      <body className="font-sans antialiased bg-background">
-        {children}
+    <html lang="en" className="light" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+        <Toaster richColors position="top-right" closeButton />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
