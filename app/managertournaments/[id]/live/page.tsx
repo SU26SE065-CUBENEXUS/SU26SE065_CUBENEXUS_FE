@@ -681,6 +681,7 @@ export default function LiveOperationsPage({
   }
 
   const traditionalEvents = tournament.events.filter((e) => e.eventFormatCode === 'TRADITIONAL');
+  const currentEvent = traditionalEvents.find((e) => e.id === selectedEventId);
   const medleyEvents = tournament.events.filter((e) => e.eventFormatCode === 'MEDLEY');
   const filteredTradCompetitors = liveState?.competitors.filter((c: any) => c.groupId === selectedGroupId) || [];
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
@@ -948,6 +949,22 @@ export default function LiveOperationsPage({
               </div>
             </div>
 
+            {/* Info Bar for Time Limit & Cutoff */}
+            {currentEvent && (currentEvent.timeLimitMs || currentEvent.cutoffTimeMs) && (
+              <div className="flex flex-wrap items-center gap-4 px-4 py-2 bg-slate-50 border border-b-0 border-slate-200 text-xs text-slate-600 font-sans rounded-t-lg">
+                {currentEvent.timeLimitMs && (
+                  <span className="flex items-center gap-1 font-medium">
+                    ⏱️ <span className="font-semibold text-slate-700">Time Limit:</span> <strong className="text-slate-900 font-mono">{formatMs(currentEvent.timeLimitMs)}</strong> <span className="text-[11px] text-slate-500">(Vượt mốc = DNF)</span>
+                  </span>
+                )}
+                {currentEvent.cutoffTimeMs && (
+                  <span className="flex items-center gap-1 font-medium">
+                    ⚡ <span className="font-semibold text-slate-700">Cutoff Time:</span> <strong className="text-amber-700 font-mono">{formatMs(currentEvent.cutoffTimeMs)}</strong> <span className="text-[11px] text-slate-500">(Mốc tối đa lượt thi đầu để được thi tiếp)</span>
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Table */}
             {isLoadingLiveState ? (
               <div className="flex justify-center py-12">
@@ -1002,44 +1019,60 @@ export default function LiveOperationsPage({
                           {Array.from({ length: liveState.solveCount || 5 }, (_, i) => {
                             const attempt = c.results?.find((r: any) => r.solveNumber === i + 1);
                             const isDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
+                            const cutoffMs = currentEvent?.cutoffTimeMs;
+                            const solveCount = liveState.solveCount || 5;
+                            const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
+                            const isInitialSolve = i < reqAttempts;
+                            const isOverCutoff = attempt && cutoffMs && !isDnf && attempt.finalTimeMs >= cutoffMs && isInitialSolve;
+                            const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
+
                             const val = attempt ? (isDnf ? 'DNF' : formatMs(attempt.finalTimeMs)) : '—';
                             const hasPhoto = Boolean(attempt?.evidencePhotoUrl);
 
                             return (
                               <td key={i} className="px-2 py-2.5 text-center">
-                                <button
-                                  type="button"
-                                  disabled={!attempt}
-                                  onClick={() => {
-                                    if (attempt) {
-                                      setEditingResult({
-                                        resultId: attempt.resultId,
-                                        competitorName: c.competitorName,
-                                        solveNumber: i + 1,
-                                        rawTimeMs: attempt.rawTimeMs || attempt.finalTimeMs,
-                                        penaltyTypeId: attempt.penaltyTypeId || 'none',
-                                        isDnf: attempt.isDnf,
-                                        penaltyCode: attempt.penaltyCode || 'OK',
-                                        evidencePhotoUrl: attempt.evidencePhotoUrl,
-                                        esignatureData: attempt.esignatureData,
-                                      });
+                                {isCutoffStoppedCell ? (
+                                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Dừng thi do không đạt mốc Cutoff ở các lượt đầu">
+                                    CUTOFF
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={!attempt}
+                                    onClick={() => {
+                                      if (attempt) {
+                                        setEditingResult({
+                                          resultId: attempt.resultId,
+                                          competitorName: c.competitorName,
+                                          solveNumber: i + 1,
+                                          rawTimeMs: attempt.rawTimeMs || attempt.finalTimeMs,
+                                          penaltyTypeId: attempt.penaltyTypeId || 'none',
+                                          isDnf: attempt.isDnf,
+                                          penaltyCode: attempt.penaltyCode || 'OK',
+                                          evidencePhotoUrl: attempt.evidencePhotoUrl,
+                                          esignatureData: attempt.esignatureData,
+                                        });
+                                      }
+                                    }}
+                                    className={`px-2 py-1 rounded transition font-semibold ${
+                                      attempt
+                                        ? (isDnf ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100')
+                                        : 'text-slate-300 cursor-default'
+                                    }`}
+                                    title={
+                                      attempt
+                                        ? `Solve #${i + 1}: ${val} ${isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
+                                        : 'Chưa thi đấu'
                                     }
-                                  }}
-                                  className={`px-2 py-1 rounded transition font-semibold ${
-                                    attempt
-                                      ? (isDnf ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100')
-                                      : 'text-slate-300 cursor-default'
-                                  }`}
-                                  title={
-                                    attempt
-                                      ? `Solve #${i + 1}: ${val} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
-                                      : 'Chưa thi đấu'
-                                  }
-                                >
-                                  <span>{val}</span>
-                                  {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 ml-0.5">+2</span>}
-                                  {hasPhoto && <span className="text-[10px] ml-1" title="Có ảnh R2">📸</span>}
-                                </button>
+                                  >
+                                    <span>{val}</span>
+                                    {isOverCutoff && (
+                                      <span className="text-[9px] font-bold text-amber-600 ml-0.5" title={`Lượt thi >= Cutoff (${formatMs(cutoffMs)})`}>⚡</span>
+                                    )}
+                                    {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 ml-0.5">+2</span>}
+                                    {hasPhoto && <span className="text-[10px] ml-1" title="Có ảnh R2">📸</span>}
+                                  </button>
+                                )}
                               </td>
                             );
                           })}

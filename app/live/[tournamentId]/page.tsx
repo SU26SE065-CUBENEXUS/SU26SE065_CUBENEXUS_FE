@@ -806,11 +806,6 @@ export default function PublicLiveBoardDetailPage({
                                         </div>
                                         <div>
                                           <span className="text-xs font-bold text-slate-900 block">{c.competitorName}</span>
-                                          {c.isCutoffReached && (
-                                            <span className="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider ml-1">
-                                              CUTOFF
-                                            </span>
-                                          )}
                                           <span className="text-[10px] text-slate-500 font-mono tracking-tight block mt-0.5">
                                             {c.competitorUserCode || 'No Code'}
                                           </span>
@@ -830,46 +825,64 @@ export default function PublicLiveBoardDetailPage({
                                       const attempt = c.results && c.results.find((r: any) => r.solveNumber === i + 1);
                                       const isAttemptDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
                                       const isAttemptDns = attempt?.penaltyCode === 'DNS' || (c.competitorStatus === 'NO_SHOW' && i === 0 && !attempt);
+
+                                      const cutoffMs = activeEvent?.cutoffTimeMs;
+                                      const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
+                                      const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
+                                      const isInitialSolve = i < reqAttempts;
+                                      const isOverCutoff = attempt && cutoffMs && !isAttemptDnf && attempt.finalTimeMs >= cutoffMs && isInitialSolve;
+
                                       const val = attempt 
                                         ? (isAttemptDns ? 'DNS' : formatDisplayTime(attempt.finalTimeMs, isAttemptDnf))
                                         : (isAttemptDns ? 'DNS' : '—');
-                                      
+
                                       return (
                                         <td key={i} className="px-3 py-3.5 text-center font-mono text-xs">
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setSelectedInspectSolve({
-                                                competitorName: c.competitorName,
-                                                competitorUserCode: c.competitorUserCode,
-                                                solveNumber: i + 1,
-                                                eventName: activeEvent?.puzzleTypeName || 'Event',
-                                                roundNumber: selectedRoundNumber,
-                                                rawTimeMs: attempt?.rawTimeMs || attempt?.finalTimeMs,
-                                                finalTimeMs: attempt?.finalTimeMs,
-                                                penaltyCode: attempt?.penaltyCode || 'OK',
-                                                isDnf: Boolean(isAttemptDnf),
-                                                submittedAt: attempt?.submittedAt,
-                                                evidencePhotoUrl: attempt?.evidencePhotoUrl,
-                                                esignatureData: attempt?.esignatureData,
-                                              });
-                                            }}
-                                            className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-indigo-50 cursor-pointer ${
-                                              attempt ? 'font-bold' : 'text-slate-400'
-                                            }`}
-                                            title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
-                                          >
-                                            <span className={`${isAttemptDnf ? 'text-red-600 font-bold' : isAttemptDns ? 'text-slate-400 font-bold' : 'text-slate-900 font-semibold'} relative group/tooltip`}>
-                                              {val}
-                                              {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
-                                              {attempt?.evidencePhotoUrl && (
-                                                <span className="text-[9px] ml-1" title="Có ảnh tờ ghi điểm R2">📸</span>
-                                              )}
-                                              {attempt?.isLocked && (
-                                                <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
-                                              )}
+                                          {isCutoffStoppedCell ? (
+                                            <span className="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Dừng thi do không vượt qua mốc Cutoff ở các lượt đầu">
+                                              CUTOFF
                                             </span>
-                                          </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                if (attempt) {
+                                                  setSelectedInspectSolve({
+                                                    competitorName: c.competitorName,
+                                                    competitorUserCode: c.competitorUserCode,
+                                                    solveNumber: i + 1,
+                                                    eventName: activeEvent?.puzzleTypeName || 'Event',
+                                                    roundNumber: selectedRoundNumber,
+                                                    rawTimeMs: attempt?.rawTimeMs || attempt?.finalTimeMs,
+                                                    finalTimeMs: attempt?.finalTimeMs,
+                                                    penaltyCode: attempt?.penaltyCode || 'OK',
+                                                    isDnf: Boolean(isAttemptDnf),
+                                                    submittedAt: attempt?.submittedAt,
+                                                    evidencePhotoUrl: attempt?.evidencePhotoUrl,
+                                                    esignatureData: attempt?.esignatureData,
+                                                  });
+                                                }
+                                              }}
+                                              className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-indigo-50 cursor-pointer ${
+                                                attempt ? 'font-bold' : 'text-slate-400'
+                                              }`}
+                                              title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
+                                            >
+                                              <span className={`${isAttemptDnf ? 'text-red-600 font-bold' : isAttemptDns ? 'text-slate-400 font-bold' : 'text-slate-900 font-semibold'} relative group/tooltip`}>
+                                                {val}
+                                                {isOverCutoff && (
+                                                  <span className="text-[9px] font-bold text-amber-600 ml-0.5" title={`Lượt thi >= Cutoff (${formatLimitMs(cutoffMs)})`}>⚡</span>
+                                                )}
+                                                {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
+                                                {attempt?.evidencePhotoUrl && (
+                                                  <span className="text-[9px] ml-1" title="Có ảnh tờ ghi điểm R2">📸</span>
+                                                )}
+                                                {attempt?.isLocked && (
+                                                  <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
+                                                )}
+                                              </span>
+                                            </button>
+                                          )}
                                         </td>
                                       );
                                     })}

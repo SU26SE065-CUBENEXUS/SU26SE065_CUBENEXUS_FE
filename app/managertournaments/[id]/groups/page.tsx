@@ -197,10 +197,10 @@ function EventGroupPanel({
     advance: roundStatus === 'COMPLETED' ? 'Ready' : 'Blocked',
   };
 
-  // Ranked competitors currently qualifying for next round
+  // Ranked competitors qualifying for next round (exclude cutoff-stopped & all-DNF)
   const advancingCompetitors = liveBoard?.competitors
     ? [...liveBoard.competitors]
-        .filter((c: any) => c.rank && c.rank <= Number(advanceCount))
+        .filter((c: any) => c.rank && c.rank <= Number(advanceCount) && !c.isCutoffReached && c.bestTimeMs)
         .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999))
     : [];
 
@@ -863,28 +863,37 @@ function EventGroupPanel({
                       Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán từ bảng thành tích.
                     </div>
                   ) : (
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
-                          <th className="p-2.5 font-mono">Hạng</th>
-                          <th className="p-2.5 font-mono">Thí Sinh</th>
-                          <th className="p-2.5 font-mono">Best</th>
-                          <th className="p-2.5 font-mono">Average</th>
-                          <th className="p-2.5 font-mono">Số Lượt</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {advancingCompetitors.map((c: any) => (
-                          <tr key={c.groupCompetitorId} className="hover:bg-slate-50/80">
-                            <td className="p-2.5 font-bold font-mono text-indigo-600">#{c.rank}</td>
-                            <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
-                            <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
-                            <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
-                            <td className="p-2.5 text-slate-500 font-mono">{c.completedSolves} lượt</td>
+                    <>
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
+                            <th className="p-2.5 font-mono">Hạng</th>
+                            <th className="p-2.5 font-mono">Thí Sinh</th>
+                            <th className="p-2.5 font-mono">Best</th>
+                            <th className="p-2.5 font-mono">Average</th>
+                            <th className="p-2.5 font-mono">Số Lượt</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {advancingCompetitors.map((c: any) => (
+                            <tr key={c.groupCompetitorId} className="hover:bg-slate-50/80">
+                              <td className="p-2.5 font-bold font-mono text-indigo-600">#{c.rank}</td>
+                              <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
+                              <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
+                              <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
+                              <td className="p-2.5 text-slate-500 font-mono">{c.completedSolves} lượt</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {/* Cutoff warning note */}
+                      {event.cutoffTimeMs && liveBoard?.competitors?.some((c: any) => c.isCutoffReached) && (
+                        <div className="p-2.5 border-t border-amber-100 bg-amber-50 text-[10px] text-amber-700 font-semibold flex items-center gap-1.5">
+                          <span>⚠️</span>
+                          <span>Một số thí sinh bị loại do không vượt qua Cutoff Time ({msToDisplay(event.cutoffTimeMs)}) và đã được tự động loại khỏi danh sách này.</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
