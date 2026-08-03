@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/ai-service/:path*',
-        destination: 'http://127.0.0.1:8010/:path*',
+        destination: 'https://robena-nonapparitional-knox.ngrok-free.dev/:path*',
       },
       {
         source: '/api/:path*',
