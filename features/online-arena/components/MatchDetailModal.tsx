@@ -272,6 +272,9 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
             <p className="text-xs font-mono font-bold text-amber-300/90 break-words bg-zinc-950/80 p-3 rounded-xl border border-zinc-800 select-all">
               {matchItem.scrambleSequence}
             </p>
+          </div>
+        )}
+
         {/* Fraud Report Modal */}
         <FraudReportModal
           matchId={matchItem.matchId}
