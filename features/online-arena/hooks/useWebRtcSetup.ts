@@ -481,15 +481,27 @@ export function useWebRtcSetup({
     };
   }, []);
 
-  // ── Manual retry (after ICE failure) ─────────────────────────────────────
+  // ── Manual retry (after ICE failure or stall) ─────────────────────────────
   const retry = useCallback(() => {
+    console.log('[WebRTC] Manual retry triggered. Resetting PeerConnection...');
     connectedRef.current = false;
     negotiatingRef.current = false;
     setError(null);
     setStatus('connecting');
     createPc();
-    if (isP1) sendOffer();
-  }, [isP1, createPc, sendOffer]);
+    if (isP1) {
+      sendOffer();
+    } else {
+      const uid = opponentUserIdRef.current;
+      const conn = connectionRef.current;
+      if (uid && conn) {
+        console.log('[WebRTC] P2 manual retry: sending RequestOffer to P1...');
+        conn.invoke('SendWebRtcRequestOffer', matchId, uid).catch((err) => {
+          console.warn('[WebRTC] SendWebRtcRequestOffer error during retry:', err);
+        });
+      }
+    }
+  }, [isP1, matchId, createPc, sendOffer]);
 
   return { status, error, retry, remoteStream };
 }

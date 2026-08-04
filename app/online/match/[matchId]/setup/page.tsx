@@ -330,18 +330,22 @@ function WebRtcConnectStep({
             <span className="text-[9px] font-bold text-orange-400 uppercase">Opponent</span>
           </div>
 
-          {/* ICE status overlay + manual reconnect button */}
-          {!alreadyConnected && !remoteStream && (
+          {/* ICE status overlay + manual reconnect button — always visible when remoteStream is missing */}
+          {!remoteStream && (
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5 bg-zinc-950/90 border border-zinc-800/80 rounded-lg px-2 py-1 z-10">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Loader2 className="h-3 w-3 text-orange-500 animate-spin shrink-0" />
                 <span className="text-[9px] text-zinc-400 truncate">
-                  {status === 'connecting' ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...') : 'P2P Stall'}
+                  {status === 'connected' || alreadyConnected
+                    ? 'Stream pending...'
+                    : status === 'connecting'
+                    ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...')
+                    : 'P2P Stall'}
                 </span>
               </div>
               <button
                 onClick={retry}
-                className="px-2 py-0.5 bg-orange-500/20 hover:bg-orange-500 text-orange-400 hover:text-white border border-orange-500/30 text-[9px] font-bold rounded uppercase cursor-pointer shrink-0 transition-colors"
+                className="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold rounded uppercase cursor-pointer shrink-0 transition-colors shadow-md"
                 title="Force WebRTC Reconnect"
               >
                 Reconnect
