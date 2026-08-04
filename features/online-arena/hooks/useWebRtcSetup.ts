@@ -377,7 +377,14 @@ export function useWebRtcSetup({
       if (!pc || connectedRef.current) return;
 
       if (pc.signalingState === 'stable' && !connectedRef.current) {
-        console.log('[WebRTC] P1: offer was lost (stable state). Re-sending...');
+        // Do NOT interrupt if ICE is actively checking — it may be about to connect.
+        // Only resend if ICE is in a dead state (new, disconnected, failed, closed).
+        const iceState = pc.iceConnectionState;
+        if (iceState === 'checking' || iceState === 'connected' || iceState === 'completed') {
+          console.log('[WebRTC] P1: ICE is', iceState, '— waiting, NOT resending offer.');
+          return;
+        }
+        console.log('[WebRTC] P1: offer was lost (stable state, ICE=' + iceState + '). Re-sending...');
         negotiatingRef.current = false;
         sendOffer();
       } else if (pc.signalingState === 'have-local-offer') {
