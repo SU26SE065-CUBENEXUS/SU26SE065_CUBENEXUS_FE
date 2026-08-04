@@ -26,7 +26,9 @@ const STUN_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun2.l.google.com:19302' },
-  // TURN servers (relay when direct P2P fails across NAT)
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:openrelay.metered.ca:80' },
+  // TURN servers (relay when direct P2P fails across NAT or Wi-Fi hairpinning)
   {
     urls: 'turn:openrelay.metered.ca:80',
     username: 'openrelayproject',
@@ -116,7 +118,7 @@ export function useWebRtcSetup({
       pcRef.current.close();
     }
     console.log('[WebRTC] Creating new RTCPeerConnection...');
-    const pc = new RTCPeerConnection({ iceServers: STUN_SERVERS });
+    const pc = new RTCPeerConnection({ iceServers: STUN_SERVERS, iceCandidatePoolSize: 10 });
     pcRef.current = pc;
     iceCandidateQueue.current = [];
     negotiatingRef.current = false;
@@ -181,14 +183,33 @@ export function useWebRtcSetup({
           console.error('[WebRTC] onConnected callback error:', e);
         }
       } else if (s === 'failed') {
-        console.error('[WebRTC] ICE failed — resetting connected state.');
+        console.error('[WebRTC] ICE failed — resetting PC and retrying negotiation...');
         connectedRef.current = false;
         setStatus('error');
-        setError('WebRTC ICE connection failed.');
+        setError('WebRTC ICE connection failed. Click Retry or reconnect wifi.');
       } else if (s === 'disconnected') {
-        console.warn('[WebRTC] ICE disconnected — resetting connected state for fast reconnect.');
+        console.warn('[WebRTC] ICE disconnected — scheduling automatic reconnect in 3s...');
         connectedRef.current = false;
         setStatus('connecting');
+        // If disconnected for more than 3 seconds, reset PC to attempt fresh signaling
+        setTimeout(() => {
+          if (!connectedRef.current && enabledRef.current) {
+            const currentPc = pcRef.current;
+            if (currentPc && (currentPc.iceConnectionState === 'disconnected' || currentPc.iceConnectionState === 'failed')) {
+              console.log('[WebRTC] Auto-reconnecting after ICE disconnect timeout...');
+              createPc();
+              if (isP1) {
+                sendOffer();
+              } else {
+                const uid = opponentUserIdRef.current;
+                const conn = connectionRef.current;
+                if (uid && conn) {
+                  conn.invoke('SendWebRtcRequestOffer', matchId, uid).catch(() => {});
+                }
+              }
+            }
+          }
+        }, 3000);
       }
     };
 
