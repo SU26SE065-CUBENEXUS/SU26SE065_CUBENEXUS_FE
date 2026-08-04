@@ -51,6 +51,9 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}/hubs/online-arena`, {
         accessTokenFactory: () => getAccessToken() || '',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();
