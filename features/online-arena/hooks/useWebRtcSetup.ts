@@ -26,33 +26,6 @@ const STUN_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun.cloudflare.com:3478' },
-  // TURN servers — global.relay.metered.ca (geographically distributed, more reliable)
-  {
-    urls: 'turn:global.relay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:global.relay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turns:global.relay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  // Fallback: old endpoint
-  {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
 ];
 
 /** P2 re-sends RequestOffer every this many ms until ICE is connected. */
