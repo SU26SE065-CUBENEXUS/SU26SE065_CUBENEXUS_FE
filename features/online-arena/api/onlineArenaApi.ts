@@ -306,3 +306,78 @@ export async function getMyMatchHistory(
   params.append('pageSize', pageSize.toString());
   return apiFetch<OnlineMatchHistoryResponseDto>(`/api/online/matches/history?${params.toString()}`);
 }
+
+export interface CreateFraudReportPayload {
+  fraudType: string;
+  timestampText: string;
+  timestampSeconds: number;
+  description: string;
+  evidenceUrl?: string;
+  evidenceScreenshotUrl?: string;
+}
+
+export interface FraudReportDto {
+  id: string;
+  matchId: string;
+  reporterUserId: string;
+  reportedUserId: string;
+  reasonCode?: string;
+  fraudType: string;
+  timestampText: string;
+  timestampSeconds: number;
+  description?: string;
+  evidenceUrl?: string;
+  evidenceScreenshotUrl?: string;
+  statusCode: string;
+  reviewScope: string;
+  decision?: string;
+  penaltyAction?: string;
+  resolvedByAdminId?: string;
+  resolvedAt?: string;
+  reviewedBy?: string;
+  verdictCode?: string;
+  adminNote?: string;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export interface FraudReportDetailDto {
+  report: FraudReportDto;
+  match: any;
+  aiChecks: any[];
+  videoEvidences: any[];
+  auditLogs: any[];
+}
+
+/** POST /api/online/matches/{matchId}/fraud-reports */
+export async function createFraudReport(
+  matchId: string,
+  payload: CreateFraudReportPayload,
+): Promise<FraudReportDto> {
+  return apiFetch<FraudReportDto>(`/api/online/matches/${matchId}/fraud-reports`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/** GET /api/admin/fraud-reports/pending */
+export async function getPendingFraudReports(): Promise<FraudReportDto[]> {
+  return apiFetch<FraudReportDto[]>('/api/admin/fraud-reports/pending');
+}
+
+/** GET /api/admin/fraud-reports/{reportId} */
+export async function getFraudReportDetail(reportId: string): Promise<FraudReportDetailDto> {
+  return apiFetch<FraudReportDetailDto>(`/api/admin/fraud-reports/${reportId}`);
+}
+
+/** POST /api/admin/fraud-reports/{reportId}/review */
+export async function reviewFraudReport(
+  reportId: string,
+  verdictCode: string,
+  adminNote?: string,
+): Promise<FraudReportDto> {
+  return apiFetch<FraudReportDto>(`/api/admin/fraud-reports/${reportId}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ verdictCode, adminNote }),
+  });
+}

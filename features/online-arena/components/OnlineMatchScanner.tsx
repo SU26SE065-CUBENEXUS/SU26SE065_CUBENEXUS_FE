@@ -9,9 +9,9 @@ import {
   completeScannerSession,
   submitScrambleBatch,
 } from '../api/onlineArenaApi';
-import { observeScannerTestFrame } from '../../rubik-scanner-test/api/onlineScannerTestApi';
+import { observeScannerTestFrame, resetScannerTestSession } from '../../rubik-scanner-test/api/onlineScannerTestApi';
 import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
-import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen, RotateCcw } from 'lucide-react';
 
 interface OnlineMatchScannerProps {
   matchId: string;
@@ -574,7 +574,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
   const effectiveCapturedFaceCount = session?.capturedFaceCount ?? 0;
   const effectiveModelVersion = preview?.modelVersion || session?.modelVersion || '-';
   const effectiveAiHealth = error || cameraError ? 'degraded' : effectiveModelVersion !== '-' ? 'healthy' : 'unknown';
-  const targetTotalFaces = validationType === 'SCRAMBLE' ? 5 : 6;
+  const targetTotalFaces = 5;
   const progressText = `${effectiveCapturedFaceCount} / ${targetTotalFaces}`;
   const stableText = `${effectiveStableObservationCount} / ${effectiveRequiredStableObservations}`;
   const observedCenterText = effectiveObservedCenter ? effectiveObservedCenter.toUpperCase() : '-';
@@ -611,6 +611,49 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
     const nextMessage = nextSession.reason || nextSession.message || UI_MESSAGE[nextSession.scannerState] || fallbackReason || 'Scanner observation committed.';
     setLastReason(nextMessage);
     setStatusMessage(nextMessage);
+  };
+
+  /**
+   * Cho phép chọn và xóa 1 mặt đã quét sai để quét lại riêng mặt đó
+   * mà không cần phải Reset toàn bộ session.
+   */
+  const rescanSingleFace = async (targetFace: ScannerAcceptedFaceDto) => {
+    if (!session) return;
+
+    const faceCenter = (targetFace.observedCenterColor || targetFace.expectedCenterColor || '').toLowerCase();
+
+    // Reset Python AI session RAM state để xóa danh sách captured_centers ở phía AI
+    if (session.aiSessionId) {
+      try {
+        await resetScannerTestSession({ backendUrl, sessionId: session.aiSessionId });
+      } catch (e) {
+        // Suppress reset error if session was stale
+      }
+    }
+
+    const nextFaces = session.faces.filter(
+      (f) => (f.observedCenterColor || f.expectedCenterColor || '').toLowerCase() !== faceCenter
+    );
+
+    const nextObservations = localObservations.filter(
+      (obs) => (obs.centerColor || '').toLowerCase() !== faceCenter
+    );
+    setLocalObservations(nextObservations);
+
+    const updatedSession: ScannerSessionDto = {
+      ...session,
+      faces: nextFaces,
+      capturedFaceCount: nextFaces.length,
+      requestedFaceIndex: nextFaces.length + 1,
+      requestedFaceLabel: `Face ${nextFaces.length + 1} of 5`,
+      scanStatus: 'IN_PROGRESS',
+      scannerState: 'POSITION_FACE',
+      message: `Removed ${faceCenter.toUpperCase()} face. Point camera at ${faceCenter.toUpperCase()} face and press Scan.`,
+    };
+
+    applySessionFull(updatedSession, `Removed ${faceCenter.toUpperCase()} face for re-scan.`);
+    setStatusMessage(`Selected ${faceCenter.toUpperCase()} face to re-scan. Point camera and press Scan.`);
+    setLastReason(`Selected ${faceCenter.toUpperCase()} face to re-scan. Point camera and press Scan.`);
   };
 
   useEffect(() => {
@@ -940,12 +983,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
         }
       }
 
-      // If FINISH mode and we have collected all 6 faces:
-      if (validationType === 'FINISH' && nextSession && nextSession.faces.length >= 6) {
+      // If FINISH mode and we have collected 5 faces:
+      if (validationType === 'FINISH' && nextSession && nextSession.faces.length >= 5) {
         if (completionInFlightRef.current) return;
         completionInFlightRef.current = true;
 
-        setStatusMessage('Submitting all 6 faces for finish validation...');
+        setStatusMessage('Submitting 5 faces for finish validation...');
         setIsScanningFace(true);
 
         try {
@@ -1149,189 +1192,237 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/60 shadow-2xl">
-        <div className="aspect-[4/3] w-full bg-black">
-          <div className="relative h-full w-full">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 z-0 block h-full w-full object-cover bg-black"
-            />
-            <canvas
-              ref={overlayCanvasRef}
-              className="absolute inset-0 z-10 block h-full w-full object-cover pointer-events-none"
-            />
-          </div>
-        </div>
+      {/* Side-by-Side Main Section on Desktop */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+        
+        {/* Left Side: Large Clean Camera Viewport (7 cols out of 12) */}
+        <div className="lg:col-span-7 flex flex-col space-y-3">
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-2xl backdrop-blur-md">
+            {/* Camera Viewport 4:3 */}
+            <div className="relative aspect-[4/3] w-full bg-black overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 z-0 block h-full w-full object-cover bg-black"
+              />
+              <canvas
+                ref={overlayCanvasRef}
+                className="absolute inset-0 z-10 block h-full w-full object-cover pointer-events-none"
+              />
 
-        <div className="space-y-5 p-5">
-          <div className="space-y-2">
-            <h3 className="text-lg font-black text-white uppercase tracking-wide">
-              OnlineArena Match Scanner
-            </h3>
-            <p className="text-sm text-zinc-300">{statusMessage}</p>
-            <p className="text-xs text-zinc-500">
-              1. Start Camera. 2. Start Scan Session. 3. Hold one full face with 9 stickers. 4. Press Scan / Accept Next Face.
-            </p>
-
-            {/* Live Stability Bar — shown during burst scan */}
-            <StabilityBar
-              stable={effectiveStableObservationCount}
-              required={effectiveRequiredStableObservations}
-              detectedStickers={effectiveDetectedStickers}
-              isScanning={isScanningFace}
-            />
+              {/* Stability Bar overlay at bottom of camera frame */}
+              <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4">
+                <StabilityBar
+                  stable={effectiveStableObservationCount}
+                  required={effectiveRequiredStableObservations}
+                  detectedStickers={effectiveDetectedStickers}
+                  isScanning={isScanningFace}
+                />
+              </div>
+            </div>
           </div>
 
-          {cameraError ? (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          {/* Error messages if any */}
+          {cameraError && (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-xs font-semibold text-rose-300">
               {cameraError}
             </div>
-          ) : null}
-          {error ? (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          )}
+          {error && (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-xs font-semibold text-rose-300">
               {error}
             </div>
-          ) : null}
+          )}
+        </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleLoadExistingSession}
-              disabled={isPreparingSession || isScanningFace}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
-            >
-              <FolderOpen className="h-3.5 w-3.5" />
-              {isPreparingSession ? 'Loading...' : 'Load Session'}
-            </button>
-            <button
-              onClick={handleStartCamera}
-              disabled={cameraStatus === 'starting' || isScanningFace}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
-            >
-              <Camera className="h-3.5 w-3.5" />
-              {cameraStatus === 'starting' ? 'Starting...' : 'Start Camera'}
-            </button>
-            <button
-              onClick={handleStartSession}
-              disabled={isPreparingSession || isScanningFace}
-              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
-            >
-              <Play className="h-3.5 w-3.5" />
-              {isPreparingSession ? 'Preparing...' : 'Start Scan Session'}
-            </button>
+        {/* Right Side: Scanner Control Buttons Panel & Metrics (5 cols out of 12) */}
+        <div className="lg:col-span-5 flex flex-col space-y-4">
+          
+          {/* Controls Panel Card */}
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-5 shadow-xl space-y-4 backdrop-blur-md">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                  Match Scanner Controls
+                </h3>
+                <span className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-orange-400">
+                  {validationType} MODE
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-orange-400 font-medium leading-relaxed">{statusMessage}</p>
+            </div>
+
+            {/* Primary SCAN / ACCEPT Button */}
             <button
               onClick={scanCurrentFace}
               disabled={cameraStatus !== 'ready' || isScanningFace || isPreparingSession}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
+              className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 disabled:shadow-none"
             >
-              {isScanningFace ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-              {isScanningFace ? 'Scanning...' : 'Scan / Accept Next Face'}
+              {isScanningFace ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>Scanning... Hold Still</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="h-4 w-4 text-white" />
+                  <span>Scan / Accept Next Face</span>
+                </>
+              )}
             </button>
-            <button
-              onClick={handleRetryFace}
-              disabled={!session || isScanningFace}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Retry Current Face
-            </button>
-            <button
-              onClick={handleReset}
-              disabled={isScanningFace}
-              className="rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-900/60 disabled:text-zinc-600"
-            >
-              Reset Session
-            </button>
-            <button
-              onClick={handleStopCamera}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800"
-            >
-              <Square className="h-3.5 w-3.5" />
-              Stop Camera
-            </button>
+
+            {/* Grid of Control Action Buttons right next to Camera */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <button
+                onClick={handleStartCamera}
+                disabled={cameraStatus === 'starting' || isScanningFace}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 hover:border-zinc-600 disabled:opacity-50"
+              >
+                <Camera className="h-4 w-4 text-orange-400 shrink-0" />
+                <span>{cameraStatus === 'starting' ? 'Starting...' : 'Start Camera'}</span>
+              </button>
+
+              <button
+                onClick={handleStartSession}
+                disabled={isPreparingSession || isScanningFace}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-3.5 py-3 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 disabled:opacity-50"
+              >
+                <Play className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span>{isPreparingSession ? 'Preparing...' : 'Start Session'}</span>
+              </button>
+
+              <button
+                onClick={handleLoadExistingSession}
+                disabled={isPreparingSession || isScanningFace}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+              >
+                <FolderOpen className="h-4 w-4 text-zinc-400 shrink-0" />
+                <span>Load Session</span>
+              </button>
+
+              <button
+                onClick={handleRetryFace}
+                disabled={!session || isScanningFace}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+              >
+                <RefreshCw className="h-4 w-4 text-zinc-400 shrink-0" />
+                <span>Retry Face</span>
+              </button>
+
+              <button
+                onClick={handleReset}
+                disabled={isScanningFace}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+              >
+                <span>Reset Session</span>
+              </button>
+
+              <button
+                onClick={handleStopCamera}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800"
+              >
+                <Square className="h-4 w-4 text-rose-400 shrink-0" />
+                <span>Stop Camera</span>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
-            <StatusItem label="Mode" value={validationType.toLowerCase()} />
-            <StatusItem label="Camera" value={cameraStatus} />
-            <StatusItem label="AI health" value={effectiveAiHealth} />
-            <StatusItem label="Model" value={effectiveModelVersion} />
-            <StatusItem
-              label="Face Target"
-              value={
-                validationType === 'SCRAMBLE'
-                  ? `Face ${Math.min(effectiveCapturedFaceCount + 1, 5)} of 5`
-                  : (session?.requestedFaceLabel ?? 'Not started')
-              }
-            />
-            <StatusItem label="Progress" value={`${progressText} Captured`} />
-            <StatusItem label="Stability Check" value={`${stableText} Matches`} />
-            <StatusItem label="AI Infer Time" value={effectiveInferMs > 0 ? `${effectiveInferMs.toFixed(0)} ms` : '-'} />
-            <StatusItem label="State" value={scannerState} />
-            <StatusItem label="Stickers" value={`${effectiveDetectedStickers} / 9`} />
-            <StatusItem label="Observed center" value={observedCenterText} />
+          {/* Realtime Metrics Grid Card */}
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-3 shadow-xl backdrop-blur-md">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Scan Status & Metrics</h4>
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <StatusItem
+                label="Target"
+                value={
+                  validationType === 'SCRAMBLE'
+                    ? `Face ${Math.min(effectiveCapturedFaceCount + 1, 5)} of 5`
+                    : (session?.requestedFaceLabel ?? 'Not started')
+                }
+              />
+              <StatusItem
+                label="Progress"
+                value={`${effectiveCapturedFaceCount} / 5 Captured`}
+              />
+              <StatusItem label="AI Model" value={effectiveModelVersion} />
+              <StatusItem label="Observed Center" value={observedCenterText} />
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <strong className="text-sm font-bold text-white">Remaining Center Colors</strong>
-              <span className="text-xs font-bold text-zinc-400">
-                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'Completed'}
+          {/* Remaining Center Colors Card */}
+          <div className="rounded-3xl border border-orange-500/20 bg-orange-500/5 p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <strong className="text-xs font-extrabold uppercase tracking-wider text-white">Remaining Colors</strong>
+              <span className="text-[10px] font-bold text-orange-400 uppercase">
+                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'All 5 Captured'}
               </span>
             </div>
-            <p className="text-sm text-zinc-200">
-              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 6 center colors captured.'}
+            <p className="text-xs text-zinc-200 font-semibold">
+              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 center colors captured.'}
             </p>
-            {validationType === 'SCRAMBLE' ? (
-              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-                Scramble mode does not require a solid-color face. As long as AI sees 9 stickers and the center color has not been accepted yet, the face can be accepted.
-              </p>
-            ) : (
-              <p className="mt-2 text-xs leading-relaxed text-zinc-400">{scannerGuidance}</p>
-            )}
+            <p className="text-[11px] text-zinc-400 leading-relaxed">{scannerGuidance}</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, idx) => {
-          const face = effectiveFaces.find((item) => item.faceIndex === idx + 1);
-          const isActive = session ? !face && idx === effectiveCapturedFaceCount : false;
+      {/* Bottom Section: 5 Captured Face Cards Slots */}
+      <div className="space-y-2 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <h4 className="text-xs font-black uppercase tracking-wider text-zinc-400">Captured Face Slots</h4>
+          <span className="text-[10px] font-bold text-zinc-500 uppercase">Hover slot & click 🔄 to re-scan single face</span>
+        </div>
 
-          return (
-            <div
-              key={idx}
-              className={`p-3 bg-zinc-950/60 border rounded-2xl flex flex-col gap-2 transition-all duration-300 ${
-                isActive
-                  ? 'border-orange-500 bg-orange-500/5'
-                  : face
-                    ? 'border-emerald-500/20 bg-emerald-500/5'
-                    : 'border-zinc-800/80'
-              }`}
-            >
-              <header className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-400">
-                <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
-                <span className={face?.observedCenterColor ? 'text-orange-500 font-bold' : 'text-zinc-600'}>
-                  {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'pending'}
-                </span>
-              </header>
-              <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-zinc-900 p-1.5 rounded-xl border border-zinc-800/60">
-                {Array.from({ length: 9 }).map((_, cellIndex) => {
-                  const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
-                  return (
-                    <span
-                      key={cellIndex}
-                      className="rounded-sm transition-all duration-300"
-                      style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
-                    />
-                  );
-                })}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, idx) => {
+            const face = effectiveFaces.find((item) => item.faceIndex === idx + 1);
+            const isActive = session ? !face && idx === effectiveCapturedFaceCount : false;
+
+            return (
+              <div
+                key={idx}
+                className={`p-3 bg-zinc-950/60 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${
+                  isActive
+                    ? 'border-orange-500 bg-orange-500/5'
+                    : face
+                      ? 'border-emerald-500/20 bg-emerald-500/5'
+                      : 'border-zinc-800/80'
+                }`}
+              >
+                <header className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-400">
+                  <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
+                  <div className="flex items-center gap-1">
+                    <span className={face?.observedCenterColor ? 'text-orange-500 font-bold' : 'text-zinc-600'}>
+                      {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'pending'}
+                    </span>
+                    {face && (
+                      <button
+                        type="button"
+                        onClick={() => rescanSingleFace(face)}
+                        title="Quét lại mặt này"
+                        className="p-1 text-zinc-400 hover:text-orange-400 hover:bg-zinc-800 rounded-md transition-colors"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </header>
+                <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-zinc-900 p-1.5 rounded-xl border border-zinc-800/60">
+                  {Array.from({ length: 9 }).map((_, cellIndex) => {
+                    const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
+                    return (
+                      <span
+                        key={cellIndex}
+                        className="rounded-sm transition-all duration-300"
+                        style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {session ? (

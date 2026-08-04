@@ -60,13 +60,18 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
 
   const startRecording = useCallback(
     async (matchId: string) => {
-      console.log(`[REC] startRecording called. matchId=${matchId} statusRef=${statusRef.current}`);
-      if (statusRef.current === 'recording' || statusRef.current === 'starting') {
-        console.warn('[REC] Already recording/starting — skipped (statusRef guard).');
+      console.log(`[REC] startRecording called. matchId=${matchId} prevMatchId=${matchIdRef.current} statusRef=${statusRef.current}`);
+      if (matchIdRef.current === matchId && (statusRef.current === 'recording' || statusRef.current === 'starting')) {
+        console.warn('[REC] Already recording/starting for same match — skipped (statusRef guard).');
         return;
       }
-      statusRef.current = 'starting';
 
+      // If switching matchId or re-starting, clean up previous recorder if any
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.stop(); } catch (e) {}
+      }
+
+      statusRef.current = 'starting';
       matchIdRef.current = matchId;
       recordingMarkedRef.current = false;
       setError(null);

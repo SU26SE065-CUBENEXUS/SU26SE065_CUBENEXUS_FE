@@ -175,7 +175,7 @@ export default function ScrambleCheckPage() {
   const scramble = state?.scrambleSequence ?? null;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-xl mx-auto w-full">
+    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto w-full px-4 sm:px-6">
       <div className="space-y-2 text-center">
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Stage 2 / 4

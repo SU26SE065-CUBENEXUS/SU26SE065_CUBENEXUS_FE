@@ -12,11 +12,12 @@ const nextConfig: NextConfig = {
     proxyTimeout: 60000,
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'https://perfectly-detail-gory.ngrok-free.dev';
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://perfectly-detail-gory.ngrok-free.dev';
+    const aiScannerUrl = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://robena-nonapparitional-knox.ngrok-free.dev';
     return [
       {
         source: '/api/ai-service/:path*',
-        destination: 'https://robena-nonapparitional-knox.ngrok-free.dev/:path*',
+        destination: `${aiScannerUrl}/:path*`,
       },
       {
         source: '/api/:path*',

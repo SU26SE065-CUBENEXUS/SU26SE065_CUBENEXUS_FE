@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowDownRight, Loader2, Sparkles } from 'lucide-react';
+import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowDownRight, Loader2, Sparkles, ShieldAlert } from 'lucide-react';
 import { SplitScreenReplayPlayer } from './SplitScreenReplayPlayer';
+import { FraudReportModal } from './FraudReportModal';
 import { getMatchRecordingPlaybackUrls, PlaybackResponseDto, OnlineMatchHistoryItemDto } from '../api/onlineArenaApi';
 
 interface MatchDetailModalProps {
@@ -15,6 +16,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const [playbackData, setPlaybackData] = useState<PlaybackResponseDto | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isOpen || !matchItem) {
@@ -126,6 +128,15 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
               ) : null}
               {matchItem.eloChange > 0 ? `+${matchItem.eloChange}` : matchItem.eloChange} ELO
             </div>
+
+            {/* Report Fraud Button */}
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="px-3.5 py-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <ShieldAlert className="h-4 w-4 text-rose-500" />
+              Report Fraud
+            </button>
           </div>
         </div>
 
@@ -261,8 +272,15 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
             <p className="text-xs font-mono font-bold text-amber-300/90 break-words bg-zinc-950/80 p-3 rounded-xl border border-zinc-800 select-all">
               {matchItem.scrambleSequence}
             </p>
-          </div>
-        )}
+        {/* Fraud Report Modal */}
+        <FraudReportModal
+          matchId={matchItem.matchId}
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          onSuccess={() => {
+            console.log('[MatchDetailModal] Fraud report submitted successfully!');
+          }}
+        />
       </div>
     </div>
   );

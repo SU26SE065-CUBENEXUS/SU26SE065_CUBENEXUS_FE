@@ -7,6 +7,7 @@ import { Footer } from '@/components/footer';
 import { getPublicLiveTournamentDetail, type PublicLiveTournamentDetailDto, type PublicLiveEventDto } from '@/lib/api/live';
 import { getLiveBoardState, formatEvidencePhotoUrl } from '@/lib/api/operations';
 import { formatMs } from '@/components/tournament-manager/TimerDisplay';
+import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL } from '@/lib/api/config';
 
 import {
