@@ -427,6 +427,13 @@ export function useWebRtcSetup({
         clearInterval(interval);
         return;
       }
+      // Do NOT interrupt if ICE is actively checking — it may be about to connect.
+      const pc = pcRef.current;
+      const iceState = pc?.iceConnectionState;
+      if (iceState === 'checking' || iceState === 'connected' || iceState === 'completed') {
+        console.log('[WebRTC] P2: ICE is', iceState, '— waiting, NOT sending RequestOffer.');
+        return;
+      }
       sendRequest();
     }, P2_REQUEST_OFFER_INTERVAL_MS);
 
