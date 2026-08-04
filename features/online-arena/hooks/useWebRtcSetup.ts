@@ -21,11 +21,32 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type { HubConnection } from '@microsoft/signalr';
 
-const STUN_SERVERS: RTCIceServer[] = [
-  // STUN servers
+const ICE_SERVERS: RTCIceServer[] = [
+  // Free STUN fallback
   { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun.cloudflare.com:3478' },
+  // Metered.ca TURN & STUN servers
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  {
+    urls: 'turn:global.relay.metered.ca:80',
+    username: 'a4f71c16d93a4d93a1606469',
+    credential: 'Sd4FqrtH/VgLi6oO',
+  },
+  {
+    urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+    username: 'a4f71c16d93a4d93a1606469',
+    credential: 'Sd4FqrtH/VgLi6oO',
+  },
+  {
+    urls: 'turn:global.relay.metered.ca:443',
+    username: 'a4f71c16d93a4d93a1606469',
+    credential: 'Sd4FqrtH/VgLi6oO',
+  },
+  {
+    urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+    username: 'a4f71c16d93a4d93a1606469',
+    credential: 'Sd4FqrtH/VgLi6oO',
+  },
 ];
 
 /** P2 re-sends RequestOffer every this many ms until ICE is connected. */
@@ -100,7 +121,7 @@ export function useWebRtcSetup({
       pcRef.current.close();
     }
     console.log('[WebRTC] Creating new RTCPeerConnection...');
-    const pc = new RTCPeerConnection({ iceServers: STUN_SERVERS, iceCandidatePoolSize: 10 });
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceCandidatePoolSize: 10 });
     pcRef.current = pc;
     iceCandidateQueue.current = [];
     negotiatingRef.current = false;
@@ -331,7 +352,7 @@ export function useWebRtcSetup({
 
     try {
       await pc.addIceCandidate(new RTCIceCandidate(candidateData));
-      console.log('[WebRTC] Remote ICE candidate added.');
+      console.log('[WebRTC] Remote ICE candidate added:', candidateData.candidate);
     } catch (e) {
       console.warn('[WebRTC] Error adding ICE candidate:', e);
     }
