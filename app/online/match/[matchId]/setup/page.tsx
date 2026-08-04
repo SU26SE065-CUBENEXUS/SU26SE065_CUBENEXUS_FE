@@ -330,38 +330,38 @@ function WebRtcConnectStep({
             <span className="text-[9px] font-bold text-orange-400 uppercase">Opponent</span>
           </div>
 
-          {/* ICE status overlay + manual reconnect button — always visible when remoteStream is missing */}
+          {/* ICE status + Reconnect button + Force Connect bypass */}
           {!remoteStream && (
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5 bg-zinc-950/90 border border-zinc-800/80 rounded-lg px-2 py-1 z-10">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Loader2 className="h-3 w-3 text-orange-500 animate-spin shrink-0" />
-                <span className="text-[9px] text-zinc-400 truncate">
-                  {status === 'connected' || alreadyConnected
-                    ? 'Stream pending...'
-                    : status === 'connecting'
-                    ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...')
-                    : 'P2P Stall'}
-                </span>
+            <div className="absolute bottom-2 left-2 right-2 z-10 flex flex-col gap-1">
+              {/* Reconnect row */}
+              <div className="flex items-center justify-between gap-1.5 bg-zinc-950/90 border border-zinc-800/80 rounded-lg px-2 py-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Loader2 className="h-3 w-3 text-orange-500 animate-spin shrink-0" />
+                  <span className="text-[9px] text-zinc-400 truncate">
+                    {status === 'connected' || alreadyConnected
+                      ? 'Stream pending...'
+                      : status === 'connecting'
+                      ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...')
+                      : 'P2P Stall'}
+                  </span>
+                </div>
+                <button
+                  onClick={retry}
+                  className="px-2 py-0.5 bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold rounded uppercase cursor-pointer shrink-0 transition-colors"
+                >
+                  Reconnect
+                </button>
               </div>
-              <button
-                onClick={retry}
-                className="px-2.5 py-1 bg-orange-500 hover:bg-orange-600 text-white text-[9px] font-bold rounded uppercase cursor-pointer shrink-0 transition-colors shadow-md"
-                title="Force WebRTC Reconnect"
-              >
-                Reconnect
-              </button>
-            </div>
-          )}
-
-          {/* Dev skip button on remote panel */}
-          {process.env.NODE_ENV === 'development' && !alreadyConnected && (
-            <div className="absolute bottom-2 right-2 z-10">
-              <button
-                onClick={onConnected}
-                className="px-2 py-1 bg-zinc-900/90 border border-zinc-800 hover:bg-zinc-800 text-zinc-500 hover:text-white text-[9px] font-black rounded-lg uppercase tracking-wider cursor-pointer"
-              >
-                DEV: Skip
-              </button>
+              {/* Force Connect bypass — always visible when stuck */}
+              {!alreadyConnected && (
+                <button
+                  onClick={onConnected}
+                  className="w-full py-1 bg-zinc-800 hover:bg-emerald-800/60 border border-zinc-700 hover:border-emerald-600/50 text-zinc-400 hover:text-emerald-400 text-[9px] font-bold rounded-lg uppercase tracking-wider cursor-pointer transition-colors"
+                  title="Mark P2P as connected and proceed (use when auto-connect fails)"
+                >
+                  ⚡ Force Connect &amp; Proceed
+                </button>
+              )}
             </div>
           )}
         </div>

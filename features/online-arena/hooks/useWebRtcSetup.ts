@@ -22,23 +22,32 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import type { HubConnection } from '@microsoft/signalr';
 
 const STUN_SERVERS: RTCIceServer[] = [
-  // STUN servers (discover public IP)
+  // STUN servers
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
   { urls: 'stun:stun.cloudflare.com:3478' },
-  { urls: 'stun:openrelay.metered.ca:80' },
-  // TURN servers (relay when direct P2P fails across NAT or Wi-Fi hairpinning)
+  // TURN servers — global.relay.metered.ca (geographically distributed, more reliable)
   {
-    urls: 'turn:openrelay.metered.ca:80',
+    urls: 'turn:global.relay.metered.ca:80',
     username: 'openrelayproject',
     credential: 'openrelayproject',
   },
   {
-    urls: 'turn:openrelay.metered.ca:443',
+    urls: 'turn:global.relay.metered.ca:443',
     username: 'openrelayproject',
     credential: 'openrelayproject',
   },
+  {
+    urls: 'turns:global.relay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  // Fallback: old endpoint
   {
     urls: 'turn:openrelay.metered.ca:443?transport=tcp',
     username: 'openrelayproject',
