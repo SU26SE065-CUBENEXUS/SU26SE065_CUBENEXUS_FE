@@ -161,13 +161,13 @@ export default function AdminEloManagementPage() {
   const expectedP1 = calcExpected(simP1Elo, simP2Elo);
   const expectedP2 = calcExpected(simP2Elo, simP1Elo);
 
-  // Standard match win/loss delta
+  // Standard match win deltas
   const p1WinGainStd = Math.round(kStandard * (1 - expectedP1));
-  const p1LossGainStd = Math.round(kStandard * (0 - expectedP1));
+  const p2WinGainStd = Math.round(kStandard * (1 - expectedP2));
 
-  // Placement match win/loss delta
+  // Placement match win deltas
   const p1WinGainPlc = Math.round(kPlacement * (1 - expectedP1));
-  const p1LossGainPlc = Math.round(kPlacement * (0 - expectedP1));
+  const p2WinGainPlc = Math.round(kPlacement * (1 - expectedP2));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">
@@ -421,34 +421,54 @@ export default function AdminEloManagementPage() {
               </div>
 
               {/* Output Delta Display */}
-              <div className="space-y-2 border-t border-slate-100 pt-3 text-xs">
-                <div className="text-[11px] font-bold text-slate-500 uppercase">
-                  Nếu Người A THẮNG (Trận Chuẩn, K={kStandard}):
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-center font-mono">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
-                    <span className="text-[10px] text-emerald-700 block font-bold">Người A Thắng</span>
-                    <span className="text-base font-black text-emerald-600 flex items-center justify-center gap-0.5">
-                      <ArrowUpRight className="h-4 w-4" /> +{p1WinGainStd} ELO
-                    </span>
+              <div className="space-y-4 border-t border-slate-100 pt-3 text-xs">
+                {/* Kịch bản 1: Người A Thắng */}
+                <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
+                    <span>KỊCH BẢN 1: NGƯỜI A THẮNG</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Đúng dự đoán</span>
                   </div>
-                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
-                    <span className="text-[10px] text-rose-700 block font-bold">Người B Thua</span>
-                    <span className="text-base font-black text-rose-600 flex items-center justify-center gap-0.5">
-                      <ArrowDownRight className="h-4 w-4" /> {p1LossGainStd} ELO
-                    </span>
+                  <div className="grid grid-cols-2 gap-2 text-center font-mono">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
+                      <span className="text-[10px] text-emerald-700 block font-bold">Người A Thắng</span>
+                      <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
+                        <ArrowUpRight className="h-4 w-4" /> +{p1WinGainStd} ELO
+                      </span>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-2">
+                      <span className="text-[10px] text-rose-700 block font-bold">Người B Thua</span>
+                      <span className="text-sm font-black text-rose-600 flex items-center justify-center gap-0.5">
+                        <ArrowDownRight className="h-4 w-4" /> -{p1WinGainStd} ELO
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
+                    Nếu là trận Phân Hạng (K={kPlacement}): <strong>A: +{p1WinGainPlc} ELO</strong> | <strong>B: -{p1WinGainPlc} ELO</strong>
                   </div>
                 </div>
 
-                <div className="text-[11px] font-bold text-slate-500 uppercase pt-2">
-                  Nếu đang ở Trận Phân Hạng (Placement, K={kPlacement}):
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-center font-mono text-xs">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 font-bold text-amber-800">
-                    Người A Thắng: +{p1WinGainPlc} ELO
+                {/* Kịch bản 2: Người B Thắng */}
+                <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
+                    <span>KỊCH BẢN 2: NGƯỜI B THẮNG</span>
+                    <span className="text-[10px] text-amber-600 font-bold font-mono">Lội ngược dòng</span>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 font-bold text-amber-800">
-                    Người B Thua: {p1LossGainPlc} ELO
+                  <div className="grid grid-cols-2 gap-2 text-center font-mono">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
+                      <span className="text-[10px] text-emerald-700 block font-bold">Người B Thắng</span>
+                      <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
+                        <ArrowUpRight className="h-4 w-4" /> +{p2WinGainStd} ELO
+                      </span>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-2">
+                      <span className="text-[10px] text-rose-700 block font-bold">Người A Thua</span>
+                      <span className="text-sm font-black text-rose-600 flex items-center justify-center gap-0.5">
+                        <ArrowDownRight className="h-4 w-4" /> -{p2WinGainStd} ELO
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
+                    Nếu là trận Phân Hạng (K={kPlacement}): <strong>B: +{p2WinGainPlc} ELO</strong> | <strong>A: -{p2WinGainPlc} ELO</strong>
                   </div>
                 </div>
               </div>
