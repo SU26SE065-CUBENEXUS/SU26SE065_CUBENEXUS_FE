@@ -438,7 +438,7 @@ export default function MatchmakingPage() {
         )}
 
         {/* Global Errors or Requeuing */}
-        {(errorMsg || signalRError) && (
+        {status !== 'COOLDOWN' && (errorMsg || signalRError) && (
           <div className="bg-rose-500/10 border border-rose-500/25 p-4 rounded-2xl flex items-start gap-3 mt-6 text-left animate-fade-in">
             <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
             <div className="space-y-1.5 flex-1">
