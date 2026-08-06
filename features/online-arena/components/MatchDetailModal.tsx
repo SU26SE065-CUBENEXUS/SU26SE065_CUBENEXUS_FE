@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowDownRight, Loader2, Sparkles, ShieldAlert } from 'lucide-react';
 import { SplitScreenReplayPlayer } from './SplitScreenReplayPlayer';
 import { FraudReportModal } from './FraudReportModal';
@@ -76,12 +76,11 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const p1Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.meUserId);
   const p2Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.opponentUserId);
 
-  const effectiveEloChange = useMemo(() => {
-    if (!matchItem) return 0;
-    if (matchItem.isDraw) return 0;
-    if (matchItem.isWinner) return Math.abs(matchItem.eloChange);
-    return -Math.abs(matchItem.eloChange);
-  }, [matchItem]);
+  const effectiveEloChange = matchItem.isDraw
+    ? 0
+    : matchItem.isWinner
+    ? Math.abs(matchItem.eloChange)
+    : -Math.abs(matchItem.eloChange);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
