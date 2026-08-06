@@ -239,15 +239,19 @@ export function OnlineMatchHistory() {
                       <span className="text-[9px] font-black text-amber-300 tracking-wider animate-pulse flex items-center gap-0.5">
                         ⏳ ĐANG DUYỆT
                       </span>
-                    ) : match.eloChange !== 0 ? (
-                      <span
-                        className={`text-[11px] font-mono font-bold ${
-                          match.eloChange > 0 ? 'text-emerald-400' : 'text-rose-400'
-                        }`}
-                      >
-                        {match.eloChange > 0 ? `+${match.eloChange}` : match.eloChange} ELO
-                      </span>
-                    ) : null}
+                    ) : match.eloChange !== 0 ? (() => {
+                      const effectiveElo = match.isDraw ? 0 : match.isWinner ? Math.abs(match.eloChange) : -Math.abs(match.eloChange);
+                      if (effectiveElo === 0) return null;
+                      return (
+                        <span
+                          className={`text-[11px] font-mono font-bold ${
+                            effectiveElo > 0 ? 'text-emerald-400' : 'text-rose-400'
+                          }`}
+                        >
+                          {effectiveElo > 0 ? `+${effectiveElo}` : effectiveElo} ELO
+                        </span>
+                      );
+                    })() : null}
                   </div>
 
                   {/* Match Mode & Timestamp Info */}

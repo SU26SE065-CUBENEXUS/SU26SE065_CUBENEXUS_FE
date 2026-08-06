@@ -76,6 +76,13 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const p1Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.meUserId);
   const p2Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.opponentUserId);
 
+  const effectiveEloChange = useMemo(() => {
+    if (!matchItem) return 0;
+    if (matchItem.isDraw) return 0;
+    if (matchItem.isWinner) return Math.abs(matchItem.eloChange);
+    return -Math.abs(matchItem.eloChange);
+  }, [matchItem]);
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6">
@@ -131,19 +138,19 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
               {/* ELO Delta Tag */}
               <div
                 className={`px-2.5 py-1 rounded-lg border font-mono font-bold text-xs flex items-center gap-1 ${
-                  matchItem.eloChange > 0
+                  effectiveEloChange > 0
                     ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                    : matchItem.eloChange < 0
+                    : effectiveEloChange < 0
                     ? 'bg-rose-50 text-rose-600 border-rose-200'
                     : 'bg-zinc-100 text-zinc-500 border-zinc-200'
                 }`}
               >
-                {matchItem.eloChange > 0 ? (
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                ) : matchItem.eloChange < 0 ? (
-                  <ArrowDownRight className="h-3.5 w-3.5" />
+                {effectiveEloChange > 0 ? (
+                  <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
+                ) : effectiveEloChange < 0 ? (
+                  <ArrowDownRight className="h-3.5 w-3.5 text-rose-500" />
                 ) : null}
-                {matchItem.eloChange > 0 ? `+${matchItem.eloChange}` : matchItem.eloChange} ELO
+                {effectiveEloChange > 0 ? `+${effectiveEloChange}` : effectiveEloChange} ELO
               </div>
 
               {/* Report Fraud Button */}
