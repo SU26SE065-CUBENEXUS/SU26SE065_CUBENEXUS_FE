@@ -37,6 +37,7 @@ export type NextUiState =
   | 'FINISH_SCANNING'
   | 'WAITING_OPPONENT'
   | 'NEEDS_REVIEW'
+  | 'RETRY_SCAN'
   | 'COMPLETED';
 
 export interface RecoveryPlayerStateDto {

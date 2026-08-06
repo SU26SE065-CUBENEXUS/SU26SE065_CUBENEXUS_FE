@@ -14,6 +14,8 @@ export function routeForNextUiState(matchId: string, nextUiState: NextUiState): 
       return `/online/match/${matchId}/solving`;
     case 'FINISH_SCANNING':
       return `/online/match/${matchId}/finish`;
+    case 'RETRY_SCAN':
+      return `/online/match/${matchId}/finish`;
     case 'WAITING_OPPONENT':
       return `/online/match/${matchId}/waiting`;
     case 'NEEDS_REVIEW':

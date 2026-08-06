@@ -24,7 +24,22 @@ export default function FinishCheckPage() {
     }
   }, []);
 
+  const [retryWarning, setRetryWarning] = useState<string | null>(null);
+
   const handleSuccess = useCallback(async (res: any) => {
+    // Nếu backend trả về RETRY_SCAN: không navigate, chỉ hiển thị thông báo
+    // (OnlineMatchScanner đã tự reset session client-side)
+    if (res?.nextUiState === 'RETRY_SCAN') {
+      setRetryWarning(res?.message || 'Colors did not match a solved Rubik\'s cube. Please re-scan all faces from the beginning.');
+      return;
+    }
+    if (res?.validation?.status === 'RETRY') {
+      setRetryWarning('Colors did not match a solved Rubik\'s cube. Please re-scan all faces from the beginning.');
+      return;
+    }
+
+    // Scan thành công → điều hướng bình thường
+    setRetryWarning(null);
     console.log('Finish Scan completed successfully!', res);
     await refetch();
     
@@ -65,6 +80,32 @@ export default function FinishCheckPage() {
         validationType="FINISH"
         onSuccess={handleSuccess}
       />
+
+      {retryWarning && (
+        <div className="animate-fade-in rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-black text-amber-400 uppercase tracking-wider">
+                RE-SCAN REQUIRED
+              </p>
+              <p className="text-xs text-amber-300/80 leading-relaxed">
+                {retryWarning}
+              </p>
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                This may be caused by lighting conditions, camera angle, or cube orientation.
+                Make sure all 9 stickers on each face are clearly visible and press <strong className="text-zinc-400">Scan</strong> again.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setRetryWarning(null)}
+            className="text-[10px] font-bold text-amber-400/60 hover:text-amber-400 transition-colors uppercase tracking-widest"
+          >
+            ✕ Dismiss
+          </button>
+        </div>
+      )}
 
       <div className="text-center">
         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
