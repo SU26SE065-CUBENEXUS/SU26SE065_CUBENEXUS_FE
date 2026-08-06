@@ -408,3 +408,82 @@ export async function reviewFraudReport(
     body: JSON.stringify({ verdictCode, adminNote }),
   });
 }
+
+export interface EloConfigDto {
+  id: string;
+  kFactorPlacement: number;
+  kFactorStandard: number;
+  placementMatchCount: number;
+  defaultElo: number;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+export interface UpdateEloConfigRequest {
+  kFactorPlacement: number;
+  kFactorStandard: number;
+  placementMatchCount: number;
+  defaultElo: number;
+}
+
+export interface AdminPlayerEloDto {
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  puzzleTypeId: string;
+  puzzleTypeName: string;
+  eloStandard: number;
+  peakEloStandard: number;
+  totalWinsStandard: number;
+  totalLossesStandard: number;
+  totalDrawsStandard: number;
+  isPlacementCompleteStandard: boolean;
+  placementMatchesDoneStandard: number;
+  updatedAt: string;
+}
+
+export interface AdjustPlayerEloRequest {
+  puzzleTypeId?: string;
+  eloDelta: number;
+  reason?: string;
+}
+
+export interface AdjustPlayerEloResponseDto {
+  userId: string;
+  username: string;
+  eloBefore: number;
+  eloAfter: number;
+  delta: number;
+  reason: string;
+  adjustedAt: string;
+}
+
+/** GET /api/admin/elo/config */
+export async function getEloConfig(): Promise<EloConfigDto> {
+  return apiFetch<EloConfigDto>('/api/admin/elo/config');
+}
+
+/** PUT /api/admin/elo/config */
+export async function updateEloConfig(payload: UpdateEloConfigRequest): Promise<EloConfigDto> {
+  return apiFetch<EloConfigDto>('/api/admin/elo/config', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+/** GET /api/admin/elo/players */
+export async function getAdminPlayerEloList(search?: string): Promise<AdminPlayerEloDto[]> {
+  const query = search ? `?search=${encodeURIComponent(search)}` : '';
+  return apiFetch<AdminPlayerEloDto[]>(`/api/admin/elo/players${query}`);
+}
+
+/** POST /api/admin/elo/players/{userId}/adjust */
+export async function adjustPlayerElo(
+  userId: string,
+  payload: AdjustPlayerEloRequest,
+): Promise<AdjustPlayerEloResponseDto> {
+  return apiFetch<AdjustPlayerEloResponseDto>(`/api/admin/elo/players/${userId}/adjust`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
