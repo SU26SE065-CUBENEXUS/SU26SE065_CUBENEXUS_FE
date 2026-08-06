@@ -1005,41 +1005,38 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
           });
 
           if (isScannerSessionResponse(committed)) {
-            // Kiểm tra nếu backend bảo RETRY_SCAN (AI scan thất bại, màu không khớp khối ruëng giải)
-            // Trường hợp này sẽ không xảy ra với ScannerSessionDto - chỉ xảy ra với ObserveFinishFrameResponseDto
             applySessionFull(committed, committed.reason || committed.message || 'Scanner session completed.');
-            if (committed.validation?.status === 'RETRY') {
-              // Backend đã reset FinishCheckStatus về NOT_STARTED — reset local session để user scan lại từ đầu
+            if ((committed.scanStatus === 'COMPLETED' || !!committed.validation) && onSuccess) {
+              onSuccess(committed);
+            }
+            return;
+          }
+
+          // Handle ObserveFinishFrameResponseDto (returned by FINISH scan completion)
+          if (committed && typeof committed.finishCheckStatus === 'string') {
+            if (committed.nextUiState === 'RETRY_SCAN' || committed.finishCheckStatus === 'NOT_STARTED') {
+              // Backend rejected the scan (colors didn't match a solved Rubik's cube)
+              // Reset local session so player can scan again from scratch without clicking manual reset
               setSession(null);
               sessionRef.current = null;
               sessionFingerprintRef.current = 'empty';
               setPreview(null);
               setLocalObservations([]);
               setScannerState('POSITION_FACE');
-              const retryMsg = 'Colors did not match a solved Rubik\'s cube. Please re-scan ALL faces from the beginning.';
+              const retryMsg = committed.message || 'Colors did not match a solved Rubik\'s cube. Please re-scan ALL faces from the beginning.';
               setStatusMessage(retryMsg);
               setLastReason(retryMsg);
               setError(retryMsg);
-            } else if ((committed.scanStatus === 'COMPLETED' || !!committed.validation) && onSuccess) {
-              onSuccess(committed);
+              if (onSuccess) onSuccess(committed);
+              return;
             }
-            return;
-          }
 
-          // ObserveFinishFrameResponseDto (không phải ScannerSessionDto)
-          if (isRetryScanResponse(committed)) {
-            // Backend yêu cầu scan lại: reset local session để user bắt đầu scan mới
-            setSession(null);
-            sessionRef.current = null;
-            sessionFingerprintRef.current = 'empty';
-            setPreview(null);
-            setLocalObservations([]);
-            setScannerState('POSITION_FACE');
-            const retryMsg = (committed as any).message || 'Colors did not match a solved Rubik\'s cube. Please re-scan ALL faces from the beginning.';
-            setStatusMessage(retryMsg);
-            setLastReason(retryMsg);
-            setError(retryMsg);
-            return;
+            if (committed.finishCheckStatus === 'PASSED' || committed.nextUiState === 'COMPLETED' || committed.nextUiState === 'WAITING_OPPONENT') {
+              setStatusMessage('Finish check passed successfully!');
+              setLastReason('Finish check passed successfully!');
+              if (onSuccess) onSuccess(committed);
+              return;
+            }
           }
         } catch (err: any) {
           setError(err?.message || 'Failed to complete scanner session.');
