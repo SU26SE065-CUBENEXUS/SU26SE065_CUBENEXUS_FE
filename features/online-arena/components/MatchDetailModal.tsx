@@ -78,8 +78,8 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-        <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-3xl shadow-2xl space-y-5 p-5 sm:p-6 relative text-left text-zinc-800">
+      <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-10 pb-10">
+        <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-3xl shadow-2xl space-y-5 p-5 sm:p-6 relative text-left text-zinc-800 my-auto">
           {/* Close Button */}
           <button
             onClick={onClose}
