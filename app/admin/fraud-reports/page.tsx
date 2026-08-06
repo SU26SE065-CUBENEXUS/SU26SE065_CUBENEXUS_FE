@@ -47,13 +47,13 @@ export default function AdminFraudReportsQueuePage() {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <Link
+          {/* <Link
             href="/admin/elo-management"
             className="px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-xs font-bold text-orange-700 transition-all flex items-center gap-2 cursor-pointer shadow-2xs"
           >
             <ShieldAlert className="h-4 w-4 text-orange-600" />
             <span>Quản Lý ELO</span>
-          </Link>
+          </Link> */}
           <Link
             href="/managertournaments"
             className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-2xs"

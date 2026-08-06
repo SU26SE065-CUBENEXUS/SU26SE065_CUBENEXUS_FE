@@ -210,21 +210,19 @@ export default function AdminEloManagementPage() {
       <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-2xs w-fit">
         <button
           onClick={() => setActiveTab('config')}
-          className={`px-5 py-2.5 text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'config'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
+          className={`px-5 py-2.5 text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all cursor-pointer ${activeTab === 'config'
+            ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
         >
           <Sliders className="h-4 w-4" /> Cấu Hình Tham Số ELO
         </button>
         <button
           onClick={() => setActiveTab('players')}
-          className={`px-5 py-2.5 text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'players'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
+          className={`px-5 py-2.5 text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all cursor-pointer ${activeTab === 'players'
+            ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
         >
           <Users className="h-4 w-4" /> Bảng ELO Người Chơi
         </button>
@@ -369,7 +367,7 @@ export default function AdminEloManagementPage() {
             {/* Explanation Card */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3.5 shadow-2xs">
               <div className="flex items-center gap-2 text-indigo-700 font-extrabold text-xs uppercase tracking-wider">
-                <HelpCircle className="h-4 w-4 text-indigo-600" /> Giải Thích Công Thức ELO
+                <HelpCircle className="h-4 w-4 text-indigo-600" /> Công Thức ELO
               </div>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
                 Trong hệ thống ELO chuẩn quốc tế, số điểm ELO tăng/giảm sau mỗi trận đấu <strong>không cố định</strong> (như +10 hay -10) mà được tính dựa trên <strong>tỷ lệ chênh lệch trình độ giữa 2 người chơi</strong> và hệ số <strong>K-Factor</strong>.
@@ -425,7 +423,7 @@ export default function AdminEloManagementPage() {
                 {/* Kịch bản 1: Người A Thắng */}
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
-                    <span>KỊCH BẢN 1: NGƯỜI A THẮNG</span>
+                    <span> NẾU NGƯỜI A THẮNG</span>
                     <span className="text-[10px] text-slate-500 font-mono">Đúng dự đoán</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center font-mono">
@@ -450,7 +448,7 @@ export default function AdminEloManagementPage() {
                 {/* Kịch bản 2: Người B Thắng */}
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
-                    <span>KỊCH BẢN 2: NGƯỜI B THẮNG</span>
+                    <span> NẾU NGƯỜI B THẮNG</span>
                     <span className="text-[10px] text-amber-600 font-bold font-mono">Lội ngược dòng</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center font-mono">
@@ -648,22 +646,20 @@ export default function AdminEloManagementPage() {
                   <button
                     type="button"
                     onClick={() => setEloDelta((prev) => (prev > 0 ? -prev : prev))}
-                    className={`px-3 py-2 rounded-xl font-extrabold text-xs uppercase border transition-all cursor-pointer ${
-                      eloDelta < 0
-                        ? 'bg-rose-100 text-rose-700 border-rose-300'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
-                    }`}
+                    className={`px-3 py-2 rounded-xl font-extrabold text-xs uppercase border transition-all cursor-pointer ${eloDelta < 0
+                      ? 'bg-rose-100 text-rose-700 border-rose-300'
+                      : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
                   >
                     Trừ (-)
                   </button>
                   <button
                     type="button"
                     onClick={() => setEloDelta((prev) => Math.abs(prev))}
-                    className={`px-3 py-2 rounded-xl font-extrabold text-xs uppercase border transition-all cursor-pointer ${
-                      eloDelta > 0
-                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
-                    }`}
+                    className={`px-3 py-2 rounded-xl font-extrabold text-xs uppercase border transition-all cursor-pointer ${eloDelta > 0
+                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                      : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
                   >
                     Cộng (+)
                   </button>
