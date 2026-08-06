@@ -196,6 +196,22 @@ function Sidebar({
 
           <li>
             <Link
+              href="/admin/elo-management"
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin/elo-management')
+                  ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
+                  : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+              } ${collapsed ? 'justify-center px-2' : ''}`}
+              title={collapsed ? 'Quản Lý ELO' : undefined}
+            >
+              <Zap className="h-4 w-4 shrink-0 text-orange-500" />
+              {!collapsed && (
+                <span className="flex-1 truncate">Quản Lý &amp; Cấu Hình ELO</span>
+              )}
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/admin/fraud-reports"
               className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
                 pathname.startsWith('/admin/fraud-reports')
