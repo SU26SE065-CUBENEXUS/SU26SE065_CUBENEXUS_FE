@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Award,
   Zap,
+  ShieldAlert,
 } from 'lucide-react';
 import { getMyMatchHistory, OnlineMatchHistoryItemDto } from '../api/onlineArenaApi';
 import { MatchDetailModal } from './MatchDetailModal';
