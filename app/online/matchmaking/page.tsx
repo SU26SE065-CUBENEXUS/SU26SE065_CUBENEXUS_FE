@@ -12,20 +12,28 @@ const DEFAULT_PUZZLE_TYPE_ID = 'f4ddb522-426f-4dd0-a98d-20f21b192470'; // 3x3x3 
 
 export default function MatchmakingPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<MatchmakingStatusDto['status'] | 'CONFIRMING'>('IDLE');
+  const [status, setStatus] = useState<MatchmakingStatusDto['status'] | 'CONFIRMING' | 'COOLDOWN'>('IDLE');
   const [matchmakingInfo, setMatchmakingInfo] = useState<MatchmakingStatusDto | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number>(60);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isConfirmingApi, setIsConfirmingApi] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
+  const hasConfirmedRef = useRef(false);
   const [myElo, setMyElo] = useState<number | null>(null);
+  const [autoRequeuedNotice, setAutoRequeuedNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    hasConfirmedRef.current = hasConfirmed;
+  }, [hasConfirmed]);
 
   const parseUtc = (dateStr: string | null | undefined): number => {
     if (!dateStr) return 0;
     const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
     return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
   };
+
+  const startQueueRef = useRef<() => void>();
 
   // Fetch current user ELO rating
   useEffect(() => {
@@ -64,6 +72,7 @@ export default function MatchmakingPage() {
       setMatchmakingInfo(payload);
       setStatus('MATCH_FOUND');
       setHasConfirmed(false);
+      setAutoRequeuedNotice(false);
       
       // Calculate remaining countdown
       if (payload.confirmDeadlineAt) {
@@ -92,66 +101,95 @@ export default function MatchmakingPage() {
     onMatchConfirmed: (payload) => {
       console.log('SignalR: Match Confirmed!', payload);
       setStatus('MATCHED');
-      // Navigate to root match arena — root page.tsx renders the correct phase
-      // via its switch statement, avoiding per-subroute lazy compilation delays
       router.push(`/online/match/${payload.matchId}`);
     },
     onMatchConfirmationExpired: (payload) => {
       console.log('SignalR: Match Confirmation Expired', payload);
-      setStatus('IDLE');
-      setErrorMsg(payload.message || 'Match confirmation expired.');
+      if (hasConfirmedRef.current) {
+        console.log('Opponent failed to accept. Auto-requeuing innocent player...');
+        setHasConfirmed(false);
+        setMatchmakingInfo(null);
+        setErrorMsg(null);
+        setAutoRequeuedNotice(true);
+        startQueueRef.current?.();
+      } else {
+        setStatus('COOLDOWN');
+        setErrorMsg('Bạn không xác nhận trận đấu đúng thời gian (60s) và tạm thời bị Cooldown.');
+      }
     },
     onMatchConfirmationCancelled: (payload) => {
       console.log('SignalR: Match Confirmation Cancelled', payload);
-      setStatus('IDLE');
-      setErrorMsg(payload.message || 'Match confirmation was cancelled.');
+      if (hasConfirmedRef.current) {
+        setHasConfirmed(false);
+        setMatchmakingInfo(null);
+        setErrorMsg(null);
+        setAutoRequeuedNotice(true);
+        startQueueRef.current?.();
+      } else {
+        setStatus('IDLE');
+        setErrorMsg(payload.message || 'Match confirmation was cancelled.');
+      }
     },
+    onMatchmakingCooldownApplied: (payload) => {
+      console.log('SignalR: Matchmaking Cooldown Applied', payload);
+      setStatus('COOLDOWN');
+      if (payload.cooldownUntil) {
+        const until = parseUtc(payload.cooldownUntil);
+        const diff = Math.max(0, Math.floor((until - Date.now()) / 1000));
+        setMatchmakingInfo(prev => ({
+          ...(prev || { status: 'COOLDOWN' }),
+          status: 'COOLDOWN',
+          remainingSeconds: diff,
+        }));
+      }
+    },
+  });
+
+  const startQueue = async () => {
+    try {
+      setErrorMsg(null);
+      setHasConfirmed(false);
+      setMatchmakingInfo(null);
+      setStatus('QUEUED');
+      const res = await findMatch(DEFAULT_PUZZLE_TYPE_ID);
+      setMatchmakingInfo(res);
+      if (res.status) {
+        setStatus(res.status);
+        if (res.status === 'MATCH_CONFIRMING') {
+          setHasConfirmed(true);
+        }
+        if ((res.status === 'MATCHED' || res.status === 'IN_ACTIVE_MATCH') && res.matchId) {
+          router.push(`/online/match/${res.matchId}`);
+          return;
+        }
+        if ((res.status === 'MATCH_FOUND' || res.status === 'MATCH_CONFIRMING') && res.confirmDeadlineAt) {
+          const deadline = parseUtc(res.confirmDeadlineAt);
+          const serverNow = res.serverNow ? parseUtc(res.serverNow) : Date.now();
+          const diff = Math.max(0, Math.floor((deadline - serverNow) / 1000));
+          setCountdown(diff);
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      setStatus('IDLE');
+      setErrorMsg(err.message || 'Failed to start matchmaking queue.');
+    }
+  };
+
+  useEffect(() => {
+    startQueueRef.current = startQueue;
   });
 
   // Start finding match on mount
   useEffect(() => {
     let active = true;
-    const startQueue = async () => {
-      try {
-        setErrorMsg(null);
-        setStatus('QUEUED');
-        const res = await findMatch(DEFAULT_PUZZLE_TYPE_ID);
-        if (active) {
-          setMatchmakingInfo(res);
-          if (res.status) {
-            setStatus(res.status);
-            if (res.status === 'MATCH_CONFIRMING') {
-              setHasConfirmed(true);
-            }
-            if ((res.status === 'MATCHED' || res.status === 'IN_ACTIVE_MATCH') && res.matchId) {
-              router.push(`/online/match/${res.matchId}`);
-              return;
-            }
-            if ((res.status === 'MATCH_FOUND' || res.status === 'MATCH_CONFIRMING') && res.confirmDeadlineAt) {
-              const deadline = parseUtc(res.confirmDeadlineAt);
-              const serverNow = res.serverNow ? parseUtc(res.serverNow) : Date.now();
-              const diff = Math.max(0, Math.floor((deadline - serverNow) / 1000));
-              setCountdown(diff);
-            }
-          }
-        }
-      } catch (err: any) {
-        if (active) {
-          console.error(err);
-          setStatus('IDLE');
-          setErrorMsg(err.message || 'Failed to start matchmaking queue.');
-        }
-      }
-    };
-
     if (isConnected) {
       startQueue();
     }
-
     return () => {
       active = false;
     };
-  }, [isConnected, router]);
+  }, [isConnected]);
 
   // Handle countdown timer
   useEffect(() => {
@@ -247,6 +285,12 @@ export default function MatchmakingPage() {
 
             <div className="space-y-3">
               <h2 className="text-2xl font-black text-white uppercase tracking-wider">FINDING OPPONENT</h2>
+              {autoRequeuedNotice && (
+                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 max-w-sm mx-auto animate-fade-in">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-400" />
+                  <span>Đối thủ trước đó không xác nhận. Đang tiếp tục tìm đối thủ mới cho bạn...</span>
+                </div>
+              )}
               {myElo !== null && (
                 <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3.5 py-1.5 rounded-full w-fit mx-auto animate-pulse">
                   <Award className="h-4 w-4 text-orange-500" />

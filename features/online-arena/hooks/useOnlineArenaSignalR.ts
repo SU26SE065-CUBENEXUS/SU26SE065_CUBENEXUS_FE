@@ -12,6 +12,7 @@ interface SignalRCallbacks {
   onMatchConfirmed?: (payload: any) => void;
   onMatchConfirmationExpired?: (payload: any) => void;
   onMatchConfirmationCancelled?: (payload: any) => void;
+  onMatchmakingCooldownApplied?: (payload: any) => void;
   onMatchPhaseUpdated?: (payload: any) => void;
   onCountdownStarted?: (payload: any) => void;
   onInspectionStarted?: (payload: any) => void;
@@ -75,6 +76,7 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     register('MatchConfirmed', 'onMatchConfirmed');
     register('MatchConfirmationExpired', 'onMatchConfirmationExpired');
     register('MatchConfirmationCancelled', 'onMatchConfirmationCancelled');
+    register('MatchmakingCooldownApplied', 'onMatchmakingCooldownApplied');
 
     // Room / Flow events
     register('MatchPhaseUpdated', 'onMatchPhaseUpdated');
