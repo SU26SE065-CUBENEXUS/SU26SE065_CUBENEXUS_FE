@@ -196,25 +196,33 @@ export function SplitScreenReplayPlayer({
   };
 
   return (
-    <div className="w-full bg-zinc-950 border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl space-y-0 relative animate-fade-in">
+    <div className="w-full bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden shadow-xl space-y-0 relative text-left">
       {/* Official Match Winner Broadcast Header Overlay */}
-      {officialWinnerName && (
-        <div className="bg-gradient-to-r from-orange-500/20 via-amber-500/10 to-orange-500/20 border-b border-orange-500/30 px-6 py-3 flex items-center justify-between backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-400 animate-bounce" />
-            <span className="text-xs font-black tracking-widest text-amber-300 uppercase">
-              OFFICIAL RESULT
-            </span>
-          </div>
-          <div className="text-xs font-black text-white tracking-wider">
-            WINNER: <span className="text-amber-400 uppercase">{officialWinnerName}</span>
-            {officialWinnerText && <span className="text-zinc-400 ml-2">({officialWinnerText})</span>}
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 font-bold uppercase">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" /> VERIFIED REPLAY
-          </div>
+      <div className="bg-zinc-900/60 border-b border-zinc-800/60 px-3.5 py-2 flex items-center justify-between backdrop-blur-md">
+        <div className="flex items-center gap-1.5">
+          <Trophy className="h-3.5 w-3.5 text-amber-400" />
+          <span className="text-[10px] font-bold tracking-wider text-amber-400 uppercase">
+            Official Result
+          </span>
         </div>
-      )}
+        <div className="text-xs font-bold text-white tracking-tight">
+          {officialWinnerName ? (
+            <>
+              Winner: <span className="text-amber-400">{officialWinnerName}</span>
+              {officialWinnerText && officialWinnerText !== 'DRAW' && (
+                <span className="text-zinc-400 font-normal ml-1 text-[11px]">({officialWinnerText})</span>
+              )}
+            </>
+          ) : (
+            <span className="text-amber-400 font-bold uppercase">
+              {officialWinnerText === 'INCONCLUSIVE' ? 'KẾT QUẢ: HÒA - ĐÃ KIỂM DUYỆT (INCONCLUSIVE)' : 'KẾT QUẢ: HÒA (DRAW)'}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-semibold uppercase">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Verified Replay
+        </div>
+      </div>
 
       {/* Split-Screen Dual Video Frame Viewport */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-black p-2 relative">

@@ -79,37 +79,37 @@ export default function ResultPage() {
   );
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-xl mx-auto w-full text-center">
+    <div className="space-y-6 animate-in fade-in duration-200 max-w-xl mx-auto w-full text-center">
       {/* Victory/Defeat Banner */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {isDraw ? (
-          <div className="space-y-2">
-            <span className="bg-zinc-800 text-zinc-400 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-zinc-700/50">
+          <div className="space-y-1">
+            <span className="bg-zinc-800/80 text-zinc-300 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase border border-zinc-700/50 inline-block">
               Draw Match
             </span>
-            <h2 className="text-4xl font-black text-white uppercase tracking-wider">DRAW GAME</h2>
+            <h2 className="text-3xl font-black text-white uppercase tracking-wider">DRAW GAME</h2>
           </div>
         ) : isWinner ? (
-          <div className="space-y-2">
-            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase animate-pulse">
+          <div className="space-y-1">
+            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
               Victory
             </span>
-            <h2 className="text-4xl font-black text-amber-400 uppercase tracking-wider drop-shadow-[0_0_15px_oklch(0.72_0.21_42_/_0.2)]">
+            <h2 className="text-3xl font-black text-amber-400 uppercase tracking-wider">
               VICTORY
             </h2>
           </div>
         ) : (
-          <div className="space-y-2">
-            <span className="bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
+          <div className="space-y-1">
+            <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
               Defeat
             </span>
-            <h2 className="text-4xl font-black text-rose-500 uppercase tracking-wider">DEFEAT</h2>
+            <h2 className="text-3xl font-black text-rose-500 uppercase tracking-wider">DEFEAT</h2>
           </div>
         )}
       </div>
 
       {/* Main Results card */}
-      <div className="bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-3xl backdrop-blur-md shadow-2xl space-y-8 relative overflow-hidden">
+      <div className="bg-zinc-950 border border-zinc-800/80 p-6 sm:p-7 rounded-2xl backdrop-blur-md shadow-xl space-y-6 relative overflow-hidden text-left">
         <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
 
         {/* ELO Changes display */}
@@ -267,8 +267,9 @@ export default function ResultPage() {
 }
 
 import { SplitScreenReplayPlayer } from '@/features/online-arena/components/SplitScreenReplayPlayer';
+import { FraudReportModal } from '@/features/online-arena/components/FraudReportModal';
 import { getMatchRecordingPlaybackUrls, PlaybackResponseDto } from '@/features/online-arena/api/onlineArenaApi';
-import { Video } from 'lucide-react';
+import { Video, ShieldAlert } from 'lucide-react';
 
 function ReplaySection({
   matchId,
@@ -289,6 +290,7 @@ function ReplaySection({
   const [isLoading, setIsLoading] = useState(false);
   const [playbackData, setPlaybackData] = useState<PlaybackResponseDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const uploadTaskRef = useRef(uploadTask);
 
   useEffect(() => {
@@ -305,6 +307,17 @@ function ReplaySection({
           <Video className="h-4 w-4 text-zinc-600" />
           🎬 Replay Unavailable (Setup Incomplete)
         </button>
+        <button
+          onClick={() => setIsReportModalOpen(true)}
+          className="w-full py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
+        >
+          <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud / Cheat
+        </button>
+        <FraudReportModal
+          matchId={matchId}
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+        />
       </div>
     );
   }
@@ -361,18 +374,32 @@ function ReplaySection({
 
   return (
     <div className="space-y-4">
-      <button
-        onClick={fetchPlayback}
-        disabled={isLoading}
-        className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-orange-500/30 hover:border-orange-500/60 text-orange-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/5"
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
-        ) : (
-          <Video className="h-4 w-4 text-orange-400" />
-        )}
-        {isLoading ? 'Fetching Playback URLs...' : '🎬 Watch Split-Screen Replay'}
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={fetchPlayback}
+          disabled={isLoading}
+          className="flex-1 py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-orange-500/30 hover:border-orange-500/60 text-orange-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/5"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+          ) : (
+            <Video className="h-4 w-4 text-orange-400" />
+          )}
+          {isLoading ? 'Fetching Replay...' : '🎬 Watch Replay'}
+        </button>
+        <button
+          onClick={() => setIsReportModalOpen(true)}
+          className="flex-1 py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
+        >
+          <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud
+        </button>
+      </div>
+
+      <FraudReportModal
+        matchId={matchId}
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+      />
 
       {error && (
         <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl text-center">

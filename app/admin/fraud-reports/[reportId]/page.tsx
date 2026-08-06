@@ -102,9 +102,9 @@ export default function AdminFraudReportReviewDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 space-y-4">
-        <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
-        <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-6 space-y-4">
+        <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
           Đang tải hồ sơ kiểm duyệt trận đấu...
         </p>
       </div>
@@ -113,14 +113,14 @@ export default function AdminFraudReportReviewDetailPage() {
 
   if (error || !detail) {
     return (
-      <div className="min-h-screen bg-black text-white p-10 max-w-4xl mx-auto space-y-6">
-        <Link href="/admin/fraud-reports" className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white">
+      <div className="min-h-screen bg-slate-50 text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
+        <Link href="/admin/fraud-reports" className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 font-bold">
           <ArrowLeft className="h-4 w-4" /> Trở về danh sách báo cáo
         </Link>
-        <div className="p-8 bg-rose-500/10 border border-rose-500/20 rounded-3xl text-center space-y-3">
-          <AlertTriangle className="h-10 w-10 text-rose-500 mx-auto" />
-          <h3 className="text-base font-black uppercase text-rose-400">Không tìm thấy báo cáo</h3>
-          <p className="text-xs text-zinc-400">{error || 'Báo cáo gian lận không tồn tại hoặc đã bị xóa.'}</p>
+        <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl text-center space-y-3">
+          <AlertTriangle className="h-10 w-10 text-rose-600 mx-auto" />
+          <h3 className="text-base font-bold uppercase text-rose-900">Không tìm thấy báo cáo</h3>
+          <p className="text-xs text-slate-600">{error || 'Báo cáo gian lận không tồn tại hoặc đã bị xóa.'}</p>
         </div>
       </div>
     );
@@ -132,23 +132,23 @@ export default function AdminFraudReportReviewDetailPage() {
   const p2Record = playbackData?.recordings?.[1];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 sm:p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
       {/* Navigation & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
           <Link
             href="/admin/fraud-reports"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-semibold transition-colors mb-1"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold transition-colors mb-1"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Trở về danh sách báo cáo
           </Link>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-0.5 text-[10px] font-black uppercase tracking-widest bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full">
+            <span className="px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200 rounded-full">
               VERIFICATION AUDIT PANEL
             </span>
-            <span className="text-xs font-mono text-zinc-500">Report ID: {report.id.slice(0, 8)}</span>
+            <span className="text-xs font-mono text-slate-400">Report ID: {report.id.slice(0, 8)}</span>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-wider text-white">
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
             Kiểm Duyệt Trận Đấu (Match #{match.id?.slice(0, 8)})
           </h1>
         </div>
@@ -156,12 +156,12 @@ export default function AdminFraudReportReviewDetailPage() {
         {/* Report Status Badge */}
         <div className="flex items-center gap-3">
           <div
-            className={`px-4 py-2 rounded-2xl border text-xs font-black uppercase tracking-wider ${
+            className={`px-4 py-2 rounded-xl border text-xs font-extrabold uppercase tracking-wider ${
               isResolved
                 ? report.verdictCode === 'GUILTY'
-                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-                  : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                : 'bg-orange-500/20 text-orange-400 border-orange-500/40 animate-pulse'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200'
             }`}
           >
             Trạng thái: {report.statusCode} {report.verdictCode ? `(${report.verdictCode})` : ''}
@@ -170,17 +170,17 @@ export default function AdminFraudReportReviewDetailPage() {
       </div>
 
       {/* Main Grid: Left Column Replay + Report Info, Right Column Timeline & Verdict */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column (8 cols): Dual Replay Video + Report Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (7 cols): Dual Replay Video + Report Summary */}
         <div className="lg:col-span-7 flex flex-col space-y-6">
           {/* Dual Video Replay Player */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-                <Video className="h-4 w-4 text-orange-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                <Video className="h-4 w-4 text-indigo-600" />
                 <span>Dual Video Replay Player (Auto-Seek: {report.timestampText})</span>
               </h3>
-              <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+              <span className="text-[10px] font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
                 Timestamp: {report.timestampSeconds}s
               </span>
             </div>
@@ -204,50 +204,50 @@ export default function AdminFraudReportReviewDetailPage() {
                 officialWinnerText={match.outcome}
               />
             ) : isLoadingVideo ? (
-              <div className="p-12 bg-zinc-950 border border-zinc-800 rounded-3xl text-center space-y-3">
-                <Loader2 className="h-8 w-8 text-orange-500 animate-spin mx-auto" />
-                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Đang kết nối luồng Video Replay...</p>
+              <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center space-y-3 shadow-2xs">
+                <Loader2 className="h-8 w-8 text-indigo-600 animate-spin mx-auto" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đang kết nối luồng Video Replay...</p>
               </div>
             ) : (
-              <div className="p-8 bg-zinc-950 border border-zinc-800 rounded-3xl text-center space-y-2 text-zinc-400">
-                <AlertTriangle className="h-8 w-8 text-zinc-600 mx-auto" />
+              <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center space-y-2 text-slate-500 shadow-2xs">
+                <AlertTriangle className="h-8 w-8 text-slate-400 mx-auto" />
                 <p className="text-xs font-semibold">Video Replay không khả dụng hoặc chưa tải xong.</p>
               </div>
             )}
           </div>
 
           {/* Report Information Card */}
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-rose-400 flex items-center gap-2">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-rose-600 flex items-center gap-2">
                 <FileText className="h-4 w-4" /> Nội dung Báo cáo Gian lận
               </h3>
-              <span className="px-2.5 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-black uppercase rounded-full">
+              <span className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold uppercase rounded-md">
                 {report.fraudType || 'OTHER'}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="bg-zinc-900/60 p-3 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Người báo cáo (Reporter)</span>
-                <p className="font-mono font-bold text-emerald-400">{report.reporterUserId}</p>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Người báo cáo (Reporter)</span>
+                <p className="font-mono font-bold text-emerald-700">{report.reporterUserId}</p>
               </div>
-              <div className="bg-zinc-900/60 p-3 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Người bị báo cáo (Reported)</span>
-                <p className="font-mono font-bold text-rose-400">{report.reportedUserId}</p>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Người bị báo cáo (Reported)</span>
+                <p className="font-mono font-bold text-rose-700">{report.reportedUserId}</p>
               </div>
             </div>
 
-            <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800/80 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                 <span>Mốc thời gian nghi vấn:</span>
-                <span className="font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                <span className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
                   {report.timestampText} ({report.timestampSeconds} giây)
                 </span>
               </div>
               <div className="pt-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase block mb-1">Mô tả hành vi gian lận:</span>
-                <p className="text-xs text-zinc-200 leading-relaxed font-medium bg-zinc-950 p-3 rounded-xl border border-zinc-800">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Mô tả hành vi gian lận:</span>
+                <p className="text-xs text-slate-800 leading-relaxed font-medium bg-white p-3 rounded-lg border border-slate-200">
                   {report.description || 'Không có mô tả chi tiết.'}
                 </p>
               </div>
@@ -255,14 +255,14 @@ export default function AdminFraudReportReviewDetailPage() {
 
             {report.evidenceScreenshotUrl && (
               <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3 text-orange-400" /> Ảnh minh chứng bổ sung:
+                <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3 text-indigo-600" /> Ảnh minh chứng bổ sung:
                 </span>
                 <a
                   href={report.evidenceScreenshotUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-orange-400 underline break-all font-mono hover:text-orange-300"
+                  className="text-xs text-indigo-600 underline break-all font-mono hover:text-indigo-800"
                 >
                   {report.evidenceScreenshotUrl}
                 </a>
@@ -274,33 +274,33 @@ export default function AdminFraudReportReviewDetailPage() {
         {/* Right Column (5 cols): AI Checks, Audit Trail & Verdict Actions */}
         <div className="lg:col-span-5 flex flex-col space-y-6">
           {/* AI Check Timeline Card */}
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl">
-            <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2">
-              <Activity className="h-4 w-4" /> AI Check Timeline Analysis
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-2xs">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-700 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-amber-600" /> AI Check Timeline Analysis
             </h3>
             {aiChecks && aiChecks.length > 0 ? (
               <div className="space-y-2">
                 {aiChecks.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between text-xs"
+                    className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs"
                   >
                     <div>
-                      <span className="font-bold text-white uppercase">{item.checkType}</span>
-                      <span className="text-[10px] text-zinc-500 block">Model: {item.modelVersion || 'yolov8'}</span>
+                      <span className="font-bold text-slate-900 uppercase">{item.checkType}</span>
+                      <span className="text-[10px] text-slate-500 block">Model: {item.modelVersion || 'yolov8'}</span>
                     </div>
                     <div className="text-right">
                       <span
-                        className={`font-mono font-bold uppercase text-[10px] px-2 py-0.5 rounded-full ${
+                        className={`font-mono font-bold uppercase text-[10px] px-2 py-0.5 rounded-md ${
                           item.status === 'PASSED'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
                         }`}
                       >
                         {item.status}
                       </span>
                       {item.confidence && (
-                        <span className="text-[10px] text-zinc-400 block font-mono">
+                        <span className="text-[10px] text-slate-400 block font-mono">
                           {Math.round(item.confidence * 100)}% Conf
                         </span>
                       )}
@@ -309,22 +309,22 @@ export default function AdminFraudReportReviewDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-500 font-medium">Chưa có bản ghi AI Check cho trận đấu này.</p>
+              <p className="text-xs text-slate-400 font-medium">Chưa có bản ghi AI Check cho trận đấu này.</p>
             )}
           </div>
 
           {/* Audit Logs Timeline Card */}
-          <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-5 space-y-3 shadow-xl max-h-60 overflow-y-auto">
-            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-400" /> System Audit Logs
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 shadow-2xs max-h-60 overflow-y-auto">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-indigo-600" /> System Audit Logs
             </h3>
             {auditLogs && auditLogs.length > 0 ? (
-              <div className="space-y-2 divide-y divide-zinc-900 text-xs font-mono">
+              <div className="space-y-2 divide-y divide-slate-100 text-xs font-mono">
                 {auditLogs.map((log, idx) => (
                   <div key={idx} className="pt-2 flex items-start justify-between text-[11px]">
                     <div>
-                      <span className="font-bold text-orange-400">{log.eventType}</span>
-                      <span className="text-zinc-500 block text-[10px]">
+                      <span className="font-bold text-indigo-600">{log.eventType}</span>
+                      <span className="text-slate-400 block text-[10px]">
                         {new Date(log.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
@@ -332,26 +332,32 @@ export default function AdminFraudReportReviewDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-500">Chưa có audit log.</p>
+              <p className="text-xs text-slate-400">Chưa có audit log.</p>
             )}
           </div>
 
           {/* Admin Verdict Panel */}
-          <div className="bg-zinc-950 border border-orange-500/30 rounded-3xl p-6 space-y-5 shadow-2xl backdrop-blur-md">
+          <div className="bg-white border border-indigo-200 rounded-2xl p-6 space-y-5 shadow-sm">
             <div className="space-y-1">
-              <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5 text-orange-500" />
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-indigo-600" />
                 <span>Phán Quyết Trọng Tài (Admin Verdict)</span>
               </h3>
-              <p className="text-xs text-zinc-400">
-                Chọn phán quyết và nhập ghi chú để hệ thống tự động xử lý kết quả & điểm Elo.
+              <p className="text-xs text-slate-500">
+                Chọn phán quyết và nhập ghi chú để hệ thống tự động xử lý kết quả &amp; điểm Elo.
               </p>
             </div>
 
             {verdictSuccess ? (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto" />
-                <p className="text-xs font-bold text-emerald-300 uppercase tracking-wider">{verdictSuccess}</p>
+              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto" />
+                <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">{verdictSuccess}</p>
+                <Link
+                  href="/admin/fraud-reports"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all cursor-pointer border-none"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Quay Lại Danh Sách Báo Cáo
+                </Link>
               </div>
             ) : (
               <form onSubmit={handleReviewSubmit} className="space-y-4">
@@ -360,10 +366,10 @@ export default function AdminFraudReportReviewDetailPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedVerdict('GUILTY')}
-                    className={`py-3 px-2 rounded-2xl border font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                    className={`py-3 px-2 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
                       selectedVerdict === 'GUILTY'
-                        ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30 scale-[1.02]'
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <XCircle className="h-4 w-4" />
@@ -374,10 +380,10 @@ export default function AdminFraudReportReviewDetailPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedVerdict('INNOCENT')}
-                    className={`py-3 px-2 rounded-2xl border font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                    className={`py-3 px-2 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
                       selectedVerdict === 'INNOCENT'
-                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/30 scale-[1.02]'
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <CheckCircle2 className="h-4 w-4" />
@@ -388,10 +394,10 @@ export default function AdminFraudReportReviewDetailPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedVerdict('INCONCLUSIVE')}
-                    className={`py-3 px-2 rounded-2xl border font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                    className={`py-3 px-2 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all flex flex-col items-center gap-1 cursor-pointer ${
                       selectedVerdict === 'INCONCLUSIVE'
-                        ? 'bg-zinc-700 text-white border-zinc-600 shadow-lg scale-[1.02]'
-                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                        ? 'bg-slate-700 text-white border-slate-700 shadow-md'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <AlertTriangle className="h-4 w-4" />
@@ -402,7 +408,7 @@ export default function AdminFraudReportReviewDetailPage() {
 
                 {/* Admin Comment Textarea */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-300">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                     Ghi chú Trọng tài (Admin Comment)
                   </label>
                   <textarea
@@ -410,7 +416,7 @@ export default function AdminFraudReportReviewDetailPage() {
                     placeholder="Nhập lý do phán quyết và kết luận kiểm duyệt video..."
                     value={adminComment}
                     onChange={(e) => setAdminComment(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 transition-colors resize-none"
                   />
                 </div>
 
@@ -418,7 +424,7 @@ export default function AdminFraudReportReviewDetailPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || isResolved}
-                  className="w-full py-3.5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs rounded-2xl uppercase tracking-wider shadow-xl shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl uppercase tracking-wider shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 >
                   {isSubmitting ? (
                     <>
@@ -426,7 +432,7 @@ export default function AdminFraudReportReviewDetailPage() {
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" /> Chốt Phán Quyết & Cập Nhật Elo
+                      <Send className="h-4 w-4" /> Chốt Phán Quyết &amp; Cập Nhật Elo
                     </>
                   )}
                 </button>

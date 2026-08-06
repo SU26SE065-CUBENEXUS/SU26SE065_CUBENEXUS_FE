@@ -285,6 +285,10 @@ export interface OnlineMatchHistoryItemDto {
   createdAt: string;
   endedAt?: string;
   hasVideoReplay: boolean;
+  reportStatus?: string;
+  reportVerdictCode?: string;
+  reportAdminNote?: string;
+  reportedByUserId?: string;
 }
 
 export interface OnlineMatchHistoryResponseDto {
@@ -349,20 +353,43 @@ export interface FraudReportDetailDto {
   auditLogs: any[];
 }
 
-/** POST /api/online/matches/{matchId}/fraud-reports */
+/** POST /api/online/matches/{matchId}/reports */
 export async function createFraudReport(
   matchId: string,
   payload: CreateFraudReportPayload,
 ): Promise<FraudReportDto> {
-  return apiFetch<FraudReportDto>(`/api/online/matches/${matchId}/fraud-reports`, {
+  return apiFetch<FraudReportDto>(`/api/online/matches/${matchId}/reports`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-/** GET /api/admin/fraud-reports/pending */
+export interface MatchFraudReportStatusDto {
+  id: string;
+  matchId: string;
+  reporterUserId: string;
+  reportedUserId: string;
+  fraudType: string;
+  timestampText: string;
+  description?: string;
+  statusCode: string;
+  verdictCode?: string;
+  adminNote?: string;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+export async function getMatchFraudReport(matchId: string): Promise<MatchFraudReportStatusDto | null> {
+  try {
+    return await apiFetch<MatchFraudReportStatusDto>(`/api/online/matches/${matchId}/report`);
+  } catch {
+    return null;
+  }
+}
+
+/** GET /api/admin/fraud-reports */
 export async function getPendingFraudReports(): Promise<FraudReportDto[]> {
-  return apiFetch<FraudReportDto[]>('/api/admin/fraud-reports/pending');
+  return apiFetch<FraudReportDto[]>('/api/admin/fraud-reports');
 }
 
 /** GET /api/admin/fraud-reports/{reportId} */

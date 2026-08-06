@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowDownRight, Loader2, Sparkles, ShieldAlert } from 'lucide-react';
 import { SplitScreenReplayPlayer } from './SplitScreenReplayPlayer';
 import { FraudReportModal } from './FraudReportModal';
-import { getMatchRecordingPlaybackUrls, PlaybackResponseDto, OnlineMatchHistoryItemDto } from '../api/onlineArenaApi';
+import { getMatchRecordingPlaybackUrls, getMatchFraudReport, PlaybackResponseDto, OnlineMatchHistoryItemDto, MatchFraudReportStatusDto } from '../api/onlineArenaApi';
+import { AuditVerdictBadge } from './AuditVerdictBadge';
 
 interface MatchDetailModalProps {
   matchItem: OnlineMatchHistoryItemDto | null;
@@ -17,33 +18,47 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
+  const [reportDetail, setReportDetail] = useState<MatchFraudReportStatusDto | null>(null);
 
   useEffect(() => {
     if (!isOpen || !matchItem) {
       setPlaybackData(null);
       setVideoError(null);
+      setReportDetail(null);
       return;
     }
 
-    // Auto-fetch video playback URLs when modal opens
     let isMounted = true;
-    const fetchVideo = async () => {
-      setIsLoadingVideo(true);
-      setVideoError(null);
-      try {
-        const data = await getMatchRecordingPlaybackUrls(matchItem.matchId);
-        if (isMounted) setPlaybackData(data);
-      } catch (err: any) {
-        if (isMounted) {
-          console.warn('[ReplayModal] Could not fetch video replay:', err);
-          setVideoError(err?.message || 'Video evidence is still processing or unavailable.');
-        }
-      } finally {
-        if (isMounted) setIsLoadingVideo(false);
-      }
-    };
+    setIsLoadingVideo(true);
+    setVideoError(null);
 
-    fetchVideo();
+    // Fetch video replay
+    getMatchRecordingPlaybackUrls(matchItem.matchId)
+      .then((data) => {
+        if (isMounted) {
+          setPlaybackData(data);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.warn('[MatchDetailModal] Failed to fetch replay stream:', err);
+          setVideoError('Video replay stream not available for this match.');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingVideo(false);
+        }
+      });
+
+    // Fetch fraud report status directly for guaranteed fresh report details
+    getMatchFraudReport(matchItem.matchId)
+      .then((res) => {
+        if (isMounted && res) {
+          setReportDetail(res);
+        }
+      })
+      .catch(() => {});
 
     return () => {
       isMounted = false;
@@ -54,7 +69,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
 
   const formatTimeStr = (ms?: number, isDnf?: boolean) => {
     if (isDnf) return 'DNF';
-    if (!ms || ms <= 0) return 'N/A';
+    if (!ms || ms <= 0) return '0.00s';
     return (ms / 1000).toFixed(2) + 's';
   };
 
@@ -62,47 +77,48 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const p2Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.opponentUserId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl w-full max-w-3xl max-h-[88vh] overflow-y-auto shadow-2xl shadow-black/80 space-y-5 p-5 sm:p-6 relative text-left text-zinc-100">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all cursor-pointer z-10"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer z-10"
+          title="Close (Esc)"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
-        {/* Header Broadcast Banner */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800/60 pr-8">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-full">
+              <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md">
                 {matchItem.modeName || 'Ranked 1v1'}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">
+              <span className="text-xs text-zinc-400 font-mono">
                 {new Date(matchItem.createdAt).toLocaleString()}
               </span>
             </div>
-            <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-400" />
-              MATCH DETAILS & REPLAY
+            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              Match Replay &amp; Details
             </h2>
           </div>
 
-          {/* Outcome Badge */}
-          <div className="flex items-center gap-3">
+          {/* Outcome Badge & Actions */}
+          <div className="flex items-center gap-2 shrink-0">
             <div
-              className={`px-4 py-2 rounded-2xl border font-black text-sm uppercase tracking-wider flex items-center gap-2 ${
+              className={`px-2.5 py-1 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
                 matchItem.isWinner
-                  ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-lg shadow-emerald-500/10'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
                   : matchItem.isDraw
-                  ? 'bg-zinc-900 text-zinc-300 border-zinc-700'
-                  : 'bg-gradient-to-r from-rose-500/20 via-purple-500/10 to-rose-500/20 text-rose-400 border-rose-500/40'
+                  ? 'bg-zinc-900 text-zinc-300 border-zinc-800'
+                  : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
               }`}
             >
               {matchItem.isWinner ? (
                 <>
-                  <Trophy className="h-4 w-4 text-amber-400" /> VICTORY
+                  <Trophy className="h-3.5 w-3.5 text-amber-400" /> VICTORY
                 </>
               ) : matchItem.isDraw ? (
                 'DRAW'
@@ -113,18 +129,18 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
 
             {/* ELO Delta Tag */}
             <div
-              className={`px-3 py-2 rounded-2xl border font-mono font-black text-sm flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg border font-mono font-bold text-xs flex items-center gap-1 ${
                 matchItem.eloChange > 0
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
                   : matchItem.eloChange < 0
-                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/25'
                   : 'bg-zinc-900 text-zinc-400 border-zinc-800'
               }`}
             >
               {matchItem.eloChange > 0 ? (
-                <ArrowUpRight className="h-4 w-4" />
+                <ArrowUpRight className="h-3.5 w-3.5" />
               ) : matchItem.eloChange < 0 ? (
-                <ArrowDownRight className="h-4 w-4" />
+                <ArrowDownRight className="h-3.5 w-3.5" />
               ) : null}
               {matchItem.eloChange > 0 ? `+${matchItem.eloChange}` : matchItem.eloChange} ELO
             </div>
@@ -132,23 +148,30 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
             {/* Report Fraud Button */}
             <button
               onClick={() => setIsReportModalOpen(true)}
-              className="px-3.5 py-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <ShieldAlert className="h-4 w-4 text-rose-500" />
-              Report Fraud
+              <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
+              Report
             </button>
           </div>
         </div>
 
+        {/* Audit Verdict Banner — only shows if a fraud report exists */}
+        <AuditVerdictBadge
+          reportStatus={reportDetail?.statusCode || matchItem.reportStatus}
+          verdictCode={reportDetail?.verdictCode || matchItem.reportVerdictCode}
+          adminNote={reportDetail?.adminNote || matchItem.reportAdminNote}
+        />
+
         {/* Video Replay Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <Video className="h-4 w-4 text-orange-400" /> Dual-Cam Video Replay
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <Video className="h-3.5 w-3.5 text-orange-400" /> Dual-Cam Video Replay
             </h3>
             {isLoadingVideo && (
-              <span className="text-[11px] font-bold text-orange-400 flex items-center gap-1.5 animate-pulse">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Fetching stream URLs...
+              <span className="text-[11px] font-medium text-orange-400 flex items-center gap-1.5 animate-pulse">
+                <Loader2 className="h-3 w-3 animate-spin" /> Fetching replay stream...
               </span>
             )}
           </div>
@@ -170,13 +193,19 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
                 videoDurationSeconds: p2Record?.durationSeconds,
                 isWinner: !matchItem.isWinner && !matchItem.isDraw,
               }}
-              officialWinnerName={matchItem.isWinner ? matchItem.meUsername : matchItem.opponentUsername}
+              officialWinnerName={
+                matchItem.isDraw || matchItem.outcome === 'DRAW' || matchItem.outcome === 'INCONCLUSIVE'
+                  ? undefined
+                  : matchItem.isWinner
+                  ? matchItem.meUsername
+                  : matchItem.opponentUsername
+              }
               officialWinnerText={matchItem.outcome}
             />
           ) : videoError ? (
-            <div className="p-8 bg-zinc-900/60 border border-zinc-800 rounded-2xl text-center space-y-2 text-zinc-400">
-              <ShieldCheck className="h-8 w-8 text-zinc-600 mx-auto" />
-              <p className="text-xs font-semibold">{videoError}</p>
+            <div className="p-6 bg-zinc-900/40 border border-zinc-800/60 rounded-xl text-center space-y-1.5 text-zinc-400">
+              <ShieldCheck className="h-6 w-6 text-zinc-600 mx-auto" />
+              <p className="text-xs font-medium">{videoError}</p>
               <p className="text-[10px] text-zinc-500">
                 {matchItem.isDraw || matchItem.outcome === 'CANCELLED'
                   ? 'No video recording was captured because the match ended before setup was completed.'
@@ -184,44 +213,44 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
               </p>
             </div>
           ) : (
-            <div className="p-12 bg-zinc-900/60 border border-zinc-800 rounded-2xl text-center space-y-3">
-              <Loader2 className="h-8 w-8 text-orange-500 animate-spin mx-auto" />
-              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Loading Match Replay Stream...</p>
+            <div className="p-8 bg-zinc-900/40 border border-zinc-800/60 rounded-xl text-center space-y-2">
+              <Loader2 className="h-6 w-6 text-orange-500 animate-spin mx-auto" />
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Loading Match Replay Stream...</p>
             </div>
           )}
         </div>
 
         {/* Stats Comparison Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
           {/* Player (Me) Card */}
-          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2.5">
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between border-b border-zinc-800/40 pb-2">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                <span className="text-sm font-black text-white">{matchItem.meUsername}</span>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">(YOU)</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-bold text-white">{matchItem.meUsername}</span>
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase">(YOU)</span>
               </div>
               {matchItem.isWinner && (
-                <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                <span className="text-[9px] font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                   WINNER
                 </span>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/50 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Solve Time</span>
-                <p className="text-lg font-black font-mono text-emerald-400">
+              <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/40 space-y-0.5">
+                <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Solve Time</span>
+                <p className="text-base font-bold font-mono text-emerald-400">
                   {formatTimeStr(matchItem.meTimeMs, matchItem.meIsDnf)}
                 </p>
               </div>
 
-              <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/50 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">ELO Rating</span>
-                <p className="text-base font-black font-mono text-zinc-200">
+              <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/40 space-y-0.5">
+                <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">ELO Rating</span>
+                <p className="text-sm font-bold font-mono text-zinc-200">
                   {matchItem.meEloAfter ?? matchItem.meEloBefore ?? '1200'}
                   {matchItem.eloChange !== 0 && (
-                    <span className={`text-xs ml-1 font-bold ${matchItem.eloChange > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`text-xs ml-1 font-semibold ${matchItem.eloChange > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       ({matchItem.eloChange > 0 ? `+${matchItem.eloChange}` : matchItem.eloChange})
                     </span>
                   )}
@@ -231,31 +260,31 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
           </div>
 
           {/* Opponent Card */}
-          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2.5">
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between border-b border-zinc-800/40 pb-2">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
-                <span className="text-sm font-black text-white">{matchItem.opponentUsername}</span>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">(OPPONENT)</span>
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                <span className="text-xs font-bold text-white">{matchItem.opponentUsername}</span>
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase">(OPPONENT)</span>
               </div>
               {!matchItem.isWinner && !matchItem.isDraw && (
-                <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                <span className="text-[9px] font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                   WINNER
                 </span>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/50 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">Solve Time</span>
-                <p className="text-lg font-black font-mono text-orange-400">
+              <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/40 space-y-0.5">
+                <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Solve Time</span>
+                <p className="text-base font-bold font-mono text-orange-400">
                   {formatTimeStr(matchItem.opponentTimeMs, matchItem.opponentIsDnf)}
                 </p>
               </div>
 
-              <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/50 space-y-0.5">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase">ELO Rating</span>
-                <p className="text-base font-black font-mono text-zinc-200">
+              <div className="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/40 space-y-0.5">
+                <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">ELO Rating</span>
+                <p className="text-sm font-bold font-mono text-zinc-200">
                   {matchItem.opponentEloAfter ?? matchItem.opponentEloBefore ?? '1200'}
                 </p>
               </div>
@@ -265,11 +294,11 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
 
         {/* Scramble Sequence Box */}
         {matchItem.scrambleSequence && (
-          <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-4 space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-              <Hash className="h-3.5 w-3.5 text-orange-500" /> Official Match Scramble Sequence
+          <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3 space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <Hash className="h-3 w-3 text-orange-400" /> Official Scramble Sequence
             </span>
-            <p className="text-xs font-mono font-bold text-amber-300/90 break-words bg-zinc-950/80 p-3 rounded-xl border border-zinc-800 select-all">
+            <p className="text-xs font-mono font-medium text-amber-200/90 break-words bg-zinc-950/80 p-2.5 rounded-lg border border-zinc-800/50 select-all">
               {matchItem.scrambleSequence}
             </p>
           </div>

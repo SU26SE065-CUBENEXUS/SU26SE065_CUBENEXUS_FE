@@ -58,7 +58,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 z-40 bg-white border-r border-slate-200 shadow-xs ${
+      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 z-40 bg-white border-r border-slate-200 shadow-2xs ${
         collapsed ? 'w-[68px]' : 'w-60'
       }`}
     >
@@ -185,8 +185,33 @@ function Sidebar({
               </li>
             );
           })}
+
+          {!collapsed && (
+            <li className="pt-4 pb-1">
+              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-rose-500 flex items-center gap-1">
+                <ShieldAlert className="h-3 w-3" /> Anti-Cheat & Audit
+              </span>
+            </li>
+          )}
+
+          <li>
+            <Link
+              href="/admin/fraud-reports"
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                pathname.startsWith('/admin/fraud-reports')
+                  ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
+                  : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+              } ${collapsed ? 'justify-center px-2' : ''}`}
+              title={collapsed ? 'Fraud Reports' : undefined}
+            >
+              <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
+              {!collapsed && (
+                <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
+              )}
+            </Link>
+          </li>
         </ul>
-      </nav>`
+      </nav>
 
       {/* Bottom info */}
       {!collapsed && (
@@ -216,6 +241,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
     groups: 'Groups & Scrambles',
     live: 'Live Operations',
     judges: 'Judge Management',
+    'fraud-reports': 'Fraud Reports Queue',
   };
   const pageLabel = pageLabels[lastSegment] || (selectedTournamentName ? 'Overview' : 'Dashboard');
 
@@ -284,6 +310,13 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
               </div>
               <div className="mt-1 space-y-0.5">
                 <Link
+                  href="/admin/fraud-reports"
+                  className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                >
+                  <ShieldAlert size={13} />
+                  <span>Fraud Reports Queue</span>
+                </Link>
+                <Link
                   href="/profile"
                   className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
@@ -292,7 +325,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
                 </Link>
                 <button
                   onClick={logout}
-                  className="w-full flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors text-left border-none bg-transparent"
+                  className="w-full flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors text-left border-none bg-transparent cursor-pointer"
                 >
                   <LogOut size={13} />
                   <span>Log Out</span>
@@ -354,10 +387,10 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'oklch(0.72 0.21 42)' }} />
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Loading Portal...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Loading Portal...</p>
         </div>
       </div>
     );
@@ -365,10 +398,10 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
 
   if (!isAuthenticated || (user?.role?.toUpperCase() !== 'MANAGER' && user?.role?.toUpperCase() !== 'ADMIN')) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <ShieldAlert className="h-12 w-12 text-red-400" />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 text-slate-900">
+        <ShieldAlert className="h-12 w-12 text-rose-500" />
         <p className="text-lg font-semibold">Access Denied</p>
-        <p className="text-sm text-muted-foreground">Redirecting…</p>
+        <p className="text-sm text-slate-500">Redirecting…</p>
       </div>
     );
   }

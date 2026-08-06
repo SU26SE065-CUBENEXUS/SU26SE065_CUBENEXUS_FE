@@ -78,15 +78,15 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl w-full max-w-lg shadow-2xl space-y-5 p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-2xl shadow-black/80 space-y-4 p-5 sm:p-6 relative text-left text-zinc-100">
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all cursor-pointer z-10 disabled:opacity-50"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer z-10 disabled:opacity-50"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
@@ -101,12 +101,20 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
         </div>
 
         {isSuccess ? (
-          <div className="py-8 text-center space-y-3 animate-fade-in">
-            <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto" />
-            <h4 className="text-base font-black text-white uppercase">Đã gửi Báo cáo Thành công!</h4>
-            <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-              Báo cáo đã được chuyển đến Ban Quản Trị & Trọng tài. Kết quả xử lý sẽ được cập nhật sớm nhất.
-            </p>
+          <div className="py-6 text-center space-y-4 animate-fade-in">
+            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
+            <div className="space-y-1">
+              <h4 className="text-base font-bold text-zinc-100 uppercase">Đã gửi Báo cáo Thành công!</h4>
+              <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+                Báo cáo đã được chuyển đến Ban Quản Trị &amp; Trọng tài. Kết quả xử lý sẽ được cập nhật sớm nhất.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
+            >
+              Quay Lại / Đóng
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

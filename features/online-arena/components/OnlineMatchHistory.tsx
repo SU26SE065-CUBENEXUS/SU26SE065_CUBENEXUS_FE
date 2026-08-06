@@ -168,59 +168,101 @@ export function OnlineMatchHistory() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredMatches.map((match) => (
-            <div
-              key={match.matchId}
-              onClick={() => setSelectedMatch(match)}
-              className="group bg-zinc-950 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-orange-500/50 rounded-2xl p-4 md:p-5 transition-all duration-200 shadow-xl cursor-pointer relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4"
-            >
-              {/* Left Metallic Accent Indicator Bar */}
+          {filteredMatches.map((match) => {
+            const hasReport = !!(match.reportStatus || match.reportVerdictCode || match.reportedByUserId);
+
+            const isGuilty = hasReport && (match.reportVerdictCode === 'GUILTY' || match.outcome === 'GUILTY');
+            const isInnocent = hasReport && (match.reportVerdictCode === 'INNOCENT' || match.outcome === 'INNOCENT');
+            const isInconclusive = hasReport && (match.reportVerdictCode === 'INCONCLUSIVE' || match.outcome === 'INCONCLUSIVE');
+            const isPending = hasReport && match.reportStatus === 'PENDING' && !match.reportVerdictCode;
+
+            const cardBorderStyle = isGuilty
+              ? 'border-rose-500/50 bg-gradient-to-r from-rose-950/20 via-zinc-950 to-zinc-950 shadow-lg shadow-rose-950/20'
+              : isInnocent
+              ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-950/20 via-zinc-950 to-zinc-950 shadow-lg shadow-emerald-950/20'
+              : isInconclusive
+              ? 'border-amber-500/50 bg-gradient-to-r from-amber-950/20 via-zinc-950 to-zinc-950 shadow-lg shadow-amber-950/20'
+              : isPending
+              ? 'border-amber-500/40 bg-zinc-950 shadow-md'
+              : 'bg-zinc-950 hover:bg-zinc-900/90 border-zinc-800/80 hover:border-orange-500/50';
+
+            const barStyle = isGuilty
+              ? 'bg-gradient-to-b from-rose-500 via-rose-600 to-rose-700 w-2'
+              : isInnocent
+              ? 'bg-gradient-to-b from-emerald-400 via-teal-500 to-emerald-600 w-2'
+              : isInconclusive
+              ? 'bg-gradient-to-b from-amber-400 via-orange-500 to-amber-600 w-2'
+              : match.isWinner
+              ? 'bg-gradient-to-b from-emerald-400 to-teal-500 w-1.5'
+              : 'bg-gradient-to-b from-rose-500 to-purple-600 w-1.5';
+
+            return (
               <div
-                className={`absolute top-0 bottom-0 left-0 w-1.5 transition-all ${
-                  match.isWinner ? 'bg-gradient-to-b from-emerald-400 to-teal-500' : 'bg-gradient-to-b from-rose-500 to-purple-600'
-                }`}
-              />
+                key={match.matchId}
+                onClick={() => setSelectedMatch(match)}
+                className={`group border rounded-2xl p-4 md:p-5 transition-all duration-200 shadow-xl cursor-pointer relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 ${cardBorderStyle}`}
+              >
+                {/* Left Metallic Accent Indicator Bar */}
+                <div className={`absolute top-0 bottom-0 left-0 transition-all ${barStyle}`} />
 
-              {/* Victory/Defeat Badge & ELO Delta */}
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <div
-                  className={`w-28 py-2.5 rounded-xl border text-center font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 shadow-md ${
-                    match.isWinner
-                      ? 'bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-emerald-500/10'
-                      : match.isDraw
-                      ? 'bg-zinc-900 text-zinc-400 border-zinc-700'
-                      : 'bg-gradient-to-br from-rose-500/20 via-purple-500/10 to-rose-500/20 text-rose-400 border-rose-500/40'
-                  }`}
-                >
-                  <span className="flex items-center gap-1 font-black">
-                    {match.isWinner ? <Trophy className="h-3.5 w-3.5 text-amber-400" /> : null}
-                    {match.isWinner ? 'VICTORY' : match.isDraw ? 'DRAW' : 'DEFEAT'}
-                  </span>
-                  {match.eloChange !== 0 && (
-                    <span
-                      className={`text-[11px] font-mono font-bold ${
-                        match.eloChange > 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {match.eloChange > 0 ? `+${match.eloChange}` : match.eloChange} ELO
+                {/* Victory/Defeat Badge & ELO Delta */}
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div
+                    className={`w-28 h-12 rounded-xl border text-center font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 shadow-md shrink-0 ${
+                      match.isWinner
+                        ? 'bg-gradient-to-br from-emerald-500/20 via-teal-500/10 to-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-emerald-500/10'
+                        : match.isDraw
+                        ? 'bg-zinc-900 text-zinc-400 border-zinc-700'
+                        : 'bg-gradient-to-br from-rose-500/20 via-purple-500/10 to-rose-500/20 text-rose-400 border-rose-500/40'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1 font-black">
+                      {match.isWinner ? <Trophy className="h-3.5 w-3.5 text-amber-400" /> : null}
+                      {match.isWinner ? 'VICTORY' : match.isDraw ? 'DRAW' : 'DEFEAT'}
                     </span>
-                  )}
-                </div>
 
-                {/* Match Mode & Timestamp Info */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-zinc-900 text-orange-400 border border-zinc-800 rounded-md">
-                      {match.puzzleTypeName}
-                    </span>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">{match.modeName}</span>
+                    {/* Sub-tag inside fixed outcome box */}
+                    {isGuilty ? (
+                      <span className="text-[9px] font-black text-rose-400 tracking-wider flex items-center gap-0.5">
+                        <ShieldAlert className="h-2.5 w-2.5" /> GIAN LẬN
+                      </span>
+                    ) : isInnocent ? (
+                      <span className="text-[9px] font-black text-emerald-400 tracking-wider flex items-center gap-0.5">
+                        <ShieldCheck className="h-2.5 w-2.5" /> HỢP LỆ
+                      </span>
+                    ) : isInconclusive ? (
+                      <span className="text-[9px] font-black text-amber-400 tracking-wider">
+                        ĐÃ KIỂM DUYỆT
+                      </span>
+                    ) : isPending ? (
+                      <span className="text-[9px] font-black text-amber-300 tracking-wider animate-pulse flex items-center gap-0.5">
+                        ⏳ ĐANG DUYỆT
+                      </span>
+                    ) : match.eloChange !== 0 ? (
+                      <span
+                        className={`text-[11px] font-mono font-bold ${
+                          match.eloChange > 0 ? 'text-emerald-400' : 'text-rose-400'
+                        }`}
+                      >
+                        {match.eloChange > 0 ? `+${match.eloChange}` : match.eloChange} ELO
+                      </span>
+                    ) : null}
                   </div>
-                  <p className="text-xs text-zinc-400 font-medium flex items-center gap-1">
-                    <Clock className="h-3 w-3 text-zinc-500" />
-                    {new Date(match.createdAt).toLocaleDateString()} {new Date(match.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+
+                  {/* Match Mode & Timestamp Info */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-zinc-900 text-orange-400 border border-zinc-800 rounded-md">
+                        {match.puzzleTypeName}
+                      </span>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase">{match.modeName}</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 font-medium flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-zinc-500" />
+                      {new Date(match.createdAt).toLocaleDateString()} {new Date(match.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
               {/* Player vs Opponent Solve Times Comparison */}
               <div className="flex items-center justify-center gap-6 bg-zinc-900/60 border border-zinc-800/60 px-5 py-2.5 rounded-xl w-full md:w-auto">
@@ -255,7 +297,8 @@ export function OnlineMatchHistory() {
                 </button>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       )}
 

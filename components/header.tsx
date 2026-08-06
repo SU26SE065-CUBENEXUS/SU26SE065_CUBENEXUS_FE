@@ -11,11 +11,11 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/88 backdrop-blur supports-[backdrop-filter]:bg-background/72">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md transition-all duration-200">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 h-14 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="relative h-20 w-20 sm:h-24 sm:w-24">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="relative h-8 w-8 shrink-0 transition-transform duration-200 group-hover:scale-105">
             <Image
               src="/logoCube.png"
               alt="CubeNexus logo"
@@ -24,33 +24,24 @@ export function Header() {
               priority
             />
           </div>
-          <div className="leading-none">
-            <div className="flex items-baseline gap-1 sm:gap-1.5">
-              <span className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">CUBE</span>
-              <span className="text-2xl font-black tracking-tight sm:text-3xl text-accent">NEXUS</span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[9px] font-semibold tracking-[0.28em] text-muted-foreground sm:text-[10px]">
-              <span>SOLVE</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-              <span>COMPETE</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-              <span>INSPIRE</span>
-            </div>
+          <div className="flex items-center gap-1.5 leading-none">
+            <span className="text-base font-black tracking-tight text-foreground">CUBE</span>
+            <span className="text-base font-black tracking-tight text-accent">NEXUS</span>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation */}
-        <div className="hidden gap-8 lg:flex">
-          <Link href="/" className="text-sm font-medium text-foreground transition hover:text-primary">HOME</Link>
-          <Link href="/online" className="text-sm font-medium text-foreground transition hover:text-green-500">ARENA</Link>
-          <Link href="/tournaments" className="text-sm font-medium text-foreground transition hover:text-orange-500">TOURNAMENTS</Link>
-          <Link href="/rankings" className="text-sm font-medium text-foreground transition hover:text-blue-500">RANKINGS</Link>
-          <Link href="/practice" className="text-sm font-medium text-foreground transition hover:text-green-500">PRACTICE</Link>
-          <Link href="/community" className="text-sm font-medium text-foreground transition hover:text-yellow-500">COMMUNITY</Link>
+        <div className="hidden items-center gap-6 lg:flex">
+          <Link href="/" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">HOME</Link>
+          <Link href="/online" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">ARENA</Link>
+          <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">TOURNAMENTS</Link>
+          <Link href="/rankings" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-400 transition-colors">RANKINGS</Link>
+          <Link href="/practice" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">PRACTICE</Link>
+          <Link href="/community" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">COMMUNITY</Link>
         </div>
 
         {/* Auth / Profile Area */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <div 
               className="relative"
@@ -58,30 +49,27 @@ export function Header() {
               onMouseLeave={() => setIsDropdownOpen(false)}
             >
               {/* Trigger Avatar Button */}
-              <button className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 shadow-sm transition-all hover:border-accent/50 focus:outline-none">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground shadow-sm overflow-hidden shrink-0">
+              <button className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1 text-left shadow-xs transition-all hover:border-accent/40 hover:bg-accent/5 focus:outline-none cursor-pointer">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground shadow-xs overflow-hidden shrink-0">
                   {user?.avatarUrl ? (
                     <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
                   ) : (
                     user?.displayName?.charAt(0)?.toUpperCase() ?? 'U'
                   )}
                 </div>
-                <div className="hidden flex-col text-left sm:flex">
-                  <span className="text-xs font-bold text-foreground leading-tight">{user?.displayName}</span>
-                  {user?.role?.toUpperCase() !== 'COMPETITOR' && (
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider leading-none mt-0.5">{user?.role}</span>
-                  )}
+                <div className="hidden flex-col sm:flex">
+                  <span className="text-xs font-semibold text-foreground leading-none">{user?.displayName}</span>
                 </div>
-                <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`} />
+                <ChevronDown size={12} className={`text-muted-foreground transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`} />
               </button>
 
               {/* Hover Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 top-full pt-2 z-50">
-                  <div className="w-56 rounded-2xl border border-border bg-card p-2 shadow-xl animate-fade-in">
+                <div className="absolute right-0 top-full pt-1.5 z-50">
+                  <div className="w-52 rounded-xl border border-border/60 bg-popover p-1.5 shadow-xl animate-fade-in backdrop-blur-md">
                     {/* User Details header */}
-                    <div className="px-3 py-2 border-b border-border/60 flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground shadow-sm overflow-hidden shrink-0">
+                    <div className="px-2.5 py-2 border-b border-border/40 flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground shadow-xs overflow-hidden shrink-0">
                         {user?.avatarUrl ? (
                           <img src={user.avatarUrl} alt={user.displayName} className="h-full w-full object-cover" />
                         ) : (
@@ -89,31 +77,26 @@ export function Header() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-extrabold text-foreground truncate">{user?.displayName}</p>
-                        <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
-                        {user?.role?.toUpperCase() !== 'COMPETITOR' && (
-                          <span className="mt-1 inline-block rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent">
-                            {user?.role}
-                          </span>
-                        )}
+                        <p className="text-xs font-bold text-foreground truncate">{user?.displayName}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
                       </div>
                     </div>
                     
                     {/* Action items */}
-                    <div className="mt-1.5 space-y-0.5">
+                    <div className="mt-1 space-y-0.5">
                       <Link 
                         href="/profile" 
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-accent/5 hover:text-accent transition-colors"
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent/10 hover:text-accent transition-colors"
                       >
-                        <User size={14} />
+                        <User size={13} />
                         <span>MY PROFILE</span>
                       </Link>
                       
                       <button 
                         onClick={logout}
-                        className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-500/5 transition-colors text-left border-none bg-transparent"
+                        className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors text-left border-none bg-transparent cursor-pointer"
                       >
-                        <LogOut size={14} />
+                        <LogOut size={13} />
                         <span>LOG OUT</span>
                       </button>
                     </div>
@@ -122,11 +105,11 @@ export function Header() {
               )}
             </div>
           ) : (
-            <div className="flex gap-3">
-              <Button asChild variant="outline" className="hidden sm:inline-flex border-accent text-accent hover:bg-accent/5">
+            <div className="flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm" className="h-8 text-xs font-semibold">
                 <Link href="/login">LOGIN</Link>
               </Button>
-              <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button asChild size="sm" className="h-8 text-xs font-bold bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link href="/signup">SIGN UP</Link>
               </Button>
             </div>

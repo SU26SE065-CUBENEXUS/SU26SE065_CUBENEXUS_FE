@@ -48,42 +48,42 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
       </div>
 
       {/* Clean Modern Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-2xs">
-        <table className="w-full text-sm text-left border-collapse">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800/80 bg-zinc-950 shadow-xl">
+        <table className="w-full text-sm text-left border-collapse text-zinc-100">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80">
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Giải Đấu</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Trạng Thái</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Thời Gian</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Địa Điểm</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500">Hạng Mục Thi Đấu</th>
-              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Quản Lý Giải</th>
+            <tr className="border-b border-zinc-800 bg-zinc-900/60">
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">Giải Đấu</th>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">Trạng Thái</th>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">Thời Gian</th>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">Địa Điểm</th>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400">Hạng Mục Thi Đấu</th>
+              <th className="px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400 text-right">Quản Lý Giải</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-zinc-900 font-medium">
             {tournaments.map((t) => (
-              <tr key={t.id} className="hover:bg-slate-50/70 transition-colors group align-middle">
+              <tr key={t.id} className="hover:bg-zinc-900/40 transition-colors group align-middle">
                 {/* Tournament Name & Banner */}
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     {t.bannerUrl ? (
                       <div
                         onClick={() => setPreviewImage({ url: t.bannerUrl!, name: t.name })}
-                        className="w-16 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100 relative cursor-pointer hover:border-indigo-500 transition shadow-2xs"
+                        className="w-16 h-10 rounded-lg overflow-hidden border border-zinc-800 shrink-0 bg-zinc-900 relative cursor-pointer hover:border-orange-500 transition shadow-2xs"
                         title="Bấm để xem ảnh banner"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={t.bannerUrl} alt={t.name} className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-bold shrink-0">
                         {t.name.slice(0, 2).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="font-semibold text-slate-900 text-sm leading-snug group-hover:text-indigo-600 transition">{t.name}</p>
+                      <p className="font-bold text-white text-sm leading-snug group-hover:text-orange-400 transition">{t.name}</p>
                       {t.maxParticipants && (
-                        <span className="inline-block mt-0.5 text-[10px] font-medium px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
                           Tối đa {t.maxParticipants} thí sinh
                         </span>
                       )}
@@ -97,12 +97,12 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                 </td>
 
                 {/* Date */}
-                <td className="px-5 py-3.5 text-xs text-slate-600 whitespace-nowrap font-medium">
+                <td className="px-5 py-3.5 text-xs text-zinc-400 whitespace-nowrap font-mono font-medium">
                   {formatDateRange(t.startDate, t.endDate)}
                 </td>
 
                 {/* Location */}
-                <td className="px-5 py-3.5 text-xs text-slate-600 max-w-[180px]">
+                <td className="px-5 py-3.5 text-xs text-zinc-300 max-w-[180px]">
                   <p className="line-clamp-1 truncate font-medium">{t.location ?? '—'}</p>
                 </td>
 
@@ -113,19 +113,19 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                       {t.events.slice(0, 3).map((e) => (
                         <span
                           key={e.id}
-                          className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200 whitespace-nowrap"
+                          className="rounded-md bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 border border-zinc-800 whitespace-nowrap"
                         >
                           {e.puzzleTypeName || e.puzzleTypeCode}
                         </span>
                       ))}
                       {t.events.length > 3 && (
-                        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 border border-slate-200">
+                        <span className="rounded-md bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-zinc-500 border border-zinc-800">
                           +{t.events.length - 3}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-[11px] text-slate-400 font-normal italic">
+                    <span className="text-[11px] text-zinc-500 font-normal italic">
                       Chưa tạo hạng mục
                     </span>
                   )}
@@ -143,7 +143,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                         return (
                           <Link
                             href={`/managertournaments/${t.id}/live`}
-                            className="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-2xs"
+                            className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-sm"
                             title="Giải đấu đang diễn ra. Bấm để mở Điều Hành Live"
                           >
                             Điều Hành Live
@@ -155,7 +155,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                         return (
                           <Link
                             href={`/managertournaments/${t.id}/live`}
-                            className="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                            className="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
                             title="Sẵn sàng vào Điều Hành Live"
                           >
                             Điều Hành Live
@@ -166,7 +166,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                       return (
                         <Link
                           href={`/managertournaments/${t.id}/live`}
-                          className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+                          className="inline-flex items-center text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition"
                           title="Mở điều hành live"
                         >
                           Điều Hành Live
@@ -183,7 +183,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                         return (
                           <button
                             onClick={() => setTargetTourToClose(t)}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition cursor-pointer"
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition cursor-pointer"
                             title="Khóa cổng đăng ký thủ công"
                           >
                             Khóa Đăng Ký
@@ -193,7 +193,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
 
                       return (
                         <span
-                          className="inline-flex items-center text-[11px] font-medium text-slate-400 bg-slate-100 border border-slate-200/60 px-2.5 py-1.5 rounded-lg cursor-default"
+                          className="inline-flex items-center text-[11px] font-medium text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-lg cursor-default"
                           title="Cổng đăng ký đã đóng"
                         >
                           Đã Khóa
@@ -204,7 +204,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                     {/* Details */}
                     <Link
                       href={`/managertournaments/${t.id}`}
-                      className="inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                      className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-800 transition cursor-pointer"
                       title="Vào trang quản lý chi tiết giải đấu"
                     >
                       Chi Tiết
@@ -216,7 +216,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
           </tbody>
         </table>
         {tournaments.length === 0 && (
-          <div className="py-16 text-center text-slate-400 text-sm">Chưa có giải đấu nào được tạo.</div>
+          <div className="py-16 text-center text-zinc-500 text-sm">Chưa có giải đấu nào được tạo.</div>
         )}
       </div>
 

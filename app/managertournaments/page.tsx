@@ -171,7 +171,7 @@ export default function TournamentManagerOverviewPage() {
           <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
             Quản Lý Giải Đấu
           </p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight sm:text-3xl">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight sm:text-3xl">
             Tournament Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal">
@@ -182,14 +182,14 @@ export default function TournamentManagerOverviewPage() {
           <button
             onClick={fetchTournaments}
             disabled={isLoading}
-            className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+            className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 cursor-pointer"
             title="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Tạo Giải Đấu
@@ -197,7 +197,7 @@ export default function TournamentManagerOverviewPage() {
         </div>
       </div>
 
-      {/* Clean Stat Cards (No Icons) */}
+      {/* Clean Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((card) => {
           return (
@@ -207,7 +207,7 @@ export default function TournamentManagerOverviewPage() {
             >
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
               <div className="flex items-baseline justify-between mt-2">
-                <p className={`text-3xl font-bold tracking-tight ${card.color}`}>{card.value}</p>
+                <p className={`text-3xl font-extrabold tracking-tight ${card.color}`}>{card.value}</p>
                 <span className="text-[11px] text-slate-400 font-medium">{card.hint}</span>
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function TournamentManagerOverviewPage() {
           </div>
           <button
             onClick={fetchTournaments}
-            className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition shadow-2xs"
+            className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition shadow-2xs cursor-pointer"
           >
             Thử lại
           </button>
@@ -249,9 +249,9 @@ export default function TournamentManagerOverviewPage() {
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 activeFilter === f.value
-                  ? 'border-indigo-600 bg-indigo-600 text-white shadow-2xs'
+                  ? 'border-indigo-600 bg-indigo-600 text-white shadow-2xs font-bold'
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
@@ -263,13 +263,13 @@ export default function TournamentManagerOverviewPage() {
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-border/60 px-5 py-4 last:border-0">
-              <div className="h-4 w-48 animate-pulse rounded bg-muted" />
-              <div className="h-5 w-24 animate-pulse rounded-full bg-muted" />
-              <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-              <div className="ml-auto h-4 w-16 animate-pulse rounded bg-muted" />
+            <div key={i} className="flex items-center gap-4 border-b border-zinc-800/60 px-5 py-4 last:border-0">
+              <div className="h-4 w-48 animate-pulse rounded bg-zinc-900" />
+              <div className="h-5 w-24 animate-pulse rounded-full bg-zinc-900" />
+              <div className="h-4 w-32 animate-pulse rounded bg-zinc-900" />
+              <div className="ml-auto h-4 w-16 animate-pulse rounded bg-zinc-900" />
             </div>
           ))}
         </div>
