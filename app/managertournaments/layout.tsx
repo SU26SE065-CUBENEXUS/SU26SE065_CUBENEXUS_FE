@@ -95,8 +95,8 @@ function Sidebar({
         <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
       </button>
 
-      {/* Tournament Selector */}
-      {!collapsed && tournaments.length > 0 && (
+      {/* Tournament Selector (Manager only) */}
+      {!isAdmin && !collapsed && tournaments.length > 0 && (
         <div className="px-3 pt-3.5 pb-3 border-b border-slate-200 flex-shrink-0 bg-slate-50/50">
           <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
             Active Tournament
@@ -143,50 +143,81 @@ function Sidebar({
             </Link>
           </li>
 
-          {!collapsed && (
-            <li className="pt-3 pb-1">
-              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400">
-                Tournament
-              </span>
-            </li>
+          {/* Manager Specific Navigation */}
+          {!isAdmin && (
+            <>
+              {!collapsed && (
+                <li className="pt-3 pb-1">
+                  <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Tournament
+                  </span>
+                </li>
+              )}
+
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = selectedId ? isActive(item.href, item.exact) : false;
+                const isLive = item.label === 'Live Operations';
+                return (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      onClick={(e) => {
+                        if (!selectedId) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                        !selectedId
+                          ? 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
+                          : active
+                            ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
+                            : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                      } ${collapsed ? 'justify-center px-2' : ''}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <span className="flex-1 truncate">{item.label}</span>
+                      )}
+                      {!collapsed && isLive && selectedId && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </>
           )}
 
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = selectedId ? isActive(item.href, item.exact) : false;
-            const isLive = item.label === 'Live Operations';
-            return (
-              <li key={item.label}>
+          {/* Admin Specific Navigation */}
+          {isAdmin && (
+            <>
+              {!collapsed && (
+                <li className="pt-3 pb-1">
+                  <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-amber-600 flex items-center gap-1">
+                    <Trophy className="h-3 w-3" /> Tournaments
+                  </span>
+                </li>
+              )}
+
+              <li>
                 <Link
-                  href={item.href}
-                  onClick={(e) => {
-                    if (!selectedId) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    !selectedId
-                      ? 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
-                      : active
-                        ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
-                        : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                  href="/admin/tournaments"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                    pathname.startsWith('/admin/tournaments')
+                      ? 'text-amber-600 bg-amber-50 border border-amber-100 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                   } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? 'Quản Lý Giải Đấu' : undefined}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">{item.label}</span>
-                  )}
-                  {!collapsed && isLive && selectedId && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="flex-1 truncate">Quản Lý Giải Đấu</span>
                   )}
                 </Link>
               </li>
-            );
-          })}
 
-          {isAdmin && (
-            <>
               {!collapsed && (
                 <li className="pt-4 pb-1">
                   <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-rose-500 flex items-center gap-1">

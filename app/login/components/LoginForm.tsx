@@ -25,14 +25,15 @@ import {
 
 /** Map Vietnamese BE error messages to user-friendly English */
 function mapErrorMessage(msg: string): string {
+  if (!msg) return 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
   if (msg.includes('Email hoặc mật khẩu không đúng'))
-    return 'Incorrect email or password. Please try again.';
+    return 'Tên đăng nhập hoặc mật khẩu không chính xác.';
   if (msg.includes('bị vô hiệu hóa'))
-    return 'This account has been deactivated. Contact support for help.';
+    return 'Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.';
   if (msg.includes('bị cấm'))
-    return 'This account has been banned.';
+    return msg;
   if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch'))
-    return 'Unable to connect to server. Please check your connection.';
+    return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.';
   return msg;
 }
 
@@ -76,7 +77,7 @@ export default function LoginForm() {
 
     const isEmailValid = validateEmail(email);
     if (!password) {
-      setError('Password is required');
+      setError('Mật khẩu không được để trống');
       return;
     }
     if (!isEmailValid) return;
@@ -117,7 +118,6 @@ export default function LoginForm() {
       const message = err instanceof Error ? err.message : 'An unexpected error occurred';
       const mapped = mapErrorMessage(message);
       setError(mapped);
-      toast.error('Đăng nhập thất bại', mapped);
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +128,9 @@ export default function LoginForm() {
     width: '100%',
     padding: '13px 44px 13px 42px',
     borderRadius: 12,
-    border: '1.5px solid rgba(15, 23, 42, 0.12)',
+    borderWidth: '1.5px',
+    borderStyle: 'solid',
+    borderColor: 'rgba(15, 23, 42, 0.12)',
     background: '#ffffff',
     color: '#0f172a',
     fontSize: 15,
@@ -247,29 +249,6 @@ export default function LoginForm() {
           </p>
         </div>
 
-        {/* ── Error Banner ── */}
-        {error && (
-          <div
-            className="animate-shake"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 10,
-              padding: '12px 16px',
-              borderRadius: 12,
-              background: 'rgba(239, 68, 68, 0.05)',
-              border: '1px solid rgba(239, 68, 68, 0.15)',
-              color: '#ef4444',
-              fontSize: 13.5,
-              lineHeight: 1.5,
-              marginBottom: 20,
-            }}
-          >
-            <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>{error}</span>
-          </div>
-        )}
-
         {/* ── Login Form ── */}
         <form onSubmit={handleSubmit} noValidate>
           {/* Email */}
@@ -323,6 +302,7 @@ export default function LoginForm() {
                 style={{
                   ...inputBaseStyle,
                   ...(passwordFocused ? inputFocusedStyle : {}),
+                  ...(error ? inputErrorStyle : {}),
                 }}
                 value={password}
                 onChange={(e) => {
@@ -361,6 +341,26 @@ export default function LoginForm() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+
+            {/* Inline Error Message directly under Password input box */}
+            {error && (
+              <div
+                className="animate-slide-up"
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 6,
+                  marginTop: 6,
+                  color: '#ef4444',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  lineHeight: 1.4,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{error}</span>
+              </div>
+            )}
           </div>
 
           {/* Remember & Forgot */}

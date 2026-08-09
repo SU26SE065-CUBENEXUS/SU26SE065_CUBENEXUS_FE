@@ -104,8 +104,9 @@ export async function apiFetch<T>(
     headers,
   });
 
-  // 401 → try refresh once
-  if (response.status === 401 && !isRefreshing) {
+  // 401 → try refresh once (skip for auth endpoints like login/register)
+  const isAuthEndpoint = path.includes('/api/auth/login') || path.includes('/api/auth/register') || path.includes('/api/auth/refresh');
+  if (response.status === 401 && !isAuthEndpoint && !isRefreshing) {
     isRefreshing = true;
     const newToken = await tryRefreshToken();
     isRefreshing = false;
@@ -120,8 +121,8 @@ export async function apiFetch<T>(
         },
       });
     } else {
-      // Redirect to login
-      if (typeof window !== 'undefined') {
+      // Redirect to login only if not already on login page
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
       throw new Error('Unauthorized');

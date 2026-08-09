@@ -18,6 +18,29 @@ function formatDateRange(start: string, end: string): string {
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
+function formatEventLabel(e: {
+  puzzleTypeName?: string;
+  puzzleTypeCode?: string;
+  eventFormatCode?: string;
+  medleyPuzzles?: { puzzleTypeName?: string; puzzleTypeCode?: string }[];
+}): string {
+  const isMedley = (e.eventFormatCode || '').toUpperCase() === 'MEDLEY';
+  const baseName = e.puzzleTypeName || e.puzzleTypeCode || '3x3x3';
+
+  if (isMedley) {
+    if (e.medleyPuzzles && e.medleyPuzzles.length > 0) {
+      const subNames = e.medleyPuzzles
+        .map((mp) => mp.puzzleTypeCode || mp.puzzleTypeName)
+        .filter(Boolean)
+        .join(' + ');
+      return `Medley (${subNames})`;
+    }
+    return `${baseName} (Medley)`;
+  }
+
+  return `${baseName} (Traditional)`;
+}
+
 export function TournamentTable({ tournaments }: TournamentTableProps) {
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const [targetTourToClose, setTargetTourToClose] = useState<TournamentDetailDto | null>(null);
@@ -116,7 +139,7 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                             key={e.id}
                             className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700 border border-slate-200/80 whitespace-nowrap"
                           >
-                            {e.puzzleTypeName || e.puzzleTypeCode}
+                            {formatEventLabel(e)}
                           </span>
                         ))}
                         {t.events.length > 3 && (
