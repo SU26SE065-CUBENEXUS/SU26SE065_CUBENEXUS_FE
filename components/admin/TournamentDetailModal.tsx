@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Trophy, MapPin, Calendar, Users, User, ShieldAlert, CheckCircle2, Layers } from 'lucide-react';
 import type { AdminTournamentDto } from '@/features/admin/api/adminTournamentApi';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 
 interface TournamentDetailModalProps {
   isOpen: boolean;
@@ -166,25 +167,15 @@ export function TournamentDetailModal({
             <p className="text-xs text-slate-400 italic">Chưa có môn thi nào được tạo trong giải đấu này.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {tournament.events.map((ev) => {
-                const isMedley = (ev.eventFormatCode || '').toUpperCase() === 'MEDLEY';
-                const subNames = ev.medleyPuzzles?.map((mp) => mp.puzzleTypeCode || mp.puzzleTypeName).filter(Boolean).join(' + ');
-                const label = isMedley
-                  ? subNames
-                    ? `Medley (${subNames})`
-                    : `${ev.puzzleTypeName || ev.puzzleTypeCode} (Medley)`
-                  : `${ev.puzzleTypeName || ev.puzzleTypeCode} (Traditional)`;
-
-                return (
-                  <div key={ev.id} className="rounded-xl border border-slate-200 bg-white p-2.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                      <span className="font-bold text-slate-900">{label}</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase font-mono">{ev.eventFormatCode || 'TRADITIONAL'}</span>
+              {tournament.events.map((ev) => (
+                <div key={ev.id} className="rounded-xl border border-slate-200 bg-white p-2.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                    <span className="font-bold text-slate-900">{formatEventLabel(ev)}</span>
                   </div>
-                );
-              })}
+                  <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase font-mono">{ev.eventFormatCode || 'TRADITIONAL'}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>

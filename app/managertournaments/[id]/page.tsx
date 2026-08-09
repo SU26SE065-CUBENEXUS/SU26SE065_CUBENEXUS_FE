@@ -6,6 +6,7 @@ import { DashboardCard } from '@/components/tournament-manager/DashboardCard';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
 import { getTournamentById, completeTournament } from '@/lib/api/tournaments';
 import type { TournamentDetailDto } from '@/lib/api/types';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
@@ -261,8 +262,7 @@ export default function TournamentDetailDashboardPage({
                     key={e.id}
                     className="rounded-md bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
                   >
-                    {e.puzzleTypeName || e.puzzleTypeCode}
-                    {e.eventFormatCode === 'MEDLEY' && ' (Medley)'}
+                    {formatEventLabel(e)}
                   </span>
                 ))}
               </div>

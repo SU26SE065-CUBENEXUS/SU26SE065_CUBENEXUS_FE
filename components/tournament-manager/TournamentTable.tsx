@@ -6,6 +6,8 @@ import { Settings, ChevronRight, ZoomIn, Radio, Lock } from 'lucide-react';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
+
 interface TournamentTableProps {
   tournaments: TournamentDetailDto[];
 }
@@ -16,29 +18,6 @@ function formatDateRange(start: string, end: string): string {
   const fmt = (d: Date) =>
     d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(s)} – ${fmt(e)}`;
-}
-
-function formatEventLabel(e: {
-  puzzleTypeName?: string;
-  puzzleTypeCode?: string;
-  eventFormatCode?: string;
-  medleyPuzzles?: { puzzleTypeName?: string; puzzleTypeCode?: string }[];
-}): string {
-  const isMedley = (e.eventFormatCode || '').toUpperCase() === 'MEDLEY';
-  const baseName = e.puzzleTypeName || e.puzzleTypeCode || '3x3x3';
-
-  if (isMedley) {
-    if (e.medleyPuzzles && e.medleyPuzzles.length > 0) {
-      const subNames = e.medleyPuzzles
-        .map((mp) => mp.puzzleTypeCode || mp.puzzleTypeName)
-        .filter(Boolean)
-        .join(' + ');
-      return `Medley (${subNames})`;
-    }
-    return `${baseName} (Medley)`;
-  }
-
-  return `${baseName} (Traditional)`;
 }
 
 export function TournamentTable({ tournaments }: TournamentTableProps) {
