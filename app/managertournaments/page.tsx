@@ -263,13 +263,13 @@ export default function TournamentManagerOverviewPage() {
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-zinc-800/60 px-5 py-4 last:border-0">
-              <div className="h-4 w-48 animate-pulse rounded bg-zinc-900" />
-              <div className="h-5 w-24 animate-pulse rounded-full bg-zinc-900" />
-              <div className="h-4 w-32 animate-pulse rounded bg-zinc-900" />
-              <div className="ml-auto h-4 w-16 animate-pulse rounded bg-zinc-900" />
+            <div key={i} className="flex items-center gap-4 border-b border-slate-100 px-5 py-4 last:border-0">
+              <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
+              <div className="h-5 w-24 animate-pulse rounded-full bg-slate-100" />
+              <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+              <div className="ml-auto h-4 w-16 animate-pulse rounded bg-slate-100" />
             </div>
           ))}
         </div>

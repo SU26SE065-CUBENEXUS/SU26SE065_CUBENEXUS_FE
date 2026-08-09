@@ -21,9 +21,6 @@ import {
   Settings,
   Layers,
   Radio,
-  Shield,
-  Wifi,
-  WifiOff,
   Zap,
 } from 'lucide-react';
 
@@ -41,6 +38,8 @@ function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -186,46 +185,66 @@ function Sidebar({
             );
           })}
 
-          {!collapsed && (
-            <li className="pt-4 pb-1">
-              <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-rose-500 flex items-center gap-1">
-                <ShieldAlert className="h-3 w-3" /> Anti-Cheat & Audit
-              </span>
-            </li>
-          )}
+          {isAdmin && (
+            <>
+              {!collapsed && (
+                <li className="pt-4 pb-1">
+                  <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-rose-500 flex items-center gap-1">
+                    <ShieldAlert className="h-3 w-3" /> Anti-Cheat & Audit
+                  </span>
+                </li>
+              )}
 
-          <li>
-            <Link
-              href="/admin/elo-management"
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                pathname.startsWith('/admin/elo-management')
-                  ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
-                  : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-              } ${collapsed ? 'justify-center px-2' : ''}`}
-              title={collapsed ? 'Quản Lý ELO' : undefined}
-            >
-              <Zap className="h-4 w-4 shrink-0 text-orange-500" />
-              {!collapsed && (
-                <span className="flex-1 truncate">Quản Lý &amp; Cấu Hình ELO</span>
-              )}
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin/fraud-reports"
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                pathname.startsWith('/admin/fraud-reports')
-                  ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
-                  : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-              } ${collapsed ? 'justify-center px-2' : ''}`}
-              title={collapsed ? 'Fraud Reports' : undefined}
-            >
-              <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
-              {!collapsed && (
-                <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
-              )}
-            </Link>
-          </li>
+              <li>
+                <Link
+                  href="/admin/users"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                    pathname.startsWith('/admin/users')
+                      ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                  title={collapsed ? 'Quản Lý Người Dùng' : undefined}
+                >
+                  <Users className="h-4 w-4 shrink-0 text-indigo-500" />
+                  {!collapsed && (
+                    <span className="flex-1 truncate">Quản Lý Người Dùng</span>
+                  )}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/elo-management"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                    pathname.startsWith('/admin/elo-management')
+                      ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                  title={collapsed ? 'Quản Lý ELO' : undefined}
+                >
+                  <Zap className="h-4 w-4 shrink-0 text-orange-500" />
+                  {!collapsed && (
+                    <span className="flex-1 truncate">Quản Lý &amp; Cấu Hình ELO</span>
+                  )}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/fraud-reports"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                    pathname.startsWith('/admin/fraud-reports')
+                      ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                  title={collapsed ? 'Fraud Reports' : undefined}
+                >
+                  <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
+                  {!collapsed && (
+                    <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
+                  )}
+                </Link>
+              </li>
+            </>
+          )}
         </ul>
       </nav>
 
@@ -258,6 +277,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
     live: 'Live Operations',
     judges: 'Judge Management',
     'fraud-reports': 'Fraud Reports Queue',
+    'elo-management': 'Quản Lý ELO',
   };
   const pageLabel = pageLabels[lastSegment] || (selectedTournamentName ? 'Overview' : 'Dashboard');
 
@@ -325,13 +345,15 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
                 </div>
               </div>
               <div className="mt-1 space-y-0.5">
-                <Link
-                  href="/admin/fraud-reports"
-                  className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-                >
-                  <ShieldAlert size={13} />
-                  <span>Fraud Reports Queue</span>
-                </Link>
+                {user?.role?.toUpperCase() === 'ADMIN' && (
+                  <Link
+                    href="/admin/fraud-reports"
+                    className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <ShieldAlert size={13} />
+                    <span>Fraud Reports Queue</span>
+                  </Link>
+                )}
                 <Link
                   href="/profile"
                   className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
@@ -370,8 +392,11 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     if (isLoading) return;
     if (!isAuthenticated) { router.replace('/login'); return; }
     const role = user?.role?.toUpperCase();
-    if (role !== 'MANAGER' && role !== 'ADMIN') { router.replace('/'); }
-  }, [isLoading, isAuthenticated, user, router]);
+    if (role !== 'MANAGER' && role !== 'ADMIN') { router.replace('/'); return; }
+    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+      router.replace('/managertournaments');
+    }
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   // Fetch tournaments list for switcher
   useEffect(() => {

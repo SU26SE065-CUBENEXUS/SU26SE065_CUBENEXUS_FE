@@ -191,7 +191,7 @@ export default function LiveOperationsPage({
     if (editingResult) {
       const seconds = (editingResult.rawTimeMs / 1000).toFixed(2);
       setEditingResultTime(seconds);
-      
+
       // Locate matching penalty ID in penaltyTypes
       const match = penaltyTypes.find(p => p.code === editingResult.penaltyCode);
       setEditingResultPenalty(match?.id || 'none');
@@ -310,7 +310,7 @@ export default function LiveOperationsPage({
       setHubStatus('Connected');
       try {
         await connection.invoke('RegisterManagerHub', hubEventId, Number(hubRound));
-      } catch {}
+      } catch { }
     });
 
     connection.onclose(() => {
@@ -350,7 +350,7 @@ export default function LiveOperationsPage({
         const state = await getLiveBoardState(selectedEventId, Number(roundNumber));
         setLiveState(state);
         if (state.groups.length > 0) setSelectedGroupId(state.groups[0].groupId);
-      } catch {}
+      } catch { }
       finally { setIsLoadingLiveState(false); }
     }
     fetchLive();
@@ -411,7 +411,7 @@ export default function LiveOperationsPage({
         const state = await getLiveBoardState(medleyEventId, Number(medleyRoundNumber));
         setMedleyLiveState(state);
         if (state.groups.length > 0) setMedleyGroupId(state.groups[0].groupId);
-      } catch {}
+      } catch { }
       finally { setIsLoadingMedleyLive(false); }
     }
     fetchMedleyLive();
@@ -572,11 +572,11 @@ export default function LiveOperationsPage({
         return;
       }
       const penVal = medleyPenalties[puzzle.id];
-      detailsList.push({ 
-        medleyPuzzleId: puzzle.id, 
-        rawTimeMs: Math.round(Number(timeStr) * 1000), 
-        penaltyTypeId: isValidGuid(penVal) ? penVal : undefined, 
-        scrambleId: matchingScramble.id 
+      detailsList.push({
+        medleyPuzzleId: puzzle.id,
+        rawTimeMs: Math.round(Number(timeStr) * 1000),
+        penaltyTypeId: isValidGuid(penVal) ? penVal : undefined,
+        scrambleId: matchingScramble.id
       });
     }
     setIsSubmittingMedley(true);
@@ -724,11 +724,10 @@ export default function LiveOperationsPage({
 
         {/* SignalR Status */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-            isHubConnected
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${isHubConnected
               ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
               : 'text-slate-600 border-slate-200 bg-slate-50'
-          }`}>
+            }`}>
             {isHubConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
             <span>Hub: {hubStatus}</span>
           </div>
@@ -743,11 +742,10 @@ export default function LiveOperationsPage({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${
-                isActive
+              className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${isActive
                   ? 'border-indigo-600 text-indigo-600 font-bold bg-indigo-50/50 rounded-t-lg'
                   : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -797,9 +795,8 @@ export default function LiveOperationsPage({
               <div className="flex items-end">
                 <button
                   onClick={connectHub}
-                  className={`w-full py-2 rounded-lg text-xs font-semibold text-white transition ${
-                    isHubConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
-                  }`}
+                  className={`w-full py-2 rounded-lg text-xs font-semibold text-white transition ${isHubConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                 >
                   {isHubConnected ? '✓ Kết Nối Lại Hub' : 'Kết Nối Hub'}
                 </button>
@@ -825,14 +822,13 @@ export default function LiveOperationsPage({
                 {stations.map((station) => (
                   <div
                     key={station.stationNumber}
-                    className={`relative rounded-xl border-2 p-4 transition-all duration-500 ${
-                      station.state === 'EMPTY' ? 'station-empty' :
-                      station.state === 'VERIFIED' ? 'station-verified' :
-                      station.state === 'INSPECTING' ? 'station-inspecting' :
-                      station.state === 'SOLVING' ? 'station-solving' :
-                      station.state === 'SUBMITTING' ? 'station-submitting' :
-                      station.state === 'DONE' ? 'station-done' : 'station-empty'
-                    }`}
+                    className={`relative rounded-xl border-2 p-4 transition-all duration-500 ${station.state === 'EMPTY' ? 'station-empty' :
+                        station.state === 'VERIFIED' ? 'station-verified' :
+                          station.state === 'INSPECTING' ? 'station-inspecting' :
+                            station.state === 'SOLVING' ? 'station-solving' :
+                              station.state === 'SUBMITTING' ? 'station-submitting' :
+                                station.state === 'DONE' ? 'station-done' : 'station-empty'
+                      }`}
                   >
                     <div className="text-center">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Trạm</p>
@@ -889,11 +885,10 @@ export default function LiveOperationsPage({
             </button>
           </form>
           {checkInResult && (
-            <div className={`mt-4 flex items-start gap-3 rounded-lg border p-3.5 text-xs ${
-              checkInResult.success
+            <div className={`mt-4 flex items-start gap-3 rounded-lg border p-3.5 text-xs ${checkInResult.success
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                 : 'border-red-200 bg-red-50 text-red-800'
-            }`}>
+              }`}>
               {checkInResult.success ? <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /> : <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
               <div>
                 {checkInResult.displayName && <p className="font-bold text-slate-900">{checkInResult.displayName}</p>}
@@ -955,12 +950,12 @@ export default function LiveOperationsPage({
               <div className="flex flex-wrap items-center gap-4 px-4 py-2 bg-slate-50 border border-b-0 border-slate-200 text-xs text-slate-600 font-sans rounded-t-lg">
                 {currentEvent.timeLimitMs && (
                   <span className="flex items-center gap-1 font-medium">
-                    ⏱️ <span className="font-semibold text-slate-700">Time Limit:</span> <strong className="text-slate-900 font-mono">{formatMs(currentEvent.timeLimitMs)}</strong> <span className="text-[11px] text-slate-500">(Vượt mốc = DNF)</span>
+                    <span className="font-semibold text-slate-700">Time Limit:</span> <strong className="text-slate-900 font-mono">{formatMs(currentEvent.timeLimitMs)}</strong> <span className="text-[11px] text-slate-500">(Vượt mốc = DNF)</span>
                   </span>
                 )}
                 {currentEvent.cutoffTimeMs && (
                   <span className="flex items-center gap-1 font-medium">
-                    ⚡ <span className="font-semibold text-slate-700">Cutoff Time:</span> <strong className="text-amber-700 font-mono">{formatMs(currentEvent.cutoffTimeMs)}</strong> <span className="text-[11px] text-slate-500">(Mốc tối đa lượt thi đầu để được thi tiếp)</span>
+                    <span className="font-semibold text-slate-700">Cutoff Time:</span> <strong className="text-amber-700 font-mono">{formatMs(currentEvent.cutoffTimeMs)}</strong> <span className="text-[11px] text-slate-500">(Mốc tối đa lượt thi đầu để được thi tiếp)</span>
                   </span>
                 )}
               </div>
@@ -998,11 +993,10 @@ export default function LiveOperationsPage({
                       return (
                         <tr key={c.groupCompetitorId} className="hover:bg-slate-50 transition-colors">
                           <td className="px-3 py-2.5 text-center font-bold">
-                            <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${
-                              c.rank === 1 ? 'bg-amber-100 text-amber-900 font-bold' :
-                              c.rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' :
-                              c.rank === 3 ? 'bg-amber-800 text-white font-bold' : 'text-slate-500'
-                            }`}>
+                            <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${c.rank === 1 ? 'bg-amber-100 text-amber-900 font-bold' :
+                                c.rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' :
+                                  c.rank === 3 ? 'bg-amber-800 text-white font-bold' : 'text-slate-500'
+                              }`}>
                               {c.rank || '—'}
                             </span>
                           </td>
@@ -1055,11 +1049,10 @@ export default function LiveOperationsPage({
                                         });
                                       }
                                     }}
-                                    className={`px-2 py-1 rounded transition font-semibold ${
-                                      attempt
+                                    className={`px-2 py-1 rounded transition font-semibold ${attempt
                                         ? (isDnf ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100')
                                         : 'text-slate-300 cursor-default'
-                                    }`}
+                                      }`}
                                     title={
                                       attempt
                                         ? `Solve #${i + 1}: ${val} ${isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
@@ -1093,236 +1086,234 @@ export default function LiveOperationsPage({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
-            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-              <ClipboardEdit className="h-4 w-4 text-indigo-600" /> Nhập Điểm Trực Tiếp (Traditional Result Entry)
-            </h2>
-            <p className="text-xs text-slate-500 mb-5">Nhập kết quả các lượt giải thi đấu truyền thống.</p>
+            <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                <ClipboardEdit className="h-4 w-4 text-indigo-600" /> Nhập Điểm Trực Tiếp (Traditional Result Entry)
+              </h2>
+              <p className="text-xs text-slate-500 mb-5">Nhập kết quả các lượt giải thi đấu truyền thống.</p>
 
-            {traditionalEvents.length === 0 ? (
-              <p className="text-center py-10 text-xs text-slate-500">Không có hạng mục thi đấu truyền thống.</p>
-            ) : (
-              <form onSubmit={handleTraditionalSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
-                    <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
-                    >
-                      {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
-                    <input type="number" min="1" value={roundNumber} onChange={(e) => setRoundNumber(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm (Group)</label>
-                    {isLoadingLiveState ? (
-                      <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
-                    ) : (
-                      <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}
+              {traditionalEvents.length === 0 ? (
+                <p className="text-center py-10 text-xs text-slate-500">Không có hạng mục thi đấu truyền thống.</p>
+              ) : (
+                <form onSubmit={handleTraditionalSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
+                      <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
                         className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
-                        <option value="">-- Chọn Nhóm Thi --</option>
-                        {liveState?.groups.map((g: any) => (
-                          <option key={g.groupId} value={g.groupId}>{g.groupName} ({g.statusCode})</option>
-                        ))}
+                        {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
                       </select>
-                    )}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
+                      <input type="number" min="1" value={roundNumber} onChange={(e) => setRoundNumber(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
-                    <select value={selectedGroupCompetitorId} onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
-                      disabled={!selectedGroupId}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
-                    >
-                      <option value="">-- Chọn Thí Sinh --</option>
-                      {filteredTradCompetitors.map((c: any) => (
-                        <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Trạm {c.stationNumber ?? '—'})</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
 
-                {selectedGroupCompetitorId && (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve #</label>
-                        <select value={attemptNumber} onChange={(e) => setAttemptNumber(e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm (Group)</label>
+                      {isLoadingLiveState ? (
+                        <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
+                      ) : (
+                        <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                         >
-                          {[...Array(liveState?.solveCount || 5)].map((_, i) => (
-                            <option key={i + 1} value={i + 1}>Solve {i + 1}</option>
+                          <option value="">-- Chọn Nhóm Thi --</option>
+                          {liveState?.groups.map((g: any) => (
+                            <option key={g.groupId} value={g.groupId}>{g.groupName} ({g.statusCode})</option>
                           ))}
                         </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">
-                          {isCorrectingMode ? 'Thời Gian Sửa (Giây)' : 'Thời Gian Solve (Giây)'}
-                        </label>
-                        <input type="number" step="0.01" value={rawTimeMs} onChange={(e) => setRawTimeMs(e.target.value)}
-                          placeholder="Ví dụ: 10.25"
-                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Hình Phạt (Penalty)</label>
-                        <select value={selectedPenaltyId} onChange={(e) => setSelectedPenaltyId(e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
-                        >
-                          <option value="none">OK (Hợp lệ)</option>
-                          {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                        </select>
-                      </div>
+                      )}
                     </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
+                      <select value={selectedGroupCompetitorId} onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
+                        disabled={!selectedGroupId}
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
+                      >
+                        <option value="">-- Chọn Thí Sinh --</option>
+                        {filteredTradCompetitors.map((c: any) => (
+                          <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Trạm {c.stationNumber ?? '—'})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-                    {isCorrectingMode ? (
-                      /* Correction Reason Input (Audit Trail) */
-                      <div className="space-y-1.5 animate-in fade-in duration-200">
-                        <label className="block text-[10px] font-bold text-amber-600 uppercase font-mono">Lý Do Đổi Điểm (Bắt buộc)</label>
-                        <textarea
-                          value={correctionReason}
-                          onChange={(e) => setCorrectionReason(e.target.value)}
-                          placeholder="Ví dụ: Trọng tài ghi nhầm giây trên scorecard giấy..."
-                          rows={2}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
-                        />
-                      </div>
-                    ) : (
-                      /* Standard Scramble & Signature Requirements */
-                      <>
-                        {/* Scramble for this solve */}
-                        {(() => {
-                          const scramble = groupScrambles.find((s) => s.solveNumber === Number(attemptNumber));
-                          return scramble && (
-                            <ScrambleDisplay sequence={scramble.sequence} solveNumber={Number(attemptNumber)} />
-                          );
-                        })()}
-
-                        {/* Signature */}
+                  {selectedGroupCompetitorId && (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
-                            <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
-                          </div>
-                          <canvas
-                            ref={tradCanvasRef} width={400} height={80}
-                            onMouseDown={startTradDrawing} onMouseMove={drawTrad}
-                            onMouseUp={() => setIsTradDrawing(false)} onMouseLeave={() => setIsTradDrawing(false)}
-                            className="w-full rounded-lg border border-slate-200 cursor-crosshair block bg-white"
-                            style={{ height: '80px' }}
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve #</label>
+                          <select value={attemptNumber} onChange={(e) => setAttemptNumber(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
+                          >
+                            {[...Array(liveState?.solveCount || 5)].map((_, i) => (
+                              <option key={i + 1} value={i + 1}>Solve {i + 1}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">
+                            {isCorrectingMode ? 'Thời Gian Sửa (Giây)' : 'Thời Gian Solve (Giây)'}
+                          </label>
+                          <input type="number" step="0.01" value={rawTimeMs} onChange={(e) => setRawTimeMs(e.target.value)}
+                            placeholder="Ví dụ: 10.25"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 font-mono"
                           />
                         </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {isCorrectingMode && !isHubConnected && (
-                  <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 animate-in fade-in duration-200">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>Yêu cầu kết nối Hub (Connected) hoạt động mới được phép sửa điểm.</span>
-                  </div>
-                )}
-
-                <button type="submit" 
-                  disabled={isSubmittingTrad || !selectedGroupCompetitorId || (isCorrectingMode && !isHubConnected)}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
-                >
-                  {isSubmittingTrad ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : isCorrectingMode ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <ClipboardEdit className="h-4 w-4" />
-                  )}
-                  {isSubmittingTrad ? 'Đang gửi...' : isCorrectingMode ? 'Cập Nhật Điều Chỉnh Điểm' : 'Gửi Kết Quả Thi'}
-                </button>
-              </form>
-            )}
-
-            {submitTradResult && (
-              <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
-                submitTradResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
-              }`}>
-                {submitTradResult.ok ? <CheckCircle className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
-                {submitTradResult.message}
-              </div>
-            )}
-          </div>
-
-          {/* Results Monitor sidebar */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
-            <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Nhóm</h3>
-            {isLoadingLiveState ? (
-              <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
-            ) : filteredTradCompetitors.length === 0 ? (
-              <p className="text-xs text-slate-400">Chọn nhóm thi để xem danh sách thí sinh.</p>
-            ) : (
-              <div className="space-y-3">
-                {filteredTradCompetitors.map((c: any) => (
-                  <div key={c.groupCompetitorId} className="border-b border-slate-100 pb-2.5 last:border-0">
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-bold text-slate-900 truncate mr-2">{c.competitorName}</span>
-                      <span className="text-[10px] text-slate-500 font-mono shrink-0">
-                        {c.completedSolves}/{liveState?.solveCount}
-                      </span>
-                    </div>
-                    <div className="flex gap-1 flex-wrap">
-                      {Array.from({ length: liveState?.solveCount || 5 }, (_, i) => {
-                        const result = c.results?.find((r: any) => r.solveNumber === i + 1);
-                        return (
-                          <button key={i}
-                            type="button"
-                            disabled={!result}
-                            onClick={() => {
-                              if (result) {
-                                setEditingResult({
-                                  resultId: result.resultId,
-                                  competitorName: c.competitorName,
-                                  solveNumber: i + 1,
-                                  rawTimeMs: result.rawTimeMs || result.finalTimeMs,
-                                  penaltyTypeId: result.penaltyTypeId || 'none',
-                                  isDnf: result.isDnf,
-                                  penaltyCode: result.penaltyCode || 'OK',
-                                  evidencePhotoUrl: result.evidencePhotoUrl,
-                                  esignatureData: result.esignatureData,
-                                });
-                                setEditingResultTime(result.rawTimeMs ? (result.rawTimeMs / 1000).toString() : (result.finalTimeMs / 1000).toString());
-                                setEditingResultPenalty(result.penaltyTypeId || 'none');
-                                setEditingResultReason('');
-                                setCorrectionError(null);
-                              }
-                            }}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${
-                              result ? (
-                                result.isLocked 
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : result.isDnf 
-                                    ? 'bg-red-50 text-red-700 border border-red-200' 
-                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                              ) : 'bg-slate-100 text-slate-400 cursor-default'
-                            }`}
-                            title={result ? "Bấm để xem ảnh minh chứng / Sửa điểm" : "Lượt thi chưa hoàn thành"}
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Hình Phạt (Penalty)</label>
+                          <select value={selectedPenaltyId} onChange={(e) => setSelectedPenaltyId(e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                           >
-                            {result ? (result.isDnf ? 'DNF' : `${(result.finalTimeMs / 1000).toFixed(2)}`) : `S${i + 1}`}
-                          </button>
-                        );
-                      })}
+                            <option value="none">OK (Hợp lệ)</option>
+                            {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      {isCorrectingMode ? (
+                        /* Correction Reason Input (Audit Trail) */
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-bold text-amber-600 uppercase font-mono">Lý Do Đổi Điểm (Bắt buộc)</label>
+                          <textarea
+                            value={correctionReason}
+                            onChange={(e) => setCorrectionReason(e.target.value)}
+                            placeholder="Ví dụ: Trọng tài ghi nhầm giây trên scorecard giấy..."
+                            rows={2}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
+                          />
+                        </div>
+                      ) : (
+                        /* Standard Scramble & Signature Requirements */
+                        <>
+                          {/* Scramble for this solve */}
+                          {(() => {
+                            const scramble = groupScrambles.find((s) => s.solveNumber === Number(attemptNumber));
+                            return scramble && (
+                              <ScrambleDisplay sequence={scramble.sequence} solveNumber={Number(attemptNumber)} />
+                            );
+                          })()}
+
+                          {/* Signature */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
+                              <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
+                            </div>
+                            <canvas
+                              ref={tradCanvasRef} width={400} height={80}
+                              onMouseDown={startTradDrawing} onMouseMove={drawTrad}
+                              onMouseUp={() => setIsTradDrawing(false)} onMouseLeave={() => setIsTradDrawing(false)}
+                              className="w-full rounded-lg border border-slate-200 cursor-crosshair block bg-white"
+                              style={{ height: '80px' }}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
+
+                  {isCorrectingMode && !isHubConnected && (
+                    <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 animate-in fade-in duration-200">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>Yêu cầu kết nối Hub (Connected) hoạt động mới được phép sửa điểm.</span>
+                    </div>
+                  )}
+
+                  <button type="submit"
+                    disabled={isSubmittingTrad || !selectedGroupCompetitorId || (isCorrectingMode && !isHubConnected)}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
+                  >
+                    {isSubmittingTrad ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isCorrectingMode ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <ClipboardEdit className="h-4 w-4" />
+                    )}
+                    {isSubmittingTrad ? 'Đang gửi...' : isCorrectingMode ? 'Cập Nhật Điều Chỉnh Điểm' : 'Gửi Kết Quả Thi'}
+                  </button>
+                </form>
+              )}
+
+              {submitTradResult && (
+                <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${submitTradResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
+                  }`}>
+                  {submitTradResult.ok ? <CheckCircle className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
+                  {submitTradResult.message}
+                </div>
+              )}
+            </div>
+
+            {/* Results Monitor sidebar */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
+              <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Nhóm</h3>
+              {isLoadingLiveState ? (
+                <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
+              ) : filteredTradCompetitors.length === 0 ? (
+                <p className="text-xs text-slate-400">Chọn nhóm thi để xem danh sách thí sinh.</p>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTradCompetitors.map((c: any) => (
+                    <div key={c.groupCompetitorId} className="border-b border-slate-100 pb-2.5 last:border-0">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-bold text-slate-900 truncate mr-2">{c.competitorName}</span>
+                        <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                          {c.completedSolves}/{liveState?.solveCount}
+                        </span>
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {Array.from({ length: liveState?.solveCount || 5 }, (_, i) => {
+                          const result = c.results?.find((r: any) => r.solveNumber === i + 1);
+                          return (
+                            <button key={i}
+                              type="button"
+                              disabled={!result}
+                              onClick={() => {
+                                if (result) {
+                                  setEditingResult({
+                                    resultId: result.resultId,
+                                    competitorName: c.competitorName,
+                                    solveNumber: i + 1,
+                                    rawTimeMs: result.rawTimeMs || result.finalTimeMs,
+                                    penaltyTypeId: result.penaltyTypeId || 'none',
+                                    isDnf: result.isDnf,
+                                    penaltyCode: result.penaltyCode || 'OK',
+                                    evidencePhotoUrl: result.evidencePhotoUrl,
+                                    esignatureData: result.esignatureData,
+                                  });
+                                  setEditingResultTime(result.rawTimeMs ? (result.rawTimeMs / 1000).toString() : (result.finalTimeMs / 1000).toString());
+                                  setEditingResultPenalty(result.penaltyTypeId || 'none');
+                                  setEditingResultReason('');
+                                  setCorrectionError(null);
+                                }
+                              }}
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${result ? (
+                                  result.isLocked
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : result.isDnf
+                                      ? 'bg-red-50 text-red-700 border border-red-200'
+                                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                ) : 'bg-slate-100 text-slate-400 cursor-default'
+                                }`}
+                              title={result ? "Bấm để xem ảnh minh chứng / Sửa điểm" : "Lượt thi chưa hoàn thành"}
+                            >
+                              {result ? (result.isDnf ? 'DNF' : `${(result.finalTimeMs / 1000).toFixed(2)}`) : `S${i + 1}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
         </div>
       )}
 
@@ -1451,9 +1442,8 @@ export default function LiveOperationsPage({
             )}
 
             {submitMedleyResultStatus && (
-              <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
-                submitMedleyResultStatus.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
-              }`}>
+              <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${submitMedleyResultStatus.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
+                }`}>
                 {submitMedleyResultStatus.ok ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                 {submitMedleyResultStatus.message}
               </div>
@@ -1537,11 +1527,10 @@ export default function LiveOperationsPage({
           </form>
 
           {verifyResult && (
-            <div className={`mt-5 flex items-start gap-3 rounded-lg border p-4 text-xs ${
-              verifyResult.success && verifyResult.canSubmit
+            <div className={`mt-5 flex items-start gap-3 rounded-lg border p-4 text-xs ${verifyResult.success && verifyResult.canSubmit
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                 : 'border-red-200 bg-red-50 text-red-800'
-            }`}>
+              }`}>
               {verifyResult.success && verifyResult.canSubmit ? (
                 <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
               ) : (
@@ -1616,12 +1605,11 @@ export default function LiveOperationsPage({
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
                     <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Trạng thái:</span>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      roundState.roundStatus === 'ONGOING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      roundState.roundStatus === 'LOCKED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      roundState.roundStatus === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      'bg-slate-100 border border-slate-200 text-slate-600'
-                    }`}>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${roundState.roundStatus === 'ONGOING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        roundState.roundStatus === 'LOCKED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                          roundState.roundStatus === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            'bg-slate-100 border border-slate-200 text-slate-600'
+                      }`}>
                       {roundState.roundStatus === 'DRAFT' || roundState.roundStatus === 'None' || !roundState.roundStatus ? 'Chưa Bắt Đầu' : roundState.roundStatus}
                     </span>
                   </div>
@@ -1664,13 +1652,12 @@ export default function LiveOperationsPage({
                       {/* Active control flow steps */}
                       <div className="p-6 space-y-3">
                         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">QUY TRÌNH ĐIỀU HÀNH VÒNG THI</h4>
-                        
+
                         {/* Step 1: Start Round */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
-                          (roundStatus === 'DRAFT' || roundStatus === 'None') 
-                            ? 'border-indigo-200 bg-indigo-50/50' 
+                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${(roundStatus === 'DRAFT' || roundStatus === 'None')
+                            ? 'border-indigo-200 bg-indigo-50/50'
                             : 'border-slate-200 bg-white opacity-60'
-                        }`}>
+                          }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-indigo-600">BƯỚC 1</span>
                             <h5 className="font-bold text-xs text-slate-900">Khai mạc vòng đấu (Start Round)</h5>
@@ -1688,11 +1675,10 @@ export default function LiveOperationsPage({
                         </div>
 
                         {/* Step 2: Lock Results */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
-                          roundStatus === 'ONGOING' 
-                            ? 'border-amber-200 bg-amber-50/50' 
+                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'ONGOING'
+                            ? 'border-amber-200 bg-amber-50/50'
                             : 'border-slate-200 bg-white opacity-60'
-                        }`}>
+                          }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-amber-600">BƯỚC 2</span>
                             <h5 className="font-bold text-xs text-slate-900">Khóa bảng điểm (Lock Results)</h5>
@@ -1710,11 +1696,10 @@ export default function LiveOperationsPage({
                         </div>
 
                         {/* Step 3: Complete Round */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
-                          roundStatus === 'LOCKED' 
-                            ? 'border-purple-200 bg-purple-50/50' 
+                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'LOCKED'
+                            ? 'border-purple-200 bg-purple-50/50'
                             : 'border-slate-200 bg-white opacity-60'
-                        }`}>
+                          }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-purple-600">BƯỚC 3</span>
                             <h5 className="font-bold text-xs text-slate-900">Hoàn tất vòng thi (Complete Round)</h5>
@@ -1732,11 +1717,10 @@ export default function LiveOperationsPage({
                         </div>
 
                         {/* Step 4: Complete Event */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${
-                          roundStatus === 'COMPLETED' 
-                            ? 'border-emerald-200 bg-emerald-50/50' 
+                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'COMPLETED'
+                            ? 'border-emerald-200 bg-emerald-50/50'
                             : 'border-slate-200 bg-white opacity-60'
-                        }`}>
+                          }`}>
                           <div className="mb-3 sm:mb-0 max-w-md">
                             <span className="text-[10px] font-bold font-mono text-emerald-600">BƯỚC 4</span>
                             <h5 className="font-bold text-xs text-slate-900">Hoàn tất hạng mục đấu (Complete Event)</h5>
@@ -1774,9 +1758,8 @@ export default function LiveOperationsPage({
           )}
 
           {roundActionResult && (
-            <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${
-              roundActionResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
-            }`}>
+            <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${roundActionResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
+              }`}>
               {roundActionResult.ok ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
               {roundActionResult.message}
             </div>
@@ -1813,14 +1796,14 @@ export default function LiveOperationsPage({
                       Mở Tab Mới ↗
                     </button>
                   </div>
-                  <div 
+                  <div
                     onClick={() => window.open(formattedUrl, '_blank')}
                     className="block group relative overflow-hidden rounded-lg border border-slate-200 cursor-pointer min-h-[120px] bg-slate-100 flex items-center justify-center"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={formattedUrl} 
-                      alt="Evidence photo" 
+                    <img
+                      src={formattedUrl}
+                      alt="Evidence photo"
                       className="max-h-48 w-full object-contain transition group-hover:scale-105"
                     />
                   </div>
