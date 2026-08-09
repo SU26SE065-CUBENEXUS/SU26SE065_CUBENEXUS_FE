@@ -492,13 +492,31 @@ export default function JudgePage() {
 
     try {
       if (activeEvent?.eventFormatCode === 'MEDLEY') {
-        const detailsPayload = medleySolves.map(s => {
-          const pType = penaltyTypes.find(pt => pt.code === (s.penalty === '+2' ? 'PLUS_2' : s.penalty === 'DNF' ? 'DNF' : 'OK'));
+        // Sub-puzzles come from activeEvent — ScrambleInfoDto does not carry medleyPuzzles
+        const subPuzzles: any[] = (activeEvent.medleyPuzzles && activeEvent.medleyPuzzles.length > 0)
+          ? activeEvent.medleyPuzzles
+          : [];
+
+        const rawTimeMs = penalty === 'DNF' ? 0 : Math.round(Number.parseFloat(stackmat) * 1000);
+        const pType = penaltyTypes.find(pt => pt.code === (penalty === '+2' ? 'PLUS_2' : penalty === 'DNF' ? 'DNF' : 'OK'));
+
+        // currentScramble is typed as ScrambleInfoDto which doesn't have subScrambles;
+        // cast to any to allow dynamic fields that the API may return
+        const currentScrAny = verifiedCompetitor.currentScramble as any;
+
+        const detailsPayload = (subPuzzles.length > 0 ? subPuzzles : [{ id: '00000000-0000-0000-0000-000000000000' }]).map((p: any, idx: number) => {
+          const matchingScramble = currentScrAny?.subScrambles?.find(
+            (s: any) => s.puzzleTypeId === p.puzzleTypeId
+          );
+          const scrambleId = matchingScramble?.scrambleId
+            || currentScrAny?.scrambleId
+            || '00000000-0000-0000-0000-000000000000';
+
           return {
-            medleyPuzzleId: s.medleyPuzzleId,
-            rawTimeMs: Number.parseFloat(s.time) * 1000,
-            penaltyTypeId: pType?.id || null,
-            scrambleId: s.scrambleId || '00000000-0000-0000-0000-000000000000'
+            medleyPuzzleId: p.id || p.medleyPuzzleId || '00000000-0000-0000-0000-000000000000',
+            rawTimeMs: idx === 0 ? rawTimeMs : 0,
+            penaltyTypeId: idx === 0 ? (pType?.id || null) : null,
+            scrambleId
           };
         });
 
@@ -510,9 +528,42 @@ export default function JudgePage() {
           details: detailsPayload
         });
 
-        setResultSummary(`Success: Submitted Medley attempt of ${medleyResult}.`);
-        await emitStationState('DONE');
-        resetLane();
+        const displayTime = penalty === 'DNF' ? 'DNF' : `${finalTime}`;
+        setResultSummary(`✓ Đã lưu Medley lượt ${solveProgress.nextSolveNumber} — Thời gian: ${displayTime}.`);
+
+        // Reload progress to check for next solve (multi-solve Medley like Traditional)
+        const freshProgress = await getSolveProgress(verifiedCompetitor.groupCompetitorId);
+        setSolveProgress(freshProgress);
+
+        if (freshProgress.canSubmit && freshProgress.nextSolveNumber) {
+          // More solves remaining — stay on competitor, advance to next solve
+          setVerifiedCompetitor(prev => prev ? {
+            ...prev,
+            nextSolveNumber: freshProgress.nextSolveNumber ?? undefined,
+            currentScramble: freshProgress.currentScramble as any ?? prev.currentScramble
+          } : null);
+          // Reset inputs for next attempt
+          setStackmat('');
+          setPenalty('None');
+          setSignature('');
+          setHasSignature(false);
+          setEvidencePhoto(null);
+          if (evidenceInputRef.current) evidenceInputRef.current.value = '';
+          if (canvasRef.current) {
+            const context = canvasRef.current.getContext('2d');
+            context?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          }
+          await emitStationState('VERIFIED', verifiedCompetitor.groupName);
+        } else {
+          // All solves complete
+          if (freshProgress.isCutoffReached) {
+            setResultSummary('Thí sinh dừng thi do không đạt mốc Cutoff Time. Phần thi hoàn tất.');
+          } else {
+            setResultSummary(`✓ Đã hoàn tất tất cả ${solveProgress.solveCount} lượt thi Medley!`);
+          }
+          await emitStationState('DONE');
+          resetLane();
+        }
       } else {
         const pType = penaltyTypes.find(pt => pt.code === (penalty === '+2' ? 'PLUS_2' : penalty === 'DNF' ? 'DNF' : 'OK'));
         const scrambleId = verifiedCompetitor.currentScramble?.scrambleId || solveProgress.currentScramble?.scrambleId;
@@ -881,87 +932,119 @@ export default function JudgePage() {
                 </h3>
               </div>
 
-              {activeEvent?.eventFormatCode !== 'MEDLEY' ? (
-                <div className="space-y-3 pt-1">
-                  {/* Time input row */}
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Thời Gian (giây)</label>
-                      <input
-                        value={stackmat}
-                        onChange={(e) => setStackmat(e.target.value)}
+              <div className="space-y-3 pt-1">
+                {activeEvent?.eventFormatCode === 'MEDLEY' && (
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-500 font-semibold flex items-center gap-1.5">
+                    <span>⚡ Hạng mục Medley: Chỉ cần nhập 1 TỔNG THỜI GIAN duy nhất cho toàn bộ các khối.</span>
+                  </div>
+                )}
+
+                {activeEvent?.eventFormatCode === 'MEDLEY' && solveProgress && (
+                  <div className="rounded-xl border p-3 flex items-center justify-between"
+                    style={{ background: 'oklch(0.72 0.21 42 / 0.08)', borderColor: 'oklch(0.72 0.21 42 / 0.25)' }}>
+                    <div className="space-y-1 flex-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'oklch(0.72 0.21 42)' }}>
+                        Tiến Trình Medley
+                      </p>
+                      <p className="text-sm font-black" style={{ color: 'oklch(0.72 0.21 42)' }}>
+                        Lượt {solveProgress.nextSolveNumber ?? (solveProgress.submittedCount + 1)} / {solveProgress.solveCount}
+                      </p>
+                      <div className="flex gap-1 mt-1">
+                        {Array.from({ length: solveProgress.solveCount }).map((_, i) => (
+                          <div key={i} className="h-1.5 flex-1 rounded-full transition-all"
+                            style={{
+                              background: i < solveProgress.submittedCount
+                                ? 'oklch(0.70 0.19 145)'
+                                : i === solveProgress.submittedCount
+                                  ? 'oklch(0.72 0.21 42)'
+                                  : 'oklch(0.24 0.02 256)'
+                            }} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ml-3 text-right">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Đã hoàn tất</p>
+                      <p className="text-xl font-black" style={{ color: 'oklch(0.70 0.19 145)' }}>{solveProgress.submittedCount}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Time input row */}
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">
+                      {activeEvent?.eventFormatCode === 'MEDLEY' ? 'Tổng Thời Gian Medley (giây)' : 'Thời Gian (giây)'}
+                    </label>
+                    <input
+                      value={stackmat}
+                      onChange={(e) => setStackmat(e.target.value)}
+                      disabled={!verifiedCompetitor}
+                      placeholder="Vd: 45.20"
+                      className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary font-mono font-bold"
+                    />
+                  </div>
+                  {/* Quick penalty buttons */}
+                  <div className="flex gap-1 pb-0.5">
+                    {(['None', '+2', 'DNF'] as PenaltyMode[]).map((p) => (
+                      <button
+                        key={p}
                         disabled={!verifiedCompetitor}
-                        placeholder="Vd: 8.35"
-                        className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary font-mono font-bold"
-                      />
-                    </div>
-                    {/* Quick penalty buttons */}
-                    <div className="flex gap-1 pb-0.5">
-                      {(['None', '+2', 'DNF'] as PenaltyMode[]).map((p) => (
-                        <button
-                          key={p}
-                          disabled={!verifiedCompetitor}
-                          onClick={() => setPenalty(p)}
-                          className="px-3 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all border"
-                          style={penalty === p ? {
-                            background: p === 'DNF' ? 'oklch(0.55 0.22 25)' : p === '+2' ? 'oklch(0.72 0.21 42)' : 'oklch(0.70 0.19 145)',
-                            borderColor: 'transparent',
-                            color: '#fff',
-                            boxShadow: '0 0 12px currentColor'
-                          } : {
-                            background: 'oklch(0.15 0.018 255)',
-                            borderColor: 'oklch(0.24 0.02 256)',
-                            color: 'oklch(0.55 0.02 256)'
-                          }}
-                        >
-                          {p === 'None' ? 'OK' : p}
-                        </button>
-                      ))}
-                    </div>
+                        onClick={() => setPenalty(p)}
+                        className="px-3 py-2.5 rounded-xl text-[11px] font-black uppercase transition-all border"
+                        style={penalty === p ? {
+                          background: p === 'DNF' ? 'oklch(0.55 0.22 25)' : p === '+2' ? 'oklch(0.72 0.21 42)' : 'oklch(0.70 0.19 145)',
+                          borderColor: 'transparent',
+                          color: '#fff',
+                          boxShadow: '0 0 12px currentColor'
+                        } : {
+                          background: 'oklch(0.15 0.018 255)',
+                          borderColor: 'oklch(0.24 0.02 256)',
+                          color: 'oklch(0.55 0.02 256)'
+                        }}
+                      >
+                        {p === 'None' ? 'OK' : p}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  {/* Live result display */}
-                  <div className="rounded-2xl p-4 text-center relative overflow-hidden"
-                    style={{
-                      background: penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.1)' : 'oklch(0.70 0.19 145 / 0.06)',
-                      border: `1px solid ${penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.35)' : 'oklch(0.70 0.19 145 / 0.25)'}`
-                    }}
+                {/* Live result display */}
+                <div className="rounded-2xl p-4 text-center relative overflow-hidden"
+                  style={{
+                    background: penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.1)' : 'oklch(0.70 0.19 145 / 0.06)',
+                    border: `1px solid ${penalty === 'DNF' ? 'oklch(0.55 0.22 25 / 0.35)' : 'oklch(0.70 0.19 145 / 0.25)'}`
+                  }}
+                >
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Kết Quả Sau Penalty</p>
+                  <p className="text-5xl font-black leading-none time-display"
+                    style={{ color: penalty === 'DNF' ? 'oklch(0.65 0.22 25)' : 'oklch(0.70 0.19 145)', textShadow: '0 0 30px currentColor' }}
                   >
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Kết Quả Sau Penalty</p>
-                    <p className="text-5xl font-black leading-none time-display"
-                      style={{ color: penalty === 'DNF' ? 'oklch(0.65 0.22 25)' : 'oklch(0.70 0.19 145)', textShadow: '0 0 30px currentColor' }}
-                    >
-                      {finalTime}
-                    </p>
-                    {penalty !== 'None' && penalty !== 'DNF' && (
-                      <p className="text-[10px] text-muted-foreground mt-1">{stackmat || '0'}s + 2s penalty = <strong>{finalTime}</strong></p>
-                    )}
-                  </div>
-
-                  {verifiedCompetitor && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => emitStationState('INSPECTING', verifiedCompetitor.groupName)}
-                        variant="outline"
-                        className="flex-1 text-[10px] py-1 border-primary/30 text-primary hover:bg-primary/10 font-bold"
-                      >
-                        INSPECT
-                      </Button>
-                      <Button
-                        onClick={() => emitStationState('SOLVING', verifiedCompetitor.groupName)}
-                        variant="outline"
-                        className="flex-1 text-[10px] py-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-bold"
-                      >
-                        SOLVING
-                      </Button>
-                    </div>
+                    {finalTime}
+                  </p>
+                  {penalty !== 'None' && penalty !== 'DNF' && (
+                    <p className="text-[10px] text-muted-foreground mt-1">{stackmat || '0'}s + 2s penalty = <strong>{finalTime}</strong></p>
                   )}
                 </div>
-              ) : (
-                <div className="rounded-xl bg-primary/5 border border-primary/25 p-4 text-xs text-muted-foreground leading-relaxed">
-                  Medley Relay active. Dùng Medley Panel bên dưới.
-                </div>
-              )}
+
+                {verifiedCompetitor && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => emitStationState('INSPECTING', verifiedCompetitor.groupName)}
+                      variant="outline"
+                      className="flex-1 text-[10px] py-1 border-primary/30 text-primary hover:bg-primary/10 font-bold"
+                    >
+                      INSPECT
+                    </Button>
+                    <Button
+                      onClick={() => emitStationState('SOLVING', verifiedCompetitor.groupName)}
+                      variant="outline"
+                      className="flex-1 text-[10px] py-1 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-bold"
+                    >
+                      SOLVING
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── Step 2: Evidence Photo ── */}
@@ -1148,58 +1231,7 @@ export default function JudgePage() {
           </Card>
         </div>
 
-        {/* Medley panel section (displayed when Medley tournament loaded) */}
-        {activeEvent?.eventFormatCode === 'MEDLEY' && verifiedCompetitor && (
-          <div className="grid gap-6 lg:grid-cols-[1.5fr_0.8fr] animate-fade-in">
-            <Card className="p-6 border border-border/60 bg-card rounded-2xl space-y-4 hover:border-primary/20 transition-all duration-300">
-              <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <Award className="h-4.5 w-4.5" /> Medley Puzzles Lane Setup
-              </h3>
-              
-              <div className="space-y-3">
-                {medleySolves.map((s, i) => (
-                  <div key={s.medleyPuzzleId} className="grid gap-3 sm:grid-cols-[1fr_140px_140px] items-center rounded-xl border border-border bg-muted/10 p-3 hover:border-primary/20 transition-all">
-                    <div>
-                      <p className="text-xs font-black text-foreground">{s.puzzleName}</p>
-                    </div>
-                    <input 
-                      value={s.time} 
-                      placeholder="Time in seconds"
-                      onChange={(e) => updateMedleySolve(i, 'time', e.target.value)} 
-                      className="rounded-xl border border-border bg-muted/10 px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-mono font-bold" 
-                    />
-                    <select 
-                      value={s.penalty} 
-                      onChange={(e) => updateMedleySolve(i, 'penalty', e.target.value as PenaltyMode)} 
-                      className="rounded-xl border border-border bg-muted/10 px-3 py-2 text-xs text-foreground outline-none focus:border-primary font-semibold"
-                    >
-                      <option value="None">None</option>
-                      <option value="+2">+2s</option>
-                      <option value="DNF">DNF</option>
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </Card>
 
-            <Card className="p-6 border border-border/60 bg-card rounded-2xl flex flex-col justify-between shadow-sm hover:border-primary/20 transition-all duration-300">
-              <div className="space-y-4">
-                <h3 className="font-extrabold text-xs text-primary uppercase tracking-wider">
-                  Medley Combined Stats
-                </h3>
-                <div className="mt-4 rounded-xl bg-primary/5 border border-primary/25 p-4 text-center">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Computed Total Duration</p>
-                  <p className="mt-1.5 text-3xl font-black text-primary time-display">{medleyResult}</p>
-                </div>
-              </div>
-              
-              <div className="rounded-xl border border-border/80 bg-muted/5 p-3.5 text-[10px] text-muted-foreground leading-relaxed mt-4 flex items-start gap-1.5">
-                <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                <span>Confirm each puzzle duration has been typed accurately. Total updates dynamically in real-time.</span>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </main>
   );

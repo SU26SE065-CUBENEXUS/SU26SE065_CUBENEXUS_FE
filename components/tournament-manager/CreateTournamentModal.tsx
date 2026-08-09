@@ -3,17 +3,17 @@
 import { useState, useEffect } from 'react';
 import { createTournament, getPuzzleTypes } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, PuzzleTypeResponseDto } from '@/lib/api/types';
-import { 
-  X, 
-  Plus, 
-  Trash2, 
-  Loader2, 
-  AlertCircle, 
-  Calendar, 
-  MapPin, 
-  Info, 
-  Clock, 
-  FileText, 
+import {
+  X,
+  Plus,
+  Trash2,
+  Loader2,
+  AlertCircle,
+  Calendar,
+  MapPin,
+  Info,
+  Clock,
+  FileText,
   Trophy,
   Users
 } from 'lucide-react';
@@ -261,6 +261,11 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       if (ev.solveCount <= 0) {
         errs[`event_${idx}_solveCount`] = 'Solve count must be greater than 0';
       }
+      if (ev.eventFormatCode === 'MEDLEY') {
+        if (!ev.medleyPuzzles || ev.medleyPuzzles.length < 2) {
+          errs[`event_${idx}_medley`] = 'Hạng mục Medley Relay phải chứa tối thiểu 2 khối Rubik trong chuỗi liên hoàn.';
+        }
+      }
       if (evMaxCap && tourMaxPart && evMaxCap > tourMaxPart) {
         errs[`event_${idx}_maxCapacity`] = `Event capacity (${evMaxCap}) cannot exceed overall tournament limit (${tourMaxPart})`;
       }
@@ -297,11 +302,12 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         registrationOpenAt: new Date(regOpen).toISOString(),
         registrationCloseAt: new Date(regClose).toISOString(),
         events: events
-          .filter((ev) => ev.puzzleTypeId)
+          .filter((ev) => ev.eventFormatCode === 'MEDLEY' ? ev.medleyPuzzles.length >= 2 : !!ev.puzzleTypeId)
           .map((ev, i) => {
             const isMedley = ev.eventFormatCode === 'MEDLEY';
+            const primaryPuzzleId = isMedley ? (ev.medleyPuzzles[0]?.puzzleTypeId || ev.puzzleTypeId) : ev.puzzleTypeId;
             return {
-              puzzleTypeId: ev.puzzleTypeId,
+              puzzleTypeId: primaryPuzzleId,
               eventFormatCode: ev.eventFormatCode,
               timeLimitMs: ev.timeLimitSec ? Number(ev.timeLimitSec) * 1000 : undefined,
               cutoffTimeMs: ev.cutoffTimeSec ? Number(ev.cutoffTimeSec) * 1000 : undefined,
@@ -310,11 +316,11 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               sortOrder: i + 1,
               medleyPuzzles: isMedley
                 ? ev.medleyPuzzles
-                    .filter((mp) => mp.puzzleTypeId)
-                    .map((mp, idx) => ({
-                      puzzleTypeId: mp.puzzleTypeId,
-                      sortOrder: idx + 1,
-                    }))
+                  .filter((mp) => mp.puzzleTypeId)
+                  .map((mp, idx) => ({
+                    puzzleTypeId: mp.puzzleTypeId,
+                    sortOrder: idx + 1,
+                  }))
                 : undefined,
             };
           }),
@@ -645,25 +651,6 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Loại Rubik <span className="text-red-500 font-bold">*</span>
-                        </label>
-                        <select
-                          value={ev.puzzleTypeId}
-                          onChange={(e) => updateEvent(i, 'puzzleTypeId', e.target.value)}
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
-                        >
-                          {puzzleTypes.length === 0 ? (
-                            <option value="">Không tìm thấy loại Rubik</option>
-                          ) : (
-                            puzzleTypes.map((p) => (
-                              <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
-                            ))
-                          )}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Thể Thức Thi Đấu
                         </label>
                         <select
@@ -676,6 +663,33 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                           ))}
                         </select>
                       </div>
+
+                      {ev.eventFormatCode === 'TRADITIONAL' ? (
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            Loại Rubik <span className="text-red-500 font-bold">*</span>
+                          </label>
+                          <select
+                            value={ev.puzzleTypeId}
+                            onChange={(e) => updateEvent(i, 'puzzleTypeId', e.target.value)}
+                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
+                          >
+                            {puzzleTypes.length === 0 ? (
+                              <option value="">Không tìm thấy loại Rubik</option>
+                            ) : (
+                              puzzleTypes.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
+                              ))
+                            )}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <span className="text-xs font-[14px] text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
+                            Đã chọn Thể Thức Medley Relay
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* WCA Scoring & Rules */}
@@ -698,46 +712,42 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                         )}
                       </div>
 
-                      {ev.eventFormatCode === 'TRADITIONAL' && (
-                        <>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                              Cutoff Time (Giây)
-                            </label>
-                            <input
-                              type="number"
-                              value={ev.cutoffTimeSec}
-                              onChange={(e) => updateEvent(i, 'cutoffTimeSec', e.target.value)}
-                              placeholder="Ví dụ: 60"
-                              className={`w-full rounded-lg border ${errors[`event_${i}_cutoffTime`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
-                            />
-                            {errors[`event_${i}_cutoffTime`] && (
-                              <p className="text-[10px] text-red-600 mt-1 font-medium">
-                                {errors[`event_${i}_cutoffTime`]}
-                              </p>
-                            )}
-                          </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Cutoff Time (Giây)
+                        </label>
+                        <input
+                          type="number"
+                          value={ev.cutoffTimeSec}
+                          onChange={(e) => updateEvent(i, 'cutoffTimeSec', e.target.value)}
+                          placeholder="Ví dụ: 60 (để trống nếu không có)"
+                          className={`w-full rounded-lg border ${errors[`event_${i}_cutoffTime`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
+                        />
+                        {errors[`event_${i}_cutoffTime`] && (
+                          <p className="text-[10px] text-red-600 mt-1 font-medium">
+                            {errors[`event_${i}_cutoffTime`]}
+                          </p>
+                        )}
+                      </div>
 
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                              Số Lượt Thử (Solve Count)
-                            </label>
-                            <input
-                              type="number"
-                              value={ev.solveCount}
-                              onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
-                              className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
-                              min="1"
-                              max="5"
-                            />
-                            {errors[`event_${i}_solveCount`] && (
-                              <p className="text-[10px] text-red-600 mt-1 font-medium">
-                                {errors[`event_${i}_solveCount`]}
-                              </p>
-                            )}
-                          </div>
-                        </>
-                      )}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Số Lượt Thử (Solve Count)
+                        </label>
+                        <input
+                          type="number"
+                          value={ev.solveCount}
+                          onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
+                          className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
+                          min="1"
+                          max="5"
+                        />
+                        {errors[`event_${i}_solveCount`] && (
+                          <p className="text-[10px] text-red-600 mt-1 font-medium">
+                            {errors[`event_${i}_solveCount`]}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Event Capacity Limit */}
@@ -779,7 +789,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                             + Thêm Rubik
                           </button>
                         </div>
-                        
+
                         <div className="grid gap-2">
                           {ev.medleyPuzzles.map((mp, mpIdx) => (
                             <div key={mpIdx} className="flex items-center gap-2">

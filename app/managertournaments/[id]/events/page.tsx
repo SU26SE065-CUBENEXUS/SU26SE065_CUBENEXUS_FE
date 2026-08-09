@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { getTournamentById, getEventCompetitors, overrideSeed, closeEventRegistration } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, EventDetailDto, EventCompetitorDto } from '@/lib/api/types';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
@@ -90,7 +91,7 @@ function EventCard({
     try {
       await closeEventRegistration(event.id);
       setIsLocallyClosed(true);
-      setMessage(`Đã khóa cổng đăng ký cho hạng mục ${event.puzzleTypeName || event.puzzleTypeCode}.`);
+      setMessage(`Đã khóa cổng đăng ký cho hạng mục ${formatEventLabel(event)}.`);
       setShowConfirmClose(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể khóa cổng đăng ký');
@@ -138,13 +139,8 @@ function EventCard({
             {/* Title Row */}
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <h2 className="text-base font-bold text-slate-900 tracking-tight">
-                {event.puzzleTypeName || event.puzzleTypeCode}
+                {formatEventLabel(event)}
               </h2>
-              {isMedley && (
-                <span className="rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
-                  Medley Relay
-                </span>
-              )}
               {isEventRegistrationClosed ? (
                 <span className="rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
                   Đã Khóa Đăng Ký
@@ -313,7 +309,7 @@ function EventCard({
       <ConfirmModal
         isOpen={showConfirmClose}
         title="Khóa Cổng Đăng Ký Môn Thi"
-        description={`Bạn có chắc muốn đóng cổng đăng ký cho môn thi "${event.puzzleTypeName || event.puzzleTypeCode}"?`}
+        description={`Bạn có chắc muốn đóng cổng đăng ký cho môn thi "${formatEventLabel(event)}"?`}
         confirmText="Xác Nhận Khóa"
         cancelText="Hủy Bỏ"
         variant="warning"

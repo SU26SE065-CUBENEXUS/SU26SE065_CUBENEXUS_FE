@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -423,7 +424,7 @@ function TournamentsPageContent() {
             else if (now < regOpen) statusText = 'Starting Soon';
             else statusText = 'Reg. Closed';
           }
-          const formatString = t.events.map((e) => e.puzzleTypeName).join(', ') || 'Speedcubing';
+          const formatString = t.events.map((e) => formatEventLabel(e)).join(', ') || 'Speedcubing';
           const isMedley = t.events.some((e) => e.eventFormatCode === 'MEDLEY');
           const tier = t.events.length > 4 ? 'Tier S' : t.events.length > 2 ? 'Tier A' : 'Tier B';
           return {
@@ -873,7 +874,7 @@ function TournamentsPageContent() {
                     style={{ background: 'oklch(0.185 0.02 256)', border: '1px solid oklch(0.24 0.02 256)' }}
                   >
                     <div>
-                      <p className="font-bold text-foreground">{evt.puzzleTypeName || evt.name}</p>
+                      <p className="font-bold text-foreground">{formatEventLabel(evt)}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">{evt.eventFormatCode || evt.format}</p>
                     </div>
                     <span className="text-[9px] font-bold px-2 py-0.5 rounded"
@@ -1021,7 +1022,7 @@ function TournamentsPageContent() {
                         style={{ accentColor: 'oklch(0.72 0.21 42)' }}
                       />
                       <div>
-                        <p className="text-xs font-bold text-foreground">{evt.puzzleTypeName}</p>
+                        <p className="text-xs font-bold text-foreground">{formatEventLabel(evt)}</p>
                         <p className="text-[10px] text-muted-foreground">{evt.eventFormatCode} • {evt.solveCount} solves</p>
                       </div>
                     </label>

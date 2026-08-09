@@ -22,6 +22,7 @@ import {
   formatEvidencePhotoUrl,
 } from '@/lib/api/operations';
 import type { TournamentDetailDto, EventDetailDto } from '@/lib/api/types';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StationStatusBadge, type StationState } from '@/components/tournament-manager/StationStatusBadge';
 import { ScrambleDisplay } from '@/components/tournament-manager/ScrambleDisplay';
 import { formatMs } from '@/components/tournament-manager/TimerDisplay';
@@ -217,9 +218,8 @@ export default function LiveOperationsPage({
         setTournament(tournData);
         setPenaltyTypes(penalties);
         if (tournData.events.length > 0) {
-          const tradEvents = tournData.events.filter((e) => e.eventFormatCode === 'TRADITIONAL');
+          setSelectedEventId(tournData.events[0].id);
           const medEvents = tournData.events.filter((e) => e.eventFormatCode === 'MEDLEY');
-          if (tradEvents.length > 0) setSelectedEventId(tradEvents[0].id);
           if (medEvents.length > 0) setMedleyEventId(medEvents[0].id);
           setVerifyForm((prev) => ({ ...prev, eventId: tournData.events[0].id }));
           setHubEventId(tournData.events[0].id);
@@ -561,23 +561,27 @@ export default function LiveOperationsPage({
     if (!activeEvent) return;
     const detailsList = [];
     const solveNum = Number(medleyAttemptNumber);
+    let totalTimeStr = medleyTimes['total'] || medleyTimes[activeEvent.medleyPuzzles[0]?.id];
+    if (!totalTimeStr) {
+      totalTimeStr = Object.values(medleyTimes).find((v) => !!v) || '';
+    }
+    if (!totalTimeStr) { setSubmitMedleyResultStatus({ ok: false, message: `Vui lòng nhập tổng thời gian thi đấu Medley.` }); return; }
+
+    let idx = 0;
     for (const puzzle of activeEvent.medleyPuzzles) {
-      const timeStr = medleyTimes[puzzle.id];
-      if (!timeStr) { setSubmitMedleyResultStatus({ ok: false, message: `Fill time for ${puzzle.puzzleTypeName}.` }); return; }
       const matchingScramble = medleyScrambles.find(
         (s) => s.solveNumber === solveNum && s.puzzleTypeId === puzzle.puzzleTypeId
       );
-      if (!matchingScramble) {
-        setSubmitMedleyResultStatus({ ok: false, message: `No scramble for solve #${solveNum} (${puzzle.puzzleTypeName}).` });
-        return;
-      }
-      const penVal = medleyPenalties[puzzle.id];
+      const scrambleId = matchingScramble?.id || medleyScrambles[0]?.id || '00000000-0000-0000-0000-000000000000';
+      const penVal = medleyPenalties['total'] || medleyPenalties[puzzle.id];
+
       detailsList.push({
         medleyPuzzleId: puzzle.id,
-        rawTimeMs: Math.round(Number(timeStr) * 1000),
-        penaltyTypeId: isValidGuid(penVal) ? penVal : undefined,
-        scrambleId: matchingScramble.id
+        rawTimeMs: idx === 0 ? Math.round(Number(totalTimeStr) * 1000) : 0,
+        penaltyTypeId: idx === 0 && isValidGuid(penVal) ? penVal : undefined,
+        scrambleId
       });
+      idx++;
     }
     setIsSubmittingMedley(true);
     try {
@@ -682,7 +686,7 @@ export default function LiveOperationsPage({
   }
 
   const traditionalEvents = tournament.events.filter((e) => e.eventFormatCode === 'TRADITIONAL');
-  const currentEvent = traditionalEvents.find((e) => e.id === selectedEventId);
+  const currentEvent = tournament.events.find((e) => e.id === selectedEventId);
   const medleyEvents = tournament.events.filter((e) => e.eventFormatCode === 'MEDLEY');
   const filteredTradCompetitors = liveState?.competitors.filter((c: any) => c.groupId === selectedGroupId) || [];
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
@@ -919,8 +923,8 @@ export default function LiveOperationsPage({
                   onChange={(e) => setSelectedEventId(e.target.value)}
                   className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 >
-                  {traditionalEvents.map((e) => (
-                    <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>
+                  {tournament.events.map((e) => (
+                    <option key={e.id} value={e.id}>{formatEventLabel(e)}</option>
                   ))}
                 </select>
                 <div className="flex items-center gap-1">
@@ -1013,16 +1017,37 @@ export default function LiveOperationsPage({
                           </td>
                           {Array.from({ length: liveState.solveCount || 5 }, (_, i) => {
                             const attempt = c.results?.find((r: any) => r.solveNumber === i + 1);
-                            const isDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
                             const cutoffMs = currentEvent?.cutoffTimeMs;
+                            const timeLimitMs = currentEvent?.timeLimitMs;
                             const solveCount = liveState.solveCount || 5;
                             const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
                             const isInitialSolve = i < reqAttempts;
-                            const isOverCutoff = attempt && cutoffMs && !isDnf && attempt.finalTimeMs >= cutoffMs && isInitialSolve;
-                            const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
 
-                            const val = attempt ? (isDnf ? 'DNF' : formatMs(attempt.finalTimeMs)) : '—';
+                            const rawOrFinalMs = attempt ? (attempt.rawTimeMs || attempt.finalTimeMs || 0) : 0;
+                            const finalMs = attempt ? (attempt.finalTimeMs || attempt.rawTimeMs || 0) : 0;
+
+                            // 1. Time Limit Exceeded?
+                            const isOverTimeLimit = Boolean(
+                              attempt &&
+                              timeLimitMs &&
+                              timeLimitMs > 0 &&
+                              (rawOrFinalMs >= timeLimitMs || finalMs >= timeLimitMs)
+                            );
+
+                            // 2. Cutoff Exceeded?
+                            const isOverCutoff = Boolean(
+                              attempt &&
+                              cutoffMs &&
+                              cutoffMs > 0 &&
+                              (rawOrFinalMs >= cutoffMs || finalMs >= cutoffMs) &&
+                              isInitialSolve
+                            );
+
+                            const isDnf = Boolean(attempt && (attempt.isDnf || attempt.penaltyCode === 'DNF' || isOverTimeLimit));
+                            const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
                             const hasPhoto = Boolean(attempt?.evidencePhotoUrl);
+
+                            const val = attempt ? (isDnf ? 'DNF' : formatMs(finalMs)) : '—';
 
                             return (
                               <td key={i} className="px-2 py-2.5 text-center">
@@ -1042,29 +1067,42 @@ export default function LiveOperationsPage({
                                           solveNumber: i + 1,
                                           rawTimeMs: attempt.rawTimeMs || attempt.finalTimeMs,
                                           penaltyTypeId: attempt.penaltyTypeId || 'none',
-                                          isDnf: attempt.isDnf,
-                                          penaltyCode: attempt.penaltyCode || 'OK',
+                                          isDnf: isDnf,
+                                          penaltyCode: isDnf ? 'DNF' : (attempt.penaltyCode || 'OK'),
                                           evidencePhotoUrl: attempt.evidencePhotoUrl,
                                           esignatureData: attempt.esignatureData,
                                         });
                                       }
                                     }}
-                                    className={`px-2 py-1 rounded transition font-semibold ${attempt
-                                        ? (isDnf ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100')
-                                        : 'text-slate-300 cursor-default'
-                                      }`}
+                                    className={`px-2 py-1 rounded transition font-semibold flex items-center justify-center gap-1 mx-auto ${
+                                      !attempt
+                                        ? 'text-slate-300 cursor-default'
+                                        : isOverTimeLimit
+                                          ? 'bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200 font-bold'
+                                          : isOverCutoff
+                                            ? 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 font-bold'
+                                            : isDnf
+                                              ? 'bg-red-50 text-red-700 border border-red-200'
+                                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                    }`}
                                     title={
                                       attempt
-                                        ? `Solve #${i + 1}: ${val} ${isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
+                                        ? `Solve #${i + 1}: ${val} ${isOverTimeLimit ? '(Vượt mốc Time Limit => DNF)' : isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
                                         : 'Chưa thi đấu'
                                     }
                                   >
                                     <span>{val}</span>
-                                    {isOverCutoff && (
-                                      <span className="text-[9px] font-bold text-amber-600 ml-0.5" title={`Lượt thi >= Cutoff (${formatMs(cutoffMs)})`}>⚡</span>
-                                    )}
-                                    {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 ml-0.5">+2</span>}
-                                    {hasPhoto && <span className="text-[10px] ml-1" title="Có ảnh R2">📸</span>}
+                                    {isOverTimeLimit ? (
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatMs(rawOrFinalMs)}) vượt mốc Time Limit (${formatMs(timeLimitMs!)})`}>
+                                        Time Limit (DNF)
+                                      </span>
+                                    ) : isOverCutoff ? (
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatMs(finalMs)}) vượt mốc Cutoff (${formatMs(cutoffMs!)})`}>
+                                        Cutoff
+                                      </span>
+                                    ) : null}
+                                    {!isOverTimeLimit && attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 font-bold ml-0.5">+2</span>}
+                                    {hasPhoto && <span className="text-[10px] ml-0.5" title="Có ảnh R2">📸</span>}
                                   </button>
                                 )}
                               </td>
@@ -1092,7 +1130,14 @@ export default function LiveOperationsPage({
               </h2>
               <p className="text-xs text-slate-500 mb-5">Nhập kết quả các lượt giải thi đấu truyền thống.</p>
 
-              {traditionalEvents.length === 0 ? (
+              {currentEvent?.eventFormatCode === 'MEDLEY' ? (
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-6 text-center text-xs text-indigo-900 space-y-2">
+                  <p className="font-bold text-sm">📌 Hạng Mục Đang Chọn: {formatEventLabel(currentEvent)}</p>
+                  <p className="text-slate-600">
+                    Bảng xếp hạng trực tiếp của Medley Relay đã được hiển thị ở bảng phía trên. Để nhập điểm Medley thủ công trên Web Manager, vui lòng chọn Tab <button type="button" onClick={() => setActiveTab('medley')} className="font-bold text-indigo-600 underline">Thi Đấu Medley</button> hoặc sử dụng App Trọng Tài trên Mobile.
+                  </p>
+                </div>
+              ) : traditionalEvents.length === 0 ? (
                 <p className="text-center py-10 text-xs text-slate-500">Không có hạng mục thi đấu truyền thống.</p>
               ) : (
                 <form onSubmit={handleTraditionalSubmit} className="space-y-4">
@@ -1102,7 +1147,7 @@ export default function LiveOperationsPage({
                       <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
                         className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
-                        {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName}</option>)}
+                        {traditionalEvents.map((e) => <option key={e.id} value={e.id}>{formatEventLabel(e)}</option>)}
                       </select>
                     </div>
                     <div>
@@ -1380,39 +1425,43 @@ export default function LiveOperationsPage({
                 {medleyCompetitorId && (
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
                     <div className="space-y-3">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200 pb-2">Thời Gian Chi Tiết Chuỗi Rubik</p>
-                      {tournament.events.find((ev) => ev.id === medleyEventId)?.medleyPuzzles.map((puzzle) => {
-                        const solveNum = Number(medleyAttemptNumber);
-                        const scramble = medleyScrambles.find(
-                          (s) => s.solveNumber === solveNum && s.puzzleTypeId === puzzle.puzzleTypeId
-                        );
-                        return (
-                          <div key={puzzle.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-xs font-bold text-slate-900">{puzzle.puzzleTypeName}</p>
-                                <p className="text-[10px] text-slate-500">Lượt thi: #{puzzle.sortOrder}</p>
-                              </div>
-                              <select value={medleyPenalties[puzzle.id] || 'none'}
-                                onChange={(e) => setMedleyPenalties((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
-                                className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-900 outline-none"
-                              >
-                                <option value="none">OK</option>
-                                {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                              </select>
-                            </div>
-                            <input type="number" value={medleyTimes[puzzle.id] || ''}
-                              onChange={(e) => setMedleyTimes((prev) => ({ ...prev, [puzzle.id]: e.target.value }))}
-                              placeholder="Thời gian ms (VD: 5240)"
-                              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 outline-none font-mono"
-                            />
-                            {medleyTimes[puzzle.id] && (
-                              <p className="text-[10px] text-slate-500 font-mono">{formatMs(Number(medleyTimes[puzzle.id]))}s</p>
-                            )}
-                            {scramble && <ScrambleDisplay sequence={scramble.sequence} compact />}
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Tổng Thời Gian Medley</p>
+                        {tournament.events.find((ev) => ev.id === medleyEventId) && (
+                          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                            Gồm {tournament.events.find((ev) => ev.id === medleyEventId)?.medleyPuzzles.length || 0} khối
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-900">Tổng Thời Gian (giây)</label>
+                            <p className="text-[10px] text-slate-500">Ví dụ: nhập 45.20</p>
                           </div>
-                        );
-                      })}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Penalty</label>
+                            <select
+                              value={medleyPenalties['total'] || 'none'}
+                              onChange={(e) => setMedleyPenalties({ total: e.target.value })}
+                              className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
+                            >
+                              <option value="none">OK (Không phạt)</option>
+                              {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                            </select>
+                          </div>
+                        </div>
+
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={medleyTimes['total'] || ''}
+                          onChange={(e) => setMedleyTimes({ total: e.target.value })}
+                          placeholder="VD: 45.20"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 font-mono font-bold outline-none focus:bg-white focus:border-indigo-600"
+                        />
+                      </div>
                     </div>
 
                     {/* Signature */}

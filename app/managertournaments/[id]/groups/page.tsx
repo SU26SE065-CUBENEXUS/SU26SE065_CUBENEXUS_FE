@@ -13,6 +13,7 @@ import {
   getGroupScrambles,
 } from '@/lib/api/operations';
 import type { TournamentDetailDto, EventDetailDto, TournamentJudgeDto } from '@/lib/api/types';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import {
   ChevronRight,
   ChevronLeft,
@@ -215,7 +216,7 @@ function EventGroupPanel({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-900 text-base tracking-tight">
-                {event.puzzleTypeName || event.puzzleTypeCode}
+                {formatEventLabel(event)}
               </span>
               {event.eventFormatCode === 'MEDLEY' && (
                 <span className="rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
@@ -741,7 +742,7 @@ function EventGroupPanel({
                 </div>
 
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{event.puzzleTypeName || event.puzzleTypeCode}</strong>.
+                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
                 </p>
 
                 <div className="space-y-4">

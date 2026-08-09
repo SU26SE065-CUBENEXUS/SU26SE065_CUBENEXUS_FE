@@ -7,6 +7,7 @@ import { Footer } from '@/components/footer';
 import { getPublicLiveTournamentDetail, type PublicLiveTournamentDetailDto, type PublicLiveEventDto } from '@/lib/api/live';
 import { getLiveBoardState, formatEvidencePhotoUrl } from '@/lib/api/operations';
 import { formatMs } from '@/components/tournament-manager/TimerDisplay';
+import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL } from '@/lib/api/config';
 
@@ -492,7 +493,7 @@ export default function PublicLiveBoardDetailPage({
                         : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-t-lg'
                     }`}
                   >
-                    <span>{ev.puzzleTypeName}</span>
+                    <span>{formatEventLabel(ev)}</span>
                     {isEvLive && (
                       <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
                     )}
@@ -548,7 +549,7 @@ export default function PublicLiveBoardDetailPage({
                     </span>
                     <div>
                       <h3 className="font-extrabold text-sm uppercase tracking-tight text-slate-900">
-                        {activeEvent?.puzzleTypeName || 'Event Board'}
+                        {formatEventLabel(activeEvent)}
                       </h3>
                       {activeEvent && (
                         <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-0.5">
@@ -825,17 +826,37 @@ export default function PublicLiveBoardDetailPage({
                                     {/* Solve attempts */}
                                     {Array.from({ length: solveCount }, (_, i) => {
                                       const attempt = c.results && c.results.find((r: any) => r.solveNumber === i + 1);
-                                      const isAttemptDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
-                                      const isAttemptDns = attempt?.penaltyCode === 'DNS' || (c.competitorStatus === 'NO_SHOW' && i === 0 && !attempt);
-
                                       const cutoffMs = activeEvent?.cutoffTimeMs;
+                                      const timeLimitMs = activeEvent?.timeLimitMs;
                                       const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
-                                      const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
                                       const isInitialSolve = i < reqAttempts;
-                                      const isOverCutoff = attempt && cutoffMs && !isAttemptDnf && attempt.finalTimeMs >= cutoffMs && isInitialSolve;
+
+                                      const rawOrFinalMs = attempt ? (attempt.rawTimeMs || attempt.finalTimeMs || 0) : 0;
+                                      const finalMs = attempt ? (attempt.finalTimeMs || attempt.rawTimeMs || 0) : 0;
+
+                                      // 1. Time Limit Exceeded?
+                                      const isOverTimeLimit = Boolean(
+                                        attempt &&
+                                        timeLimitMs &&
+                                        timeLimitMs > 0 &&
+                                        (rawOrFinalMs >= timeLimitMs || finalMs >= timeLimitMs)
+                                      );
+
+                                      // 2. Cutoff Exceeded?
+                                      const isOverCutoff = Boolean(
+                                        attempt &&
+                                        cutoffMs &&
+                                        cutoffMs > 0 &&
+                                        (rawOrFinalMs >= cutoffMs || finalMs >= cutoffMs) &&
+                                        isInitialSolve
+                                      );
+
+                                      const isAttemptDnf = Boolean(attempt && (attempt.isDnf || attempt.penaltyCode === 'DNF' || isOverTimeLimit));
+                                      const isAttemptDns = attempt?.penaltyCode === 'DNS' || (c.competitorStatus === 'NO_SHOW' && i === 0 && !attempt);
+                                      const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
 
                                       const val = attempt 
-                                        ? (isAttemptDns ? 'DNS' : formatDisplayTime(attempt.finalTimeMs, isAttemptDnf))
+                                        ? (isAttemptDns ? 'DNS' : (isAttemptDnf ? 'DNF' : formatDisplayTime(finalMs, false)))
                                         : (isAttemptDns ? 'DNS' : '—');
 
                                       return (
@@ -847,6 +868,7 @@ export default function PublicLiveBoardDetailPage({
                                           ) : (
                                             <button
                                               type="button"
+                                              disabled={!attempt}
                                               onClick={() => {
                                                 if (attempt) {
                                                   setSelectedInspectSolve({
@@ -857,7 +879,7 @@ export default function PublicLiveBoardDetailPage({
                                                     roundNumber: selectedRoundNumber,
                                                     rawTimeMs: attempt?.rawTimeMs || attempt?.finalTimeMs,
                                                     finalTimeMs: attempt?.finalTimeMs,
-                                                    penaltyCode: attempt?.penaltyCode || 'OK',
+                                                    penaltyCode: isAttemptDnf ? 'DNF' : (attempt?.penaltyCode || 'OK'),
                                                     isDnf: Boolean(isAttemptDnf),
                                                     submittedAt: attempt?.submittedAt,
                                                     evidencePhotoUrl: attempt?.evidencePhotoUrl,
@@ -865,24 +887,36 @@ export default function PublicLiveBoardDetailPage({
                                                   });
                                                 }
                                               }}
-                                              className={`px-2 py-1 rounded-lg transition-all hover:scale-105 hover:bg-indigo-50 cursor-pointer ${
-                                                attempt ? 'font-bold' : 'text-slate-400'
+                                              className={`px-2 py-1 rounded-lg transition-all flex items-center justify-center gap-1 mx-auto ${
+                                                !attempt
+                                                  ? 'text-slate-400 font-normal cursor-default'
+                                                  : isOverTimeLimit
+                                                    ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold hover:scale-105'
+                                                    : isOverCutoff
+                                                      ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold hover:scale-105'
+                                                      : isAttemptDnf
+                                                        ? 'bg-red-50 text-red-700 border border-red-200 font-bold hover:scale-105'
+                                                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold hover:scale-105'
                                               }`}
                                               title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
                                             >
-                                              <span className={`${isAttemptDnf ? 'text-red-600 font-bold' : isAttemptDns ? 'text-slate-400 font-bold' : 'text-slate-900 font-semibold'} relative group/tooltip`}>
-                                                {val}
-                                                {isOverCutoff && (
-                                                  <span className="text-[9px] font-bold text-amber-600 ml-0.5" title={`Lượt thi >= Cutoff (${formatLimitMs(cutoffMs)})`}>⚡</span>
-                                                )}
-                                                {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
-                                                {attempt?.evidencePhotoUrl && (
-                                                  <span className="text-[9px] ml-1" title="Có ảnh tờ ghi điểm R2">📸</span>
-                                                )}
-                                                {attempt?.isLocked && (
-                                                  <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
-                                                )}
-                                              </span>
+                                              <span>{val}</span>
+                                              {isOverTimeLimit ? (
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatDisplayTime(rawOrFinalMs, false)}) vượt mốc Time Limit (${formatLimitMs(timeLimitMs!)})`}>
+                                                  Time Limit (DNF)
+                                                </span>
+                                              ) : isOverCutoff ? (
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatDisplayTime(finalMs, false)}) vượt mốc Cutoff (${formatLimitMs(cutoffMs!)})`}>
+                                                  Cutoff
+                                                </span>
+                                              ) : null}
+                                              {!isOverTimeLimit && attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
+                                              {attempt?.evidencePhotoUrl && (
+                                                <span className="text-[9px] ml-0.5" title="Có ảnh tờ ghi điểm R2">📸</span>
+                                              )}
+                                              {attempt?.isLocked && (
+                                                <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
+                                              )}
                                             </button>
                                           )}
                                         </td>
