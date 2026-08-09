@@ -40,7 +40,7 @@ export function TournamentDetailModal({
       case 'CANCELLED':
         return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 uppercase">Vô Hiệu Hóa</span>;
       case 'PUBLISHED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">Đã Xuất Bản</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">Đã Công Bố</span>;
       case 'REGISTRATION_OPEN':
         return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 uppercase">Đang Mở Đăng Ký</span>;
       case 'REGISTRATION_CLOSED':
@@ -87,11 +87,10 @@ export function TournamentDetailModal({
           </div>
           <button
             onClick={() => onToggleStatus(tournament)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer ${
-              isDisabled
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer ${isDisabled
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                 : 'bg-rose-600 hover:bg-rose-700 text-white'
-            }`}
+              }`}
           >
             {isDisabled ? 'Kích Hoạt Lại Giải Đấu' : 'Vô Hiệu Hóa Giải Đấu'}
           </button>

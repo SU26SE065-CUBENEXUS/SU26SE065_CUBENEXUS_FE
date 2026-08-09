@@ -118,11 +118,10 @@ export default function AdminTournamentsPage() {
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold animate-in slide-in-from-top-2 duration-300 ${
-            toastMessage.type === 'success'
+          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold animate-in slide-in-from-top-2 duration-300 ${toastMessage.type === 'success'
               ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
               : 'bg-rose-50 text-rose-900 border-rose-200'
-          }`}
+            }`}
         >
           {toastMessage.type === 'success' ? (
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -186,7 +185,7 @@ export default function AdminTournamentsPage() {
           className="px-3 py-2 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer focus:border-indigo-600 focus:bg-white transition"
         >
           <option value="ALL">Tất cả Trạng Thái</option>
-          <option value="PUBLISHED">Đã Xuất Bản</option>
+          <option value="PUBLISHED">Đã Công Bố</option>
           <option value="REGISTRATION_OPEN">Đang Mở Đăng Ký</option>
           <option value="REGISTRATION_CLOSED">Đóng Đăng Ký</option>
           <option value="ONGOING">Đang Diễn Ra</option>
@@ -293,11 +292,10 @@ export default function AdminTournamentsPage() {
                             onClick={() => handleToggleStatus(t)}
                             disabled={isActionLoading}
                             title={isDisabled ? 'Kích hoạt lại giải đấu' : 'Vô hiệu hóa giải đấu'}
-                            className={`p-1.5 rounded-lg border border-transparent transition cursor-pointer disabled:opacity-50 ${
-                              isDisabled
+                            className={`p-1.5 rounded-lg border border-transparent transition cursor-pointer disabled:opacity-50 ${isDisabled
                                 ? 'text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100'
                                 : 'text-rose-500 hover:bg-rose-50 hover:border-rose-100'
-                            }`}
+                              }`}
                           >
                             {isActionLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
