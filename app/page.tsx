@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/hero-section';
+import { LiveSection } from '@/components/live-section';
 import { FlowsSection } from '@/components/flows-section';
 import { FeaturesSection } from '@/components/features-section';
 import { StatsSection } from '@/components/stats-section';
@@ -41,6 +42,7 @@ export default function Home() {
     <main className="min-h-screen bg-background animate-fade-in">
       <Header />
       <HeroSection />
+      <LiveSection />
       <FlowsSection />
       <FeaturesSection />
       <StatsSection />
