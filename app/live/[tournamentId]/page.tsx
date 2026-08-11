@@ -828,7 +828,7 @@ export default function PublicLiveBoardDetailPage({
                                       const attempt = c.results && c.results.find((r: any) => r.solveNumber === i + 1);
                                       const cutoffMs = activeEvent?.cutoffTimeMs;
                                       const timeLimitMs = activeEvent?.timeLimitMs;
-                                      const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
+                                      const reqAttempts = solveCount >= 3 ? 2 : 1;
                                       const isInitialSolve = i < reqAttempts;
 
                                       const rawOrFinalMs = attempt ? (attempt.rawTimeMs || attempt.finalTimeMs || 0) : 0;
@@ -847,7 +847,7 @@ export default function PublicLiveBoardDetailPage({
                                         attempt &&
                                         cutoffMs &&
                                         cutoffMs > 0 &&
-                                        (rawOrFinalMs >= cutoffMs || finalMs >= cutoffMs) &&
+                                        (rawOrFinalMs > cutoffMs && finalMs > cutoffMs) &&
                                         isInitialSolve
                                       );
 

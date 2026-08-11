@@ -169,7 +169,23 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
     setEvents((prev) => prev.filter((_, idx) => idx !== i));
 
   const updateEvent = (i: number, key: keyof EventFormState, value: any) =>
-    setEvents((prev) => prev.map((e, idx) => (idx === i ? { ...e, [key]: value } : e)));
+    setEvents((prev) =>
+      prev.map((e, idx) => {
+        if (idx !== i) return e;
+        const updated = { ...e, [key]: value };
+        if (key === 'eventFormatCode' && value === 'MEDLEY') {
+          if (!updated.medleyPuzzles || updated.medleyPuzzles.length < 2) {
+            const firstId = puzzleTypes[0]?.id || '';
+            const secondId = puzzleTypes[1]?.id || firstId;
+            updated.medleyPuzzles = [
+              { puzzleTypeId: firstId },
+              { puzzleTypeId: secondId },
+            ];
+          }
+        }
+        return updated;
+      })
+    );
 
   const updateMedleyPuzzle = (eventIdx: number, mpIdx: number, value: string) => {
     setEvents((prev) =>
@@ -311,7 +327,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               eventFormatCode: ev.eventFormatCode,
               timeLimitMs: ev.timeLimitSec ? Number(ev.timeLimitSec) * 1000 : undefined,
               cutoffTimeMs: ev.cutoffTimeSec ? Number(ev.cutoffTimeSec) * 1000 : undefined,
-              solveCount: isMedley ? 1 : ev.solveCount,
+              solveCount: ev.solveCount,
               maxCapacity: ev.maxCapacity ? Number(ev.maxCapacity) : undefined,
               sortOrder: i + 1,
               medleyPuzzles: isMedley

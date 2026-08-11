@@ -693,10 +693,8 @@ export default function LiveOperationsPage({
 
   const TABS = [
     { id: 'traditional', label: 'Bảng Xếp Hạng & Nhập Điểm', icon: ClipboardEdit },
-    { id: 'stations', label: 'Trạm Bàn Thi', icon: Monitor },
-    { id: 'checkin', label: 'Check-In Thí Sinh', icon: QrCode },
     { id: 'medley', label: 'Thi Đấu Medley', icon: TimerIcon },
-    { id: 'verify', label: 'Xác Nhận QR', icon: ShieldCheck },
+    { id: 'stations', label: 'Trạm Bàn Thi', icon: Monitor },
     { id: 'round', label: 'Điều Hành Vòng Thi', icon: Play },
   ] as const;
 
@@ -722,7 +720,7 @@ export default function LiveOperationsPage({
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Điều Hành Trực Tiếp</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Theo dõi trạm bàn thi, check-in thí sinh, nhập điểm và điều hành tiến trình vòng thi thời gian thực.
+            Theo dõi trạm bàn thi, nhập điểm và điều hành tiến trình vòng thi thời gian thực.
           </p>
         </div>
 
@@ -733,7 +731,7 @@ export default function LiveOperationsPage({
               : 'text-slate-600 border-slate-200 bg-slate-50'
             }`}>
             {isHubConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            <span>Hub: {hubStatus}</span>
+            <span>Truyền Dữ Liệu: {isHubConnected ? 'Đã Kết Nối Trực Tiếp' : hubStatus === 'Connecting...' ? 'Đang kết nối...' : 'Chưa Kết Nối'}</span>
           </div>
         </div>
       </div>
@@ -764,7 +762,7 @@ export default function LiveOperationsPage({
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs text-slate-900">
             <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Radio className="h-4 w-4 text-indigo-600" />
-              Kết Nối SignalR Hub Trực Tiếp
+              Kết Nối Truyền Dữ Liệu Giải Đấu Trực Tiếp
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
@@ -802,7 +800,7 @@ export default function LiveOperationsPage({
                   className={`w-full py-2 rounded-lg text-xs font-semibold text-white transition ${isHubConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
                     }`}
                 >
-                  {isHubConnected ? '✓ Kết Nối Lại Hub' : 'Kết Nối Hub'}
+                  {isHubConnected ? '✓ Đã Kết Nối (Bấm để kết nối lại)' : 'Kết Nối Trực Tiếp Vào Giải'}
                 </button>
               </div>
             </div>
@@ -856,7 +854,7 @@ export default function LiveOperationsPage({
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 py-16 text-center bg-white">
               <Monitor className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-xs font-semibold text-slate-600">Kết nối SignalR Hub để theo dõi trạng thái trạm bàn thi trực tiếp</p>
+              <p className="text-xs font-semibold text-slate-600">Kết nối truyền dữ liệu trực tiếp để theo dõi trạng thái trạm bàn thi theo thời gian thực</p>
               <p className="text-[10px] text-slate-400 mt-1">Chọn môn thi, số vòng và số lượng bàn thi ở trên</p>
             </div>
           )}
@@ -1020,7 +1018,7 @@ export default function LiveOperationsPage({
                             const cutoffMs = currentEvent?.cutoffTimeMs;
                             const timeLimitMs = currentEvent?.timeLimitMs;
                             const solveCount = liveState.solveCount || 5;
-                            const reqAttempts = (solveCount === 3 || solveCount <= 2) ? 1 : 2;
+                            const reqAttempts = solveCount >= 3 ? 2 : 1;
                             const isInitialSolve = i < reqAttempts;
 
                             const rawOrFinalMs = attempt ? (attempt.rawTimeMs || attempt.finalTimeMs || 0) : 0;
@@ -1039,7 +1037,7 @@ export default function LiveOperationsPage({
                               attempt &&
                               cutoffMs &&
                               cutoffMs > 0 &&
-                              (rawOrFinalMs >= cutoffMs || finalMs >= cutoffMs) &&
+                              (rawOrFinalMs > cutoffMs && finalMs > cutoffMs) &&
                               isInitialSolve
                             );
 
@@ -1112,7 +1110,11 @@ export default function LiveOperationsPage({
                             {c.bestTimeMs ? formatMs(c.bestTimeMs) : '—'}
                           </td>
                           <td className="px-3 py-2.5 text-center font-bold text-indigo-600">
-                            {c.averageTimeMs ? formatMs(c.averageTimeMs) : '—'}
+                            {c.averageTimeMs === 2147483647 || c.isCutoffReached || (c.completedSolves >= (liveState?.solveCount || 5) && c.results?.filter((r: any) => r.isDnf || r.penaltyCode === 'DNF').length >= ((liveState?.solveCount || 5) === 5 ? 2 : 1))
+                              ? 'DNF'
+                              : c.averageTimeMs
+                              ? formatMs(c.averageTimeMs)
+                              : '—'}
                           </td>
                         </tr>
                       );
@@ -1266,7 +1268,7 @@ export default function LiveOperationsPage({
                   {isCorrectingMode && !isHubConnected && (
                     <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 animate-in fade-in duration-200">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>Yêu cầu kết nối Hub (Connected) hoạt động mới được phép sửa điểm.</span>
+                      <span>Yêu cầu kết nối truyền dữ liệu trực tiếp đang hoạt động mới được phép điều chỉnh điểm.</span>
                     </div>
                   )}
 
