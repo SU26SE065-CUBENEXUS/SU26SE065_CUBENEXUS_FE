@@ -6,12 +6,12 @@ import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { Timer, AlertCircle } from 'lucide-react';
 
 export default function InspectionPage() {
-  const { state } = useMatchContext();
+  const { state, refetch } = useMatchContext();
   const [secondsLeft, setSecondsLeft] = useState<number>(15);
   const router = useRouter();
   const params = useParams();
   const matchId = params?.matchId as string;
-  const hasRoutedRef = useRef(false);
+  const hasRefetchedRef = useRef(false);
 
   const parseUtc = (dateStr: string | null | undefined): number => {
     if (!dateStr) return 0;
@@ -29,12 +29,29 @@ export default function InspectionPage() {
     const initialSeconds = Math.max(0, Math.ceil((deadline - serverNow) / 1000));
     setSecondsLeft(initialSeconds);
 
+    if (initialSeconds <= 0 && !hasRefetchedRef.current) {
+      hasRefetchedRef.current = true;
+      refetch();
+      return;
+    }
+
     const interval = setInterval(() => {
-      setSecondsLeft((prev) => Math.max(0, prev - 1));
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (!hasRefetchedRef.current) {
+            hasRefetchedRef.current = true;
+            refetch();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state?.inspectionDeadlineAt]);
+  }, [state?.inspectionDeadlineAt, refetch]);
+
 
   return (
     <div className="space-y-8 animate-fade-in max-w-xl mx-auto w-full text-center">
