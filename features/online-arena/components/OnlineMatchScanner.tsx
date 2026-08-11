@@ -1039,8 +1039,11 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             }
           }
         } catch (err: any) {
-          setError(err?.message || 'Failed to complete scanner session.');
+          const msg = err?.message || 'Failed to complete scanner session.';
+          setError(msg);
+          setStatusMessage(msg);
         } finally {
+
           completionInFlightRef.current = false;
           setIsScanningFace(false);
         }
