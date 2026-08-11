@@ -143,13 +143,19 @@ export default function RankingsPage() {
   const top3 = rankings[2];
 
   // User real profile metrics
-  const userElo = myProfile?.eloStandard ?? myProfile?.elo ?? 1000;
-  const userPeakElo = myProfile?.peakEloStandard ?? myProfile?.peakElo ?? userElo;
-  const isPlacementDone = myProfile?.isPlacementCompleteStandard ?? myProfile?.isPlacementComplete ?? false;
-  const placementDoneCount = myProfile?.placementMatchesDoneStandard ?? 0;
-  const totalWins = myProfile?.totalWinsStandard ?? 0;
-  const totalLosses = myProfile?.totalLossesStandard ?? 0;
-  const totalMatches = totalWins + totalLosses + (myProfile?.totalDrawsStandard ?? 0);
+  const userElo = myProfile?.elo ?? myProfile?.eloStandard ?? 1000;
+  const userPeakElo = myProfile?.peakElo ?? myProfile?.peakEloStandard ?? userElo;
+  const isPlacementDone = myProfile?.isPlacementComplete ?? myProfile?.isPlacementCompleteStandard ?? false;
+
+  // Compute real wins & total matches with fallback to recent match history
+  const historyWins = recentMatches.filter((m) => m.isWinner).length;
+  const historyTotal = recentMatches.length;
+
+  const totalWins = Math.max(myProfile?.totalWins ?? myProfile?.totalWinsStandard ?? 0, historyWins);
+  const totalLosses = myProfile?.totalLosses ?? myProfile?.totalLossesStandard ?? 0;
+  const totalDraws = myProfile?.totalDraws ?? myProfile?.totalDrawsStandard ?? 0;
+  const totalMatches = Math.max(totalWins + totalLosses + totalDraws, historyTotal);
+  const placementDoneCount = Math.max(myProfile?.placementMatchesDone ?? myProfile?.placementMatchesDoneStandard ?? 0, totalMatches);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
