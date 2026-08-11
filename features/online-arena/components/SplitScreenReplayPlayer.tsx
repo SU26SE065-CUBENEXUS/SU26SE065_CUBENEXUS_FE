@@ -195,6 +195,11 @@ export function SplitScreenReplayPlayer({
     return `${mins}:${Number(secs) < 10 ? '0' : ''}${secs}`;
   };
 
+  // Derived winner name if officialWinnerName is missing but playerA or playerB is marked as winner
+  const resolvedWinnerName = (officialWinnerText === 'DRAW' || officialWinnerText === 'INCONCLUSIVE')
+    ? undefined
+    : (officialWinnerName || (playerA.isWinner ? playerA.username : playerB.isWinner ? playerB.username : undefined));
+
   return (
     <div className="w-full bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm space-y-0 relative text-left">
       {/* Official Match Winner Broadcast Header Overlay */}
@@ -206,9 +211,9 @@ export function SplitScreenReplayPlayer({
           </span>
         </div>
         <div className="text-xs font-bold text-zinc-900 tracking-tight">
-          {officialWinnerName ? (
+          {resolvedWinnerName ? (
             <>
-              Winner: <span className="text-amber-600">{officialWinnerName}</span>
+              Winner: <span className="text-amber-600">{resolvedWinnerName}</span>
               {officialWinnerText && officialWinnerText !== 'DRAW' && (
                 <span className="text-zinc-500 font-normal ml-1 text-[11px]">({officialWinnerText})</span>
               )}

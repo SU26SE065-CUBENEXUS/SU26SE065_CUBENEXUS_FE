@@ -367,9 +367,9 @@ function ReplaySection({
   const p2Record = playbackData?.recordings?.find((r) => r.playerId === state?.player2?.userId);
 
   const winnerUsername = state?.winnerId === state?.player1?.userId
-    ? state?.player1?.username
+    ? (state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
     : state?.winnerId === state?.player2?.userId
-    ? state?.player2?.username
+    ? (state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'))
     : undefined;
 
   return (
@@ -412,18 +412,18 @@ function ReplaySection({
           <SplitScreenReplayPlayer
             matchId={matchId}
             playerA={{
-              username: state?.player1?.username || 'Player 1',
+              username: state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'),
               videoUrl: p1Record?.playbackUrl || '',
               solveTimeSeconds: ((state?.player1?.timeMs || 10000) / 1000),
               videoDurationSeconds: p1Record?.durationSeconds,
-              isWinner: state?.winnerId === state?.player1?.userId,
+              isWinner: Boolean(state?.winnerId && state?.winnerId === state?.player1?.userId),
             }}
             playerB={{
-              username: state?.player2?.username || 'Player 2',
+              username: state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'),
               videoUrl: p2Record?.playbackUrl || '',
               solveTimeSeconds: ((state?.player2?.timeMs || 10000) / 1000),
               videoDurationSeconds: p2Record?.durationSeconds,
-              isWinner: state?.winnerId === state?.player2?.userId,
+              isWinner: Boolean(state?.winnerId && state?.winnerId === state?.player2?.userId),
             }}
             officialWinnerName={winnerUsername}
             officialWinnerText={state?.outcome}
