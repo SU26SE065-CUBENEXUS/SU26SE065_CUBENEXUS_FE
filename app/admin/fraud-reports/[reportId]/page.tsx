@@ -132,7 +132,8 @@ export default function AdminFraudReportReviewDetailPage() {
   const p2Record = playbackData?.recordings?.[1];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 sm:p-8 max-w-7xl mx-auto space-y-6 animate-fade-in">
+    <div className="w-full max-w-full p-4 sm:p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen transition-all duration-300 animate-fade-in font-sans">
+
       {/* Navigation & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
