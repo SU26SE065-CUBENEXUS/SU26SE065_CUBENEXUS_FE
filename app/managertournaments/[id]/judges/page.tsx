@@ -12,6 +12,8 @@ import {
   resetTournamentJudgePassword,
   deleteTournamentJudge,
   shuffleTournamentJudges,
+  toggleJudgeStatus,
+  deactivateAllJudges,
 } from '@/lib/api/tournaments';
 import type {
   TournamentDetailDto,
@@ -40,6 +42,9 @@ import {
   Shuffle,
   QrCode,
   Users,
+  Lock,
+  Unlock,
+  PowerOff,
 } from 'lucide-react';
 
 export default function JudgeManagementPage({
@@ -253,6 +258,35 @@ export default function JudgeManagementPage({
     }
   };
 
+  // Handler: Toggle individual judge active status
+  const handleToggleJudgeStatus = async (j: TournamentJudgeDto) => {
+    try {
+      const currentActive = j.isActive ?? true;
+      const updated = await toggleJudgeStatus(id, j.userId, !currentActive);
+      setJudges((prev) =>
+        prev.map((item) => (item.userId === j.userId ? { ...item, isActive: updated.isActive } : item))
+      );
+      toast.success(
+        updated.isActive ? 'Đã kích hoạt' : 'Đã vô hiệu hóa',
+        `Tài khoản ${j.displayName} đã ${updated.isActive ? 'được mở khóa' : 'bị khóa'}.`
+      );
+    } catch (err: any) {
+      toast.error('Thao tác thất bại', err?.message || 'Không thể đổi trạng thái trọng tài.');
+    }
+  };
+
+  // Handler: Deactivate all judges for this tournament
+  const handleDeactivateAllJudges = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn vô hiệu hóa TOÀN BỘ tài khoản trọng tài của giải đấu này không?')) return;
+    try {
+      const updatedJudges = await deactivateAllJudges(id);
+      setJudges(updatedJudges);
+      toast.success('Đã vô hiệu hóa toàn bộ', 'Tất cả tài khoản trọng tài đã được khóa.');
+    } catch (err: any) {
+      toast.error('Thất bại', err?.message || 'Lỗi khi vô hiệu hóa tất cả trọng tài.');
+    }
+  };
+
   // Role Badge Helper
   const renderRoleBadge = (j: TournamentJudgeDto) => {
     if (j.roleCode === 'CHECKIN_JUDGE') {
@@ -407,6 +441,16 @@ export default function JudgeManagementPage({
             >
               + Thêm Đơn Lẻ
             </button>
+
+            <button
+              onClick={handleDeactivateAllJudges}
+              disabled={judges.length === 0}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-3 py-2.5 text-xs font-semibold text-rose-700 transition cursor-pointer shadow-2xs disabled:opacity-50"
+              title="Vô hiệu hóa toàn bộ trọng tài giải đấu"
+            >
+              <PowerOff className="h-3.5 w-3.5" />
+              Khóa Tất Cả
+            </button>
           </div>
         </div>
       </div>
@@ -478,6 +522,7 @@ export default function JudgeManagementPage({
                   <th className="py-3.5 px-5 w-16 text-center">STT</th>
                   <th className="py-3.5 px-5">Tên Trọng Tài</th>
                   <th className="py-3.5 px-5">Vai Trò & Vị Trí Trực</th>
+                  <th className="py-3.5 px-5">Trạng Thái</th>
                   <th className="py-3.5 px-5">Tài Khoản (Username)</th>
                   <th className="py-3.5 px-5">Mật Khẩu Ban Đầu</th>
                   <th className="py-3.5 px-5 text-right">Thao Tác</th>
@@ -502,6 +547,17 @@ export default function JudgeManagementPage({
                     </td>
                     <td className="py-3.5 px-5">
                       {renderRoleBadge(j)}
+                    </td>
+                    <td className="py-3.5 px-5">
+                      {(j.isActive ?? true) ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                          Hoạt Động
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded bg-rose-50 border border-rose-200 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                          Đã Khóa
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-5">
                       <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded text-xs">
@@ -532,6 +588,17 @@ export default function JudgeManagementPage({
                     </td>
                     <td className="py-3.5 px-5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleToggleJudgeStatus(j)}
+                          title={(j.isActive ?? true) ? 'Khóa tài khoản trọng tài' : 'Mở khóa tài khoản'}
+                          className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${
+                            (j.isActive ?? true)
+                              ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
+                              : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
+                          }`}
+                        >
+                          {(j.isActive ?? true) ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                        </button>
                         <button
                           onClick={() => {
                             setSelectedJudge(j);

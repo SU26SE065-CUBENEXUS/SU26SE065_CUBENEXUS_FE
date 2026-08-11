@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
 import { getTournamentById, getTournamentRegistrations, updateRegistrationStatus, checkInRegistration } from '@/lib/api/tournaments';
+import type { TournamentDetailDto, TournamentRegistrationDetailDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
 import {
@@ -68,7 +69,6 @@ export default function RegistrationManagementPage({
   const [filterEvent, setFilterEvent] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterCheckIn, setFilterCheckIn] = useState('ALL');
-  const [filterMissingSeed, setFilterMissingSeed] = useState(false);
 
   // Action feedback
   const [actionError, setActionError] = useState<string | null>(null);
@@ -138,11 +138,11 @@ export default function RegistrationManagementPage({
     if (registrations.length === 0) return;
 
     // Header row
-    const headers = ['Competitor Name', 'Email', 'User Code', 'Registration Status', 'Check-In Status', 'Checked-In At', 'Registered At', 'Registered Events (Seed Times)'];
+    const headers = ['Competitor Name', 'Email', 'User Code', 'Registration Status', 'Check-In Status', 'Checked-In At', 'Registered At', 'Registered Events'];
     
     const rows = filteredRegistrations.map(r => {
       const eventsStr = r.registeredEvents.map(e => 
-        `${e.puzzleTypeName}: ${e.seedTimeMs ? msToDisplay(e.seedTimeMs) : 'No Seed'} (${e.statusCode})`
+        `${e.puzzleTypeName} (${e.statusCode})`
       ).join('; ');
 
       return [
@@ -192,12 +192,7 @@ export default function RegistrationManagementPage({
       (filterCheckIn === 'CHECKED_IN' && r.checkedInAt !== null && r.checkedInAt !== undefined) ||
       (filterCheckIn === 'NOT_CHECKED_IN' && (!r.checkedInAt));
 
-    // Missing seed filter
-    const matchesMissingSeed = 
-      !filterMissingSeed || 
-      r.registeredEvents.some(e => e.statusCode === 'REGISTERED' && !e.seedTimeMs);
-
-    return matchesSearch && matchesEvent && matchesStatus && matchesCheckIn && matchesMissingSeed;
+    return matchesSearch && matchesEvent && matchesStatus && matchesCheckIn;
   });
 
   // ---------- Counts Summary ----------
@@ -388,16 +383,7 @@ export default function RegistrationManagementPage({
               <option value="NOT_CHECKED_IN">Chưa Check-In</option>
             </select>
 
-            {/* Toggle Missing Seeds */}
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 select-none cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filterMissingSeed}
-                onChange={(e) => setFilterMissingSeed(e.target.checked)}
-                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
-              />
-              Thiếu Seed Time
-            </label>
+
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
@@ -429,7 +415,7 @@ export default function RegistrationManagementPage({
                   <th className="px-4 py-3.5">Thí Sinh</th>
                   <th className="px-4 py-3.5">Email</th>
                   <th className="px-4 py-3.5 text-center">Trạng Thái</th>
-                  <th className="px-4 py-3.5">Hạng Mục & Seed Time</th>
+                  <th className="px-4 py-3.5">Hạng Mục</th>
                   <th className="px-4 py-3.5 text-center">Check-In</th>
                   <th className="px-4 py-3.5 text-center w-28">Ngày Đăng Ký</th>
                   <th className="px-4 py-3.5 text-right w-44">Thao Tác</th>
@@ -439,7 +425,7 @@ export default function RegistrationManagementPage({
                 {filteredRegistrations.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
-                      {searchQuery || filterEvent !== 'ALL' || filterStatus !== 'ALL' || filterCheckIn !== 'ALL' || filterMissingSeed
+                      {searchQuery || filterEvent !== 'ALL' || filterStatus !== 'ALL' || filterCheckIn !== 'ALL'
                         ? 'No competitors match the specified search filters.'
                         : 'No competitor registrations found for this tournament.'}
                     </td>
@@ -490,7 +476,7 @@ export default function RegistrationManagementPage({
                           </span>
                         </td>
 
-                        {/* Registered Events list with seed details */}
+                        {/* Registered Events list */}
                         <td className="px-4 py-3.5">
                           <div className="flex flex-wrap gap-1.5">
                             {reg.registeredEvents.map(ev => {
@@ -507,18 +493,6 @@ export default function RegistrationManagementPage({
                                   }`}
                                 >
                                   <span className="font-bold text-slate-900">{formatEventLabel(ev)}</span>
-                                  {!isWithdrawn && !isDisqualified && (
-                                    <>
-                                      <span className="text-slate-300">|</span>
-                                      {ev.seedTimeMs ? (
-                                        <span className="font-mono text-indigo-700 font-bold" title="Seed Time">Seed: {msToDisplay(ev.seedTimeMs)}</span>
-                                      ) : (
-                                        <span className="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80 font-bold text-[10px] flex items-center gap-0.5" title="Chưa cài đặt Seed Time!">
-                                          <AlertTriangle className="h-3 w-3 text-amber-500" /> No Seed
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
                                 </div>
                               );
                             })}
@@ -600,14 +574,7 @@ export default function RegistrationManagementPage({
                             </button>
                           )}
 
-                          {/* Override seed link redirects to events panel */}
-                          <Link
-                            href={`/managertournaments/${tournamentId}/events`}
-                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-7 w-7 text-slate-600 hover:bg-slate-50 transition shadow-2xs"
-                            title="Override Seed Time"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </Link>
+
                         </td>
                       </tr>
                     );

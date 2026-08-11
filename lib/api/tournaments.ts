@@ -182,6 +182,21 @@ export async function shuffleTournamentJudges(tournamentId: string, dto: Shuffle
   });
 }
 
+/** PATCH /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId}/toggle-status — Bật/tắt trạng thái trọng tài */
+export async function toggleJudgeStatus(tournamentId: string, judgeUserId: string, isActive: boolean): Promise<TournamentJudgeDto> {
+  return apiFetch<TournamentJudgeDto>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}/toggle-status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isActive }),
+  });
+}
+
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges/deactivate-all — Vô hiệu hóa tất cả trọng tài */
+export async function deactivateAllJudges(tournamentId: string): Promise<TournamentJudgeDto[]> {
+  return apiFetch<TournamentJudgeDto[]>(`/api/tournament-management/tournaments/${tournamentId}/judges/deactivate-all`, {
+    method: 'POST',
+  });
+}
+
 /** DELETE /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId} — Xóa Trọng tài */
 export async function deleteTournamentJudge(tournamentId: string, judgeUserId: string): Promise<{ message: string }> {
   return apiFetch<{ message: string }>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}`, {

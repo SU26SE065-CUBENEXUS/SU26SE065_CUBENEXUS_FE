@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { getTournamentById, getEventCompetitors, overrideSeed, closeEventRegistration } from '@/lib/api/tournaments';
+import { getTournamentById, getEventCompetitors, closeEventRegistration } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, EventDetailDto, EventCompetitorDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
@@ -30,20 +30,7 @@ function msToDisplay(ms?: number | null): string {
   return `${totalSec.toFixed(2)}s`;
 }
 
-function parseDisplayToMs(str: string): number | null {
-  const trimmed = str.trim().toLowerCase().replace('s', '');
-  if (!trimmed) return null;
-  if (trimmed.includes(':')) {
-    const parts = trimmed.split(':');
-    const min = parseFloat(parts[0]);
-    const sec = parseFloat(parts[1]);
-    if (isNaN(min) || isNaN(sec)) return null;
-    return Math.round((min * 60 + sec) * 1000);
-  }
-  const sec = parseFloat(trimmed);
-  if (isNaN(sec) || sec <= 0) return null;
-  return Math.round(sec * 1000);
-}
+
 
 function EventCard({
   event,
@@ -57,8 +44,6 @@ function EventCard({
   const [loadingComp, setLoadingComp] = useState(false);
   const [closingReg, setClosingReg] = useState(false);
   const [isLocallyClosed, setIsLocallyClosed] = useState(false);
-  const [editSeedId, setEditSeedId] = useState<string | null>(null);
-  const [seedInput, setSeedInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,26 +85,7 @@ function EventCard({
     }
   };
 
-  const handleSaveSeed = async (regEventId: string) => {
-    const ms = parseDisplayToMs(seedInput);
-    if (!ms) {
-      setError('Thời gian hạt giống không hợp lệ. Nhập ví dụ: 15.50');
-      return;
-    }
-    setError(null);
-    try {
-      await overrideSeed(regEventId, { seedTimeMs: ms });
-      setCompetitors((prev) =>
-        prev.map((c) =>
-          c.registrationEventId === regEventId ? { ...c, seedTimeMs: ms } : c
-        )
-      );
-      setMessage(`Đã cập nhật hạt giống thành ${msToDisplay(ms)}.`);
-      setEditSeedId(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể cập nhật thời gian hạt giống');
-    }
-  };
+
 
   const isMedley = event.eventFormatCode === 'MEDLEY';
   const formatLabel = isMedley
@@ -245,8 +211,6 @@ function EventCard({
                     <th className="py-2.5 px-4 w-12 text-center">STT</th>
                     <th className="py-2.5 px-4">Thí Sinh</th>
                     <th className="py-2.5 px-4">Email</th>
-                    <th className="py-2.5 px-4">Seed Time Ban Đầu</th>
-                    <th className="py-2.5 px-4 text-right">Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -255,47 +219,6 @@ function EventCard({
                       <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">{idx + 1}</td>
                       <td className="py-2.5 px-4 font-semibold text-slate-900">{c.displayName}</td>
                       <td className="py-2.5 px-4 text-slate-500">{c.email || '—'}</td>
-                      <td className="py-2.5 px-4 font-mono font-medium text-slate-700">
-                        {editSeedId === c.registrationEventId ? (
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="text"
-                              value={seedInput}
-                              onChange={(e) => setSeedInput(e.target.value)}
-                              placeholder="15.50"
-                              className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 outline-none focus:border-indigo-600"
-                            />
-                            <button
-                              onClick={() => handleSaveSeed(c.registrationEventId)}
-                              className="p-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
-                              title="Lưu Hạt Giống"
-                            >
-                              <Check className="h-3 w-3" />
-                            </button>
-                            <button
-                              onClick={() => setEditSeedId(null)}
-                              className="p-1 rounded bg-slate-200 text-slate-600 hover:bg-slate-300 transition"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <span>{msToDisplay(c.seedTimeMs)}</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-4 text-right">
-                        {editSeedId !== c.registrationEventId && (
-                          <button
-                            onClick={() => {
-                              setEditSeedId(c.registrationEventId);
-                              setSeedInput(c.seedTimeMs ? (c.seedTimeMs / 1000).toString() : '');
-                            }}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs transition"
-                          >
-                            Đổi Seed Time
-                          </button>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

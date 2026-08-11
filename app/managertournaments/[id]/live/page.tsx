@@ -4,7 +4,7 @@ import { useEffect, useState, use, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL } from '@/lib/api/config';
-import { getTournamentById } from '@/lib/api/tournaments';
+import { getTournamentById, getTournamentJudges, generateGroups, generateScrambles } from '@/lib/api/tournaments';
 import {
   checkIn,
   submitTraditionalResult,
@@ -28,11 +28,15 @@ import { ScrambleDisplay } from '@/components/tournament-manager/ScrambleDisplay
 import { formatMs } from '@/components/tournament-manager/TimerDisplay';
 import {
   ChevronRight,
+  ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   Trophy,
   Radio,
   QrCode,
   AlertCircle,
   CheckCircle,
+  CheckCircle2,
   Loader2,
   Scan,
   ClipboardEdit,
@@ -47,9 +51,578 @@ import {
   Monitor,
   ArrowRight,
   Zap,
+  Shuffle,
+  X,
 } from 'lucide-react';
 
-// ─── Station grid entry ──────────────────────────────────────
+function msToDisplay(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return '-';
+  if (ms === 999999999) return 'DNF';
+  const totalSec = ms / 1000;
+  if (totalSec >= 60) {
+    const min = Math.floor(totalSec / 60);
+    const sec = (totalSec % 60).toFixed(2);
+    return `${min}:${sec.padStart(5, '0')}`;
+  }
+  return `${totalSec.toFixed(2)}s`;
+}
+
+function EventRoundControlPanel({
+  event,
+  tournamentId,
+  defaultStationCount = 4,
+}: {
+  event: EventDetailDto;
+  tournamentId: string;
+  defaultStationCount?: number;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const [roundNumber, setRoundNumber] = useState('1');
+
+  // Form configurations
+  const [groupSize, setGroupSize] = useState('8');
+  const [stationCount, setStationCount] = useState(defaultStationCount.toString());
+  const [advanceCount, setAdvanceCount] = useState('8');
+
+  useEffect(() => {
+    setStationCount(defaultStationCount.toString());
+  }, [defaultStationCount]);
+
+  // Live board state
+  const [liveBoard, setLiveBoard] = useState<any>(null);
+  const [isLiveBoardLoading, setIsLiveBoardLoading] = useState(false);
+
+  // Group scrambles
+  const [groupScrambles, setGroupScrambles] = useState<Record<string, any[]>>({});
+
+  // Modals
+  const [isGenerateGroupsOpen, setIsGenerateGroupsOpen] = useState(false);
+  const [isAdvanceOpen, setIsAdvanceOpen] = useState(false);
+
+  // Global actions loading & notifications
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch Live Board Status
+  const fetchLiveBoard = useCallback(async (roundNum: number) => {
+    setIsLiveBoardLoading(true);
+    try {
+      const data = await getLiveBoardState(event.id, roundNum);
+      setLiveBoard(data);
+    } catch {
+      setLiveBoard(null);
+    } finally {
+      setIsLiveBoardLoading(false);
+    }
+  }, [event.id]);
+
+  useEffect(() => {
+    fetchLiveBoard(Number(roundNumber));
+  }, [roundNumber, fetchLiveBoard]);
+
+  // Fetch scrambles for generated groups
+  useEffect(() => {
+    if (!liveBoard?.groups || liveBoard.groups.length === 0) {
+      setGroupScrambles({});
+      return;
+    }
+    const fetchScrambles = async () => {
+      const newScrambles: Record<string, any[]> = {};
+      await Promise.all(
+        liveBoard.groups.map(async (g: any) => {
+          try {
+            const list = await getGroupScrambles(g.groupId);
+            newScrambles[g.groupId] = list;
+          } catch {}
+        })
+      );
+      setGroupScrambles(newScrambles);
+    };
+    fetchScrambles();
+  }, [liveBoard?.groups]);
+
+  // Helper action executor
+  const doAction = async (actionFn: () => Promise<unknown>, successMsg: string) => {
+    setIsLoading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      await actionFn();
+      setMessage(successMsg);
+      await fetchLiveBoard(Number(roundNumber));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Computed properties
+  const roundStatus = liveBoard?.roundStatus || 'PENDING';
+  const groupsCount = liveBoard?.groups?.length ?? 0;
+  const groupsExist = groupsCount > 0;
+  const scramblesGenerated = groupsExist && liveBoard.groups.every((g: any) => {
+    const list = groupScrambles[g.groupId];
+    return list && list.length > 0;
+  });
+  const isScramblesReady = scramblesGenerated;
+
+  const stepStatus = {
+    groups: groupsExist ? 'Done' : 'Pending',
+    scrambles: scramblesGenerated ? 'Done' : (groupsExist ? 'Ready' : 'Pending'),
+    start: roundStatus !== 'PENDING' ? 'Done' : (groupsExist && scramblesGenerated ? 'Ready' : 'Blocked'),
+    lock: (roundStatus === 'LOCKED' || roundStatus === 'COMPLETED') ? 'Done' : (roundStatus === 'ONGOING' ? 'Ready' : 'Blocked'),
+    complete: roundStatus === 'COMPLETED' ? 'Done' : (roundStatus === 'LOCKED' ? 'Ready' : 'Blocked'),
+    advance: roundStatus === 'COMPLETED' ? 'Ready' : 'Blocked',
+  };
+
+  const totalCompetitors = liveBoard?.progress?.totalCompetitors ?? 0;
+  const totalSolves = liveBoard?.progress?.totalExpectedSolves ?? 0;
+  const submittedSolves = liveBoard?.progress?.submittedSolves ?? 0;
+  const progressPercentage = totalSolves > 0 ? Math.round((submittedSolves / totalSolves) * 100) : 0;
+  const activeStations = liveBoard?.competitors
+    ? Math.max(...liveBoard.competitors.map((c: any) => c.stationNumber || 0), 0)
+    : 0;
+
+  const isAvgFormat = (event.solveCount || 5) >= 3;
+  const advancingCompetitors = liveBoard?.competitors
+    ? [...liveBoard.competitors]
+      .filter((c: any) => {
+        if (!c.rank || c.rank > Number(advanceCount) || c.isCutoffReached) return false;
+        if (isAvgFormat) {
+          return c.averageTimeMs && c.averageTimeMs > 0 && c.averageTimeMs < 2147483647;
+        } else {
+          return c.bestTimeMs && c.bestTimeMs > 0 && c.bestTimeMs < 2147483647;
+        }
+      })
+      .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999))
+    : [];
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
+      {/* Panel Header */}
+      <div className="flex items-center justify-between px-5 py-4 hover:bg-slate-50/70 transition">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="flex-1 flex items-center justify-between text-left cursor-pointer"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 text-base tracking-tight">
+                {formatEventLabel(event)}
+              </span>
+              {event.eventFormatCode === 'MEDLEY' && (
+                <span className="rounded bg-purple-50 border border-purple-200 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+                  MEDLEY
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-slate-500 mt-0.5 font-medium">
+              {event.solveCount} solves · Limit: {msToDisplay(event.timeLimitMs)}
+              {event.cutoffTimeMs ? ` · Cutoff: ${msToDisplay(event.cutoffTimeMs)}` : ''}
+            </div>
+          </div>
+        </button>
+
+        <div className="flex items-center gap-3">
+          {expanded && (
+            <div className="flex items-center gap-2">
+              {/* Round Switcher */}
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                <button
+                  disabled={Number(roundNumber) <= 1 || isLoading || isLiveBoardLoading}
+                  onClick={() => setRoundNumber((prev) => String(Math.max(1, Number(prev) - 1)))}
+                  className="p-1 rounded hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </button>
+                <span className="text-[10px] font-bold px-2 text-slate-800 font-mono">Round {roundNumber}</span>
+                <button
+                  disabled={isLoading || isLiveBoardLoading}
+                  onClick={() => setRoundNumber((prev) => String(Number(prev) + 1))}
+                  className="p-1 rounded hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </button>
+              </div>
+
+              {/* Status Badge */}
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  : roundStatus === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
+                    : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                      : 'text-slate-500 bg-slate-100 border-slate-200'
+              }`}>
+                {roundStatus}
+              </span>
+            </div>
+          )}
+
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="p-1 rounded hover:bg-slate-100 text-slate-500 cursor-pointer"
+          >
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-slate-200 px-5 pb-6 pt-4 bg-slate-50/20">
+          {/* Notifications */}
+          {message && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-4 py-3 text-xs text-emerald-600">
+              <CheckCircle className="h-4 w-4 shrink-0" />
+              <div className="flex-1 font-semibold">{message}</div>
+              <button onClick={() => setMessage(null)} className="underline hover:text-emerald-500 transition-colors cursor-pointer">Dismiss</button>
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-500/5 border border-red-500/20 px-4 py-3 text-xs text-red-600">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <div className="flex-1 font-semibold">{error}</div>
+              <button onClick={() => setError(null)} className="underline hover:text-red-500 transition-colors cursor-pointer">Dismiss</button>
+            </div>
+          )}
+
+          {/* Overview Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Current Round</span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900">Round {roundNumber}</span>
+              </div>
+              <span className="text-xs text-slate-500 mt-1">Trạng thái: <strong className="text-slate-900">{roundStatus}</strong></span>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Participants & Groups</span>
+              <div className="mt-2">
+                <span className="text-2xl font-bold text-slate-900">{totalCompetitors}</span>
+                <span className="text-xs text-slate-500 font-semibold ml-1">thí sinh</span>
+              </div>
+              <span className="text-xs text-slate-500 mt-1">{groupsCount} nhóm · {activeStations} bàn thi</span>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Scramble Status</span>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-2xl font-bold text-slate-900">
+                  {isScramblesReady ? 'Ready' : (groupsExist ? 'Missing' : 'None')}
+                </span>
+                <span className={`inline-block w-2.5 h-2.5 rounded-full ${isScramblesReady ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              </div>
+              <span className="text-xs text-indigo-600 font-semibold mt-1">{isScramblesReady ? 'Đã tạo chuỗi Scramble' : 'Chưa tạo Scramble'}</span>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Submissions Progress</span>
+              <div className="mt-2">
+                <span className="text-2xl font-bold text-indigo-600">{progressPercentage}%</span>
+                <span className="text-xs text-slate-500 font-semibold ml-2">({submittedSolves}/{totalSolves})</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2 border border-slate-200">
+                <div className="bg-indigo-600 h-full rounded-full transition-all duration-300" style={{ width: `${progressPercentage}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Stepper Section */}
+          <div className="space-y-4 max-w-4xl mx-auto w-full">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-500 font-bold font-mono block">
+                QUY TRÌNH ĐIỀU HÀNH VÒNG THI (LIFECYCLE STEPPER)
+              </span>
+              <button
+                onClick={() => fetchLiveBoard(Number(roundNumber))}
+                disabled={isLiveBoardLoading}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 p-1 transition cursor-pointer"
+              >
+                <RefreshCw className={`h-3 w-3 ${isLiveBoardLoading ? 'animate-spin text-indigo-600' : ''}`} />
+                Đồng Bộ Dữ Liệu
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Step 1: Generate Groups */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.groups === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    {stepStatus.groups === 'Done' ? <Check className="h-3.5 w-3.5" /> : '1'}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">1. Tạo Nhóm Thi & Trạm Bàn Thi (Generate Groups & Stations)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading}
+                  onClick={() => setIsGenerateGroupsOpen(true)}
+                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                >
+                  <Shuffle className="h-3.5 w-3.5" />
+                  {groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
+                </button>
+              </div>
+
+              {/* Step 2: Generate Scrambles */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.scrambles === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : stepStatus.scrambles === 'Ready' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    {stepStatus.scrambles === 'Done' ? <Check className="h-3.5 w-3.5" /> : '2'}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">2. Tạo Chuỗi Scramble (Generate Scrambles)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">{isScramblesReady ? 'Đã khởi tạo xong chuỗi xáo trộn cho toàn bộ các nhóm.' : 'Sinh ngẫu nhiên bộ scramble chính thức cho vòng đấu này.'}</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading || stepStatus.scrambles === 'Pending' || isScramblesReady}
+                  onClick={() => doAction(
+                    () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
+                    'Scrambles generated!'
+                  )}
+                  className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs cursor-pointer ${isScramblesReady ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed' : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'}`}
+                >
+                  {isScramblesReady ? <Check className="h-3.5 w-3.5" /> : <Zap className="h-3.5 w-3.5" />}
+                  {isScramblesReady ? 'Scrambles Ready' : 'Generate Scrambles'}
+                </button>
+              </div>
+
+              {/* Step 3: Start Round */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.start === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : stepStatus.start === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    {stepStatus.start === 'Done' ? <Check className="h-3.5 w-3.5" /> : '3'}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">3. Khai Mạc Vòng Đấu (Start Active Round)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading || stepStatus.start !== 'Ready'}
+                  onClick={() => doAction(
+                    () => startRound(event.id, Number(roundNumber), {}),
+                    `Round ${roundNumber} started!`
+                  )}
+                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                >
+                  <Play className="h-3.5 w-3.5" /> Start Round
+                </button>
+              </div>
+
+              {/* Step 4: Lock Results */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.lock === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : stepStatus.lock === 'Ready' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    {stepStatus.lock === 'Done' ? <Check className="h-3.5 w-3.5" /> : '4'}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">4. Khóa Bảng Điểm (Lock Round Results)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading || stepStatus.lock !== 'Ready'}
+                  onClick={() => doAction(
+                    () => lockRoundResults(event.id, Number(roundNumber)),
+                    `Round ${roundNumber} results locked!`
+                  )}
+                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                >
+                  <Lock className="h-3.5 w-3.5" /> Lock Results
+                </button>
+              </div>
+
+              {/* Step 5: Complete Round */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.complete === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : stepStatus.complete === 'Ready' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    {stepStatus.complete === 'Done' ? <Check className="h-3.5 w-3.5" /> : '5'}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">5. Hoàn Tất Vòng Đấu (Complete Round)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading || stepStatus.complete !== 'Ready'}
+                  onClick={() => doAction(
+                    () => completeRound(event.id, Number(roundNumber)),
+                    `Round ${roundNumber} completed!`
+                  )}
+                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Complete Round
+                </button>
+              </div>
+
+              {/* Step 6: Advance Round */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                    6
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">6. Thăng Hạng Thí Sinh Vào Vòng Kế (Advance Competitors)</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
+                  </div>
+                </div>
+                <button
+                  disabled={isLoading || stepStatus.advance !== 'Ready'}
+                  onClick={() => setIsAdvanceOpen(true)}
+                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                >
+                  <Zap className="h-3.5 w-3.5" /> Advance Round
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* GENERATE GROUPS MODAL */}
+          {isGenerateGroupsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="relative w-full max-w-md p-6 bg-white border border-slate-200 rounded-xl shadow-2xl space-y-4 text-slate-900 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tạo Nhóm Thi Đấu</h3>
+                  <button onClick={() => setIsGenerateGroupsOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                      Số lượng thí sinh trong 1 nhóm
+                    </label>
+                    <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                      Số trạm bàn thi khả dụng
+                    </label>
+                    <input type="number" min="1" value={stationCount} onChange={(e) => setStationCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button onClick={() => setIsGenerateGroupsOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    disabled={isLoading}
+                    onClick={() => {
+                      setIsGenerateGroupsOpen(false);
+                      doAction(
+                        () => generateGroups(event.id, { roundNumber: Number(roundNumber), competitorsPerGroup: Number(groupSize), stationCount: Number(stationCount) }),
+                        `Đã khởi tạo thành công các nhóm thi đấu cho Vòng ${roundNumber}!`
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Tạo Nhóm Ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ADVANCE ROUND MODAL */}
+          {isAdvanceOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="relative w-full max-w-2xl p-6 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[85vh] space-y-4 text-slate-900 overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tăng Vòng (Advance Round)</h3>
+                  <button onClick={() => setIsAdvanceOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Tuyển chọn các thí sinh có thứ hạng xuất sắc nhất từ <strong className="text-indigo-600">Vòng {roundNumber}</strong> tiến vào <strong className="text-indigo-600">Vòng {Number(roundNumber) + 1}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                      Số Lấy Vào (Top N)
+                    </label>
+                    <input type="number" min="1" value={advanceCount} onChange={(e) => setAdvanceCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                      Size Nhóm Mới
+                    </label>
+                    <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
+                      Số Bàn Thi Mới
+                    </label>
+                    <input type="number" min="1" value={stationCount} onChange={(e) => setStationCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  </div>
+                </div>
+
+                {/* Advance Preview Table */}
+                <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-white">
+                  <div className="p-2.5 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                    Danh Sách Thí Sinh Dự Kiến Đi Tiếp (Top {advanceCount})
+                  </div>
+                  {advancingCompetitors.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-500 italic">Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán.</div>
+                  ) : (
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
+                          <th className="p-2.5 font-mono">Hạng</th>
+                          <th className="p-2.5 font-mono">Thí Sinh</th>
+                          <th className="p-2.5 font-mono">Best</th>
+                          <th className="p-2.5 font-mono">Average</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {advancingCompetitors.map((c: any) => (
+                          <tr key={c.groupCompetitorId} className="hover:bg-slate-50/80">
+                            <td className="p-2.5 font-bold font-mono text-indigo-600">#{c.rank}</td>
+                            <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
+                            <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
+                            <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button onClick={() => setIsAdvanceOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    disabled={isLoading}
+                    onClick={() => {
+                      setIsAdvanceOpen(false);
+                      doAction(
+                        () => advanceRound(event.id, Number(roundNumber), { nextRoundNumber: Number(roundNumber) + 1, topN: Number(advanceCount), competitorsPerGroup: Number(groupSize), stationCount: Number(stationCount) }),
+                        `Đã chuyển thành công Top ${advanceCount} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Xác Nhận Chuyển Vòng
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 interface StationEntry {
   stationNumber: number;
   state: StationState;
@@ -135,13 +708,7 @@ export default function LiveOperationsPage({
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<any | null>(null);
 
-  // ─── Round Management ────────────────────────────────────
-  const [roundMgmtEventId, setRoundMgmtEventId] = useState('');
-  const [roundMgmtRound, setRoundMgmtRound] = useState('1');
-  const [isRoundAction, setIsRoundAction] = useState(false);
-  const [roundActionResult, setRoundActionResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [roundState, setRoundState] = useState<any>(null);
-  const [isLoadingRoundState, setIsLoadingRoundState] = useState(false);
+
 
   // ─── Result Correction Modal States ──────────────────────
   const [editingResult, setEditingResult] = useState<any | null>(null);
@@ -201,29 +768,37 @@ export default function LiveOperationsPage({
     }
   }, [editingResult, penaltyTypes]);
 
+  const [judges, setJudges] = useState<any[]>([]);
+
+  const assignedStations = judges
+    .map((j) => j.assignedStationNumber)
+    .filter((s): s is number => typeof s === 'number' && s > 0);
+  const detectedStations = assignedStations.length > 0 ? Math.max(...assignedStations) : 4;
+
   // ─── Initialize ──────────────────────────────────────────
   useEffect(() => {
     async function loadData() {
       setIsLoadingMain(true);
       setErrorMain(null);
       try {
-        const [tournData, penalties] = await Promise.all([
+        const [tournData, penalties, jData] = await Promise.all([
           getTournamentById(id),
           getPenaltyTypes().catch(() => [
             { id: 'ok-uuid', code: 'OK', label: 'OK', timeAdditionMs: 0 },
             { id: 'plus2-uuid', code: 'PLUS_2', label: '+2s', timeAdditionMs: 2000 },
             { id: 'dnf-uuid', code: 'DNF', label: 'DNF', timeAdditionMs: 0 },
           ]),
+          getTournamentJudges(id).catch(() => []),
         ]);
         setTournament(tournData);
         setPenaltyTypes(penalties);
+        setJudges(jData);
         if (tournData.events.length > 0) {
           setSelectedEventId(tournData.events[0].id);
           const medEvents = tournData.events.filter((e) => e.eventFormatCode === 'MEDLEY');
           if (medEvents.length > 0) setMedleyEventId(medEvents[0].id);
           setVerifyForm((prev) => ({ ...prev, eventId: tournData.events[0].id }));
           setHubEventId(tournData.events[0].id);
-          setRoundMgmtEventId(tournData.events[0].id);
         }
       } catch (err) {
         setErrorMain(err instanceof Error ? err.message : 'Failed to load tournament data');
@@ -234,6 +809,21 @@ export default function LiveOperationsPage({
     loadData();
   }, [id]);
 
+  // ─── Auto Detect Active Stations for Hub Event & Round ──
+  useEffect(() => {
+    if (!hubEventId || !hubRound) return;
+    getLiveBoardState(hubEventId, Number(hubRound))
+      .then((state) => {
+        if (state?.competitors && state.competitors.length > 0) {
+          const maxSt = Math.max(...state.competitors.map((c: any) => c.stationNumber || 0), 0);
+          if (maxSt > 0) {
+            setStationCount(maxSt.toString());
+          }
+        }
+      })
+      .catch(() => undefined);
+  }, [hubEventId, hubRound]);
+
   // ─── SignalR Hub connection ──────────────────────────────
   const connectHub = useCallback(async () => {
     if (hubConnection) {
@@ -241,9 +831,22 @@ export default function LiveOperationsPage({
       setHubConnection(null);
       setIsHubConnected(false);
     }
-    if (!hubEventId || !hubRound || !stationCount) return;
+    if (!hubEventId || !hubRound) return;
 
-    const count = Number(stationCount);
+    // Detect station count from live state if not manually set
+    let count = Number(stationCount || '0');
+    if (count <= 0) {
+      try {
+        const state = await getLiveBoardState(hubEventId, Number(hubRound));
+        if (state?.competitors && state.competitors.length > 0) {
+          const maxSt = Math.max(...state.competitors.map((c: any) => c.stationNumber || 0), 0);
+          if (maxSt > 0) count = maxSt;
+        }
+      } catch { }
+    }
+    if (count <= 0) count = 2; // fallback default
+    setStationCount(count.toString());
+
     // Init station grid
     setStations(
       Array.from({ length: count }, (_, i) => ({
@@ -377,27 +980,6 @@ export default function LiveOperationsPage({
     }
   }, [selectedGroupCompetitorId, liveState]);
 
-  // Load round management state dynamically
-  useEffect(() => {
-    if (!roundMgmtEventId || !roundMgmtRound) {
-      setRoundState(null);
-      return;
-    }
-    let active = true;
-    async function fetchRoundStatus() {
-      setIsLoadingRoundState(true);
-      try {
-        const state = await getLiveBoardState(roundMgmtEventId, Number(roundMgmtRound));
-        if (active) setRoundState(state);
-      } catch (err) {
-        if (active) setRoundState(null);
-      } finally {
-        if (active) setIsLoadingRoundState(false);
-      }
-    }
-    fetchRoundStatus();
-    return () => { active = false; };
-  }, [roundMgmtEventId, roundMgmtRound]);
 
   // ─── Medley side-effects ─────────────────────────────────
   useEffect(() => {
@@ -694,7 +1276,6 @@ export default function LiveOperationsPage({
   const TABS = [
     { id: 'traditional', label: 'Bảng Xếp Hạng & Nhập Điểm', icon: ClipboardEdit },
     { id: 'medley', label: 'Thi Đấu Medley', icon: TimerIcon },
-    { id: 'stations', label: 'Trạm Bàn Thi', icon: Monitor },
     { id: 'round', label: 'Điều Hành Vòng Thi', icon: Play },
   ] as const;
 
@@ -724,14 +1305,11 @@ export default function LiveOperationsPage({
           </p>
         </div>
 
-        {/* SignalR Status */}
+        {/* Real-time Status Badge */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${isHubConnected
-              ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
-              : 'text-slate-600 border-slate-200 bg-slate-50'
-            }`}>
-            {isHubConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            <span>Truyền Dữ Liệu: {isHubConnected ? 'Đã Kết Nối Trực Tiếp' : hubStatus === 'Connecting...' ? 'Đang kết nối...' : 'Chưa Kết Nối'}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border text-emerald-700 border-emerald-200 bg-emerald-50">
+            <Wifi className="h-3.5 w-3.5" />
+            <span>Hệ Thống Trực Tiếp Sẵn Sàng</span>
           </div>
         </div>
       </div>
@@ -745,8 +1323,8 @@ export default function LiveOperationsPage({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition whitespace-nowrap cursor-pointer ${isActive
-                  ? 'border-indigo-600 text-indigo-600 font-bold bg-indigo-50/50 rounded-t-lg'
-                  : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
+                ? 'border-indigo-600 text-indigo-600 font-bold bg-indigo-50/50 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300'
                 }`}
             >
               {tab.label}
@@ -754,112 +1332,6 @@ export default function LiveOperationsPage({
           );
         })}
       </div>
-
-      {/* ─── TAB 0: STATION GRID ─────────────────────────────── */}
-      {activeTab === 'stations' && (
-        <div className="space-y-6">
-          {/* Hub Setup Card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs text-slate-900">
-            <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Radio className="h-4 w-4 text-indigo-600" />
-              Kết Nối Truyền Dữ Liệu Giải Đấu Trực Tiếp
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Môn Thi</label>
-                <select
-                  value={hubEventId}
-                  onChange={(e) => setHubEventId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                >
-                  <option value="">Chọn Môn Thi</option>
-                  {tournament.events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>{ev.puzzleTypeName} ({ev.eventFormatCode})</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Vòng Thi (Round)</label>
-                <input
-                  type="number" min="1" value={hubRound}
-                  onChange={(e) => setHubRound(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Số Trạm Bàn Thi</label>
-                <input
-                  type="number" min="1" max="20" value={stationCount}
-                  onChange={(e) => setStationCount(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={connectHub}
-                  className={`w-full py-2 rounded-lg text-xs font-semibold text-white transition ${isHubConnected ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'
-                    }`}
-                >
-                  {isHubConnected ? '✓ Đã Kết Nối (Bấm để kết nối lại)' : 'Kết Nối Trực Tiếp Vào Giải'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Station Grid */}
-          {stations.length > 0 ? (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Monitor className="h-4 w-4 text-indigo-600" />
-                  Trạm Trọng Tài — Round {hubRound}
-                </h2>
-                <div className="flex items-center gap-3">
-                  {['EMPTY', 'VERIFIED', 'INSPECTING', 'SOLVING', 'SUBMITTING', 'DONE'].map((s) => (
-                    <StationStatusBadge key={s} state={s as StationState} size="sm" />
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {stations.map((station) => (
-                  <div
-                    key={station.stationNumber}
-                    className={`relative rounded-xl border-2 p-4 transition-all duration-500 ${station.state === 'EMPTY' ? 'station-empty' :
-                        station.state === 'VERIFIED' ? 'station-verified' :
-                          station.state === 'INSPECTING' ? 'station-inspecting' :
-                            station.state === 'SOLVING' ? 'station-solving' :
-                              station.state === 'SUBMITTING' ? 'station-submitting' :
-                                station.state === 'DONE' ? 'station-done' : 'station-empty'
-                      }`}
-                  >
-                    <div className="text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Trạm</p>
-                      <p className="text-3xl font-black text-slate-900 mb-2">{station.stationNumber}</p>
-                      <StationStatusBadge state={station.state} size="sm" />
-                      {station.competitorName && (
-                        <p className="mt-2 text-[10px] font-semibold text-slate-900 truncate" title={station.competitorName}>
-                          {station.competitorName}
-                        </p>
-                      )}
-                    </div>
-                    {station.state === 'SOLVING' && (
-                      <div className="absolute top-1.5 right-1.5">
-                        <Zap className="h-3 w-3 text-amber-500 animate-pulse" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 py-16 text-center bg-white">
-              <Monitor className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-xs font-semibold text-slate-600">Kết nối truyền dữ liệu trực tiếp để theo dõi trạng thái trạm bàn thi theo thời gian thực</p>
-              <p className="text-[10px] text-slate-400 mt-1">Chọn môn thi, số vòng và số lượng bàn thi ở trên</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ─── TAB 1: CHECK-IN ──────────────────────────────────── */}
       {activeTab === 'checkin' && (
@@ -888,8 +1360,8 @@ export default function LiveOperationsPage({
           </form>
           {checkInResult && (
             <div className={`mt-4 flex items-start gap-3 rounded-lg border p-3.5 text-xs ${checkInResult.success
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                : 'border-red-200 bg-red-50 text-red-800'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-red-200 bg-red-50 text-red-800'
               }`}>
               {checkInResult.success ? <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" /> : <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />}
               <div>
@@ -996,8 +1468,8 @@ export default function LiveOperationsPage({
                         <tr key={c.groupCompetitorId} className="hover:bg-slate-50 transition-colors">
                           <td className="px-3 py-2.5 text-center font-bold">
                             <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full ${c.rank === 1 ? 'bg-amber-100 text-amber-900 font-bold' :
-                                c.rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' :
-                                  c.rank === 3 ? 'bg-amber-800 text-white font-bold' : 'text-slate-500'
+                              c.rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' :
+                                c.rank === 3 ? 'bg-amber-800 text-white font-bold' : 'text-slate-500'
                               }`}>
                               {c.rank || '—'}
                             </span>
@@ -1072,8 +1544,7 @@ export default function LiveOperationsPage({
                                         });
                                       }
                                     }}
-                                    className={`px-2 py-1 rounded transition font-semibold flex items-center justify-center gap-1 mx-auto ${
-                                      !attempt
+                                    className={`px-2 py-1 rounded transition font-semibold flex items-center justify-center gap-1 mx-auto ${!attempt
                                         ? 'text-slate-300 cursor-default'
                                         : isOverTimeLimit
                                           ? 'bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200 font-bold'
@@ -1082,7 +1553,7 @@ export default function LiveOperationsPage({
                                             : isDnf
                                               ? 'bg-red-50 text-red-700 border border-red-200'
                                               : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                    }`}
+                                      }`}
                                     title={
                                       attempt
                                         ? `Solve #${i + 1}: ${val} ${isOverTimeLimit ? '(Vượt mốc Time Limit => DNF)' : isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
@@ -1113,8 +1584,8 @@ export default function LiveOperationsPage({
                             {c.averageTimeMs === 2147483647 || c.isCutoffReached || (c.completedSolves >= (liveState?.solveCount || 5) && c.results?.filter((r: any) => r.isDnf || r.penaltyCode === 'DNF').length >= ((liveState?.solveCount || 5) === 5 ? 2 : 1))
                               ? 'DNF'
                               : c.averageTimeMs
-                              ? formatMs(c.averageTimeMs)
-                              : '—'}
+                                ? formatMs(c.averageTimeMs)
+                                : '—'}
                           </td>
                         </tr>
                       );
@@ -1341,12 +1812,12 @@ export default function LiveOperationsPage({
                                 }
                               }}
                               className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono transition-all ${result ? (
-                                  result.isLocked
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : result.isDnf
-                                      ? 'bg-red-50 text-red-700 border border-red-200'
-                                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                ) : 'bg-slate-100 text-slate-400 cursor-default'
+                                result.isLocked
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : result.isDnf
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              ) : 'bg-slate-100 text-slate-400 cursor-default'
                                 }`}
                               title={result ? "Bấm để xem ảnh minh chứng / Sửa điểm" : "Lượt thi chưa hoàn thành"}
                             >
@@ -1377,7 +1848,7 @@ export default function LiveOperationsPage({
               <p className="text-center py-10 text-xs text-slate-500">Chưa cấu hình môn thi Medley.</p>
             ) : (
               <form onSubmit={handleMedleySubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi Medley</label>
                     <select value={medleyEventId} onChange={(e) => setMedleyEventId(e.target.value)}
@@ -1391,6 +1862,23 @@ export default function LiveOperationsPage({
                     <input type="number" min="1" value={medleyRoundNumber} onChange={(e) => setMedleyRoundNumber(e.target.value)}
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve (#)</label>
+                    <select
+                      value={medleyAttemptNumber}
+                      onChange={(e) => setMedleyAttemptNumber(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
+                    >
+                      {Array.from(
+                        { length: tournament?.events.find((ev) => ev.id === medleyEventId)?.solveCount || 5 },
+                        (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            Solve #{i + 1}
+                          </option>
+                        )
+                      )}
+                    </select>
                   </div>
                 </div>
 
@@ -1412,7 +1900,20 @@ export default function LiveOperationsPage({
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
-                    <select value={medleyCompetitorId} onChange={(e) => setMedleyCompetitorId(e.target.value)}
+                    <select
+                      value={medleyCompetitorId}
+                      onChange={(e) => {
+                        const compId = e.target.value;
+                        setMedleyCompetitorId(compId);
+                        const compObj = filteredMedleyCompetitors.find((c: any) => c.groupCompetitorId === compId);
+                        if (compObj) {
+                          const activeEv = tournament?.events.find((ev) => ev.id === medleyEventId);
+                          const totalSolves = activeEv?.solveCount || 5;
+                          const submitted = compObj.submittedCount || compObj.results?.length || 0;
+                          const nextSolve = Math.min(submitted + 1, totalSolves);
+                          setMedleyAttemptNumber(nextSolve.toString());
+                        }
+                      }}
                       disabled={!medleyGroupId}
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
                     >
@@ -1435,7 +1936,7 @@ export default function LiveOperationsPage({
                           </span>
                         )}
                       </div>
-                      
+
                       <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-3">
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -1579,8 +2080,8 @@ export default function LiveOperationsPage({
 
           {verifyResult && (
             <div className={`mt-5 flex items-start gap-3 rounded-lg border p-4 text-xs ${verifyResult.success && verifyResult.canSubmit
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                : 'border-red-200 bg-red-50 text-red-800'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-red-200 bg-red-50 text-red-800'
               }`}>
               {verifyResult.success && verifyResult.canSubmit ? (
                 <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -1606,213 +2107,40 @@ export default function LiveOperationsPage({
         </div>
       )}
 
-      {/* ─── TAB 5: ROUND CONTROL ─────────────────────────────── */}
+      {/* ─── TAB 5: ROUND CONTROL (LIFECYCLE STEPPER) ──────────── */}
       {activeTab === 'round' && (
-        <div className="space-y-6 max-w-4xl mx-auto w-full">
-          {/* Header & Selection */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
-            <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Play className="h-5 w-5 text-indigo-600" />
-              Điều Hành Tiến Trình Vòng Thi (Round Lifecycle)
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Chọn Môn Thi</label>
-                <select value={roundMgmtEventId} onChange={(e) => setRoundMgmtEventId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
-                >
-                  <option value="">Chọn Môn Thi</option>
-                  {tournament.events.map((e) => <option key={e.id} value={e.id}>{e.puzzleTypeName} ({e.eventFormatCode})</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Số Vòng Thi (Round)</label>
-                <input type="number" min="1" value={roundMgmtRound} onChange={(e) => setRoundMgmtRound(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
-                />
-              </div>
+        <div className="space-y-4 max-w-7xl mx-auto w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
+            <div>
+              <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider font-mono">
+                Điều Hành Tiến Trình Vòng Thi
+              </p>
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight mt-0.5 flex items-center gap-2">
+                <Play className="h-5 w-5 text-indigo-600" />
+                Round Control Lifecycle Stepper
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Khởi tạo nhóm thi đấu, tạo chuỗi scramble, khai mạc vòng đấu, khóa kết quả và thăng hạng thí sinh cho từng môn thi.
+              </p>
             </div>
           </div>
 
-          {/* Round State Dashboard */}
-          {roundMgmtEventId && (
-            isLoadingRoundState ? (
-              <div className="rounded-xl border border-slate-200 bg-white p-8 flex justify-center items-center">
-                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
-                <span className="text-xs text-slate-500 ml-2">Đang tải chỉ số vòng thi...</span>
-              </div>
-            ) : roundState ? (
-              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs text-slate-900">
-                {/* Dashboard Banner */}
-                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold tracking-widest text-indigo-600 uppercase font-mono">ACTIVE DASHBOARD</span>
-                    <h3 className="text-base font-bold text-slate-900 mt-0.5 leading-tight">
-                      {roundState.eventName} — Vòng {roundState.roundNumber}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Tiến trình lượt giải của toàn bộ đấu thủ được cập nhật trực tiếp.
-                    </p>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Trạng thái:</span>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${roundState.roundStatus === 'ONGOING' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                        roundState.roundStatus === 'LOCKED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                          roundState.roundStatus === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                            'bg-slate-100 border border-slate-200 text-slate-600'
-                      }`}>
-                      {roundState.roundStatus === 'DRAFT' || roundState.roundStatus === 'None' || !roundState.roundStatus ? 'Chưa Bắt Đầu' : roundState.roundStatus}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Metrics Grid */}
-                {(() => {
-                  const totalCompetitors = roundState.competitors?.length || 0;
-                  const completedCompetitors = roundState.competitors?.filter((c: any) => c.competitorStatus === 'COMPLETED' || c.competitorStatus === 'NO_SHOW' || c.completedSolves === roundState.solveCount).length || 0;
-                  const totalSolvesExpected = totalCompetitors * (roundState.solveCount || 5);
-                  const completedSolves = roundState.competitors?.reduce((sum: number, c: any) => sum + (c.completedSolves || 0), 0) || 0;
-                  const solvePercentage = totalSolvesExpected > 0 ? Math.round((completedSolves / totalSolvesExpected) * 100) : 0;
-                  const roundStatus = roundState.roundStatus || 'DRAFT';
-
-                  return (
-                    <>
-                      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-slate-100 divide-x divide-slate-100">
-                        <div className="p-4">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Thí Sinh</p>
-                          <p className="text-xl font-bold text-slate-900 mt-1">{totalCompetitors}</p>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Lượt Solve Đã Thi</p>
-                          <p className="text-xl font-bold text-slate-900 mt-1">
-                            {completedSolves} <span className="text-xs text-slate-400 font-normal">/ {totalSolvesExpected}</span>
-                          </p>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Đã Hoàn Thành</p>
-                          <p className="text-xl font-bold text-slate-900 mt-1">
-                            {completedCompetitors} <span className="text-xs text-slate-400 font-normal">/ {totalCompetitors}</span>
-                          </p>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">Tiến Độ Vòng Thi</p>
-                          <p className="text-xl font-bold text-indigo-600 mt-1">{solvePercentage}%</p>
-                        </div>
-                      </div>
-
-                      {/* Active control flow steps */}
-                      <div className="p-6 space-y-3">
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">QUY TRÌNH ĐIỀU HÀNH VÒNG THI</h4>
-
-                        {/* Step 1: Start Round */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${(roundStatus === 'DRAFT' || roundStatus === 'None')
-                            ? 'border-indigo-200 bg-indigo-50/50'
-                            : 'border-slate-200 bg-white opacity-60'
-                          }`}>
-                          <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-indigo-600">BƯỚC 1</span>
-                            <h5 className="font-bold text-xs text-slate-900">Khai mạc vòng đấu (Start Round)</h5>
-                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                              Mở trạm trọng tài để bắt đầu quét mã QR và submit điểm thi đấu trực tiếp.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRoundAction('start')}
-                            disabled={isRoundAction || (roundStatus !== 'DRAFT' && roundStatus !== 'None')}
-                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-2xs"
-                          >
-                            <Play className="h-3.5 w-3.5" /> Start Round
-                          </button>
-                        </div>
-
-                        {/* Step 2: Lock Results */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'ONGOING'
-                            ? 'border-amber-200 bg-amber-50/50'
-                            : 'border-slate-200 bg-white opacity-60'
-                          }`}>
-                          <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-amber-600">BƯỚC 2</span>
-                            <h5 className="font-bold text-xs text-slate-900">Khóa bảng điểm (Lock Results)</h5>
-                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                              Khóa không cho các trạm gửi thêm điểm. Cho phép Manager chỉnh sửa lỗi nhập điểm của trọng tài trước khi chốt vòng.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRoundAction('lock')}
-                            disabled={isRoundAction || roundStatus !== 'ONGOING'}
-                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition shadow-2xs"
-                          >
-                            <Lock className="h-3.5 w-3.5" /> Lock Results
-                          </button>
-                        </div>
-
-                        {/* Step 3: Complete Round */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'LOCKED'
-                            ? 'border-purple-200 bg-purple-50/50'
-                            : 'border-slate-200 bg-white opacity-60'
-                          }`}>
-                          <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-purple-600">BƯỚC 3</span>
-                            <h5 className="font-bold text-xs text-slate-900">Hoàn tất vòng thi (Complete Round)</h5>
-                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                              Chốt thứ hạng chính thức của vòng đấu. Thăng hạng (Advance) cho các đấu thủ top đầu vào vòng tiếp theo.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRoundAction('complete')}
-                            disabled={isRoundAction || roundStatus !== 'LOCKED'}
-                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition shadow-2xs"
-                          >
-                            <CheckCircle className="h-3.5 w-3.5" /> Complete Round
-                          </button>
-                        </div>
-
-                        {/* Step 4: Complete Event */}
-                        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border transition-all ${roundStatus === 'COMPLETED'
-                            ? 'border-emerald-200 bg-emerald-50/50'
-                            : 'border-slate-200 bg-white opacity-60'
-                          }`}>
-                          <div className="mb-3 sm:mb-0 max-w-md">
-                            <span className="text-[10px] font-bold font-mono text-emerald-600">BƯỚC 4</span>
-                            <h5 className="font-bold text-xs text-slate-900">Hoàn tất hạng mục đấu (Complete Event)</h5>
-                            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                              Chốt Podium trao giải và hoàn thành hạng mục thi đấu (3x3x3, 2x2x2, Medley...) của giải.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleRoundAction('complete_event')}
-                            disabled={isRoundAction || roundStatus !== 'COMPLETED'}
-                            className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition shadow-2xs"
-                          >
-                            <Trophy className="h-3.5 w-3.5" /> Complete Event
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-slate-200 py-16 text-center bg-white">
-                <AlertCircle className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-xs font-semibold text-slate-600">Không tìm thấy thông tin vòng đấu</p>
-                <p className="text-[10px] text-slate-400 mt-1">Vui lòng kiểm tra lại cấu hình sự kiện và số vòng thi.</p>
-              </div>
-            )
-          )}
-
-          {isRoundAction && (
-            <div className="mt-4 flex items-center gap-2 text-slate-500 text-xs">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Đang thực hiện thao tác...
+          {tournament.events.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center shadow-2xs">
+              <p className="text-slate-400 font-semibold text-sm">Chưa có hạng mục thi đấu nào cho giải này.</p>
             </div>
-          )}
-
-          {roundActionResult && (
-            <div className={`mt-4 flex items-center gap-2 rounded-lg border px-4 py-3 text-xs font-medium ${roundActionResult.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'
-              }`}>
-              {roundActionResult.ok ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-              {roundActionResult.message}
+          ) : (
+            <div className="space-y-4">
+              {tournament.events
+                .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                .map((event) => (
+                  <EventRoundControlPanel
+                    key={event.id}
+                    event={event}
+                    tournamentId={id}
+                    defaultStationCount={detectedStations}
+                  />
+                ))}
             </div>
           )}
         </div>

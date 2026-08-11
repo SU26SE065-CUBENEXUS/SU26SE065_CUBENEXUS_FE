@@ -701,9 +701,9 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                         </div>
                       ) : (
                         <div className="flex items-center">
-                          <span className="text-xs font-[14px] text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
+                          {/* <span className="text-xs font-[14px] text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
                             Đã chọn Thể Thức Medley Relay
-                          </span>
+                          </span> */}
                         </div>
                       )}
                     </div>

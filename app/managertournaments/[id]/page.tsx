@@ -54,7 +54,7 @@ const QUICK_ACTIONS = [
   },
   {
     title: 'Manage Registrations',
-    description: 'View and override competitor seed times',
+    description: 'View and manage competitor registrations',
     href: 'registrations',
     icon: ClipboardList,
     accent: 'bg-white border-slate-200 hover:border-sky-500 hover:bg-sky-50/30 text-sky-700',
@@ -86,7 +86,8 @@ export default function TournamentDetailDashboardPage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [completeMsg, setCompleteMsg] = useState<string | null>(null);
+  const [completeMsg, setCompleteMsg] = useState<{ text: string; isError: boolean } | null>(null);
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const fetchTournament = async () => {
@@ -121,7 +122,7 @@ export default function TournamentDetailDashboardPage({
         ]
       };
       setTournament(mockDetail);
-      setCompleteMsg('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
+      setCompleteMsg({ text: 'Đang sử dụng dữ liệu mẫu (Không kết nối được BE)', isError: true });
     } finally {
       setIsLoading(false);
     }
@@ -131,20 +132,22 @@ export default function TournamentDetailDashboardPage({
     fetchTournament();
   }, [id]);
 
-  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
-
   const handleComplete = async () => {
     if (!tournament) return;
     setIsCompleting(true);
+    setShowConfirmComplete(false);
     try {
       const updated = await completeTournament(id);
       setTournament(updated);
-      setCompleteMsg('Giải đấu đã được đánh dấu HOÀN THÀNH thành công!');
-      setShowConfirmComplete(false);
+      setCompleteMsg({
+        text: 'Giải đấu đã được đánh dấu HOÀN THÀNH thành công!',
+        isError: false,
+      });
     } catch (err) {
-      setCompleteMsg(
-        `Lỗi: ${err instanceof Error ? err.message : 'Không thể đánh dấu hoàn thành'}`
-      );
+      setCompleteMsg({
+        text: err instanceof Error ? err.message : 'Không thể đánh dấu hoàn thành',
+        isError: true,
+      });
     } finally {
       setIsCompleting(false);
     }
@@ -194,13 +197,17 @@ export default function TournamentDetailDashboardPage({
       {/* Complete success/error banner */}
       {completeMsg && (
         <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
-          completeMsg.startsWith('Error')
+          completeMsg.isError
             ? 'border-red-200 bg-red-50 text-red-700'
             : 'border-emerald-200 bg-emerald-50 text-emerald-700'
         }`}>
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          {completeMsg}
-          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline">Đóng</button>
+          {completeMsg.isError ? (
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+          ) : (
+            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
+          )}
+          <span>{completeMsg.text}</span>
+          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline font-semibold cursor-pointer">Đóng</button>
         </div>
       )}
 

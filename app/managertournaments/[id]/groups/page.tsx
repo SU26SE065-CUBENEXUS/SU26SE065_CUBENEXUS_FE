@@ -166,7 +166,7 @@ function EventGroupPanel({
   const totalCompetitors = liveBoard?.progress?.totalCompetitors ?? 0;
   const groupsCount = liveBoard?.groups?.length ?? 0;
   const roundStatus = liveBoard?.roundStatus || 'PENDING';
-  
+
   // Calculate active stations from competitors maximum station number
   const activeStations = liveBoard?.competitors
     ? Math.max(...liveBoard.competitors.map((c: any) => c.stationNumber || 0), 0)
@@ -198,11 +198,19 @@ function EventGroupPanel({
     advance: roundStatus === 'COMPLETED' ? 'Ready' : 'Blocked',
   };
 
-  // Ranked competitors qualifying for next round (exclude cutoff-stopped & all-DNF)
+  // Ranked competitors qualifying for next round (exclude cutoff-stopped, DNF-stopped, and DNF Average/Best)
+  const isAvgFormat = (event.solveCount || 5) >= 3;
   const advancingCompetitors = liveBoard?.competitors
     ? [...liveBoard.competitors]
-        .filter((c: any) => c.rank && c.rank <= Number(advanceCount) && !c.isCutoffReached && c.bestTimeMs)
-        .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999))
+      .filter((c: any) => {
+        if (!c.rank || c.rank > Number(advanceCount) || c.isCutoffReached) return false;
+        if (isAvgFormat) {
+          return c.averageTimeMs && c.averageTimeMs > 0 && c.averageTimeMs < 2147483647;
+        } else {
+          return c.bestTimeMs && c.bestTimeMs > 0 && c.bestTimeMs < 2147483647;
+        }
+      })
+      .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999))
     : [];
 
   return (
@@ -255,12 +263,11 @@ function EventGroupPanel({
               </div>
 
               {/* Status Badge */}
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                 : roundStatus === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
-                : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                : 'text-slate-500 bg-slate-100 border-slate-200'
-              }`}>
+                  : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                    : 'text-slate-500 bg-slate-100 border-slate-200'
+                }`}>
                 {roundStatus}
               </span>
             </div>
@@ -322,9 +329,8 @@ function EventGroupPanel({
                 <span className="text-2xl font-bold text-slate-900">
                   {scramblesStatus === 'Generated' ? 'Ready' : (scramblesStatus === 'Missing' ? 'Missing' : 'None')}
                 </span>
-                <span className={`inline-block w-2.5 h-2.5 rounded-full ${
-                  scramblesStatus === 'Generated' ? 'bg-emerald-500' : 'bg-amber-500'
-                }`} />
+                <span className={`inline-block w-2.5 h-2.5 rounded-full ${scramblesStatus === 'Generated' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`} />
               </div>
               <span className="text-xs text-indigo-600 font-semibold mt-1">Đã tạo chuỗi Scramble</span>
             </div>
@@ -348,17 +354,16 @@ function EventGroupPanel({
 
           {/* Segmented Tab Headers */}
           <div className="flex border-b border-slate-200 mb-5 gap-6">
-            {(['groups', 'scrambles', 'control'] as const).map((tab) => (
+            {(['groups', 'scrambles'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                  activeTab === tab
-                    ? 'border-indigo-600 text-indigo-600 font-bold'
-                    : 'border-transparent text-slate-500 hover:text-slate-900'
-                }`}
+                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === tab
+                  ? 'border-indigo-600 text-indigo-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
               >
-                {tab === 'groups' ? 'Groups Board' : tab === 'scrambles' ? 'Scrambles' : 'Round Control'}
+                {tab === 'groups' ? 'Groups Board' : 'Scrambles'}
               </button>
             ))}
             <button
@@ -433,15 +438,15 @@ function EventGroupPanel({
 
                       const groupStatusText = group.statusCode === 'PENDING' ? 'Ready'
                         : group.statusCode === 'ONGOING' ? 'Running'
-                        : group.statusCode === 'LOCKED' ? 'Locked'
-                        : group.statusCode === 'COMPLETED' ? 'Completed'
-                        : group.statusCode;
+                          : group.statusCode === 'LOCKED' ? 'Locked'
+                            : group.statusCode === 'COMPLETED' ? 'Completed'
+                              : group.statusCode;
 
                       const groupStatusColor = group.statusCode === 'PENDING' ? 'text-slate-600 bg-slate-100 border-slate-200'
                         : group.statusCode === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                        : group.statusCode === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
-                        : group.statusCode === 'COMPLETED' ? 'text-blue-700 bg-blue-50 border-blue-200'
-                        : 'text-slate-600 bg-slate-100 border-slate-200';
+                          : group.statusCode === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
+                            : group.statusCode === 'COMPLETED' ? 'text-blue-700 bg-blue-50 border-blue-200'
+                              : 'text-slate-600 bg-slate-100 border-slate-200';
 
                       return (
                         <div key={group.groupId} className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col justify-between shadow-2xs text-slate-900">
@@ -493,11 +498,10 @@ function EventGroupPanel({
                         () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
                         'Scrambles generated successfully!'
                       )}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${
-                        isScramblesReady
-                          ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
-                          : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${isScramblesReady
+                        ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
+                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
+                        }`}
                     >
                       {isLoading ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -517,9 +521,8 @@ function EventGroupPanel({
                         <div key={group.groupId} className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-bold text-slate-900">{group.groupName}</span>
-                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider font-mono ${
-                              scrambles ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-amber-700 bg-amber-50 border-amber-200'
-                            }`}>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider font-mono ${scrambles ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-amber-700 bg-amber-50 border-amber-200'
+                              }`}>
                               {scrambles ? 'Generated' : 'Missing'}
                             </span>
                           </div>
@@ -553,177 +556,6 @@ function EventGroupPanel({
                   </div>
                 </div>
               )}
-            </div>
-          )}`
-
-          {/* TAB 3: ROUND CONTROL (LIFE CYCLE WORKFLOW STEPPER) */}
-          {activeTab === 'control' && !isLiveBoardLoading && (
-            <div className="space-y-4 max-w-4xl mx-auto w-full">
-              <span className="text-xs text-slate-500 font-bold font-mono block mb-2">
-                QUY TRÌNH ĐIỀU HÀNH VÒNG THI (LIFECYCLE STEPPER)
-              </span>
-
-              <div className="space-y-3">
-                {/* 1. Generate Groups */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.groups === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 border border-slate-200 text-slate-700'
-                    }`}>
-                      {stepStatus.groups === 'Done' ? <Check className="h-3.5 w-3.5" /> : '1'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">1. Tạo Nhóm Thi & Trạm Bàn Thi (Generate Groups & Stations)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading}
-                    onClick={() => setIsGenerateGroupsOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
-                  >
-                    <Shuffle className="h-3.5 w-3.5" />
-                    {groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
-                  </button>
-                </div>
-
-                {/* 2. Generate Scrambles */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.scrambles === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.scrambles === 'Ready' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
-                    }`}>
-                      {stepStatus.scrambles === 'Done' ? <Check className="h-3.5 w-3.5" /> : '2'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">2. Tạo Chuỗi Scramble (Generate Scrambles)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">
-                        {isScramblesReady ? 'Đã khởi tạo xong chuỗi xáo trộn cho toàn bộ các nhóm.' : 'Sinh ngẫu nhiên bộ scramble chính thức cho vòng đấu này.'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading || stepStatus.scrambles === 'Pending' || isScramblesReady}
-                    onClick={() => doAction(
-                      () => generateScrambles(event.id, { roundNumber: Number(roundNumber) }),
-                      'Scrambles generated!'
-                    )}
-                    className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs cursor-pointer ${
-                      isScramblesReady
-                        ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
-                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
-                    }`}
-                  >
-                    {isScramblesReady ? <Check className="h-3.5 w-3.5" /> : <Zap className="h-3.5 w-3.5" />}
-                    {isScramblesReady ? 'Scrambles Ready' : 'Generate Scrambles'}
-                  </button>
-                </div>
-
-                {/* 3. Start Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.start === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.start === 'Ready' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700')
-                    }`}>
-                      {stepStatus.start === 'Done' ? <Check className="h-3.5 w-3.5" /> : '3'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">3. Khai Mạc Vòng Đấu (Start Active Round)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading || stepStatus.start !== 'Ready'}
-                    onClick={() => doAction(
-                      () => startRound(event.id, Number(roundNumber), {}),
-                      `Round ${roundNumber} started!`
-                    )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                    Start Round
-                  </button>
-                </div>
-
-                {/* 4. Lock Results */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.lock === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.lock === 'Ready' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
-                    }`}>
-                      {stepStatus.lock === 'Done' ? <Check className="h-3.5 w-3.5" /> : '4'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">4. Khóa Bảng Điểm (Lock Round Results)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading || stepStatus.lock !== 'Ready'}
-                    onClick={() => doAction(
-                      () => lockRoundResults(event.id, Number(roundNumber)),
-                      `Round ${roundNumber} results locked!`
-                    )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
-                  >
-                    <Lock className="h-3.5 w-3.5" />
-                    Lock Results
-                  </button>
-                </div>
-
-                {/* 5. Complete Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.complete === 'Done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : (stepStatus.complete === 'Ready' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 border border-slate-200 text-slate-700')
-                    }`}>
-                      {stepStatus.complete === 'Done' ? <Check className="h-3.5 w-3.5" /> : '5'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">5. Hoàn Tất Vòng Đấu (Complete Round)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading || stepStatus.complete !== 'Ready'}
-                    onClick={() => doAction(
-                      () => completeRound(event.id, Number(roundNumber)),
-                      `Round ${roundNumber} completed!`
-                    )}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Complete Round
-                  </button>
-                </div>
-
-                {/* 6. Advance Round */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
-                  <div className="flex items-start gap-3">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${
-                      stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700'
-                    }`}>
-                      6
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">6. Thăng Hạng Thí Sinh Vào Vòng Kế (Advance Competitors)</p>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
-                    </div>
-                  </div>
-                  <button
-                    disabled={isLoading || stepStatus.advance !== 'Ready'}
-                    onClick={() => setIsAdvanceOpen(true)}
-                    className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    Advance Round
-                  </button>
-                </div>
-              </div>`
             </div>
           )}
 
@@ -891,7 +723,7 @@ function EventGroupPanel({
                       {event.cutoffTimeMs && liveBoard?.competitors?.some((c: any) => c.isCutoffReached) && (
                         <div className="p-2.5 border-t border-amber-100 bg-amber-50 text-[10px] text-amber-700 font-semibold flex items-center gap-1.5">
                           <span>⚠️</span>
-                          <span>Một số thí sinh bị loại do không vượt qua Cutoff Time ({msToDisplay(event.cutoffTimeMs)}) và đã được tự động loại khỏi danh sách này.</span>
+                          <span>Một số thí sinh bị loại do không vượt qua Cutoff Time ({msToDisplay(event.cutoffTimeMs)}) và DNF đã được tự động loại khỏi danh sách này.</span>
                         </div>
                       )}
                     </>
@@ -963,11 +795,10 @@ function CollapsibleRoster({ list }: { list: any[] }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-600 font-mono text-[11px] font-medium">Station {c.stationNumber ?? 'TBD'}</span>
-                  <span className={`px-2 py-0.5 rounded font-bold uppercase font-mono text-[9px] ${
-                    c.competitorStatus === 'DONE' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                  <span className={`px-2 py-0.5 rounded font-bold uppercase font-mono text-[9px] ${c.competitorStatus === 'DONE' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
                     : c.competitorStatus === 'COMPETING' ? 'text-indigo-700 bg-indigo-50 border border-indigo-200'
-                    : 'text-slate-600 bg-slate-100 border border-slate-200'
-                  }`}>
+                      : 'text-slate-600 bg-slate-100 border border-slate-200'
+                    }`}>
                     {c.competitorStatus}
                   </span>
                 </div>

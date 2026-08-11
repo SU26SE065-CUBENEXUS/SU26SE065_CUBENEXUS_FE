@@ -417,6 +417,7 @@ export interface TournamentJudgeDto {
   roleCode?: string;
   assignedStationNumber?: number | null;
   assignedAt: string;
+  isActive?: boolean;
   rawPassword?: string | null;
 }
 
