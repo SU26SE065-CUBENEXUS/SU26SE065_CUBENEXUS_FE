@@ -487,3 +487,19 @@ export async function adjustPlayerElo(
     body: JSON.stringify(payload),
   });
 }
+
+export interface LeaderboardEntryDto {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string;
+  rank: number;
+  elo: number;
+  totalWins: number;
+}
+
+/** GET /api/online/leaderboard */
+export async function getOnlineLeaderboard(puzzleTypeId?: string): Promise<LeaderboardEntryDto[]> {
+  const query = puzzleTypeId ? `?puzzleTypeId=${encodeURIComponent(puzzleTypeId)}` : '';
+  return apiFetch<LeaderboardEntryDto[]>(`/api/online/leaderboard${query}`);
+}
+

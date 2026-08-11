@@ -21,39 +21,83 @@ import {
   Medal,
 } from 'lucide-react';
 
+import {
+  getOnlineLeaderboard,
+  getMyProfiles,
+  getMyMatchHistory,
+  LeaderboardEntryDto,
+  OnlineMatchHistoryItemDto,
+} from '@/features/online-arena/api/onlineArenaApi';
+
 export default function RankingsPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   const [selectedDivision, setSelectedDivision] = useState('global');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const recentMatches = [
-    { playerA: 'SpeedMaster_JP', playerB: 'CubeLegend_CN', winner: 'SpeedMaster_JP', time: '8.12s', room: 'VN-2048', elo: '+12' },
-    { playerA: 'FastFingers_US', playerB: 'TwistyKing_KR', winner: 'TwistyKing_KR', time: '8.48s', room: 'VN-2051', elo: '+15' },
-    { playerA: 'BlazeFast_BR', playerB: 'PuzzleWizard_DE', winner: 'BlazeFast_BR', time: '8.77s', room: 'VN-2060', elo: '+11' },
-  ];
+  // Real API state variables
+  const [apiRankings, setApiRankings] = useState<LeaderboardEntryDto[]>([]);
+  const [myProfile, setMyProfile] = useState<any>(null);
+  const [recentMatches, setRecentMatches] = useState<OnlineMatchHistoryItemDto[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
-  const rankings = [
-    { rank: 1, name: 'SpeedMaster_JP', rating: 2950, country: '🇯🇵', region: 'asia', change: 'up', bestTime: '5.20s', duels: 145, winRate: '88%' },
-    { rank: 2, name: 'CubeLegend_CN', rating: 2890, country: '🇨🇳', region: 'asia', change: 'down', bestTime: '5.50s', duels: 182, winRate: '84%' },
-    { rank: 3, name: 'FastFingers_US', rating: 2845, country: '🇺🇸', region: 'americas', change: 'up', bestTime: '5.71s', duels: 138, winRate: '82%' },
-    { rank: 4, name: 'TwistyKing_KR', rating: 2820, country: '🇰🇷', region: 'asia', change: 'up', bestTime: '6.10s', duels: 121, winRate: '79%' },
-    { rank: 5, name: 'PhamVanD_VN', rating: 2795, country: '🇻🇳', region: 'vn', change: 'up', bestTime: '5.85s', duels: 96, winRate: '85%' },
-    { rank: 6, name: 'BlazeFast_BR', rating: 2790, country: '🇧🇷', region: 'americas', change: 'down', bestTime: '6.30s', duels: 135, winRate: '76%' },
-    { rank: 7, name: 'PuzzleWizard_DE', rating: 2750, country: '🇩🇪', region: 'europe', change: 'stable', bestTime: '6.50s', duels: 108, winRate: '74%' },
-    { rank: 8, name: 'Speedcube_RU', rating: 2720, country: '🇷🇺', region: 'europe', change: 'up', bestTime: '6.70s', duels: 112, winRate: '72%' },
-    { rank: 9, name: 'NguyenVanA_VN', rating: 2695, country: '🇻🇳', region: 'vn', change: 'up', bestTime: '6.89s', duels: 89, winRate: '75%' },
-    { rank: 10, name: 'CubeNinja_MX', rating: 2675, country: '🇲🇽', region: 'americas', change: 'down', bestTime: '6.90s', duels: 94, winRate: '70%' },
-    { rank: 11, name: 'TwistMaster_IN', rating: 2650, country: '🇮🇳', region: 'asia', change: 'down', bestTime: '7.10s', duels: 86, winRate: '68%' },
-    { rank: 12, name: 'TranThiB_VN', rating: 2625, country: '🇻🇳', region: 'vn', change: 'stable', bestTime: '7.30s', duels: 78, winRate: '66%' },
-  ];
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let isMounted = true;
+    async function loadRealData() {
+      setIsDataLoading(true);
+      try {
+        const [leaderboardData, profilesData, historyData] = await Promise.all([
+          getOnlineLeaderboard().catch(() => []),
+          getMyProfiles().catch(() => []),
+          getMyMatchHistory(undefined, 1, 5).catch(() => ({ matches: [] })),
+        ]);
+
+        if (isMounted) {
+          if (Array.isArray(leaderboardData) && leaderboardData.length > 0) {
+            setApiRankings(leaderboardData);
+          }
+          if (Array.isArray(profilesData) && profilesData.length > 0) {
+            setMyProfile(profilesData[0]);
+          }
+          if (historyData?.matches && Array.isArray(historyData.matches)) {
+            setRecentMatches(historyData.matches);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load online leaderboard data:', err);
+      } finally {
+        if (isMounted) setIsDataLoading(false);
+      }
+    }
+
+    loadRealData();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated]);
+
+  // Derived rankings list: uses API data if available, or empty list
+  const rankings = useMemo(() => {
+    if (apiRankings.length > 0) {
+      return apiRankings.map((item, index) => ({
+        rank: item.rank || index + 1,
+        name: item.displayName || (item.userId ? `Player_${item.userId.slice(0, 6)}` : 'Player'),
+        rating: item.elo || 1000,
+        change: 'stable',
+        duels: item.totalWins || 0,
+        userId: item.userId,
+        avatarUrl: item.avatarUrl,
+      }));
+    }
+    return [];
+  }, [apiRankings]);
 
   const divisions = [
-    { id: 'global', label: 'Toàn Cầu (Global)' },
-    { id: 'vn', label: 'Việt Nam (VN)' },
-    { id: 'asia', label: 'Châu Á (Asia Pacific)' },
-    { id: 'master', label: 'Bảng Cao Thủ (Master Tier)' },
+    { id: 'global', label: 'Tất Cả Đấu Thủ (All Rankings)' },
+    { id: 'master', label: 'Bảng Cao Thủ (Master Tier >= 2700 ELO)' },
   ];
 
   const getChangeIcon = (change: string) => {
@@ -71,21 +115,18 @@ export default function RankingsPage() {
     return rankings.filter((player) => {
       const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
-      if (selectedDivision === 'global') return true;
-      if (selectedDivision === 'vn') return player.region === 'vn';
-      if (selectedDivision === 'asia') return player.region === 'asia' || player.region === 'vn';
       if (selectedDivision === 'master') return player.rating >= 2700;
       return true;
     });
-  }, [searchQuery, selectedDivision]);
+  }, [rankings, searchQuery, selectedDivision]);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isAuthLoading && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isAuthLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+  if (isAuthLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <LoaderCircle className="h-8 w-8 animate-spin text-amber-500" />
@@ -100,6 +141,15 @@ export default function RankingsPage() {
   const top1 = rankings[0];
   const top2 = rankings[1];
   const top3 = rankings[2];
+
+  // User real profile metrics
+  const userElo = myProfile?.eloStandard ?? myProfile?.elo ?? 1000;
+  const userPeakElo = myProfile?.peakEloStandard ?? myProfile?.peakElo ?? userElo;
+  const isPlacementDone = myProfile?.isPlacementCompleteStandard ?? myProfile?.isPlacementComplete ?? false;
+  const placementDoneCount = myProfile?.placementMatchesDoneStandard ?? 0;
+  const totalWins = myProfile?.totalWinsStandard ?? 0;
+  const totalLosses = myProfile?.totalLossesStandard ?? 0;
+  const totalMatches = totalWins + totalLosses + (myProfile?.totalDrawsStandard ?? 0);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
@@ -116,14 +166,14 @@ export default function RankingsPage() {
                   <Swords className="h-3.5 w-3.5 text-amber-600" /> 3X3X3 SPEEDCUBING ARENA
                 </span>
                 <span className="text-slate-500 text-xs font-semibold font-mono">
-                  • Season 4 Resetting in 22 Days
+                  • Season Live ELO Rating
                 </span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 uppercase">
                 ARENA LEADERBOARD (3X3X3)
               </h1>
               <p className="text-slate-600 max-w-2xl text-xs sm:text-sm leading-relaxed">
-                Bảng xếp hạng chỉ số ELO Rating chính thức của chế độ thi đấu Đấu trường 3x3x3 Online. Tích lũy điểm ELO qua từng trận solo 1v1 để thăng hạng và tranh suất vào Master Tier.
+                Bảng xếp hạng ELO Rating chính thức của chế độ Đấu trường 3x3x3 Online. Tích lũy điểm ELO qua từng trận solo 1v1 để thăng hạng và xuất hiện trên Bảng xếp hạng.
               </p>
             </div>
             <div>
@@ -140,85 +190,87 @@ export default function RankingsPage() {
         </div>
 
         {/* Top 3 Podium Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Rank 2 - Silver */}
-          {top2 && (
-            <div className="order-2 md:order-1 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10">
-                <Medal className="h-20 w-20 text-slate-400" />
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 uppercase">
-                  Rank #2 Silver
-                </span>
-                <span className="text-2xl">{top2.country}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="font-extrabold text-base text-slate-900 tracking-tight">{top2.name}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-700 font-mono">{top2.rating}</span>
-                  <span className="text-xs font-bold text-slate-500 font-mono">ELO</span>
+        {rankings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Rank 2 - Silver */}
+            {top2 ? (
+              <div className="order-2 md:order-1 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Medal className="h-20 w-20 text-slate-400" />
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 uppercase">
+                    Rank #2 Silver
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-extrabold text-base text-slate-900 tracking-tight">{top2.name}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-slate-700 font-mono">{top2.rating}</span>
+                    <span className="text-xs font-bold text-slate-500 font-mono">ELO</span>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+                  <span>Số trận thắng: <strong className="text-indigo-600 font-mono">{top2.duels}</strong></span>
                 </div>
               </div>
-              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span>Best PB: <strong className="text-slate-900 font-mono">{top2.bestTime}</strong></span>
-                <span>Win rate: <strong className="text-indigo-600 font-mono">{top2.winRate}</strong></span>
-              </div>
-            </div>
-          )}
+            ) : null}
 
-          {/* Rank 1 - Gold */}
-          {top1 && (
-            <div className="order-1 md:order-2 bg-gradient-to-b from-amber-500/10 via-amber-50/50 to-white border-2 border-amber-400 rounded-2xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden transform md:-translate-y-2">
-              <div className="absolute top-0 right-0 p-3 opacity-20">
-                <Trophy className="h-24 w-24 text-amber-500" />
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-extrabold font-mono px-3 py-1 rounded-full bg-amber-500 text-white uppercase flex items-center gap-1 shadow-2xs">
-                  <Trophy className="h-3 w-3" /> Champion #1
-                </span>
-                <span className="text-3xl">{top1.country}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="font-black text-lg text-slate-900 tracking-tight">{top1.name}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-amber-600 font-mono">{top1.rating}</span>
-                  <span className="text-xs font-extrabold text-amber-700 font-mono">ELO</span>
+            {/* Rank 1 - Gold */}
+            {top1 ? (
+              <div className="order-1 md:order-2 bg-gradient-to-b from-amber-500/10 via-amber-50/50 to-white border-2 border-amber-400 rounded-2xl p-6 shadow-md flex flex-col justify-between relative overflow-hidden transform md:-translate-y-2">
+                <div className="absolute top-0 right-0 p-3 opacity-20">
+                  <Trophy className="h-24 w-24 text-amber-500" />
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-extrabold font-mono px-3 py-1 rounded-full bg-amber-500 text-white uppercase flex items-center gap-1 shadow-2xs">
+                    <Trophy className="h-3 w-3" /> Champion #1
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-black text-lg text-slate-900 tracking-tight">{top1.name}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-amber-600 font-mono">{top1.rating}</span>
+                    <span className="text-xs font-extrabold text-amber-700 font-mono">ELO</span>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-amber-200/60 flex items-center justify-between text-xs font-semibold text-slate-600">
+                  <span>Số trận thắng: <strong className="text-emerald-600 font-mono text-sm">{top1.duels}</strong></span>
                 </div>
               </div>
-              <div className="pt-3 mt-3 border-t border-amber-200/60 flex items-center justify-between text-xs font-semibold text-slate-600">
-                <span>Best PB: <strong className="text-amber-700 font-mono text-sm">{top1.bestTime}</strong></span>
-                <span>Win rate: <strong className="text-emerald-600 font-mono text-sm">{top1.winRate}</strong></span>
-              </div>
-            </div>
-          )}
+            ) : null}
 
-          {/* Rank 3 - Bronze */}
-          {top3 && (
-            <div className="order-3 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-3 opacity-10">
-                <Medal className="h-20 w-20 text-amber-700" />
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-amber-100/60 text-amber-800 border border-amber-200 uppercase">
-                  Rank #3 Bronze
-                </span>
-                <span className="text-2xl">{top3.country}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="font-extrabold text-base text-slate-900 tracking-tight">{top3.name}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-amber-800 font-mono">{top3.rating}</span>
-                  <span className="text-xs font-bold text-slate-500 font-mono">ELO</span>
+            {/* Rank 3 - Bronze */}
+            {top3 ? (
+              <div className="order-3 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Medal className="h-20 w-20 text-amber-700" />
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-amber-100/60 text-amber-800 border border-amber-200 uppercase">
+                    Rank #3 Bronze
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-extrabold text-base text-slate-900 tracking-tight">{top3.name}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-black text-amber-800 font-mono">{top3.rating}</span>
+                    <span className="text-xs font-bold text-slate-500 font-mono">ELO</span>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+                  <span>Số trận thắng: <strong className="text-indigo-600 font-mono">{top3.duels}</strong></span>
                 </div>
               </div>
-              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                <span>Best PB: <strong className="text-slate-900 font-mono">{top3.bestTime}</strong></span>
-                <span>Win rate: <strong className="text-indigo-600 font-mono">{top3.winRate}</strong></span>
-              </div>
-            </div>
-          )}
-        </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500 shadow-2xs space-y-2">
+            <Trophy className="h-10 w-10 text-amber-500/40 mx-auto" />
+            <p className="font-bold text-sm text-slate-900">Chưa có người chơi nào hoàn thành 5 trận phân hạng.</p>
+            <p className="text-xs text-slate-500">Hãy tham gia thi đấu Arena 3x3x3 để trở thành người đầu tiên có tên trên Bảng xếp hạng!</p>
+          </div>
+        )}
 
         {/* User stats overview and Live Matches */}
         <div className="grid gap-6 lg:grid-cols-3">
@@ -228,32 +280,37 @@ export default function RankingsPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider font-mono flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" /> Competitor Rank
+                    <Sparkles className="h-3 w-3" /> Thông Tin Hồ Sơ Arena Của Bạn
                   </span>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">#1,284 Global</p>
+                  <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
+                    {isPlacementDone ? 'Đã Hoàn Thành Phân Hạng' : `Đang Phân Hạng (${placementDoneCount}/5 trận)`}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-500 font-bold font-mono">3x3x3 ELO RATING</span>
-                  <p className="text-2xl sm:text-3xl font-black text-amber-600 mt-0.5 font-mono">2,645</p>
+                  <span className="text-xs text-slate-500 font-bold font-mono">3X3X3 ELO RATING</span>
+                  <p className="text-2xl sm:text-3xl font-black text-amber-600 mt-0.5 font-mono">{userElo}</p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex justify-between text-xs text-slate-600 font-semibold mb-2">
-                  <span>Tiến trình lên Master Tier (2,700 ELO)</span>
-                  <span className="text-slate-900 font-mono">55 / 100 PTS</span>
+                  <span>ELO Cao Nhất Ghi Nhận (Peak ELO):</span>
+                  <span className="text-amber-700 font-mono font-bold">{userPeakElo} ELO</span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200">
-                  <div className="h-full w-[55%] rounded-full bg-amber-500" />
+                  <div
+                    className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(10, (userElo / 3000) * 100))}%` }}
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs pt-4 text-slate-500 font-semibold border-t border-slate-100 mt-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 text-xs pt-4 text-slate-500 font-semibold border-t border-slate-100 mt-4 font-mono">
               <span className="flex items-center gap-1.5">
-                <Flame className="h-4 w-4 text-amber-500" /> Chuỗi thắng: <strong className="text-slate-900">12 trận liên tiếp</strong>
+                <Flame className="h-4 w-4 text-amber-500" /> Trận thắng: <strong className="text-emerald-600">{totalWins}</strong> / <strong className="text-slate-900">{totalMatches} trận</strong>
               </span>
-              <span>Thứ hạng Việt Nam: <strong className="text-slate-900 font-mono">#86 (VN)</strong></span>
+              <span>Trạng thái ELO: <strong className="text-slate-900">{isPlacementDone ? 'Công Khai' : 'Tạm Ẩn'}</strong></span>
             </div>
           </div>
 
@@ -261,25 +318,40 @@ export default function RankingsPage() {
           <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 shadow-2xs text-slate-900">
             <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 font-mono flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-500" />
-              Trận 3x3x3 Gần Đây
+              Lịch Sử Trận Gần Đây
             </h3>
-            <div className="space-y-3">
-              {recentMatches.map((match) => (
-                <div key={match.room} className="rounded-xl border border-slate-100 bg-slate-50 p-3 hover:border-amber-300 transition">
-                  <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-900">
-                    <span>{match.playerA}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">VS</span>
-                    <span>{match.playerB}</span>
+            {recentMatches.length > 0 ? (
+              <div className="space-y-3">
+                {recentMatches.map((match) => (
+                  <div key={match.matchId} className="rounded-xl border border-slate-100 bg-slate-50 p-3 hover:border-amber-300 transition">
+                    <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-900">
+                      <span>{match.meUsername}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">VS</span>
+                      <span>{match.opponentUsername}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[11px] font-semibold">
+                      <span className={match.isWinner ? 'text-emerald-600 font-bold' : match.isDraw ? 'text-amber-600 font-bold' : 'text-rose-500 font-bold'}>
+                        {match.isWinner ? 'Chiến Thắng' : match.isDraw ? 'Hòa' : 'Thất Bại'}
+                        {match.eloChange !== 0 && (
+                          <span className={`text-[10px] ml-1.5 px-1.5 py-0.2 rounded font-bold font-mono border ${
+                            match.eloChange > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            {match.eloChange > 0 ? `+${match.eloChange}` : match.eloChange}
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-mono text-slate-600">
+                        {match.meTimeMs ? `${(match.meTimeMs / 1000).toFixed(2)}s` : 'DNF'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-[11px] font-semibold">
-                    <span className="text-amber-700 flex items-center gap-1">
-                      Thắng: {match.winner} <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded font-bold font-mono">{match.elo}</span>
-                    </span>
-                    <span className="font-mono text-slate-600">{match.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-xs text-slate-400 italic">
+                Chưa có dữ liệu lịch sử trận đấu gần đây.
+              </div>
+            )}
           </div>
         </div>
 
@@ -315,107 +387,105 @@ export default function RankingsPage() {
 
         {/* Leaderboard Table Container */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-          {/* Desktop Table View */}
-          <div className="hidden md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                    <th className="px-6 py-4">Hạng</th>
-                    <th className="px-6 py-4">Đấu Thủ 3x3x3</th>
-                    <th className="px-6 py-4 text-center">ELO Rating</th>
-                    <th className="px-6 py-4 text-center">3x3x3 Best PB</th>
-                    <th className="px-6 py-4 text-center">Số Trận Đã Đấu</th>
-                    <th className="px-6 py-4 text-center">Tỷ Lệ Thắng</th>
-                    <th className="px-6 py-4 text-center">Xu Hướng</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-900">
-                  {filteredRankings.map((player) => {
-                    const isUser = player.name === 'PhamVanD_VN';
-                    return (
-                      <tr
-                        key={player.rank}
-                        className={`hover:bg-slate-50 transition-colors ${
-                          isUser ? 'bg-amber-50/60 font-semibold' : ''
-                        }`}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2.5">
-                            {player.rank <= 3 ? (
-                              <Trophy
-                                className={`h-4.5 w-4.5 ${
-                                  player.rank === 1
-                                    ? 'text-amber-500'
-                                    : player.rank === 2
-                                    ? 'text-slate-400'
-                                    : 'text-amber-700'
-                                }`}
-                              />
-                            ) : (
-                              <div className="w-4.5" />
-                            )}
-                            <span className="font-extrabold font-mono text-sm">#{player.rank}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-lg leading-none">{player.country}</span>
-                            <span className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition-colors text-xs">
-                              {player.name}
-                            </span>
-                            {isUser && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-white font-mono uppercase">
-                                SỐ CỦA BẠN
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="font-extrabold text-amber-600 font-mono text-sm">
-                            {player.rating.toLocaleString('en-US')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold font-mono text-slate-700 text-xs">
-                          {player.bestTime}
-                        </td>
-                        <td className="px-6 py-4 text-center font-semibold font-mono text-slate-600">
-                          {player.duels}
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold font-mono text-emerald-600">
-                          {player.winRate}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center">{getChangeIcon(player.change)}</div>
-                        </td>
+          {filteredRankings.length > 0 ? (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                        <th className="px-6 py-4">Hạng</th>
+                        <th className="px-6 py-4">Đấu Thủ 3x3x3</th>
+                        <th className="px-6 py-4 text-center">ELO Rating</th>
+                        <th className="px-6 py-4 text-center">Tổng Số Trận Thắng</th>
+                        <th className="px-6 py-4 text-center">Xu Hướng</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Mobile Cards View */}
-          <div className="md:hidden divide-y divide-slate-100">
-            {filteredRankings.map((player) => (
-              <div key={player.rank} className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold font-mono text-xs text-slate-900">#{player.rank}</span>
-                    <span className="text-base">{player.country}</span>
-                    <span className="font-bold text-xs text-slate-900">{player.name}</span>
-                  </div>
-                  <span className="font-extrabold text-amber-600 font-mono text-xs">{player.rating} ELO</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
-                  <span>Best: <strong className="text-slate-900">{player.bestTime}</strong></span>
-                  <span>Trận: <strong className="text-slate-900">{player.duels}</strong> ({player.winRate})</span>
-                  <div className="flex items-center gap-1">{getChangeIcon(player.change)}</div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-900">
+                      {filteredRankings.map((player) => {
+                        const isUser = myProfile?.userId && player.userId === myProfile.userId;
+                        return (
+                          <tr
+                            key={player.rank}
+                            className={`hover:bg-slate-50 transition-colors ${
+                              isUser ? 'bg-amber-50/60 font-semibold' : ''
+                            }`}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2.5">
+                                {player.rank <= 3 ? (
+                                  <Trophy
+                                    className={`h-4.5 w-4.5 ${
+                                      player.rank === 1
+                                        ? 'text-amber-500'
+                                        : player.rank === 2
+                                        ? 'text-slate-400'
+                                        : 'text-amber-700'
+                                    }`}
+                                  />
+                                ) : (
+                                  <div className="w-4.5" />
+                                )}
+                                <span className="font-extrabold font-mono text-sm">#{player.rank}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2.5">
+                                <span className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition-colors text-xs">
+                                  {player.name}
+                                </span>
+                                {isUser && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-white font-mono uppercase">
+                                    BẠN
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="font-extrabold text-amber-600 font-mono text-sm">
+                                {player.rating.toLocaleString('en-US')}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center font-bold font-mono text-slate-700 text-xs">
+                              {player.duels} trận
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-center">{getChangeIcon(player.change)}</div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Mobile Cards View */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {filteredRankings.map((player) => (
+                  <div key={player.rank} className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold font-mono text-xs text-slate-900">#{player.rank}</span>
+                        <span className="font-bold text-xs text-slate-900">{player.name}</span>
+                      </div>
+                      <span className="font-extrabold text-amber-600 font-mono text-xs">{player.rating} ELO</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
+                      <span>Số trận thắng: <strong className="text-slate-900">{player.duels}</strong></span>
+                      <div className="flex items-center gap-1">{getChangeIcon(player.change)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="py-12 text-center text-slate-500 space-y-2">
+              <p className="font-bold text-sm text-slate-900">Không tìm thấy dữ liệu đấu thủ nào.</p>
+              <p className="text-xs text-slate-400">Các đấu thủ hoàn thành đủ 5 trận phân hạng sẽ được hiển thị tại đây.</p>
+            </div>
+          )}
         </div>
       </div>
     </main>
