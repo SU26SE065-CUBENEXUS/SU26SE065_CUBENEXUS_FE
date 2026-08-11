@@ -10,13 +10,11 @@ import {
   MapPin, 
   Calendar, 
   Search, 
-  Filter,
-  Zap, 
   RefreshCw, 
   Layers, 
   ArrowRight,
-  Loader2,
-  CalendarDays
+  CalendarDays,
+  ChevronDown
 } from 'lucide-react';
 
 function formatDate(dateStr: string): string {
@@ -34,6 +32,7 @@ export default function PublicLiveTournamentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'UPCOMING' | 'COMPLETED'>('ALL');
+  const [visibleCount, setVisibleCount] = useState<number>(3);
 
   const fetchTournaments = async () => {
     setIsLoading(true);
@@ -53,13 +52,15 @@ export default function PublicLiveTournamentsPage() {
     fetchTournaments();
   }, []);
 
+  useEffect(() => {
+    setVisibleCount(3);
+  }, [searchQuery, statusFilter]);
+
   const filteredTournaments = tournaments.filter((t) => {
-    // Search filter
     const matchesSearch = 
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.location && t.location.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    // Status filter
     if (!matchesSearch) return false;
     if (statusFilter === 'ALL') return true;
 
@@ -70,8 +71,10 @@ export default function PublicLiveTournamentsPage() {
     return true;
   });
 
+  const displayedTournaments = filteredTournaments.slice(0, visibleCount);
+
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden font-sans">
       {/* Background gradients for soft accent */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-20 left-0 w-[400px] h-[400px] rounded-full bg-amber-500/5 blur-[100px] pointer-events-none" />
@@ -82,8 +85,8 @@ export default function PublicLiveTournamentsPage() {
         
         {/* Banner section */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-indigo-700 mb-4 shadow-2xs">
-            <Trophy className="h-3.5 w-3.5" /> CubeNexus Live Portal
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-indigo-700 mb-4 shadow-2xs font-mono">
+            <Trophy className="h-3.5 w-3.5 text-indigo-600" /> CubeNexus Live Portal
           </span>
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 uppercase mb-4 leading-tight">
             Follow Live <span className="text-indigo-600 font-black">Tournaments</span>
@@ -120,7 +123,7 @@ export default function PublicLiveTournamentsPage() {
                 }`}
               >
                 {tab === 'LIVE' ? (
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 font-mono">
                     <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" />
                     LIVE BOARD
                   </span>
@@ -168,112 +171,126 @@ export default function PublicLiveTournamentsPage() {
             </p>
           </div>
         ) : (
-          /* Tournament cards listing */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTournaments.map((t) => {
-              // Custom badge styling depending on state
-              let statusText = 'Sắp Diễn Ra';
-              let badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
-              let ctaStyle = 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs';
-              let ctaLabel = 'Xem Lịch Thi Đấu';
+          /* Tournament cards listing (limited to 3 initially) */
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedTournaments.map((t) => {
+                let statusText = 'Sắp Diễn Ra';
+                let badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
+                let ctaStyle = 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs';
+                let ctaLabel = 'Xem Lịch Thi Đấu';
 
-              const codeUpper = (t.status || '').toUpperCase();
+                const codeUpper = (t.status || '').toUpperCase();
 
-              if (t.isLive) {
-                statusText = 'ĐANG THI ĐẤU (LIVE)';
-                badgeStyle = 'border-red-200 text-red-700 bg-red-50 font-extrabold';
-                ctaStyle = 'bg-red-600 hover:bg-red-700 text-white shadow-2xs';
-                ctaLabel = 'Xem Bảng Live';
-              } else if (codeUpper === 'ONGOING') {
-                statusText = 'Đang Thi Đấu';
-                badgeStyle = 'border-purple-200 text-purple-700 bg-purple-50 font-bold';
-                ctaStyle = 'bg-purple-600 hover:bg-purple-700 text-white shadow-2xs';
-                ctaLabel = 'Xem Bảng Live';
-              } else if (codeUpper === 'COMPLETED') {
-                statusText = 'Đã Hoàn Thành';
-                badgeStyle = 'border-slate-200 text-slate-600 bg-slate-100';
-                ctaStyle = 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200';
-                ctaLabel = 'Xem Kết Quả';
-              } else if (codeUpper === 'REGISTRATION_OPEN') {
-                statusText = 'Mở Đăng Ký';
-                badgeStyle = 'border-emerald-200 text-emerald-700 bg-emerald-50';
-                ctaLabel = 'Xem Chi Tiết';
-              } else if (codeUpper === 'REGISTRATION_CLOSED') {
-                statusText = 'Đóng Đăng Ký';
-                badgeStyle = 'border-amber-200 text-amber-700 bg-amber-50';
-                ctaLabel = 'Xem Lịch Thi Đấu';
-              } else if (codeUpper === 'CANCELLED') {
-                statusText = 'Đã Hủy';
-                badgeStyle = 'border-red-200 text-red-700 bg-red-50';
-                ctaLabel = 'Xem Chi Tiết';
-              } else if (codeUpper === 'PUBLISHED') {
-                statusText = 'Công Bố / Sắp Khởi Tranh';
-                badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
-                ctaLabel = 'Xem Lịch Thi Đấu';
-              }
+                if (t.isLive) {
+                  statusText = 'ĐANG THI ĐẤU (LIVE)';
+                  badgeStyle = 'border-red-200 text-red-700 bg-red-50 font-extrabold';
+                  ctaStyle = 'bg-red-600 hover:bg-red-700 text-white shadow-2xs';
+                  ctaLabel = 'Xem Bảng Live';
+                } else if (codeUpper === 'ONGOING') {
+                  statusText = 'Đang Thi Đấu';
+                  badgeStyle = 'border-purple-200 text-purple-700 bg-purple-50 font-bold';
+                  ctaStyle = 'bg-purple-600 hover:bg-purple-700 text-white shadow-2xs';
+                  ctaLabel = 'Xem Bảng Live';
+                } else if (codeUpper === 'COMPLETED') {
+                  statusText = 'Đã Hoàn Thành';
+                  badgeStyle = 'border-slate-200 text-slate-600 bg-slate-100';
+                  ctaStyle = 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200';
+                  ctaLabel = 'Xem Kết Quả';
+                } else if (codeUpper === 'REGISTRATION_OPEN') {
+                  statusText = 'Mở Đăng Ký';
+                  badgeStyle = 'border-emerald-200 text-emerald-700 bg-emerald-50';
+                  ctaLabel = 'Xem Chi Tiết';
+                } else if (codeUpper === 'REGISTRATION_CLOSED') {
+                  statusText = 'Đóng Đăng Ký';
+                  badgeStyle = 'border-amber-200 text-amber-700 bg-amber-50';
+                  ctaLabel = 'Xem Lịch Thi Đấu';
+                } else if (codeUpper === 'CANCELLED') {
+                  statusText = 'Đã Hủy';
+                  badgeStyle = 'border-red-200 text-red-700 bg-red-50';
+                  ctaLabel = 'Xem Chi Tiết';
+                } else if (codeUpper === 'PUBLISHED') {
+                  statusText = 'Công Bố / Sắp Khởi Tranh';
+                  badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
+                  ctaLabel = 'Xem Lịch Thi Đấu';
+                }
 
-              return (
-                <div
-                  key={t.id}
-                  className="group relative rounded-3xl border border-slate-200 bg-white p-6 flex flex-col justify-between hover:border-indigo-300 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="space-y-4">
-                    {/* Header: badge + isLive */}
-                    <div className="flex justify-between items-center">
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${badgeStyle}`}>
-                        {t.isLive && <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping mr-0.5" />}
-                        {statusText}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono font-medium">
-                        {t.id.slice(0, 8)}
-                      </span>
-                    </div>
-
-                    {/* Name and description */}
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight leading-tight uppercase">
-                        {t.name}
-                      </h2>
-                      {t.description && (
-                        <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed font-medium">
-                          {t.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Metadata details */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
-                        <span className="truncate">{t.location || 'Offline Location'}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
-                        <span>
-                          {formatDate(t.startTime)} – {formatDate(t.endTime)}
+                return (
+                  <div
+                    key={t.id}
+                    className="group relative rounded-3xl border border-slate-200 bg-white p-6 flex flex-col justify-between hover:border-indigo-300 hover:shadow-md transition-all duration-300"
+                  >
+                    <div className="space-y-4">
+                      {/* Header: badge + isLive */}
+                      <div className="flex justify-between items-center">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                          {t.isLive && <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping mr-0.5" />}
+                          {statusText}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono font-medium">
+                          {t.id.slice(0, 8)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Layers className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
-                        <span>{t.eventsCount} Hạng mục thi đấu</span>
+
+                      {/* Name and description */}
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight leading-tight uppercase">
+                          {t.name}
+                        </h2>
+                        {t.description && (
+                          <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed font-medium">
+                            {t.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Metadata details */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+                          <span className="truncate">{t.location || 'Offline Location'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+                          <span>
+                            {formatDate(t.startTime)} – {formatDate(t.endTime)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Layers className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+                          <span>{t.eventsCount} Hạng mục thi đấu</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* CTA Button */}
-                  <div className="mt-6 pt-2">
-                    <Link
-                      href={`/live/${t.id}`}
-                      className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${ctaStyle}`}
-                    >
-                      <span>{ctaLabel}</span>
-                      <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    {/* CTA Button */}
+                    <div className="mt-6 pt-2">
+                      <Link
+                        href={`/live/${t.id}`}
+                        className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${ctaStyle}`}
+                      >
+                        <span>{ctaLabel}</span>
+                        <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Show More Button */}
+            {filteredTournaments.length > visibleCount && (
+              <div className="text-center mt-10">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 3)}
+                  className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-extrabold text-indigo-600 hover:text-indigo-700 transition-all shadow-2xs inline-flex items-center gap-2 cursor-pointer font-mono"
+                >
+                  <span>XEM THÊM GIẢI ĐẤU ({filteredTournaments.length - visibleCount} GIẢI CÒN LẠI)</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </main>

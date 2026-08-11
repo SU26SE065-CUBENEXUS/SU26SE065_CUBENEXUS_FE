@@ -12,19 +12,12 @@ import { CTASection } from '@/components/cta-section';
 import { Footer } from '@/components/footer';
 import { Loader2 } from 'lucide-react';
 
-// ─── Home Page ───────────────────────────────────────────────────
-// Client-side protected landing page. Automatically redirects to `/login`
-// if the user is not authenticated. Renders a unified dashboard header
-// with user profile card upon successful login.
-
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
-    } else if (!isLoading && isAuthenticated && user) {
+    if (!isLoading && isAuthenticated && user) {
       if (user.role?.toUpperCase() === 'MANAGER' || user.role?.toUpperCase() === 'ADMIN') {
         router.replace('/managertournaments');
       }
@@ -39,8 +32,9 @@ export default function Home() {
     );
   }
 
-  if (!isAuthenticated || user?.role?.toUpperCase() === 'MANAGER' || user?.role?.toUpperCase() === 'ADMIN') {
-    return null; // Prevents flashing content before redirect
+  // Redirect manager/admin to manager portal
+  if (isAuthenticated && (user?.role?.toUpperCase() === 'MANAGER' || user?.role?.toUpperCase() === 'ADMIN')) {
+    return null;
   }
 
   return (

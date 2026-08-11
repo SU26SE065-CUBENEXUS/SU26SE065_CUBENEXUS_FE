@@ -45,7 +45,8 @@ export function Footer() {
               <li><a href="/arena" className="text-sm text-muted-foreground hover:text-accent transition">Arena</a></li>
               <li><a href="/tournaments" className="text-sm text-muted-foreground hover:text-accent transition">Tournaments</a></li>
               <li><a href="/rankings" className="text-sm text-muted-foreground hover:text-accent transition">Rankings</a></li>
-              <li><a href="/community" className="text-sm text-muted-foreground hover:text-accent transition">Community</a></li>
+              <li><a href="/live" className="text-sm text-muted-foreground hover:text-accent transition">Community</a></li>
+
             </ul>
           </div>
 

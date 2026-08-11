@@ -37,7 +37,8 @@ export function Header() {
           <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">TOURNAMENTS</Link>
           <Link href="/rankings" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-400 transition-colors">RANKINGS</Link>
           <Link href="/practice" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">PRACTICE</Link>
-          <Link href="/community" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">COMMUNITY</Link>
+          <Link href="/live" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">COMMUNITY</Link>
+
         </div>
 
         {/* Auth / Profile Area */}
