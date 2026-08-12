@@ -100,7 +100,8 @@ export type TournamentStatusCode =
   | 'registration_closed'
   | 'ongoing'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'disabled';
 
 export interface TournamentDetailDto {
   id: string;
@@ -120,6 +121,7 @@ export interface TournamentDetailDto {
   createdAt: string;
   updatedAt: string;
   events: EventDetailDto[];
+  isOnlineAsync?: boolean;
 }
 
 export interface EventDetailDto {

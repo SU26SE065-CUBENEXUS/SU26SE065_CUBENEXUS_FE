@@ -22,6 +22,10 @@ import { Play, RotateCcw, RefreshCw, StopCircle, CheckCircle, AlertTriangle } fr
 type Props = {
   backendUrl: string;
   onScanCompleted?: (session: AiRubikScannerSessionResponse) => void;
+  requiredFaceCount?: 5 | 6;
+  compact?: boolean;
+  onCameraStreamChange?: (stream: MediaStream | null) => void;
+  resetToken?: number;
 };
 
 const CAPTURE_INTERVAL_MS = 220;
@@ -60,7 +64,14 @@ const UI_MESSAGE: Record<string, string> = {
   CAMERA_ERROR: 'Camera chưa sẵn sàng. Hãy bấm bật lại camera.',
 };
 
-export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestPanel({ backendUrl: backendUrlProp, onScanCompleted }: Props) {
+export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestPanel({
+  backendUrl: backendUrlProp,
+  onScanCompleted,
+  requiredFaceCount = 6,
+  compact = false,
+  onCameraStreamChange,
+  resetToken,
+}: Props) {
   const camera = useCameraStream();
   // Tự resolve URL trực tiếp: khi local → http://localhost:5212 (bypass Next.js proxy)
   // Khi prod → '' (relative URL qua Nginx)
@@ -92,12 +103,23 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
     };
   }, [backendUrl]);
 
+  // Handle external resetToken trigger
+  useEffect(() => {
+    if (resetToken && resetToken > 0) {
+      void resetSession();
+    }
+  }, [resetToken]);
+
   // Stop scanning if camera is stopped/disconnected
   useEffect(() => {
     if (camera.status !== 'ready') {
       abortActiveScan();
     }
   }, [camera.status]);
+
+  useEffect(() => {
+    onCameraStreamChange?.(camera.status === 'ready' ? camera.getStream() : null);
+  }, [camera.status, onCameraStreamChange]);
 
   // Draw overlay outlines on video frame
   useEffect(() => {
@@ -202,7 +224,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
     }
 
     const targetFaceIndex = currentSession.requestedFaceIndex;
-    const scanGeneration = Math.max(scanGenerationRef.current, currentSession.scanGeneration) + 1;
+    const scanGeneration = currentSession.scanGeneration;
     scanGenerationRef.current = scanGeneration;
     
     const scanIdentity = {
@@ -244,9 +266,12 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
 
           if (nextObservation.scannerState === 'ACCEPTED') {
             setSession((current) => {
-              const updated = applyAcceptedObservation(current, nextObservation, scanIdentity.scanGeneration);
-              if (updated && updated.status === 'COMPLETED' && onScanCompleted) {
-                onScanCompleted(updated);
+              const updated = applyAcceptedObservation(current, nextObservation, scanIdentity.scanGeneration, requiredFaceCount);
+              if (updated && (updated.status === 'COMPLETED' || updated.capturedFaceCount >= requiredFaceCount) && onScanCompleted) {
+                const sessionToPass = updated;
+                queueMicrotask(() => {
+                  onScanCompleted(sessionToPass);
+                });
               }
               return updated;
             });
@@ -373,8 +398,101 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
   const faceSlots = session?.faces ?? [];
   const observedCenterText = observation?.centerColor ? observation.centerColor.toUpperCase() : '-';
   const remainingCenters = getRemainingCenterColors(session).map(capitalize);
-  const progressText = `${session?.capturedFaceCount ?? 0} / 6`;
+  const progressText = `${session?.capturedFaceCount ?? 0} / ${requiredFaceCount}`;
   const stableText = observation ? `${observation.stableObservationCount} / ${observation.requiredStableObservations}` : '0 / 3';
+
+  if (compact) {
+    const isComplete = session?.status === 'COMPLETED';
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold text-slate-900">Quét cube với AI</p>
+            <p className="text-xs text-slate-500">Quét lần lượt {requiredFaceCount} mặt có tâm màu khác nhau.</p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${isComplete ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-700'}`}>{progressText}</span>
+        </div>
+        <div className="relative mb-3 aspect-video overflow-hidden rounded-xl bg-slate-950">
+          <video ref={camera.videoRef} muted playsInline className="h-full w-full object-cover" />
+          <canvas ref={overlayCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full object-cover" />
+          <span className="absolute left-3 top-3 rounded-full bg-slate-900/75 px-2.5 py-1 text-[11px] font-bold text-white">{camera.status === 'ready' ? 'CAMERA READY' : 'CAMERA OFF'}</span>
+        </div>
+        {(camera.error || error) && <p className="mb-3 rounded-lg bg-red-50 p-2 text-xs font-medium text-red-700">{camera.error || error}</p>}
+        <p className="mb-3 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-800">{statusMessage}</p>
+        <button onClick={() => void scanCurrentFace()} disabled={camera.status !== 'ready' || isScanningFace || isPreparingSession || isComplete} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer">
+          {isScanningFace ? 'Scanning... Hold Still' : isComplete ? 'All Faces Captured' : 'Scan / Accept Next Face'}
+        </button>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
+          <button onClick={camera.start} disabled={camera.status === 'starting' || isScanningFace} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer">Start Camera</button>
+          <button onClick={() => void startScanSession()} disabled={isPreparingSession || isScanningFace} className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 cursor-pointer">{isPreparingSession ? 'Preparing...' : 'Start Session'}</button>
+          <button onClick={() => void retryFace()} disabled={!session || isScanningFace || isComplete} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer">Retry Face</button>
+          <button onClick={() => void resetSession()} disabled={isScanningFace} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer">Reset Session</button>
+          <button onClick={() => { abortActiveScan(); camera.stop(); onCameraStreamChange?.(null); }} className="col-span-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 cursor-pointer">Stop Camera</button>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between text-[11px] font-bold">
+            <span className="text-slate-500">Các tâm màu còn lại:</span>
+            <span className="text-indigo-600 font-extrabold">
+              {remainingCenters.length ? remainingCenters.map(c => COLOR_NAME_VI[c.toLowerCase()] || c).join(', ') : 'Đã quét xong đủ mặt'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-5 gap-1.5">
+            {Array.from({ length: requiredFaceCount }).map((_, index) => {
+              const face = faceSlots[index];
+              const active = session?.requestedFaceIndex === index + 1;
+              const centerVi = face?.centerColor ? COLOR_NAME_VI[face.centerColor.toLowerCase()] || face.centerColor : null;
+              return (
+                <div
+                  key={index}
+                  className={`rounded-xl border p-1.5 flex flex-col items-center gap-1 transition-all ${
+                    face
+                      ? 'border-emerald-300 bg-emerald-50/80 text-emerald-800'
+                      : active
+                      ? 'border-indigo-400 bg-indigo-50/80 text-indigo-700 ring-2 ring-indigo-400/30'
+                      : 'border-slate-200 bg-slate-50 text-slate-400'
+                  }`}
+                >
+                  <div className="text-[10px] font-extrabold truncate max-w-full text-center">
+                    {face ? (
+                      <span className="flex items-center justify-center gap-0.5">
+                        <span
+                          className="w-2 h-2 rounded-full inline-block border border-black/20 shrink-0"
+                          style={{ backgroundColor: COLOR_STYLE[face.centerColor.toLowerCase()] || COLOR_STYLE.unknown }}
+                        />
+                        <span className="truncate">{centerVi}</span>
+                      </span>
+                    ) : (
+                      `Mặt ${index + 1}`
+                    )}
+                  </div>
+
+                  {/* Mini 3x3 Grid */}
+                  <div className="grid grid-cols-3 gap-[1px] w-full max-w-[36px] aspect-square bg-slate-300 p-[1px] rounded border border-slate-300">
+                    {Array.from({ length: 9 }).map((_, cellIndex) => {
+                      const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
+                      return (
+                        <span
+                          key={cellIndex}
+                          className="w-full aspect-square rounded-[0.5px]"
+                          style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <span className="text-[9px] font-black">
+                    {face ? '✓' : active ? 'Đang chờ' : 'Chờ'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
@@ -663,6 +781,7 @@ function applyAcceptedObservation(
   current: AiRubikScannerSessionResponse | null,
   observation: AiRubikScannerPreviewResponse,
   scanGeneration: number,
+  requiredFaceCount: number = 6,
 ): AiRubikScannerSessionResponse | null {
   if (
     !current
@@ -685,10 +804,10 @@ function applyAcceptedObservation(
 
   const nextFaces = [...current.faces];
   nextFaces[observation.targetFaceIndex - 1] = face;
-  const faces = nextFaces.slice(0, 6);
+  const faces = nextFaces.slice(0, requiredFaceCount);
   const rawStickerState = faces.flatMap((savedFace) => savedFace.grid3x3.flat());
   const capturedFaceCount = faces.length;
-  const completed = capturedFaceCount >= 6;
+  const completed = capturedFaceCount >= requiredFaceCount;
 
   return {
     ...current,
@@ -701,10 +820,10 @@ function applyAcceptedObservation(
     lastScanStatus: 'ACCEPTED',
     lastScanReason: null,
     scannerState: 'ACCEPTED',
-    requestedFaceIndex: Math.min(capturedFaceCount + 1, 6),
-    requestedFaceLabel: `Face ${Math.min(capturedFaceCount + 1, 6)} of 6`,
+    requestedFaceIndex: Math.min(capturedFaceCount + 1, requiredFaceCount),
+    requestedFaceLabel: `Face ${Math.min(capturedFaceCount + 1, requiredFaceCount)} of ${requiredFaceCount}`,
     status: completed ? 'COMPLETED' : current.status,
-    message: completed ? 'Six-face scan completed.' : 'Face accepted. Rotate to a different center color.',
+    message: completed ? `${requiredFaceCount}-face scan completed.` : 'Face accepted. Rotate to a different center color.',
     completedAt: completed ? new Date().toISOString() : current.completedAt,
   };
 }

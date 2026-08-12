@@ -139,6 +139,18 @@ export function TournamentTable({ tournaments }: TournamentTableProps) {
                     <div className="flex items-center justify-end gap-2">
                       {/* Live Operations Button */}
                       {(() => {
+                        if (t.isOnlineAsync) {
+                          return (
+                            <Link
+                              href={`/managertournaments/${t.id}/review`}
+                              className="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition shadow-2xs"
+                              title="Mở danh sách attempt để review"
+                            >
+                              Review A01
+                            </Link>
+                          );
+                        }
+
                         const isOngoing = (t.statusCode || '').toUpperCase() === 'ONGOING';
                         const isRegClosed = (t.statusCode || '').toUpperCase() === 'REGISTRATION_CLOSED';
                         

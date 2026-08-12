@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Trophy, MapPin, Calendar, Users, User, ShieldAlert, CheckCircle2, Layers } from 'lucide-react';
+import { X, Trophy, MapPin, Calendar, Users, User, ShieldAlert, CheckCircle2, Layers, Puzzle, Clock } from 'lucide-react';
 import type { AdminTournamentDto } from '@/features/admin/api/adminTournamentApi';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 
@@ -33,6 +33,7 @@ export function TournamentDetailModal({
   };
 
   const isDisabled = tournament.statusCode.toUpperCase() === 'DISABLED' || tournament.statusCode.toUpperCase() === 'CANCELLED';
+  const isOnlineAsync = tournament.tournamentType === 'ONLINE_ASYNC';
 
   const getStatusBadge = (code: string) => {
     switch (code.toUpperCase()) {
@@ -116,9 +117,12 @@ export function TournamentDetailModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-slate-400" /> Địa điểm
+              {isOnlineAsync ? <Puzzle className="h-3 w-3 text-slate-400" /> : <MapPin className="h-3 w-3 text-slate-400" />}
+              {isOnlineAsync ? 'Puzzle thi trực tuyến' : 'Địa điểm'}
             </p>
-            <p className="font-semibold text-slate-800">{tournament.location || 'Chưa cập nhật'}</p>
+            <p className="font-semibold text-slate-800">
+              {isOnlineAsync ? `${tournament.puzzleTypeName || 'Chưa cập nhật'} (${tournament.puzzleTypeCode || 'N/A'})` : tournament.location || 'Chưa cập nhật'}
+            </p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
@@ -149,6 +153,15 @@ export function TournamentDetailModal({
           </div>
         </div>
 
+        {isOnlineAsync && (
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs">
+            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider flex items-center gap-1">
+              <Clock className="h-3 w-3" /> Thể thức Online
+            </p>
+            <p className="mt-1 font-semibold text-slate-800">{tournament.formatCode || 'AO1'} · 1 attempt / thí sinh · giới hạn {Math.round((tournament.attemptTimeLimitMs || 300000) / 60000)} phút</p>
+          </div>
+        )}
+
         {/* Description */}
         {tournament.description && (
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1 text-xs">
@@ -158,7 +171,7 @@ export function TournamentDetailModal({
         )}
 
         {/* Events List */}
-        <div className="space-y-2">
+        {!isOnlineAsync && <div className="space-y-2">
           <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
             <Layers className="h-4 w-4 text-indigo-600" /> Danh Sách Môn Thi ({tournament.events.length})
           </p>
@@ -177,7 +190,7 @@ export function TournamentDetailModal({
               ))}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Footer */}
         <div className="flex justify-end pt-2 border-t border-slate-100">
