@@ -48,7 +48,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
     } else if (state.phase === 'SOLVING') {
       statusText = 'SOLVING';
       statusColor = 'text-green-400 bg-green-500/10 border-green-500/20';
-    } else if (oppState.isReady) {
+    } else if (oppState.checklistPassed || oppState.isReady) {
       statusText = 'READY';
       statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
     } else if (oppState.scrambleCheckStatus === 'PASSED') {
@@ -84,6 +84,8 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
         })()
       : null;
 
+  const isSetupPhase = ['ROOM_SETUP', 'WEBRTC_CONNECTING', 'MOBILE_TIMER_PAIRING', 'SCRAMBLE_CHECKING'].includes(state.phase);
+
   return (
     <div className="w-80 bg-zinc-950/70 backdrop-blur-md border-l border-zinc-800/80 p-5 flex flex-col justify-between shrink-0 shadow-2xl relative">
       <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
@@ -104,7 +106,9 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
             <User className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-sm font-bold text-white truncate">Player_{oppState.userId.slice(0, 6)}</h4>
+            <h4 className="text-sm font-bold text-white truncate">
+              {oppState.displayName || `Player_${oppState.userId.slice(0, 6)}`}
+            </h4>
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 mt-0.5">
               <Award className="h-3.5 w-3.5 text-orange-400" />
               <span>{oppElo !== null && oppElo !== undefined ? `${oppElo} ELO` : '1500 ELO'}</span>
@@ -159,26 +163,28 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        {/* Live Status Indicators */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
-            <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Scramble</span>
-            <span className={`text-xs font-bold ${
-              oppState.scrambleCheckStatus === 'PASSED' ? 'text-indigo-400' : 'text-zinc-400'
-            }`}>
-              {oppState.scrambleCheckStatus === 'PASSED' ? 'PASSED' : 'PENDING'}
-            </span>
-          </div>
+        {/* Live Setup Status Indicators (Shown only during room setup phase) */}
+        {isSetupPhase && (
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
+              <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Scramble</span>
+              <span className={`text-xs font-bold ${
+                oppState.scrambleCheckStatus === 'PASSED' ? 'text-indigo-400' : 'text-zinc-400'
+              }`}>
+                {oppState.scrambleCheckStatus === 'PASSED' ? 'PASSED' : 'PENDING'}
+              </span>
+            </div>
 
-          <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
-            <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Ready State</span>
-            <span className={`text-xs font-bold ${
-              oppState.isReady ? 'text-emerald-400' : 'text-zinc-400'
-            }`}>
-              {oppState.isReady ? 'READY' : 'NOT READY'}
-            </span>
+            <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
+              <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Ready State</span>
+              <span className={`text-xs font-bold ${
+                oppState.checklistPassed || oppState.isReady ? 'text-emerald-400' : 'text-zinc-400'
+              }`}>
+                {oppState.checklistPassed || oppState.isReady ? 'READY' : 'SETTING UP'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Opponent Results Card */}
