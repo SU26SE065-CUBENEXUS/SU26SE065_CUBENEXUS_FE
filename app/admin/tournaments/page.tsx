@@ -12,6 +12,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Power,
+  Play,
+  Lock,
   User,
   MapPin,
   Calendar,
@@ -20,6 +22,8 @@ import {
 import {
   getAdminTournaments,
   updateAdminTournamentStatus,
+  forceStartOnlineAsyncTournament,
+  closeOnlineAsyncRegistration,
   type AdminTournamentDto,
 } from '@/features/admin/api/adminTournamentApi';
 import { TournamentDetailModal } from '@/components/admin/TournamentDetailModal';
@@ -86,6 +90,24 @@ export default function AdminTournamentsPage() {
       showToast('success', `Đã ${actionText} thành công giải đấu "${updated.name}".`);
     } catch (err: any) {
       showToast('error', err?.message || `Không thể ${actionText} giải đấu.`);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const applyAdminAction = async (t: AdminTournamentDto, action: 'start' | 'close-registration') => {
+    const label = action === 'start' ? 'mở giải ngay và đóng đăng ký' : 'đóng đăng ký ngay';
+    if (!window.confirm(`Bạn có chắc muốn ${label} cho "${t.name}"?`)) return;
+    setActionLoadingId(t.id);
+    try {
+      const updated = action === 'start'
+        ? await forceStartOnlineAsyncTournament(t.id)
+        : await closeOnlineAsyncRegistration(t.id);
+      setTournaments((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+      if (selectedTournament?.id === updated.id) setSelectedTournament(updated);
+      showToast('success', action === 'start' ? 'Giải A01 đã được mở để kiểm thử.' : 'Đăng ký đã được đóng.');
+    } catch (err: any) {
+      showToast('error', err?.message || 'Không thể thực hiện thao tác phát triển.');
     } finally {
       setActionLoadingId(null);
     }
@@ -228,6 +250,9 @@ export default function AdminTournamentsPage() {
                 tournaments.map((t) => {
                   const isActionLoading = actionLoadingId === t.id;
                   const isDisabled = t.statusCode.toUpperCase() === 'DISABLED' || t.statusCode.toUpperCase() === 'CANCELLED';
+                  const isOnlineAsync = t.tournamentType === 'ONLINE_ASYNC';
+                  const canForceStart = isOnlineAsync && !isDisabled && new Date(t.startDate) > new Date();
+                  const canCloseRegistration = isOnlineAsync && !isDisabled && new Date(t.registrationCloseAt) > new Date() && new Date(t.startDate) > new Date();
 
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/60 transition">
@@ -286,6 +311,18 @@ export default function AdminTournamentsPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </button>
+
+                          {canCloseRegistration && (
+                            <button onClick={() => applyAdminAction(t, 'close-registration')} disabled={isActionLoading} title="Đóng đăng ký A01 ngay" className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 hover:border-amber-100 border border-transparent transition cursor-pointer disabled:opacity-50">
+                              <Lock className="h-4 w-4" />
+                            </button>
+                          )}
+
+                          {canForceStart && (
+                            <button onClick={() => applyAdminAction(t, 'start')} disabled={isActionLoading} title="Dev: mở giải A01 ngay" className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 border border-transparent transition cursor-pointer disabled:opacity-50">
+                              <Play className="h-4 w-4 fill-current" />
+                            </button>
+                          )}
 
                           {/* Toggle Status */}
                           <button

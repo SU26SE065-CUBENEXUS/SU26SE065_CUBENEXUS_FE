@@ -55,6 +55,6 @@ export function useCameraStream() {
     };
   }, []);
 
-  return { videoRef, status, error, deviceLabel, start, stop };
+  return { videoRef, status, error, deviceLabel, start, stop, getStream: () => streamRef.current };
 }
 export type CameraStreamResult = ReturnType<typeof useCameraStream>;

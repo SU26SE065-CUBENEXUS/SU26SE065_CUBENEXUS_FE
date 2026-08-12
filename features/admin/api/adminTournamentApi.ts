@@ -5,6 +5,7 @@ export interface AdminTournamentEventDto {
   puzzleTypeId: string;
   puzzleTypeName: string;
   puzzleTypeCode: string;
+  eventFormatCode: string;
   registrationStatusCode?: string;
 }
 
@@ -21,6 +22,12 @@ export interface AdminTournamentDto {
   registrationOpenAt: string;
   registrationCloseAt: string;
   statusCode: string;
+  tournamentType: string;
+  formatCode: string;
+  puzzleTypeId?: string;
+  puzzleTypeName?: string;
+  puzzleTypeCode?: string;
+  attemptTimeLimitMs: number;
   createdByUserId: string;
   createdByName: string;
   createdByEmail: string;
@@ -64,4 +71,12 @@ export async function updateAdminTournamentStatus(
     method: 'PUT',
     body: JSON.stringify({ statusCode }),
   });
+}
+
+export async function forceStartOnlineAsyncTournament(id: string): Promise<AdminTournamentDto> {
+  return apiFetch<AdminTournamentDto>(`/api/admin/tournaments/${id}/online-async/force-start`, { method: 'POST' });
+}
+
+export async function closeOnlineAsyncRegistration(id: string): Promise<AdminTournamentDto> {
+  return apiFetch<AdminTournamentDto>(`/api/admin/tournaments/${id}/online-async/close-registration`, { method: 'POST' });
 }

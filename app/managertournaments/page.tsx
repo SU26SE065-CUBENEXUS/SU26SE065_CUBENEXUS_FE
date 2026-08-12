@@ -3,7 +3,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { TournamentTable } from '@/components/tournament-manager/TournamentTable';
 import { CreateTournamentModal } from '@/components/tournament-manager/CreateTournamentModal';
+import { CreateOnlineAsyncTournamentModal } from '@/components/tournament-manager/CreateOnlineAsyncTournamentModal';
 import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
+import { listOnlineAsyncTournaments, type OnlineAsyncTournamentDto } from '@/lib/api/online-async';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import {
   Trophy,
@@ -33,12 +35,16 @@ export default function TournamentManagerOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<TournamentStatusCode | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateAsyncModal, setShowCreateAsyncModal] = useState(false);
 
   const fetchTournaments = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const publicList = await getPublicTournaments();
+      const [publicList, asyncList] = await Promise.all([
+        getPublicTournaments(),
+        listOnlineAsyncTournaments(),
+      ]);
       
       const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
       const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
@@ -55,7 +61,10 @@ export default function TournamentManagerOverviewPage() {
         }
       }
       
-      setTournaments([...drafts, ...publicList]);
+      const asyncTournaments = asyncList.map((tourney) => mapOnlineAsyncTournament(tourney));
+      // An A01 tournament may also be returned by the public endpoint. Keep one
+      // row per id, preferring the A01 projection so its Review action is shown.
+      setTournaments(uniqueTournamentsById([...drafts, ...publicList, ...asyncTournaments]));
     } catch (err) {
       console.warn('API connection failed, falling back to mock data:', err);
       const mappedMocks: TournamentDetailDto[] = [
@@ -189,10 +198,17 @@ export default function TournamentManagerOverviewPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
+            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Tạo Giải Đấu
+            Tạo Giải Offline
+          </button>
+          <button
+            onClick={() => setShowCreateAsyncModal(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4" />
+            Tạo Giải Online AO1
           </button>
         </div>
       </div>
@@ -293,6 +309,40 @@ export default function TournamentManagerOverviewPage() {
           }}
         />
       )}
+
+      {/* Create Online Async Tournament Modal */}
+      {showCreateAsyncModal && (
+        <CreateOnlineAsyncTournamentModal
+          onClose={() => setShowCreateAsyncModal(false)}
+          onCreated={() => {
+            setShowCreateAsyncModal(false);
+            fetchTournaments();
+          }}
+        />
+      )}
     </div>
   );
+}
+
+function mapOnlineAsyncTournament(tourney: OnlineAsyncTournamentDto): TournamentDetailDto {
+  return {
+    id: tourney.id,
+    name: tourney.name,
+    description: tourney.description,
+    startDate: tourney.startDate,
+    endDate: tourney.endDate,
+    registrationOpenAt: tourney.registrationOpenAt,
+    registrationCloseAt: tourney.registrationCloseAt,
+    statusCode: tourney.statusCode.toLowerCase() as TournamentStatusCode,
+    createdBy: tourney.createdBy,
+    createdByUserName: 'Online Async Manager',
+    createdAt: tourney.createdAt,
+    updatedAt: tourney.createdAt,
+    events: [],
+    isOnlineAsync: true,
+  };
+}
+
+function uniqueTournamentsById(tournaments: TournamentDetailDto[]): TournamentDetailDto[] {
+  return [...new Map(tournaments.map((tournament) => [tournament.id, tournament])).values()];
 }
