@@ -708,6 +708,13 @@ export default function LiveOperationsPage({
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState<any | null>(null);
 
+  // ─── Round Operations ────────────────────────────────────
+  const [roundMgmtEventId, setRoundMgmtEventId] = useState('');
+  const [roundMgmtRound, setRoundMgmtRound] = useState('1');
+  const [roundState, setRoundState] = useState<any>(null);
+  const [isRoundAction, setIsRoundAction] = useState(false);
+  const [roundActionResult, setRoundActionResult] = useState<{ ok: boolean; message: string } | null>(null);
+
 
 
   // ─── Result Correction Modal States ──────────────────────

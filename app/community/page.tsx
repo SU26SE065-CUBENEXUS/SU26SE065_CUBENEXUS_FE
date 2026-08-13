@@ -1,6 +1,7 @@
 'use client';
 
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useState, useEffect } from 'react';

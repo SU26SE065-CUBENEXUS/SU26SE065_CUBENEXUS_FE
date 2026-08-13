@@ -1734,13 +1734,13 @@ export default function ArenaPage() {
   const renderContent = () => {
     switch (selectedMode) {
       case "1v1":
-        return <Match1v1View selectedMode={selectedMode} onSelectMode={setSelectedMode} />;
+        return renderVSView();
       case "history":
-        return <MatchHistoryView onSelectMode={setSelectedMode} />;
+        return renderHistoryView();
       case "practice":
-        return <PracticeModeView onSelectMode={setSelectedMode} />;
+        return renderPracticeView();
       default:
-        return <Match1v1View selectedMode={selectedMode} onSelectMode={setSelectedMode} />;
+        return renderVSView();
     }
   };
 

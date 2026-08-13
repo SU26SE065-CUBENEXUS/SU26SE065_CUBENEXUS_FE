@@ -48,6 +48,7 @@ export interface VerifyAsyncScrambleResponse {
   status: string;
   reason: string;
   attemptDeadlineAt?: string;
+  handTimerStartedAt?: string;
 }
 
 export interface AsyncScannerFace {
@@ -76,6 +77,7 @@ export interface StartAsyncSolveTimerResponse {
   attemptId: string;
   status: string;
   solveStartedAt: string;
+  handTimerMs: number;
   penaltyCode: string; // NONE | PLUS2 | DNF
   penaltyTimeMs: number;
   isDnf: boolean;
@@ -96,10 +98,13 @@ export interface FinishAsyncSolveTimerResponse {
 
 export interface OnlineAsyncAttemptStateDto extends FinishAsyncSolveTimerResponse {
   tournamentId: string;
-  attemptStatus: 'INITIALIZED' | 'SCRAMBLE_VERIFIED' | 'SOLVING' | 'COMPLETED';
+  attemptStatus: 'INITIALIZED' | 'SCRAMBLE_VERIFIED' | 'SOLVING' | 'FINISH_PENDING' | 'COMPLETED';
   scrambleCheckStatus: string;
   finishCheckStatus: string;
   attemptDeadlineAt?: string;
+  handTimerStartedAt?: string;
+  solveStartedAt?: string;
+  scrambleSequence: string;
 }
 
 export interface ReviewAsyncAttemptRequest {
@@ -187,8 +192,47 @@ export async function verifyAsyncFinish(attemptId: string, imageBase64: string, 
 }
 
 export async function uploadAsyncAttemptVideo(attemptId: string, video: Blob): Promise<{ attemptId: string; objectKey: string }> {
+  const contentType = video.type.includes('mp4') ? 'video/mp4' : 'video/webm';
+  const extension = contentType === 'video/mp4' ? 'mp4' : 'webm';
+
+  // Match the proven online-match flow: upload directly to R2 with a presigned
+  // URL, then let the backend verify metadata and finalize the evidence.
+  let directUploadError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const ticket = await apiFetch<{ uploadUrl: string; objectKey: string; contentType: string }>(
+        `/api/tournaments/online-async/attempts/${attemptId}/video/upload-url`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ contentType, fileExtension: extension }),
+        },
+      );
+      const uploadResponse = await fetch(ticket.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': ticket.contentType },
+        body: video,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error(`R2 upload failed with HTTP ${uploadResponse.status}.`);
+      }
+      return apiFetch<{ attemptId: string; objectKey: string }>(
+        `/api/tournaments/online-async/attempts/${attemptId}/video/complete`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ objectKey: ticket.objectKey }),
+        },
+      );
+    } catch (error) {
+      directUploadError = error;
+      if (attempt < 3) {
+        await new Promise((resolve) => window.setTimeout(resolve, attempt * 750));
+      }
+    }
+  }
+  console.warn('[AsyncAttemptRecording] Presigned upload failed after 3 attempts; falling back to backend proxy.', directUploadError);
+
   const form = new FormData();
-  form.append('video', video, `attempt-${attemptId}.${video.type.includes('mp4') ? 'mp4' : 'webm'}`);
+  form.append('video', video, `attempt-${attemptId}.${extension}`);
   return apiFetch<{ attemptId: string; objectKey: string }>(`/api/tournaments/online-async/attempts/${attemptId}/video`, {
     method: 'POST',
     body: form,

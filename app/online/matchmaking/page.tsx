@@ -33,7 +33,7 @@ export default function MatchmakingPage() {
     return new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
   };
 
-  const startQueueRef = useRef<() => void>();
+  const startQueueRef = useRef<(() => void) | undefined>(undefined);
 
   // Fetch current user ELO rating
   useEffect(() => {

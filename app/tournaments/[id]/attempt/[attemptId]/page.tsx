@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OnlineArenaScannerTestPanel } from '@/features/rubik-scanner-test/components/OnlineArenaScannerTestPanel';
 import { ExpectedScramble2DNetVisualizer } from '@/features/rubik-scanner-test/components/ExpectedScramble2DNetVisualizer';
+import { SingleVideoReplayPlayer } from '@/features/online-arena/components/SingleVideoReplayPlayer';
+import { fixWebmDuration } from '@/features/online-arena/utils/fixWebmDuration';
 import {
   CheckCircle,
   AlertTriangle,
@@ -115,6 +117,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
   const router = useRouter();
 
   const [tournament, setTournament] = useState<OnlineAsyncTournamentDto | null>(null);
+  const [attemptScramble, setAttemptScramble] = useState<string>('');
   const [step, setStep] = useState<'SCRAMBLE_SCAN' | 'TIMER_READY' | 'SOLVING' | 'FINISH_SCAN' | 'RESULT'>('SCRAMBLE_SCAN');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -131,6 +134,10 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const cameraStreamRef = useRef<MediaStream | null>(null);
+  const recordingStartedAtRef = useRef<number>(0);
+  const recordingInterruptedRef = useRef(false);
+  const scrambleSubmitInFlightRef = useRef(false);
+  const finishSubmitInFlightRef = useRef(false);
 
   // Hand placement / Ready timer
   const [handTimerStart, setHandTimerStart] = useState<number>(0);
@@ -139,10 +146,12 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
   // Solving timer state
   const [solveStartMs, setSolveStartMs] = useState<number | null>(null);
   const [solveElapsedMs, setSolveElapsedMs] = useState<number>(0);
+  const [activePenaltyCode, setActivePenaltyCode] = useState<'NONE' | 'PLUS2'>('NONE');
 
   // Result state
   const [finalResult, setFinalResult] = useState<FinishAsyncSolveTimerResponse | null>(null);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+  const [recordingInterrupted, setRecordingInterrupted] = useState(false);
 
   // Track step entry time for 600ms Space keypress cooldown
   const stepEnteredAtRef = useRef<number>(Date.now());
@@ -165,17 +174,29 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         ]);
         if (attempt.tournamentId !== tournamentId) throw new Error('Attempt không thuộc giải đấu này.');
         setTournament(data);
+        setAttemptScramble(attempt.scrambleSequence);
         if (attempt.attemptDeadlineAt) {
           setAttemptDeadlineAt(attempt.attemptDeadlineAt);
         }
-        if (attempt.attemptStatus === 'COMPLETED') {
+        if (attempt.handTimerStartedAt) {
+          setHandTimerStart(new Date(attempt.handTimerStartedAt).getTime());
+        }
+        if (attempt.penaltyCode === 'PLUS2') {
+          setActivePenaltyCode('PLUS2');
+        }
+        if (attempt.attemptStatus === 'COMPLETED' && (attempt.finishCheckStatus !== 'PENDING' || attempt.isDnf)) {
           setFinalResult(attempt);
           setStep('RESULT');
         } else if (attempt.attemptStatus === 'SCRAMBLE_VERIFIED') {
           setStep('TIMER_READY');
         } else if (attempt.attemptStatus === 'SOLVING') {
-          setError('Attempt đang ở bước Solving. Hãy hoàn tất trên phiên đang mở để bảo toàn thời gian.');
+          if (attempt.solveStartedAt) {
+            setSolveStartMs(new Date(attempt.solveStartedAt).getTime());
+          }
           setStep('SOLVING');
+        } else if (attempt.attemptStatus === 'FINISH_PENDING' || (attempt.attemptStatus === 'COMPLETED' && attempt.finishCheckStatus === 'PENDING')) {
+          setFinalResult(attempt);
+          setStep('FINISH_SCAN');
         }
       } catch (err: any) {
         setError(err?.message || 'Không thể tải thông tin attempt.');
@@ -192,27 +213,23 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       if (left <= 0) {
         if (hasExpiredRef.current) return;
         hasExpiredRef.current = true;
-        discardRecording();
-        setRecordedVideoUrl(null);
         try {
           const expired = await getOnlineAsyncAttemptState(attemptId);
-          setFinalResult({
-            ...expired,
-            isDnf: true,
-            displayResult: 'DNF',
-          });
+          // Only the server decides whether the attempt expired. A finish scan
+          // that passed before the deadline remains valid while video uploads.
+          setFinalResult(expired);
+          if (expired.isDnf || expired.penaltyCode === 'DNF') {
+            discardRecording();
+            setRecordedVideoUrl(null);
+            setError('Đã hết thời gian cho phép của lượt thi (Time Remain = 0s). Lượt thi đấu tự động bị đánh DNF.');
+          } else {
+            setError(null);
+          }
         } catch {
-          setFinalResult({
-            attemptId,
-            status: 'COMPLETED',
-            isDnf: true,
-            penaltyCode: 'DNF',
-            rawTimeMs: 0,
-            finalTimeMs: 0,
-            displayResult: 'DNF',
-          } as any);
+          hasExpiredRef.current = false;
+          setError('Time Remain đã về 0 nhưng chưa thể xác nhận kết quả với server. Hệ thống sẽ thử lại.');
+          return;
         }
-        setError('Đã hết thời gian cho phép của lượt thi (Time Remain = 0s). Lượt thi đấu tự động bị đánh DNF.');
         setStep('RESULT');
       }
     };
@@ -231,8 +248,17 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
   const handleScannerCamera = useCallback((stream: MediaStream | null) => {
     if (!stream) {
-      if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+      if (recordingStartedAtRef.current > 0 && mediaRecorderRef.current?.state === 'recording') {
+        recordingInterruptedRef.current = true;
+        setRecordingInterrupted(true);
+        setError('Camera đã bị ngắt trong lúc thi. Recording evidence không còn liên tục; hãy giữ camera bật cho tới khi hoàn tất finish scan.');
+        mediaRecorderRef.current.stop();
+      }
       setIsRecording(false);
+      return;
+    }
+    if (recordingInterruptedRef.current) {
+      setError('Không thể tiếp tục recording sau khi camera đã bị ngắt giữa lượt thi.');
       return;
     }
     if (cameraStreamRef.current === stream) return;
@@ -244,17 +270,37 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     recorder.ondataavailable = (event) => {
       if (event.data.size > 0) recordedChunksRef.current.push(event.data);
     };
+    recorder.onstart = () => {
+      recordingStartedAtRef.current = Date.now();
+    };
+    recorder.onerror = () => {
+      setIsRecording(false);
+      setError('Trình duyệt gặp lỗi khi recording video. Vui lòng kiểm tra quyền camera.');
+    };
     recorder.start(1000);
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.addEventListener('ended', () => {
+        if (recordingStartedAtRef.current <= 0 || recorder.state === 'inactive') return;
+        recordingInterruptedRef.current = true;
+        setRecordingInterrupted(true);
+        setIsRecording(false);
+        setError('Camera track đã kết thúc trong lúc thi. Recording evidence bị gián đoạn.');
+      }, { once: true });
+    }
     mediaRecorderRef.current = recorder;
     setIsRecording(true);
   }, []);
 
-  // Step 2: Ready State (No auto-ticking timer)
+  // Step 2: the penalty timer starts after scramble verification. The server
+  // remains authoritative; this interval is only the live UI display.
   useEffect(() => {
-    if (step === 'TIMER_READY') {
-      setHandElapsedMs(0);
-    }
-  }, [step]);
+    if (step !== 'TIMER_READY' || !handTimerStart) return;
+    const update = () => setHandElapsedMs(Math.max(0, Date.now() - handTimerStart));
+    update();
+    const interval = window.setInterval(update, 25);
+    return () => window.clearInterval(interval);
+  }, [step, handTimerStart]);
 
   // Solving Timer interval (Step 3) - 5 minutes time limit
   useEffect(() => {
@@ -279,7 +325,16 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     setIsProcessing(true);
     setError(null);
     try {
-      await startAsyncSolveTimer(attemptId, handElapsedMs);
+      const result = await startAsyncSolveTimer(attemptId, handElapsedMs);
+      if (result.isDnf || result.penaltyCode === 'DNF') {
+        discardRecording();
+        setRecordedVideoUrl(null);
+        const state = await getOnlineAsyncAttemptState(attemptId);
+        setFinalResult(state);
+        setStep('RESULT');
+        return;
+      }
+      setActivePenaltyCode(result.penaltyCode === 'PLUS2' ? 'PLUS2' : 'NONE');
       setSolveStartMs(Date.now());
       setSolveElapsedMs(0);
       setStep('SOLVING');
@@ -315,9 +370,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
   // Step 1: Confirm Scramble Scan
   const handleConfirmScramble = async (facesToUse?: AsyncScannerFace[]) => {
+    if (scrambleSubmitInFlightRef.current) return;
     const faces = facesToUse || scanFaces;
     if (faces.length !== 5) return;
 
+    scrambleSubmitInFlightRef.current = true;
     setIsProcessing(true);
     setError(null);
     try {
@@ -331,12 +388,16 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         return;
       }
       setAttemptDeadlineAt(result.attemptDeadlineAt ?? null);
+      setHandTimerStart(result.handTimerStartedAt ? new Date(result.handTimerStartedAt).getTime() : Date.now());
+      setHandElapsedMs(0);
       setScanFaces([]);
-      setScanResetToken((prev) => prev + 1);
       setStep('TIMER_READY');
     } catch (err: any) {
       setError(err?.message || 'Scramble check không hợp lệ. Vui lòng thử lại.');
     } finally {
+      // Scanner completion can be emitted more than once in React development
+      // mode. Keep the synchronous guard briefly after the request settles.
+      window.setTimeout(() => { scrambleSubmitInFlightRef.current = false; }, 500);
       setIsProcessing(false);
     }
   };
@@ -356,11 +417,21 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
   const stopAndBuildVideo = () => new Promise<Blob>((resolve, reject) => {
     const recorder = mediaRecorderRef.current;
     if (!recorder) return reject(new Error('Recording was not initialized.'));
+    const buildBlob = async () => {
+      const mimeType = recorder.mimeType || 'video/webm';
+      const rawBlob = new Blob(recordedChunksRef.current, { type: mimeType });
+      if (rawBlob.size === 0) throw new Error('Recording is empty.');
+      if (!mimeType.includes('webm')) return rawBlob;
+      const durationMs = Math.max(1, Date.now() - recordingStartedAtRef.current);
+      return fixWebmDuration(rawBlob, durationMs);
+    };
     if (recorder.state === 'inactive') {
-      return resolve(new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'video/webm' }));
+      void buildBlob().then(resolve, reject);
+      return;
     }
-    recorder.onstop = () => resolve(new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'video/webm' }));
+    recorder.onstop = () => void buildBlob().then(resolve, reject);
     recorder.onerror = () => reject(new Error('Recording failed.'));
+    recorder.requestData();
     recorder.stop();
   });
 
@@ -391,9 +462,15 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
   // Step 4 -> 5: Confirm Solved Cube & Stop Recording
   const handleConfirmFinish = async (facesToUse?: AsyncScannerFace[]) => {
+    if (finishSubmitInFlightRef.current) return;
+    if (recordingInterruptedRef.current || recordingInterrupted || mediaRecorderRef.current?.state !== 'recording') {
+      setError('Không thể xác nhận kết quả: camera/recording đã bị ngắt trước khi finish scan hoàn tất.');
+      return;
+    }
     const faces = facesToUse || scanFaces;
     if (faces.length !== 5) return;
 
+    finishSubmitInFlightRef.current = true;
     setIsProcessing(true);
     setError(null);
     try {
@@ -405,6 +482,9 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         setStep('RESULT');
         return;
       }
+      // The solve result is finalized before evidence upload. If upload fails,
+      // keep it available and allow the user to retry without risking a DNF.
+      setFinalResult(res);
       const video = await stopAndBuildVideo();
       setIsRecording(false);
       if (video.size === 0) throw new Error('Recording is empty; the valid attempt cannot be sent for review.');
@@ -415,11 +495,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       } catch (err) {
         setRecordedVideoUrl(null);
       }
-      setFinalResult(res);
       setStep('RESULT');
     } catch (err: any) {
       setError(err?.message || 'Lỗi khi xác nhận kết quả.');
     } finally {
+      window.setTimeout(() => { finishSubmitInFlightRef.current = false; }, 500);
       setIsProcessing(false);
     }
   };
@@ -431,7 +511,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     setTimeout(() => setCopiedScramble(false), 2000);
   };
 
-  const scrambleString = tournament?.scrambleSequence || "R U R' U' R' F R2 U' R' U' R U R' F'";
+  const scrambleString = attemptScramble;
   const formatRemaining = (ms: number) => {
     const totalSeconds = Math.ceil(ms / 1000);
     return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
@@ -494,7 +574,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         <div className={`rounded-2xl border px-4 py-3 text-center shadow-sm ${remainingMs <= 60_000 ? 'border-red-200 bg-red-50 text-red-700' : 'border-indigo-200 bg-indigo-50 text-indigo-800'}`}>
           <p className="text-[11px] font-bold uppercase tracking-wider">Thời gian còn lại của attempt</p>
           <p className="font-mono text-2xl font-black">{formatRemaining(remainingMs)}</p>
-          <p className="text-xs font-medium">Thời gian tính từ lúc Scramble Verified; hết giờ hệ thống tự đánh DNF.</p>
+          <p className="text-xs font-medium">Tổng thời gian tính từ lúc bắt đầu attempt, bao gồm cả hai bước scan; hết giờ hệ thống tự đánh DNF.</p>
         </div>
       )}
 
@@ -536,11 +616,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             {/* AI Scanner Panel in Compact Mode */}
             <div className="overflow-hidden rounded-2xl">
               <OnlineArenaScannerTestPanel
-                key={step === 'FINISH_SCAN' ? 'finish-scan' : 'scramble-scan'}
                 backendUrl=""
                 requiredFaceCount={5}
                 compact
                 resetToken={scanResetToken}
+                allowCameraStop={step === 'RESULT'}
                 onCameraStreamChange={handleScannerCamera}
                 onScanCompleted={(session) => {
                   const faces = session.faces.map((face) => ({
@@ -670,13 +750,23 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 </p>
               </div>
 
+              <div className={`rounded-2xl border p-5 text-center shadow-sm ${handElapsedMs > 14_000 ? 'border-rose-300 bg-rose-50' : handElapsedMs > 6_000 ? 'border-amber-300 bg-amber-50' : 'border-emerald-300 bg-emerald-50'}`}>
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Time Penalty</p>
+                <p className={`font-mono text-4xl font-black ${handElapsedMs > 14_000 ? 'text-rose-700' : handElapsedMs > 6_000 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                  {(handElapsedMs / 1000).toFixed(2)}s
+                </p>
+                <p className="mt-1 text-xs font-bold text-slate-600">
+                  {handElapsedMs > 14_000 ? 'DNF nếu bắt đầu lúc này' : handElapsedMs > 6_000 ? '+2 giây nếu bắt đầu lúc này' : 'Không bị phạt'}
+                </p>
+              </div>
+
               <div className="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
                 <p className="font-extrabold text-slate-900 flex items-center gap-1.5">
                   <Hand className="h-4 w-4 text-indigo-600" /> Hướng dẫn giải Rubik:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-slate-500">
                   <li>Bấm nút <strong>"BẮT ĐẦU TÍNH GIỜ GIẢI"</strong> (hoặc nhấn <strong>SPACE</strong>) để đồng hồ chạy.</li>
-                  <li>Giải Rubik thật nhanh (giới hạn tối đa 5 phút).</li>
+                  <li>Giải Rubik và hoàn tất finish scan trước khi Time Remain về 0.</li>
                   <li>Giải xong → Nhấn phím <strong>SPACE</strong> (hoặc bấm Dừng) để chốt thời gian và sang Bước 4.</li>
                 </ul>
               </div>
@@ -700,7 +790,10 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 </span>
                 <h2 className="text-2xl font-black text-slate-900">SOLVING IN PROGRESS</h2>
                 <p className="text-xs text-slate-500 font-medium">
-                  Giải khối Rubik thật nhanh. Giới hạn tối đa: 5 phút.
+                  Giải khối Rubik thật nhanh và dừng timer trước khi Time Remain về 0.
+                </p>
+                <p className={`inline-flex rounded-full px-3 py-1 text-[11px] font-extrabold ${activePenaltyCode === 'PLUS2' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                  Penalty đã chốt: {activePenaltyCode === 'PLUS2' ? '+2 giây' : 'Không phạt'}
                 </p>
               </div>
 
@@ -828,31 +921,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
               {/* VIDEO PLAYER DISPLAY OR DNF NOTICE */}
               {!finalResult.isDnf && recordedVideoUrl ? (
-                <div className="rounded-3xl border border-slate-200 bg-slate-900 overflow-hidden shadow-lg p-3 space-y-2 text-left">
-                  <div className="flex items-center justify-between px-2 py-1 text-xs text-white font-extrabold">
-                    <span className="flex items-center gap-2">
-                      <Video className="h-4 w-4 text-emerald-400" /> Xem Lại Video Thi Đấu Hợp Lệ
-                    </span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold">
-                      READY FOR REVIEW
-                    </span>
-                  </div>
-                  <video
-                    controls
-                    src={recordedVideoUrl}
-                    className="w-full aspect-video rounded-2xl bg-black object-contain shadow-inner"
-                  />
-                  <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-slate-400 font-medium">
-                    <span>Lượt giải đã được tự động lưu video evidence.</span>
-                    <a
-                      href={recordedVideoUrl}
-                      download={`attempt-${attemptId}.webm`}
-                      className="text-indigo-400 font-bold hover:underline"
-                    >
-                      Tải video về
-                    </a>
-                  </div>
-                </div>
+                <SingleVideoReplayPlayer
+                  videoUrl={recordedVideoUrl}
+                  title="Xem Lại Video Thi Đấu Hợp Lệ"
+                  downloadFilename={`attempt-${attemptId}.webm`}
+                />
               ) : finalResult.isDnf ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-left space-y-2">
                   <div className="flex items-center gap-2 text-rose-800 font-extrabold text-sm">

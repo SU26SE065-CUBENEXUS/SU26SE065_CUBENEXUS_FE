@@ -26,6 +26,7 @@ type Props = {
   compact?: boolean;
   onCameraStreamChange?: (stream: MediaStream | null) => void;
   resetToken?: number;
+  allowCameraStop?: boolean;
 };
 
 const CAPTURE_INTERVAL_MS = 220;
@@ -71,6 +72,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
   compact = false,
   onCameraStreamChange,
   resetToken,
+  allowCameraStop = true,
 }: Props) {
   const camera = useCameraStream();
   // Tự resolve URL trực tiếp: khi local → http://localhost:5212 (bypass Next.js proxy)
@@ -427,7 +429,18 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
           <button onClick={() => void startScanSession()} disabled={isPreparingSession || isScanningFace} className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 cursor-pointer">{isPreparingSession ? 'Preparing...' : 'Start Session'}</button>
           <button onClick={() => void retryFace()} disabled={!session || isScanningFace || isComplete} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer">Retry Face</button>
           <button onClick={() => void resetSession()} disabled={isScanningFace} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer">Reset Session</button>
-          <button onClick={() => { abortActiveScan(); camera.stop(); onCameraStreamChange?.(null); }} className="col-span-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 cursor-pointer">Stop Camera</button>
+          <button
+            onClick={() => {
+              if (!allowCameraStop) return;
+              abortActiveScan();
+              camera.stop();
+              onCameraStreamChange?.(null);
+            }}
+            disabled={!allowCameraStop}
+            className="col-span-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          >
+            {allowCameraStop ? 'Stop Camera' : 'Camera phải bật trong suốt lượt thi'}
+          </button>
         </div>
 
         <div className="mt-3 space-y-2">
@@ -649,12 +662,14 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             </button>
             <button
               onClick={() => {
+                if (!allowCameraStop) return;
                 abortActiveScan();
                 camera.stop();
               }}
-              className="py-2 px-3 text-[10px] font-black uppercase bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-900/30 rounded-lg transition-all"
+              disabled={!allowCameraStop}
+              className="py-2 px-3 text-[10px] font-black uppercase bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-900/30 rounded-lg transition-all disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Stop Camera
+              {allowCameraStop ? 'Stop Camera' : 'Camera Locked'}
             </button>
           </div>
         </div>

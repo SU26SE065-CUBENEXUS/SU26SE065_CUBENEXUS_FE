@@ -23,6 +23,7 @@ import {
   type AsyncLeaderboardEntryDto,
   type OnlineAsyncTournamentDto,
 } from '@/lib/api/online-async';
+import { SingleVideoReplayPlayer } from '@/features/online-arena/components/SingleVideoReplayPlayer';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -248,13 +249,12 @@ export default function AdminAttemptReviewPage({ params }: Props) {
 
             {/* Video Evidence Preview */}
             <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Video className="h-4 w-4 text-indigo-600" /> Video Evidence Recording
-              </p>
               {selectedAttempt.videoEvidenceUrl ? (
-                <div className="rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center border border-slate-800">
-                  <video src={selectedAttempt.videoEvidenceUrl} controls className="w-full h-full object-contain" />
-                </div>
+                <SingleVideoReplayPlayer
+                  videoUrl={selectedAttempt.videoEvidenceUrl}
+                  title={`Video Evidence - ${selectedAttempt.userFullName}`}
+                  downloadFilename={`attempt-${selectedAttempt.attemptId}.webm`}
+                />
               ) : (
                 <div className="p-4 bg-slate-100 rounded-xl text-xs text-slate-500 text-center">
                   Video đã được tự động lưu trữ trên server.

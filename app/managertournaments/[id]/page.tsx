@@ -96,33 +96,9 @@ export default function TournamentDetailDashboardPage({
     try {
       const data = await getTournamentById(id);
       setTournament(data);
-    } catch (err) {
-      console.warn('API connection failed, falling back to mock details:', err);
-      const mockDetail: TournamentDetailDto = {
-        id: id || 'T001',
-        name: 'CubeNexus Open 2026',
-        description: 'Official CubeNexus Speedcubing Tournament featuring 3x3x3, 2x2x2 and special medley relay.',
-        location: 'FPT University, Ho Chi Minh City',
-        startDate: '2026-06-12T09:00:00Z',
-        endDate: '2026-06-14T18:00:00Z',
-        registrationOpenAt: '2026-05-01T00:00:00Z',
-        registrationCloseAt: '2026-06-10T00:00:00Z',
-        createdAt: '2026-04-15T12:00:00Z',
-        createdBy: 'U001',
-        createdByUserName: 'Nguyen Van A',
-        updatedAt: new Date().toISOString(),
-        statusCode: 'ongoing',
-        events: [
-          { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-          { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-          { id: 'E004', puzzleTypeId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', puzzleTypeCode: 'MEDLEY', puzzleTypeName: 'Medley Relay', eventFormatCode: 'MEDLEY', solveCount: 1, medleyPuzzles: [
-            { id: 'MP1', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2', sortOrder: 1 },
-            { id: 'MP2', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3', sortOrder: 2 },
-          ] }
-        ]
-      };
-      setTournament(mockDetail);
-      setCompleteMsg({ text: 'Đang sử dụng dữ liệu mẫu (Không kết nối được BE)', isError: true });
+    } catch (err: any) {
+      setError(err?.message || 'Không thể tải thông tin giải đấu từ máy chủ.');
+      setTournament(null);
     } finally {
       setIsLoading(false);
     }
@@ -143,9 +119,9 @@ export default function TournamentDetailDashboardPage({
         text: 'Giải đấu đã được đánh dấu HOÀN THÀNH thành công!',
         isError: false,
       });
-    } catch (err) {
+    } catch (err: any) {
       setCompleteMsg({
-        text: err instanceof Error ? err.message : 'Không thể đánh dấu hoàn thành',
+        text: err?.message || 'Không thể đánh dấu hoàn thành giải đấu.',
         isError: true,
       });
     } finally {
@@ -157,7 +133,7 @@ export default function TournamentDetailDashboardPage({
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -165,18 +141,18 @@ export default function TournamentDetailDashboardPage({
   // Error
   if (error || !tournament) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 py-16 text-center">
-          <AlertCircle className="h-10 w-10 text-red-400" />
-          <p className="text-base font-semibold text-red-700">
-            {error ?? 'Tournament not found'}
-          </p>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 text-left">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-red-200 bg-red-50/50 p-12 text-center shadow-2xs">
+          <AlertCircle className="h-10 w-10 text-red-500" />
+          <div>
+            <p className="text-base font-extrabold text-red-900">Không Tìm Thấy Giải Đấu</p>
+            <p className="text-xs text-red-700 mt-1">{error || 'Giải đấu không tồn tại hoặc đã bị xóa.'}</p>
+          </div>
           <button
             onClick={fetchTournament}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-card border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted/50"
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-xs font-extrabold text-slate-800 hover:bg-slate-50 transition cursor-pointer shadow-2xs"
           >
-            <RefreshCw className="h-4 w-4" />
-            Retry
+            <RefreshCw className="h-4 w-4" /> Thử Lại
           </button>
         </div>
       </div>
@@ -184,7 +160,7 @@ export default function TournamentDetailDashboardPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 text-left">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
         <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
@@ -212,7 +188,7 @@ export default function TournamentDetailDashboardPage({
       )}
 
       {/* Tournament Overview Card */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
         {/* Banner Poster Header */}
         {tournament.bannerUrl && (
           <div
@@ -259,12 +235,12 @@ export default function TournamentDetailDashboardPage({
                   </span>
                 )}
                 <span>
-                  • Người tạo: {tournament.createdByUserName}
+                  • Người tạo: {tournament.createdByUserName || 'Manager'}
                 </span>
               </div>
               {/* Events chips */}
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {tournament.events.map((e) => (
+                {(tournament.events || []).map((e) => (
                   <span
                     key={e.id}
                     className="rounded-md bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700"
@@ -280,7 +256,7 @@ export default function TournamentDetailDashboardPage({
               <button
                 onClick={fetchTournament}
                 disabled={isLoading}
-                className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 cursor-pointer"
                 title="Tải lại"
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -289,7 +265,7 @@ export default function TournamentDetailDashboardPage({
                 <button
                   onClick={() => setShowConfirmComplete(true)}
                   disabled={isCompleting}
-                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-emerald-700 disabled:opacity-60 border-none"
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-emerald-700 disabled:opacity-60 border-none cursor-pointer"
                 >
                   {isCompleting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -320,7 +296,7 @@ export default function TournamentDetailDashboardPage({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <DashboardCard title="Hạng mục thi" value={tournament.events.length} accent="blue" />
+        <DashboardCard title="Hạng mục thi" value={tournament.events?.length || 0} accent="blue" />
         <DashboardCard title="Nhóm & Scramble" value="Sẵn sàng" accent="purple" />
         <DashboardCard title="Thí sinh đăng ký" value="Chi tiết" accent="yellow" />
         <DashboardCard title="Điều hành Live" value="Hoạt động" accent="emerald" />

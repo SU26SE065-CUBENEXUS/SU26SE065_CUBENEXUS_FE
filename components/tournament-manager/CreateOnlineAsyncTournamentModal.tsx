@@ -67,7 +67,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
       return;
     }
     if (!Number.isInteger(attemptTimeLimitMins) || attemptTimeLimitMins < 1 || attemptTimeLimitMins > 60) {
-      setError('Giới hạn thời gian solve phải từ 1 đến 60 phút.');
+      setError('Tổng thời gian attempt phải từ 1 đến 60 phút.');
       return;
     }
 
@@ -167,7 +167,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
 
             <div>
               <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 text-indigo-600" /> Limit Solve Time (Phút)
+                <Clock className="h-3.5 w-3.5 text-indigo-600" /> Tổng Time Remain (Phút)
               </label>
               <input
                 type="number"

@@ -5,6 +5,8 @@ import { Check, Loader2, PlayCircle, ShieldCheck, X } from 'lucide-react';
 import { getAdminTournaments, type AdminTournamentDto } from '@/features/admin/api/adminTournamentApi';
 import { getAsyncAttemptVideoPlayback, getAttemptsForReview, reviewAttempt, type AsyncLeaderboardEntryDto } from '@/lib/api/online-async';
 
+import { SingleVideoReplayPlayer } from '@/features/online-arena/components/SingleVideoReplayPlayer';
+
 export default function A01VideoReviewPage() {
   const [tournaments, setTournaments] = useState<AdminTournamentDto[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -65,9 +67,22 @@ export default function A01VideoReviewPage() {
               </article>
             ))}
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            {videoUrl ? <video controls autoPlay src={videoUrl} className="aspect-video w-full rounded-xl bg-slate-950" /> : <div className="flex aspect-video items-center justify-center rounded-xl bg-slate-50 text-sm text-slate-400">Chọn một attempt để xem evidence.</div>}
-            {videoUrl && activeAttemptId && <div className="mt-4 flex gap-3"><button onClick={() => void decide(activeAttemptId, true)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white"><Check className="h-4 w-4" /> Approve</button><button onClick={() => void decide(activeAttemptId, false)} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white"><X className="h-4 w-4" /> Reject / DNF</button></div>}
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+            {videoUrl ? (
+              <SingleVideoReplayPlayer
+                videoUrl={videoUrl}
+                title={`A01 Evidence - ${attempts.find((a) => a.attemptId === activeAttemptId)?.userFullName || ''}`}
+                downloadFilename={`attempt-${activeAttemptId}.webm`}
+              />
+            ) : (
+              <div className="flex aspect-video items-center justify-center rounded-xl bg-slate-50 text-sm text-slate-400">Chọn một attempt để xem evidence.</div>
+            )}
+            {videoUrl && activeAttemptId && (
+              <div className="flex gap-3">
+                <button onClick={() => void decide(activeAttemptId, true)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition cursor-pointer"><Check className="h-4 w-4" /> Approve</button>
+                <button onClick={() => void decide(activeAttemptId, false)} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:bg-rose-700 transition cursor-pointer"><X className="h-4 w-4" /> Reject / DNF</button>
+              </div>
+            )}
           </section>
         </div>
       )}

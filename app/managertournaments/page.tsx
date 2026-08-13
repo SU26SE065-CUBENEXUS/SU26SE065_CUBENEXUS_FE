@@ -3,30 +3,33 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { TournamentTable } from '@/components/tournament-manager/TournamentTable';
 import { CreateTournamentModal } from '@/components/tournament-manager/CreateTournamentModal';
-import { CreateOnlineAsyncTournamentModal } from '@/components/tournament-manager/CreateOnlineAsyncTournamentModal';
 import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
-import { listOnlineAsyncTournaments, type OnlineAsyncTournamentDto } from '@/lib/api/online-async';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import {
-  Trophy,
-  Zap,
-  Calendar,
-  CheckCircle,
   Search,
   Plus,
   RefreshCw,
   AlertCircle,
-  Sparkles,
+  Trophy,
 } from 'lucide-react';
 
 const STATUS_FILTERS: Array<{ label: string; value: TournamentStatusCode | 'all' }> = [
-  { label: 'All', value: 'all' },
-  { label: 'In Progress', value: 'ongoing' },
-  { label: 'Reg. Open', value: 'registration_open' },
-  { label: 'Upcoming', value: 'published' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Tất cả trạng thái', value: 'all' },
+  { label: 'Đang diễn ra (Live)', value: 'ongoing' },
+  { label: 'Đang mở đăng ký', value: 'registration_open' },
+  { label: 'Sắp diễn ra', value: 'published' },
+  { label: 'Đã hoàn thành', value: 'completed' },
+  { label: 'Đã hủy', value: 'cancelled' },
 ];
+
+export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
+  if (t.isOnlineAsync || (t as any).tournamentType === 'ONLINE_ASYNC') return false;
+  const nameLower = (t.name || '').toLowerCase();
+  const descLower = (t.description || '').toLowerCase();
+  if (nameLower.includes('async') || nameLower.includes('ao1') || nameLower.includes('a01') || nameLower.includes('online async')) return false;
+  if (descLower.includes('async') || descLower.includes('ao1') || descLower.includes('bất đồng bộ')) return false;
+  return true;
+}
 
 export default function TournamentManagerOverviewPage() {
   const [tournaments, setTournaments] = useState<TournamentDetailDto[]>([]);
@@ -35,97 +38,36 @@ export default function TournamentManagerOverviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<TournamentStatusCode | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCreateAsyncModal, setShowCreateAsyncModal] = useState(false);
 
   const fetchTournaments = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [publicList, asyncList] = await Promise.all([
-        getPublicTournaments(),
-        listOnlineAsyncTournaments(),
-      ]);
+      const publicList = await getPublicTournaments().catch(() => []);
       
-      const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
+      // Load local draft tournaments created by Manager in this session
+      const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
       const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
       const drafts: TournamentDetailDto[] = [];
       
       for (const id of storedDrafts) {
-        if (!publicList.some(t => t.id === id)) {
+        if (!publicList.some((t) => t.id === id)) {
            try {
               const draft = await getTournamentById(id);
-              drafts.push(draft);
-           } catch (e) {
-              // Ignore if not found
+              if (isOfflineManagerTournament(draft)) {
+                drafts.push(draft);
+              }
+           } catch {
+              // Ignore if draft deleted
            }
         }
       }
       
-      const asyncTournaments = asyncList.map((tourney) => mapOnlineAsyncTournament(tourney));
-      // An A01 tournament may also be returned by the public endpoint. Keep one
-      // row per id, preferring the A01 projection so its Review action is shown.
-      setTournaments(uniqueTournamentsById([...drafts, ...publicList, ...asyncTournaments]));
-    } catch (err) {
-      console.warn('API connection failed, falling back to mock data:', err);
-      const mappedMocks: TournamentDetailDto[] = [
-        {
-          id: 'T001',
-          name: 'CubeNexus Open 2026',
-          description: 'Official CubeNexus Speedcubing Tournament',
-          location: 'FPT University, Ho Chi Minh City',
-          startDate: '2026-06-12T09:00:00Z',
-          endDate: '2026-06-14T18:00:00Z',
-          registrationOpenAt: '2026-05-01T00:00:00Z',
-          registrationCloseAt: '2026-06-10T00:00:00Z',
-          createdAt: '2026-04-15T12:00:00Z',
-          createdBy: 'U001',
-          createdByUserName: 'Nguyen Van A',
-          updatedAt: '2026-04-15T12:00:00Z',
-          statusCode: 'ongoing',
-          events: [
-            { id: 'E001', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] },
-            { id: 'E002', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
-          ]
-        },
-        {
-          id: 'T002',
-          name: 'Asian Speedcubing Cup 2026',
-          description: 'Major regional speedcubing championship',
-          location: 'GEM Center, Ho Chi Minh City',
-          startDate: '2026-07-08T09:00:00Z',
-          endDate: '2026-07-10T18:00:00Z',
-          registrationOpenAt: '2026-06-01T00:00:00Z',
-          registrationCloseAt: '2026-07-05T00:00:00Z',
-          createdAt: '2026-05-15T12:00:00Z',
-          createdBy: 'U002',
-          createdByUserName: 'Tran Thi B',
-          updatedAt: '2026-05-15T12:00:00Z',
-          statusCode: 'registration_open',
-          events: [
-            { id: 'E003', puzzleTypeId: '33333333-3333-3333-3333-333333333333', puzzleTypeCode: '333', puzzleTypeName: '3x3x3 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
-          ]
-        },
-        {
-          id: 'T003',
-          name: 'Speed Run Showdown U18',
-          description: 'Youth cubing tournament',
-          location: 'Phu Dong Sports Center',
-          startDate: '2026-08-03T09:00:00Z',
-          endDate: '2026-08-03T18:00:00Z',
-          registrationOpenAt: '2026-07-01T00:00:00Z',
-          registrationCloseAt: '2026-08-01T00:00:00Z',
-          createdAt: '2026-06-01T12:00:00Z',
-          createdBy: 'U003',
-          createdByUserName: 'Le Van C',
-          updatedAt: '2026-06-01T12:00:00Z',
-          statusCode: 'published',
-          events: [
-            { id: 'E004', puzzleTypeId: '22222222-2222-2222-2222-222222222222', puzzleTypeCode: '222', puzzleTypeName: '2x2x2 Speedcubing', eventFormatCode: 'TRADITIONAL', solveCount: 5, medleyPuzzles: [] }
-          ]
-        }
-      ];
-      setTournaments(mappedMocks);
-      setError('Đang sử dụng dữ liệu mẫu (Không kết nối được BE)');
+      const combined = [...drafts, ...publicList].filter(isOfflineManagerTournament);
+      setTournaments(combined);
+    } catch (err: any) {
+      setError(err?.message || 'Không thể kết nối đến máy chủ BE.');
+      setTournaments([]);
     } finally {
       setIsLoading(false);
     }
@@ -153,38 +95,33 @@ export default function TournamentManagerOverviewPage() {
   const filtered = useMemo(() => {
     return tournaments.filter((t) => {
       const matchSearch =
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (t.location ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+        (t.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.location || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchStatus = activeFilter === 'all' || (t.statusCode || '').toLowerCase() === activeFilter;
       return matchSearch && matchStatus;
     });
   }, [tournaments, searchTerm, activeFilter]);
 
-  const handleCreated = (newTournament: TournamentDetailDto) => {
-    setTournaments((prev) => [newTournament, ...prev]);
-    setShowCreateModal(false);
-  };
-
   const statCards = [
-    { label: 'Tổng số giải đấu', value: stats.total, color: 'text-slate-900', hint: 'Tất cả giải đấu' },
-    { label: 'Đang diễn ra', value: stats.ongoing, color: 'text-emerald-600', hint: 'Live Operations' },
+    { label: 'Tổng số giải đấu Offline', value: stats.total, color: 'text-slate-900', hint: 'Hội trường WCA' },
+    { label: 'Đang diễn ra (Live)', value: stats.ongoing, color: 'text-emerald-600', hint: 'Live Operations' },
     { label: 'Sắp diễn ra / Mở đăng ký', value: stats.upcoming, color: 'text-indigo-600', hint: 'Nhận đăng ký' },
     { label: 'Đã hoàn thành', value: stats.completed, color: 'text-slate-500', hint: 'Đã kết thúc' },
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 text-left">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
           <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
-            Quản Lý Giải Đấu
+            Quản Lý Giải Đấu Offline WCA
           </p>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight sm:text-3xl">
             Tournament Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal">
-            Tạo, quản lý và điều hành các giải đấu Speedcubing trực tiếp.
+            Tạo, quản lý và điều hành các giải đấu Speedcubing trực tiếp tại hội trường.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
@@ -198,17 +135,10 @@ export default function TournamentManagerOverviewPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            Tạo Giải Offline
-          </button>
-          <button
-            onClick={() => setShowCreateAsyncModal(true)}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
           >
-            <Sparkles className="h-4 w-4" />
-            Tạo Giải Online AO1
+            <Plus className="h-4 w-4" />
+            Tạo Giải Đấu
           </button>
         </div>
       </div>
@@ -236,7 +166,7 @@ export default function TournamentManagerOverviewPage() {
         <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
           <div className="flex-1">
-            <p className="font-semibold text-amber-900">Chế độ offline / Dữ liệu mẫu</p>
+            <p className="font-semibold text-amber-900">Thông báo kết nối Backend</p>
             <p className="text-amber-700 text-[11px] mt-0.5">{error}</p>
           </div>
           <button
@@ -292,7 +222,7 @@ export default function TournamentManagerOverviewPage() {
       )}
 
       {/* Tournament Table */}
-      {!isLoading && <TournamentTable tournaments={filtered} />}
+      {!isLoading && <TournamentTable tournaments={filtered} onRefresh={fetchTournaments} />}
 
       {/* Create Tournament Modal */}
       {showCreateModal && (
@@ -300,8 +230,8 @@ export default function TournamentManagerOverviewPage() {
           onClose={() => setShowCreateModal(false)}
           onCreated={(newTourney) => {
             setShowCreateModal(false);
-            const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
-            const storedDrafts = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
+            const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
+            const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
             if (!storedDrafts.includes(newTourney.id)) {
               localStorage.setItem('local_draft_tournaments', JSON.stringify([newTourney.id, ...storedDrafts]));
             }
@@ -309,40 +239,6 @@ export default function TournamentManagerOverviewPage() {
           }}
         />
       )}
-
-      {/* Create Online Async Tournament Modal */}
-      {showCreateAsyncModal && (
-        <CreateOnlineAsyncTournamentModal
-          onClose={() => setShowCreateAsyncModal(false)}
-          onCreated={() => {
-            setShowCreateAsyncModal(false);
-            fetchTournaments();
-          }}
-        />
-      )}
     </div>
   );
-}
-
-function mapOnlineAsyncTournament(tourney: OnlineAsyncTournamentDto): TournamentDetailDto {
-  return {
-    id: tourney.id,
-    name: tourney.name,
-    description: tourney.description,
-    startDate: tourney.startDate,
-    endDate: tourney.endDate,
-    registrationOpenAt: tourney.registrationOpenAt,
-    registrationCloseAt: tourney.registrationCloseAt,
-    statusCode: tourney.statusCode.toLowerCase() as TournamentStatusCode,
-    createdBy: tourney.createdBy,
-    createdByUserName: 'Online Async Manager',
-    createdAt: tourney.createdAt,
-    updatedAt: tourney.createdAt,
-    events: [],
-    isOnlineAsync: true,
-  };
-}
-
-function uniqueTournamentsById(tournaments: TournamentDetailDto[]): TournamentDetailDto[] {
-  return [...new Map(tournaments.map((tournament) => [tournament.id, tournament])).values()];
 }

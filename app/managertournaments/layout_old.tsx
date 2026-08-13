@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
-import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
+import { getPublicTournaments } from '@/lib/api/tournaments';
 import type { TournamentDetailDto } from '@/lib/api/types';
 import {
   Trophy,
@@ -23,19 +23,9 @@ import {
   Radio,
   Zap,
   Video,
-  Database,
 } from 'lucide-react';
 
-export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
-  if (t.isOnlineAsync || (t as any).tournamentType === 'ONLINE_ASYNC') return false;
-  const nameLower = (t.name || '').toLowerCase();
-  const descLower = (t.description || '').toLowerCase();
-  if (nameLower.includes('async') || nameLower.includes('ao1') || nameLower.includes('a01') || nameLower.includes('online async')) return false;
-  if (descLower.includes('async') || descLower.includes('ao1') || descLower.includes('bất đồng bộ')) return false;
-  return true;
-}
-
-// ─── Sidebar ─────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Sidebar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function Sidebar({
   collapsed,
   onToggle,
@@ -75,7 +65,7 @@ function Sidebar({
       {/* Logo */}
       <div className="relative flex h-[60px] items-center justify-between px-4 border-b border-slate-200 flex-shrink-0 bg-white">
         {!collapsed && (
-          <Link href={isAdmin ? "/admin" : "/managertournaments"} className="flex items-center gap-2.5 min-w-0">
+          <Link href="/managertournaments" className="flex items-center gap-2.5 min-w-0">
             <div className="relative h-8 w-8 overflow-hidden rounded-lg shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center p-1">
               <Image src="/logoCube.png" alt="CubeNexus" width={24} height={24} className="object-contain" priority />
             </div>
@@ -85,7 +75,7 @@ function Sidebar({
                 <span className="text-[13px] font-extrabold tracking-tight text-indigo-600">NEXUS</span>
               </div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 truncate">
-                {isAdmin ? 'Admin Portal' : 'Manager Portal'}
+                Manager Portal
               </p>
             </div>
           </Link>
@@ -106,11 +96,11 @@ function Sidebar({
         <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
       </button>
 
-      {/* Active Tournament Selector (Manager View - Real Offline Tournaments Only) */}
-      {!isAdmin && !collapsed && (
+      {/* Tournament Selector (Manager only) */}
+      {!isAdmin && !collapsed && tournaments.length > 0 && (
         <div className="px-3 pt-3.5 pb-3 border-b border-slate-200 flex-shrink-0 bg-slate-50/50">
           <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-            Active Offline Tournament
+            Active Tournament
           </label>
           <div className="relative">
             <select
@@ -125,17 +115,11 @@ function Sidebar({
               }}
               className="w-full pl-3 pr-7 py-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg outline-none appearance-none cursor-pointer hover:border-slate-300 transition shadow-2xs"
             >
-              {tournaments.length > 0 ? (
-                tournaments.map((t) => (
-                  <option key={t.id} value={t.id} className="text-slate-900 bg-white font-medium">
-                    {t.name}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled className="text-slate-400">
-                  Chưa có giải Offline nào
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id} className="text-slate-900 bg-white font-medium">
+                  {t.name}
                 </option>
-              )}
+              ))}
             </select>
             <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
@@ -147,15 +131,15 @@ function Sidebar({
         <ul className="space-y-1 px-2.5">
           <li>
             <Link
-              href={isAdmin ? '/admin' : '/managertournaments'}
+              href="/managertournaments"
               className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                (isAdmin ? pathname === '/admin' : pathname === '/managertournaments')
+                pathname === '/managertournaments'
                   ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                   : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
               } ${collapsed ? 'justify-center px-2' : ''}`}
               title={collapsed ? 'Dashboard' : undefined}
             >
-              <LayoutDashboard className="h-4 w-4 shrink-0 text-indigo-600" />
+              <LayoutDashboard className="h-4 w-4 shrink-0" />
               {!collapsed && <span>Dashboard</span>}
             </Link>
           </li>
@@ -220,46 +204,22 @@ function Sidebar({
 
               <li>
                 <Link
-                  href="/managertournaments/async"
+                  href="/admin/tournaments"
                   className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/managertournaments/async')
-                      ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
+                    pathname.startsWith('/admin/tournaments')
+                      ? 'text-amber-600 bg-amber-50 border border-amber-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                   } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Giải Online Async (A01)' : undefined}
+                  title={collapsed ? 'Quß║ún L├╜ Giß║úi ─Éß║Ñu' : undefined}
                 >
-                  <Zap className="h-4 w-4 shrink-0 text-indigo-500" />
+                  <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Giải Online Async (A01)</span>
+                    <span className="flex-1 truncate">Quß║ún L├╜ Giß║úi ─Éß║Ñu</span>
                   )}
                 </Link>
               </li>
-
               <li>
-                <Link
-                  href="/admin/scrambles"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/scrambles')
-                      ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
-                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Kho đề Scramble' : undefined}
-                >
-                  <Database className="h-4 w-4 shrink-0 text-indigo-500" />
-                  {!collapsed && <span className="flex-1 truncate">Kho đề Scramble</span>}
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/admin/a01-video-review"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/a01-video-review')
-                      ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
-                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'A01 Video Review' : undefined}
-                >
+                <Link href="/admin/a01-video-review" className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/a01-video-review') ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold' : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'} ${collapsed ? 'justify-center px-2' : ''}`} title={collapsed ? 'A01 Video Review' : undefined}>
                   <Video className="h-4 w-4 shrink-0 text-rose-500" />
                   {!collapsed && <span className="flex-1 truncate">A01 Video Review</span>}
                 </Link>
@@ -281,11 +241,11 @@ function Sidebar({
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                   } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Quản Lý Người Dùng' : undefined}
+                  title={collapsed ? 'Quß║ún L├╜ Ng╞░ß╗¥i D├╣ng' : undefined}
                 >
                   <Users className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý Người Dùng</span>
+                    <span className="flex-1 truncate">Quß║ún L├╜ Ng╞░ß╗¥i D├╣ng</span>
                   )}
                 </Link>
               </li>
@@ -297,11 +257,11 @@ function Sidebar({
                       ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                   } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Quản Lý ELO' : undefined}
+                  title={collapsed ? 'Quß║ún L├╜ ELO' : undefined}
                 >
                   <Zap className="h-4 w-4 shrink-0 text-orange-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý & Cấu Hình ELO</span>
+                    <span className="flex-1 truncate">Quß║ún L├╜ &amp; Cß║Ñu H├¼nh ELO</span>
                   )}
                 </Link>
               </li>
@@ -317,7 +277,7 @@ function Sidebar({
                 >
                   <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
+                    <span className="flex-1 truncate">Fraud Reports (Khiß║┐u nß║íi)</span>
                   )}
                 </Link>
               </li>
@@ -338,7 +298,7 @@ function Sidebar({
   );
 }
 
-// ─── Top Header Bar ──────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Top Header Bar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string }) {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -349,17 +309,13 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
   const lastSegment = pathSegments[pathSegments.length - 1];
   const pageLabels: Record<string, string> = {
     managertournaments: 'Dashboard',
-    async: 'Giải Online Async (A01)',
-    offline: 'Thống Kê Giải Offline Manager',
     registrations: 'Registrations',
     events: 'Events & Competitors',
     groups: 'Groups & Scrambles',
     live: 'Live Operations',
     judges: 'Judge Management',
     'fraud-reports': 'Fraud Reports Queue',
-    'elo-management': 'Quản Lý ELO',
-    scrambles: 'Scramble Control Center',
-    'a01-video-review': 'A01 Video Review',
+    'elo-management': 'Quß║ún L├╜ ELO',
   };
   const pageLabel = pageLabels[lastSegment] || (selectedTournamentName ? 'Overview' : 'Dashboard');
 
@@ -368,7 +324,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
       {/* Left: Page Context */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-xs font-semibold text-slate-500">
-          {selectedTournamentName || 'Management Portal'}
+          {selectedTournamentName || 'Manager Portal'}
         </span>
         {selectedTournamentName && pageLabel !== 'Overview' && (
           <>
@@ -387,7 +343,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
         onMouseLeave={() => setIsDropdownOpen(false)}
       >
         <button
-          className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
+          className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-2xs"
         >
           <div
             className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold bg-indigo-600 text-white shadow-2xs overflow-hidden shrink-0"
@@ -459,7 +415,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
   );
 }
 
-// ─── Layout ──────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Layout ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -480,56 +436,31 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     }
   }, [isLoading, isAuthenticated, user, router, pathname]);
 
-  // Fetch real tournaments list for switcher (Offline Only, No Mock Data)
+  // Fetch tournaments list for switcher
   useEffect(() => {
     if (isAuthenticated) {
-      (async () => {
-        try {
-          const publicList = await getPublicTournaments().catch(() => []);
-          
-          // Load local draft tournaments created by Manager in this session
-          const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
-          const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
-          const localDrafts: TournamentDetailDto[] = [];
-
-          for (const id of storedDrafts) {
-            if (!publicList.some((t) => t.id === id)) {
-              try {
-                const draft = await getTournamentById(id);
-                if (isOfflineManagerTournament(draft)) {
-                  localDrafts.push(draft);
-                }
-              } catch {
-                // Ignore if draft deleted
-              }
-            }
-          }
-
-          const combined = [...localDrafts, ...publicList].filter(isOfflineManagerTournament);
-          setTournamentsList(combined);
-
+      getPublicTournaments()
+        .then((list) => {
+          setTournamentsList(list);
           const match = pathname.match(/^\/managertournaments\/([^/]+)/);
-          const activeId = match && match[1] !== 'layout' && match[1] !== 'page' && match[1] !== 'async' && match[1] !== 'offline' ? match[1] : null;
+          const activeId = match && match[1] !== 'layout' && match[1] !== 'page' ? match[1] : null;
 
-          if (activeId && combined.some((t) => t.id === activeId)) {
+          if (activeId && activeId !== 'T001' && activeId !== 'groups') {
             setSelectedId(activeId);
             localStorage.setItem('last_managed_tournament_id', activeId);
           } else {
             const stored = localStorage.getItem('last_managed_tournament_id');
-            if (stored && combined.some((t) => t.id === stored)) {
+            if (stored && list.some((t) => t.id === stored)) {
               setSelectedId(stored);
-            } else if (combined.length > 0) {
-              setSelectedId(combined[0].id);
-              localStorage.setItem('last_managed_tournament_id', combined[0].id);
+            } else if (list.length > 0) {
+              setSelectedId(list[0].id);
+              localStorage.setItem('last_managed_tournament_id', list[0].id);
             } else {
               setSelectedId(null);
             }
           }
-        } catch {
-          setTournamentsList([]);
-          setSelectedId(null);
-        }
-      })();
+        })
+        .catch(() => setSelectedId(null));
     }
   }, [isAuthenticated, pathname]);
 
@@ -549,7 +480,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 text-slate-900">
         <ShieldAlert className="h-12 w-12 text-rose-500" />
         <p className="text-lg font-semibold">Access Denied</p>
-        <p className="text-sm text-slate-500">Redirecting…</p>
+        <p className="text-sm text-slate-500">RedirectingΓÇª</p>
       </div>
     );
   }
