@@ -1293,16 +1293,16 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             <button
               onClick={scanCurrentFace}
               disabled={cameraStatus !== 'ready' || isScanningFace || isPreparingSession}
-              className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-none disabled:from-slate-100 disabled:to-slate-100 disabled:text-slate-500 disabled:shadow-none disabled:border disabled:border-slate-200"
             >
               {isScanningFace ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Scanning... Hold Still</span>
                 </>
               ) : (
                 <>
-                  <Camera className="h-4 w-4 text-white" />
+                  <Camera className="h-4 w-4" />
                   <span>Scan / Accept Next Face</span>
                 </>
               )}
