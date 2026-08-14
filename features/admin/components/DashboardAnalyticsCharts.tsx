@@ -158,7 +158,7 @@ export function DashboardAnalyticsCharts({
           <div>
             <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-indigo-600" />
-              Thống Kê Giải Online Async Theo Tháng (Dữ Liệu Thực)
+              Thống Kê Giải Online Theo Tháng
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Chạm hoặc di chuột vào các mốc tháng để xem số lượng giải đấu thực tế.
@@ -269,7 +269,7 @@ export function DashboardAnalyticsCharts({
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500 font-semibold">
           <span className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-indigo-600" />
-            Số lượng giải Async do Admin tạo theo từng tháng
+            Số lượng giải do Admin tạo theo từng tháng
           </span>
           <span className="text-slate-400 font-mono">Tính toán thực tế 100%</span>
         </div>

@@ -107,13 +107,13 @@ function ChecklistRow({
           ? 'bg-emerald-500/5 border-emerald-500/20'
           : status === 'error'
           ? 'bg-rose-500/5 border-rose-500/20'
-          : 'bg-zinc-950/40 border-zinc-800/60 hover:border-zinc-700/60'
+          : 'bg-card border-border hover:border-orange-500/50'
       }`}
     >
       <div className="flex items-start gap-3 flex-1">
         <div
           className={`mt-0.5 shrink-0 ${
-            done ? 'text-emerald-400' : status === 'error' ? 'text-rose-400' : 'text-zinc-500'
+            done ? 'text-emerald-500' : status === 'error' ? 'text-rose-500' : 'text-muted-foreground'
           }`}
         >
           {done ? (
@@ -128,8 +128,8 @@ function ChecklistRow({
         </div>
         <div className="flex-1 space-y-2">
           <div>
-            <span className="block text-xs font-bold text-white uppercase tracking-wide">{label}</span>
-            <span className="text-[10px] text-zinc-500">{sublabel}</span>
+            <span className="block text-xs font-bold text-foreground uppercase tracking-wide">{label}</span>
+            <span className="text-[10px] text-muted-foreground">{sublabel}</span>
           </div>
           {children}
         </div>
@@ -146,8 +146,8 @@ function OpponentChecklistBadge({ done, label }: { done: boolean; label: string 
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
         done
-          ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-          : 'text-zinc-500 border-zinc-700/30 bg-zinc-800/30'
+          ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
+          : 'text-muted-foreground border-border bg-muted/40'
       }`}
     >
       {done ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
@@ -222,18 +222,18 @@ function WebRtcConnectStep({
   const currentStream = localStream ?? stream;
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 shadow-xl space-y-4">
+    <div className="bg-card/60 border border-border/80 rounded-3xl p-5 shadow-md space-y-4">
       <div className="flex items-center gap-2">
         <Wifi className="h-5 w-5 text-orange-500" />
-        <span className="text-sm font-bold text-white uppercase tracking-wider">WebRTC P2P Connection</span>
+        <span className="text-sm font-bold text-foreground uppercase tracking-wider">WebRTC P2P Connection</span>
       </div>
-      <p className="text-xs text-zinc-400">
+      <p className="text-xs text-muted-foreground">
         Establishing a direct peer-to-peer connection for live video supervision during the solve.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Local Video Stream — MY camera */}
-        <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden aspect-video relative">
+        <div className="bg-background border border-border/80 rounded-2xl overflow-hidden aspect-video relative">
           {currentStream ? (
             <video
               ref={videoRef}
@@ -244,11 +244,11 @@ function WebRtcConnectStep({
             />
           ) : cameraError ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 gap-2">
-              <AlertCircle className="h-6 w-6 text-rose-400" />
-              <p className="text-[10px] text-rose-300 leading-relaxed">{cameraError}</p>
+              <AlertCircle className="h-6 w-6 text-rose-500" />
+              <p className="text-[10px] text-rose-600 leading-relaxed">{cameraError}</p>
               <button
                 onClick={() => acquireStream(selectedDeviceId || undefined)}
-                className="px-2.5 py-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-lg uppercase cursor-pointer"
+                className="px-2.5 py-1.5 bg-rose-500 text-white text-[9px] font-bold rounded-lg uppercase cursor-pointer border-none"
               >
                 Retry
               </button>
@@ -256,12 +256,12 @@ function WebRtcConnectStep({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
-              <p className="text-[10px] text-zinc-500">Starting camera stream...</p>
+              <p className="text-[10px] text-muted-foreground">Starting camera stream...</p>
             </div>
           )}
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-zinc-950/70 rounded-full px-2 py-0.5 z-10">
-            <Camera className="h-3 w-3 text-emerald-400" />
-            <span className="text-[9px] font-bold text-emerald-400 uppercase">You</span>
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-background/70 rounded-full px-2 py-0.5 z-10">
+            <Camera className="h-3 w-3 text-emerald-500" />
+            <span className="text-[9px] font-bold text-emerald-500 uppercase">You</span>
           </div>
 
           {devices.length > 1 && (
@@ -273,11 +273,11 @@ function WebRtcConnectStep({
                   setSelectedDeviceId(devId);
                   acquireStream(devId);
                 }}
-                className="w-full bg-zinc-950/90 text-white text-[9px] font-black border border-zinc-800 rounded px-2 py-1 focus:outline-none focus:border-orange-500/50 cursor-pointer"
+                className="w-full bg-background/90 text-foreground text-[9px] font-black border border-border rounded px-2 py-1 focus:outline-none focus:border-orange-500/50 cursor-pointer"
               >
                 <option value="">Default Camera</option>
                 {devices.map((d, index) => (
-                  <option key={d.deviceId} value={d.deviceId} className="bg-zinc-950 text-white">
+                  <option key={d.deviceId} value={d.deviceId} className="bg-background text-foreground">
                     {d.label || `Camera ${index + 1}`}
                   </option>
                 ))}
@@ -287,7 +287,7 @@ function WebRtcConnectStep({
         </div>
 
         {/* Remote Video Stream — OPPONENT camera */}
-        <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl overflow-hidden aspect-video relative">
+        <div className="bg-background border border-border/80 rounded-2xl overflow-hidden aspect-video relative">
           {/* Video element always mounted so remoteStream can be attached immediately */}
           <video
             ref={remoteVideoRef}
@@ -412,8 +412,8 @@ export default function RoomSetupPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Stage 1 / 4
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">ROOM SETUP</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
+        <h2 className="text-3xl font-black text-foreground uppercase tracking-wider">ROOM SETUP</h2>
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Prepare your battle station. All items must be verified before the countdown starts.
         </p>
       </div>
@@ -427,18 +427,18 @@ export default function RoomSetupPage() {
 
 
           {currentStep === 'timer' && (
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 shadow-xl space-y-4">
+            <div className="bg-card/60 border border-border/80 rounded-3xl p-5 shadow-md space-y-4">
               <div className="flex items-center gap-2">
                 <QrCode className="h-5 w-5 text-orange-500" />
-                <span className="text-sm font-bold text-white uppercase tracking-wider">Step 3: Pair Mobile Timer</span>
+                <span className="text-sm font-bold text-foreground uppercase tracking-wider">Step 3: Pair Mobile Timer</span>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 Scan the QR code below using your mobile device to pair it as a Stackmat-compatible solve timer.
               </p>
               
               {state.qrSessionCode ? (
-                <div className="flex flex-col items-center justify-center p-6 bg-zinc-950 border border-zinc-800/60 rounded-2xl gap-4">
-                  <div className="bg-white p-3 rounded-2xl border border-zinc-800 shadow-inner">
+                <div className="flex flex-col items-center justify-center p-6 bg-background border border-border/60 rounded-2xl gap-4">
+                  <div className="bg-white p-3 rounded-2xl border border-border shadow-inner">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${state.qrSessionCode}:${isP1 ? 'P1' : 'P2'}`)}`}
                       alt="Session Pairing QR"
@@ -446,12 +446,12 @@ export default function RoomSetupPage() {
                     />
                   </div>
                   <div className="text-center space-y-1">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">Session Token</span>
-                    <span className="font-mono text-xs font-bold text-zinc-300">{state.qrSessionCode}</span>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">Session Token</span>
+                    <span className="font-mono text-xs font-bold text-foreground">{state.qrSessionCode}</span>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center p-8 bg-zinc-950 border border-zinc-800/60 rounded-2xl">
+                <div className="flex items-center justify-center p-8 bg-background border border-border/60 rounded-2xl">
                   <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
                 </div>
               )}
@@ -470,13 +470,13 @@ export default function RoomSetupPage() {
           )}
 
           {currentStep === 'completed' && (
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-8 shadow-xl text-center space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+            <div className="bg-card/60 border border-border/80 rounded-3xl p-8 shadow-md text-center space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-500">
                 <CheckCircle2 className="h-6 w-6 animate-pulse" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Setup Complete</h3>
-                <p className="text-xs text-zinc-400">
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Setup Complete</h3>
+                <p className="text-xs text-muted-foreground">
                   Waiting for your opponent to complete their readiness setup. Keep this window open.
                 </p>
               </div>
@@ -485,8 +485,8 @@ export default function RoomSetupPage() {
         </div>
 
         {/* Right checklist column (md:col-span-1) */}
-        <div className="md:col-span-1 bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 backdrop-blur-md shadow-xl flex flex-col gap-3">
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">My Progress</span>
+        <div className="md:col-span-1 bg-card/60 border border-border/80 rounded-3xl p-5 backdrop-blur-md shadow-md flex flex-col gap-3">
+          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">My Progress</span>
           
           <ChecklistRow
             icon={<Radio className="h-4 w-4" />}
@@ -517,9 +517,9 @@ export default function RoomSetupPage() {
           />
 
           {opponentState && (
-            <div className="mt-4 pt-4 border-t border-zinc-800/80 space-y-2">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">Opponent Progress</span>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase truncate">
+            <div className="mt-4 pt-4 border-t border-border/80 space-y-2">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">Opponent Progress</span>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase truncate">
                 {opponentState.displayName || 'Opponent'}
               </p>
               <div className="grid grid-cols-2 gap-1.5">
@@ -529,7 +529,7 @@ export default function RoomSetupPage() {
               </div>
               {opponentState.checklistPassed && (
                 <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
-                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">READY FOR BATTLE</span>
+                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">READY FOR BATTLE</span>
                 </div>
               )}
             </div>
@@ -539,7 +539,7 @@ export default function RoomSetupPage() {
 
       {/* Bottom status */}
       <div className="text-center">
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
           <Radio className="h-3.5 w-3.5 text-orange-500" />
           {allDone ? 'Waiting for opponent to complete setup...' : 'Complete all checklist items above'}
         </span>

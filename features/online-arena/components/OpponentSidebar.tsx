@@ -26,7 +26,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
   if (!state) {
     return (
-      <div className="w-80 bg-zinc-950/80 border-l border-zinc-800 p-6 flex flex-col justify-center items-center text-zinc-500 animate-pulse">
+      <div className="w-80 bg-card border-l border-border p-6 flex flex-col justify-center items-center text-muted-foreground/60 animate-pulse">
         <User className="h-12 w-12 mb-3" />
         <span className="text-xs uppercase font-semibold">Loading Opponent...</span>
       </div>
@@ -87,13 +87,13 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
   const isSetupPhase = ['ROOM_SETUP', 'WEBRTC_CONNECTING', 'MOBILE_TIMER_PAIRING', 'SCRAMBLE_CHECKING'].includes(state.phase);
 
   return (
-    <div className="w-80 bg-zinc-950/70 backdrop-blur-md border-l border-zinc-800/80 p-5 flex flex-col justify-between shrink-0 shadow-2xl relative">
+    <div className="w-80 bg-card border-l border-border p-5 flex flex-col justify-between shrink-0 shadow-md relative">
       <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
 
       {/* Opponent Profile Header */}
       <div className="space-y-4 relative z-10">
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-b border-border/80 pb-4">
+          <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
             <Activity className="h-4 w-4 text-orange-500" /> OPPONENT BOARD
           </h3>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor}`}>
@@ -106,11 +106,11 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
             <User className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-sm font-bold text-white truncate">
+            <h4 className="text-sm font-bold text-foreground truncate">
               {oppState.displayName || `Player_${oppState.userId.slice(0, 6)}`}
             </h4>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 mt-0.5">
-              <Award className="h-3.5 w-3.5 text-orange-400" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+              <Award className="h-3.5 w-3.5 text-orange-500" />
               <span>{oppElo !== null && oppElo !== undefined ? `${oppElo} ELO` : '1500 ELO'}</span>
             </div>
           </div>
@@ -118,7 +118,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
 
         {/* Live Camera Feed */}
-        <div className="aspect-video w-full rounded-2xl bg-zinc-900 border border-zinc-800/60 overflow-hidden relative group">
+        <div className="aspect-video w-full rounded-2xl bg-background border border-border/60 overflow-hidden relative group">
           {/* Actual remote video stream */}
           <video
             ref={remoteVideoRef}
@@ -130,24 +130,24 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
           {/* Placeholder when stream not yet received */}
           {!remoteStream && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
               {status === 'connected' ? (
                 // Connected but track hasn't arrived yet — very brief
                 <Video className="h-8 w-8 text-emerald-600 animate-pulse" />
               ) : (
-                <Video className="h-8 w-8 text-zinc-700 animate-pulse" />
+                <Video className="h-8 w-8 text-muted-foreground/40 animate-pulse" />
               )}
             </div>
           )}
 
           {/* Overlay: LIVE FEED badge + connection status */}
-          <div className="absolute inset-0 bg-black/20 flex flex-col justify-between p-3.5 z-10 pointer-events-none">
+          <div className="absolute inset-0 bg-black/5 flex flex-col justify-between p-3.5 z-10 pointer-events-none">
             <span className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-0.5 rounded-full w-fit border ${
               remoteStream
-                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
                 : status === 'connected'
-                ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 animate-pulse'
-                : 'text-zinc-500 bg-zinc-800/50 border-zinc-700/50'
+                ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 animate-pulse'
+                : 'text-muted-foreground/60 bg-muted/50 border-border/50'
             }`}>
               <Wifi className="h-3.5 w-3.5" />
               {remoteStream ? 'LIVE FEED' : status === 'connected' ? 'BUFFERING...' : 'WAITING...'}
@@ -155,30 +155,30 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
             {(remoteStream || status === 'connected') && (
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-[10px] text-zinc-300 font-bold">WebRTC Connected</span>
+                <span className="text-[10px] text-foreground/80 font-bold">WebRTC Connected</span>
               </div>
             )}
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Live Setup Status Indicators (Shown only during room setup phase) */}
         {isSetupPhase && (
           <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
-              <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Scramble</span>
+            <div className="bg-muted/60 border border-border/60 p-3 rounded-xl">
+              <span className="block text-[9px] text-muted-foreground uppercase font-black tracking-wider">Scramble</span>
               <span className={`text-xs font-bold ${
-                oppState.scrambleCheckStatus === 'PASSED' ? 'text-indigo-400' : 'text-zinc-400'
+                oppState.scrambleCheckStatus === 'PASSED' ? 'text-indigo-600' : 'text-muted-foreground'
               }`}>
                 {oppState.scrambleCheckStatus === 'PASSED' ? 'PASSED' : 'PENDING'}
               </span>
             </div>
 
-            <div className="bg-zinc-900/60 border border-zinc-800/60 p-3 rounded-xl">
-              <span className="block text-[9px] text-zinc-500 uppercase font-black tracking-wider">Ready State</span>
+            <div className="bg-muted/60 border border-border/60 p-3 rounded-xl">
+              <span className="block text-[9px] text-muted-foreground uppercase font-black tracking-wider">Ready State</span>
               <span className={`text-xs font-bold ${
-                oppState.checklistPassed || oppState.isReady ? 'text-emerald-400' : 'text-zinc-400'
+                oppState.checklistPassed || oppState.isReady ? 'text-emerald-600' : 'text-muted-foreground'
               }`}>
                 {oppState.checklistPassed || oppState.isReady ? 'READY' : 'SETTING UP'}
               </span>
@@ -188,36 +188,36 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
       </div>
 
       {/* Opponent Results Card */}
-      <div className="space-y-4 pt-4 border-t border-zinc-800/80 relative z-10">
+      <div className="space-y-4 pt-4 border-t border-border/80 relative z-10">
         <div>
-          <span className="block text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">
+          <span className="block text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">
             Opponent Time
           </span>
           {resultTime ? (
             <div className="flex items-baseline gap-2">
               <span className={`text-3xl font-black font-mono tracking-tight ${
-                oppState.resultStatus === 'DNF' ? 'text-rose-500' : 'text-white'
+                oppState.resultStatus === 'DNF' ? 'text-rose-500' : 'text-foreground'
               }`}>
                 {resultTime}
               </span>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase">SUBMITTED</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">SUBMITTED</span>
             </div>
           ) : (
-            <span className="text-lg font-black text-zinc-600 font-mono tracking-wider animate-pulse">
+            <span className="text-lg font-black text-muted-foreground/60 font-mono tracking-wider animate-pulse">
               SOLVING...
             </span>
           )}
         </div>
 
         {oppState.resultStatus === 'VALID' && (
-          <div className="bg-zinc-900/50 border border-zinc-800/50 p-3.5 rounded-2xl flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400">Finish Check</span>
+          <div className="bg-muted/50 border border-border/50 p-3.5 rounded-2xl flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Finish Check</span>
             <span className={`text-xs font-bold ${
               oppState.finishCheckStatus === 'PASSED'
-                ? 'text-emerald-400'
+                ? 'text-emerald-600'
                 : oppState.finishCheckStatus === 'FAILED'
-                ? 'text-rose-400'
-                : 'text-orange-400 animate-pulse'
+                ? 'text-rose-600'
+                : 'text-orange-500 animate-pulse'
             }`}>
               {oppState.finishCheckStatus === 'PASSED'
                 ? 'PASSED'

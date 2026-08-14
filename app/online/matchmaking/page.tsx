@@ -239,21 +239,22 @@ export default function MatchmakingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white relative flex flex-col justify-center items-center overflow-hidden pb-12">
+    <div className="min-h-screen bg-background text-foreground relative flex flex-col overflow-hidden">
       <Header />
 
-      {/* Cyber Grid background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.5_0.15_40_/_0.12),transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+      <main className="flex-1 flex flex-col justify-center items-center pb-12 relative z-10">
+        {/* Cyber Grid background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.5_0.15_40_/_0.06),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-      <div className="max-w-md w-full px-6 relative z-10 text-center">
+        <div className="max-w-md w-full px-6 relative z-10 text-center">
         {status === 'IDLE' && (
           <div className="space-y-4 animate-fade-in">
             <div className="relative h-20 w-20 mx-auto flex items-center justify-center">
               <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
             </div>
-            <h2 className="text-lg font-black text-white uppercase tracking-wider">CONNECTING TO ARENA</h2>
-            <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+            <h2 className="text-lg font-black text-foreground uppercase tracking-wider">CONNECTING TO ARENA</h2>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
               Establishing real-time connection with matchmaking server...
             </p>
           </div>
@@ -264,8 +265,8 @@ export default function MatchmakingPage() {
             <div className="relative h-20 w-20 mx-auto flex items-center justify-center">
               <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
             </div>
-            <h2 className="text-lg font-black text-white uppercase tracking-wider">RESUMING MATCH SESSION</h2>
-            <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+            <h2 className="text-lg font-black text-foreground uppercase tracking-wider">RESUMING MATCH SESSION</h2>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
               Redirecting you to the active duel arena...
             </p>
           </div>
@@ -284,27 +285,27 @@ export default function MatchmakingPage() {
             </div>
 
             <div className="space-y-3">
-              <h2 className="text-2xl font-black text-white uppercase tracking-wider">FINDING OPPONENT</h2>
+              <h2 className="text-2xl font-black text-foreground uppercase tracking-wider">FINDING OPPONENT</h2>
               {autoRequeuedNotice && (
-                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 max-w-sm mx-auto animate-fade-in">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-400" />
+                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 max-w-sm mx-auto animate-fade-in">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-500" />
                   <span>Đối thủ trước đó không xác nhận. Đang tiếp tục tìm đối thủ mới cho bạn...</span>
                 </div>
               )}
               {myElo !== null && (
-                <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3.5 py-1.5 rounded-full w-fit mx-auto animate-pulse">
+                <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-3.5 py-1.5 rounded-full w-fit mx-auto animate-pulse">
                   <Award className="h-4 w-4 text-orange-500" />
                   <span>YOUR RATING: {myElo.toLocaleString()} ELO</span>
                 </div>
               )}
-              <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
                 Matching with cubers near your skill rating. Ready your Stackmat and camera setup.
               </p>
             </div>
 
             <button
               onClick={handleCancelQueue}
-              className="px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white font-extrabold text-xs rounded-xl border border-zinc-800 transition-all uppercase tracking-widest"
+              className="px-8 py-3 bg-card hover:bg-muted text-muted-foreground hover:text-foreground font-extrabold text-xs rounded-xl border border-border transition-all uppercase tracking-widest cursor-pointer"
             >
               Cancel Matchmaking
             </button>
@@ -312,7 +313,7 @@ export default function MatchmakingPage() {
         )}
 
         {(status === 'MATCH_FOUND' || status === 'MATCH_CONFIRMING') && matchmakingInfo && (
-          <div className="bg-zinc-900/60 border border-zinc-800 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-2xl animate-fade-in text-center space-y-6">
+          <div className="bg-card/60 border border-border/80 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-md animate-fade-in text-center space-y-6">
             <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
             
             {/* Opponent Confirmation Overlay */}
@@ -320,11 +321,11 @@ export default function MatchmakingPage() {
               <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
                 Match Found
               </span>
-              <h2 className="text-xl font-black text-white uppercase tracking-wider">PREPARE DUEL</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-wider">PREPARE DUEL</h2>
             </div>
 
             {/* VS Card Layout */}
-            <div className="flex justify-between items-center bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-6 relative overflow-hidden shadow-inner">
+            <div className="flex justify-between items-center bg-background/80 border border-border/80 rounded-2xl p-6 relative overflow-hidden shadow-inner">
               {/* Background gradient hints */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 pointer-events-none" />
 
@@ -334,13 +335,13 @@ export default function MatchmakingPage() {
                   <User className="h-6 w-6" />
                 </div>
                 <div>
-                  <span className="block text-xs font-black text-white uppercase tracking-wider">You</span>
-                  <span className="inline-block text-[10px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
-                    {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1500 ELO'}
+                  <span className="block text-xs font-black text-foreground uppercase tracking-wider">You</span>
+                  <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                    {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1,500 ELO'}
                   </span>
                 </div>
                 {hasConfirmed && (
-                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
+                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
                     <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
                   </div>
                 )}
@@ -359,15 +360,15 @@ export default function MatchmakingPage() {
                   <User className="h-6 w-6" />
                 </div>
                 <div>
-                  <span className="block text-xs font-black text-zinc-300 uppercase tracking-wider truncate max-w-[120px]">
+                  <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
                     {matchmakingInfo.opponent?.displayName || 'Opponent'}
                   </span>
-                  <span className="inline-block text-[10px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                  <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
                     {matchmakingInfo.opponent?.rating || '1,500'} ELO
                   </span>
                 </div>
                 {matchmakingInfo.player2Confirmed && (
-                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
+                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
                     <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
                   </div>
                 )}
@@ -375,8 +376,8 @@ export default function MatchmakingPage() {
             </div>
 
             {/* Countdown bar */}
-            <div className="bg-zinc-950/60 border border-zinc-800/80 p-4 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2 text-zinc-400 text-xs">
+            <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs">
                 <Clock className="h-4 w-4 text-orange-500" />
                 <span>Confirmation deadline</span>
               </div>
@@ -389,10 +390,10 @@ export default function MatchmakingPage() {
             <button
               onClick={handleConfirm}
               disabled={hasConfirmed || isConfirmingApi}
-              className={`w-full font-black text-xs py-4 px-6 rounded-xl transition-all uppercase tracking-widest ${
+              className={`w-full font-black text-xs py-4 px-6 rounded-xl transition-all uppercase tracking-widest cursor-pointer ${
                 hasConfirmed
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/10'
+                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/25'
               }`}
             >
               {isConfirmingApi ? (
@@ -409,20 +410,20 @@ export default function MatchmakingPage() {
         )}
 
         {status === 'COOLDOWN' && (
-          <div className="bg-zinc-900/60 border border-zinc-800 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-2xl animate-fade-in text-center space-y-6">
+          <div className="bg-card/60 border border-border p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-md animate-fade-in text-center space-y-6">
             <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 via-transparent to-transparent pointer-events-none" />
             <div className="h-16 w-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-500">
               <Clock className="h-8 w-8 animate-pulse" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-xl font-black text-white uppercase tracking-wider">Queue Cooldown</h2>
-              <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+              <h2 className="text-xl font-black text-foreground uppercase tracking-wider">Queue Cooldown</h2>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
                 You have been temporarily suspended from the matchmaking queue for failing to confirm a match.
               </p>
             </div>
             {matchmakingInfo?.remainingSeconds !== undefined && (
-              <div className="bg-zinc-950/60 border border-zinc-800/80 p-4 rounded-xl flex items-center justify-between">
-                <span className="text-zinc-400 text-xs">Remaining Cooldown</span>
+              <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex items-center justify-between">
+                <span className="text-muted-foreground text-xs">Remaining Cooldown</span>
                 <span className="text-lg font-black font-mono text-rose-500">
                   {matchmakingInfo.remainingSeconds}s
                 </span>
@@ -430,7 +431,7 @@ export default function MatchmakingPage() {
             )}
             <button
               onClick={() => router.push('/online')}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-3.5 px-4 rounded-xl border border-zinc-700/80 transition-all uppercase tracking-widest"
+              className="w-full bg-muted hover:bg-muted/80 text-foreground text-xs font-bold py-3.5 px-4 rounded-xl border border-border transition-all uppercase tracking-widest cursor-pointer"
             >
               Return to Lobby
             </button>
@@ -443,21 +444,22 @@ export default function MatchmakingPage() {
             <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
             <div className="space-y-1.5 flex-1">
               <h4 className="text-xs font-bold text-rose-500 uppercase tracking-wide">Error encountered</h4>
-              <p className="text-[11px] text-zinc-400 leading-normal">{errorMsg || signalRError}</p>
+              <p className="text-[11px] text-muted-foreground leading-normal">{errorMsg || signalRError}</p>
               <button
                 onClick={() => {
                   setErrorMsg(null);
                   setStatus('QUEUED');
                   router.refresh();
                 }}
-                className="text-[10px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 mt-1 bg-transparent border-none p-0 cursor-pointer"
+                className="text-[10px] font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 mt-1 bg-transparent border-none p-0 cursor-pointer"
               >
                 <RotateCcw className="h-3 w-3" /> RETRY QUEUE
               </button>
             </div>
           </div>
         )}
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }

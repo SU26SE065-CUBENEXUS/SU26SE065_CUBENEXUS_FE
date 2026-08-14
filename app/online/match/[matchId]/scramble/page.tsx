@@ -75,21 +75,21 @@ function ScrambleDisplay({ sequence }: { sequence: string }) {
   const getMoveColor = (move: string) => {
     const face = move[0].toUpperCase();
     const colors: Record<string, string> = {
-      U: 'border-zinc-300/40 bg-zinc-100/10 text-zinc-100',
-      D: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-300',
-      F: 'border-green-400/40 bg-green-400/10 text-green-300',
-      B: 'border-blue-400/40 bg-blue-400/10 text-blue-300',
-      R: 'border-red-400/40 bg-red-400/10 text-red-300',
-      L: 'border-orange-400/40 bg-orange-400/10 text-orange-300',
+      U: 'border-zinc-300 bg-zinc-100 text-zinc-800',
+      D: 'border-yellow-400 bg-yellow-400/20 text-yellow-700',
+      F: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700',
+      B: 'border-blue-500/30 bg-blue-500/10 text-blue-700',
+      R: 'border-red-500/30 bg-red-500/10 text-red-700',
+      L: 'border-orange-500/30 bg-orange-500/10 text-orange-700',
     };
-    return colors[face] ?? 'border-zinc-600/40 bg-zinc-800/40 text-zinc-300';
+    return colors[face] ?? 'border-border bg-muted text-muted-foreground';
   };
 
   return (
-    <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-zinc-900/60 p-5 space-y-3">
+    <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-card p-5 space-y-3">
       <div className="flex items-center gap-2">
-        <Shuffle className="h-4 w-4 text-orange-400" />
-        <span className="text-xs font-black text-orange-400 uppercase tracking-widest">Your Scramble</span>
+        <Shuffle className="h-4 w-4 text-orange-500" />
+        <span className="text-xs font-black text-orange-500 uppercase tracking-widest">Your Scramble</span>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -103,8 +103,8 @@ function ScrambleDisplay({ sequence }: { sequence: string }) {
         ))}
       </div>
 
-      <p className="text-[10px] text-zinc-500 leading-relaxed">
-        Apply <span className="font-bold text-zinc-400">{moves.length} move{moves.length !== 1 ? 's' : ''}</span> to your cube starting from a <span className="font-bold text-zinc-400">solved state</span>, then scan any 5 faces.
+      <p className="text-[10px] text-muted-foreground leading-relaxed">
+        Apply <span className="font-bold text-foreground">{moves.length} move{moves.length !== 1 ? 's' : ''}</span> to your cube starting from a <span className="font-bold text-foreground">solved state</span>, then scan any 5 faces.
       </p>
     </div>
   );
@@ -124,25 +124,25 @@ function ColorSchemeGuide() {
   ];
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">
           Quy ước mặt & màu xuất phát (Solved State)
         </span>
-        <span className="text-[10px] text-zinc-500">Chuẩn CubeNexus</span>
+        <span className="text-[10px] text-muted-foreground">Chuẩn CubeNexus</span>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {scheme.map((item) => (
           <div
             key={item.code}
-            className="flex flex-col items-center p-2 rounded-xl bg-zinc-950/60 border border-zinc-800/80 text-center space-y-1"
+            className="flex flex-col items-center p-2 rounded-xl bg-muted border border-border text-center space-y-1"
           >
             <div className={`w-6 h-6 rounded-md border font-black text-xs flex items-center justify-center shadow-sm ${item.bg}`}>
               {item.code}
             </div>
-            <span className="text-[10px] font-bold text-zinc-200">{item.colorName}</span>
-            <span className="text-[9px] text-zinc-500 font-mono">({item.name})</span>
+            <span className="text-[10px] font-bold text-foreground">{item.colorName}</span>
+            <span className="text-[9px] text-muted-foreground font-mono">({item.name})</span>
           </div>
         ))}
       </div>
@@ -180,15 +180,15 @@ export default function ScrambleCheckPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Stage 2 / 4
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">SCRAMBLE CHECK</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
-          Apply the scramble below to your cube from a <strong className="text-zinc-300">solved state</strong>, then scan any 5 faces for verification.
+        <h2 className="text-3xl font-black text-foreground uppercase tracking-wider">SCRAMBLE CHECK</h2>
+        <p className="text-muted-foreground text-xs sm:text-sm">
+          Apply the scramble below to your cube from a <strong className="text-foreground">solved state</strong>, then scan any 5 faces for verification.
         </p>
 
         <button
           onClick={handleSkip}
           disabled={isSkipping}
-          className="mt-3 px-4 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white text-zinc-400 text-xs font-black rounded-xl uppercase transition-all tracking-wider inline-flex items-center gap-2 cursor-pointer"
+          className="mt-3 px-4 py-2 bg-card border border-border hover:bg-muted hover:text-foreground text-muted-foreground text-xs font-black rounded-xl uppercase transition-all tracking-wider inline-flex items-center gap-2 cursor-pointer"
         >
           {isSkipping ? 'Skipping...' : 'Dev: Skip Scramble Scan'}
         </button>
@@ -200,8 +200,8 @@ export default function ScrambleCheckPage() {
       {scramble ? (
         <ScrambleDisplay sequence={scramble} />
       ) : (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-center">
-          <p className="text-xs text-zinc-500">Loading scramble...</p>
+        <div className="rounded-2xl border border-border bg-card p-5 text-center">
+          <p className="text-xs text-muted-foreground">Loading scramble...</p>
         </div>
       )}
 
@@ -215,7 +215,7 @@ export default function ScrambleCheckPage() {
       />
 
       <div className="text-center">
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
           <Radio className="h-3.5 w-3.5 text-orange-500" /> Auto-evaluating center color and 3x3 face stability
         </span>
       </div>

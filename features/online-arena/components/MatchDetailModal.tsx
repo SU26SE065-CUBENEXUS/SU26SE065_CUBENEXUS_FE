@@ -255,7 +255,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
                 <div className="bg-white p-2 rounded-lg border border-zinc-200 space-y-0.5 shadow-sm">
                   <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">ELO Rating</span>
                   <p className="text-sm font-bold font-mono text-zinc-800">
-                    {matchItem.meEloAfter ?? matchItem.meEloBefore ?? '1200'}
+                    {matchItem.meEloAfter ?? matchItem.meEloBefore ?? '1000'}
                     {matchItem.eloChange !== 0 && (
                       <span className={`text-xs ml-1 font-semibold ${matchItem.eloChange > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         ({matchItem.eloChange > 0 ? `+${matchItem.eloChange}` : matchItem.eloChange})
@@ -292,7 +292,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
                 <div className="bg-white p-2 rounded-lg border border-zinc-200 space-y-0.5 shadow-sm">
                   <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">ELO Rating</span>
                   <p className="text-sm font-bold font-mono text-zinc-800">
-                    {matchItem.opponentEloAfter ?? matchItem.opponentEloBefore ?? '1200'}
+                    {matchItem.opponentEloAfter ?? matchItem.opponentEloBefore ?? '1000'}
                   </p>
                 </div>
               </div>

@@ -38,7 +38,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
     try {
       const { closeRegistration } = await import('@/lib/api/tournaments');
       const { closeOnlineAsyncRegistration, updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
-      
+
       let lastErr: any = null;
       try {
         if (targetTourToClose.isOnlineAsync) {
@@ -81,7 +81,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
     setErrorMessage(null);
     try {
       const { forceStartOnlineAsyncTournament, updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
-      
+
       let lastErr: any = null;
       try {
         await forceStartOnlineAsyncTournament(targetTourToStart.id);
@@ -121,7 +121,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
     try {
       const { completeTournament } = await import('@/lib/api/tournaments');
       const { updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
-      
+
       let lastErr: any = null;
 
       try {
@@ -217,9 +217,8 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                             <img src={t.bannerUrl} alt={t.name} className="w-full h-full object-cover" />
                           </div>
                         ) : (
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
-                            t.isOnlineAsync ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${t.isOnlineAsync ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                            }`}>
                             {t.name.slice(0, 2).toUpperCase()}
                           </div>
                         )}
@@ -229,7 +228,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           </p>
                           {t.isOnlineAsync ? (
                             <span className="inline-block mt-0.5 text-[10px] font-black px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 whitespace-nowrap">
-                              ⚡ Async A01 Single
+                              Async A01 Single
                             </span>
                           ) : t.maxParticipants ? (
                             <span className="inline-block mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/80 whitespace-nowrap">
@@ -293,7 +292,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     {/* Action Buttons Matching Custom Pill Styles */}
                     <td className="px-5 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
-                        {/* ⚡ Force Start Button */}
+                        {/*  Force Start Button */}
                         {canForceStart && (
                           <button
                             onClick={() => {
@@ -328,7 +327,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           </span>
                         )}
 
-                        {/* 🏆 Complete Tournament Button */}
+                        {/*  Complete Tournament Button */}
                         {canComplete && (
                           <button
                             onClick={() => {

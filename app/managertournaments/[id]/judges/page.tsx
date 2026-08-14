@@ -327,14 +327,14 @@ export default function JudgeManagementPage({
   const copyAllHandover = () => {
     if (handoverJudges.length === 0) return;
     const tournamentName = tournament?.name || 'CubeNexus Tournament';
-    let text = `🏆 [TÀI KHOẢN TRỌNG TÀI - ${tournamentName.toUpperCase()}]\n`;
+    let text = `[TÀI KHOẢN TRỌNG TÀI - ${tournamentName.toUpperCase()}]\n`;
     text += `----------------------------------------\n\n`;
 
     const checkInJudges = handoverJudges.filter((j) => j.roleCode === 'CHECKIN_JUDGE');
     const stationJudges = handoverJudges.filter((j) => j.roleCode !== 'CHECKIN_JUDGE');
 
     if (checkInJudges.length > 0) {
-      text += `🎯 [KHU VỰC CHECK-IN DESK]\n`;
+      text += `[KHU VỰC CHECK-IN DESK]\n`;
       checkInJudges.forEach((j, index) => {
         text += `${index + 1}. ${j.displayName}\n`;
         text += `   • Username: ${j.username}\n`;
@@ -344,7 +344,7 @@ export default function JudgeManagementPage({
     }
 
     if (stationJudges.length > 0) {
-      text += `⏹️ [KHU VỰC BÀN THI ĐẤU]\n`;
+      text += `[KHU VỰC BÀN THI ĐẤU]\n`;
       stationJudges.forEach((j, index) => {
         const stationText = j.assignedStationNumber ? `(Bàn ${j.assignedStationNumber})` : '';
         text += `${index + 1}. ${j.displayName} ${stationText}\n`;
@@ -354,7 +354,7 @@ export default function JudgeManagementPage({
     }
 
     text += `----------------------------------------\n`;
-    text += `📌 Đăng nhập tại hệ thống thi đấu CubeNexus.`;
+    text += `Đăng nhập tại hệ thống thi đấu CubeNexus.`;
 
     navigator.clipboard.writeText(text);
     setIsAllCopied(true);
@@ -614,11 +614,10 @@ export default function JudgeManagementPage({
                         <button
                           onClick={() => handleToggleJudgeStatus(j)}
                           title={(j.isActive ?? true) ? 'Khóa tài khoản trọng tài' : 'Mở khóa tài khoản'}
-                          className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${
-                            (j.isActive ?? true)
+                          className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${(j.isActive ?? true)
                               ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
                               : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
-                          }`}
+                            }`}
                         >
                           {(j.isActive ?? true) ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
                         </button>

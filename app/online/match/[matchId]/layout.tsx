@@ -96,10 +96,10 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
 
   if (isLoading && !state) {
     return (
-      <main className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.5_0.15_40_/_0.15),transparent_60%)]" />
+      <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.5_0.15_40_/_0.06),transparent_60%)]" />
         <Loader2 className="h-12 w-12 text-orange-500 animate-spin mb-4 relative z-10" />
-        <p className="text-sm font-bold text-zinc-400 tracking-wider uppercase relative z-10">
+        <p className="text-sm font-bold text-muted-foreground tracking-wider uppercase relative z-10">
           Entering Match Arena...
         </p>
       </main>
@@ -108,19 +108,19 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
 
   if (error && !state) {
     return (
-      <main className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.6_0.18_20_/_0.1),transparent_60%)]" />
-        <div className="bg-zinc-900/60 border border-zinc-800 p-8 rounded-3xl max-w-md text-center space-y-6 relative z-10 backdrop-blur-md">
+      <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.6_0.18_20_/_0.03),transparent_60%)]" />
+        <div className="bg-card/60 border border-border p-8 rounded-3xl max-w-md text-center space-y-6 relative z-10 backdrop-blur-md">
           <div className="h-14 w-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-500">
             <ShieldAlert className="h-7 w-7" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black text-white uppercase tracking-wider">Access Blocked</h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">{error}</p>
+            <h2 className="text-xl font-black text-foreground uppercase tracking-wider">Access Blocked</h2>
+            <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">{error}</p>
           </div>
           <button
             onClick={() => router.replace('/online')}
-            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold py-3 px-4 rounded-xl border border-zinc-700/80 transition-all uppercase tracking-widest"
+            className="w-full bg-muted hover:bg-muted/80 text-foreground text-xs font-bold py-3 px-4 rounded-xl border border-border transition-all uppercase tracking-widest cursor-pointer"
           >
             Return to Lobby
           </button>
@@ -152,11 +152,11 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
               connection,
             }}
           >
-            <main className="min-h-screen bg-zinc-950 text-white flex flex-col">
+            <main className="min-h-screen bg-background text-foreground flex flex-col">
               <Header />
               <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.5_0.15_40_/_0.06),transparent_50%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.5_0.15_40_/_0.03),transparent_50%)]" />
                   <div className="max-w-4xl mx-auto h-full flex flex-col justify-center relative z-10">
                     {children}
                   </div>

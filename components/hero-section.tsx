@@ -30,14 +30,14 @@ export function HeroSection() {
             </Button>
             <Button asChild size="lg" variant="outline" className="border-foreground/20 text-foreground hover:bg-foreground/5 font-semibold">
               <Link href="/tournaments">
-              <Play className="mr-2 h-4 w-4" />
-              HOW IT WORKS
+                <Play className="mr-2 h-4 w-4" />
+                HOW IT WORKS
               </Link>
             </Button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
+          {/* <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
             <div>
                 <p className="text-2xl font-bold text-red-500">52,840+</p>
               <p className="text-xs text-muted-foreground">Active Cubers</p>
@@ -50,7 +50,7 @@ export function HeroSection() {
                 <p className="text-2xl font-bold text-green-500">98</p>
               <p className="text-xs text-muted-foreground">Countries</p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Right - 3D Cube Image */}

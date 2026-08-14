@@ -30,7 +30,7 @@ export default function WaitingOpponentPage() {
   // Determine what opponent is doing
   let oppStatusDesc = 'Preparing battle station...';
   let oppPillText = 'PENDING';
-  let oppPillColor = 'text-zinc-500 bg-zinc-900 border-zinc-800';
+  let oppPillColor = 'text-muted-foreground bg-muted border-border';
 
   if (opponentState.resultStatus === 'PENDING') {
     oppStatusDesc = "Currently solving Rubik's cube...";
@@ -44,11 +44,11 @@ export default function WaitingOpponentPage() {
     if (opponentState.finishCheckStatus === 'PASSED') {
       oppStatusDesc = 'Opponent completed validation';
       oppPillText = 'VERIFIED';
-      oppPillColor = 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+      oppPillColor = 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20';
     } else if (opponentState.finishCheckStatus === 'FAILED') {
       oppStatusDesc = 'Opponent validation failed';
       oppPillText = 'FAILED';
-      oppPillColor = 'text-red-500 bg-red-500/10 border-red-500/20';
+      oppPillColor = 'text-rose-600 bg-rose-500/10 border-rose-500/20';
     } else {
       oppStatusDesc = "Scanning solved Rubik's cube faces...";
       oppPillText = 'SCANNING';
@@ -62,25 +62,25 @@ export default function WaitingOpponentPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Match State: Waiting
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">WAITING FOR OPPONENT</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
+        <h2 className="text-3xl font-black text-foreground uppercase tracking-wider">WAITING FOR OPPONENT</h2>
+        <p className="text-muted-foreground text-xs sm:text-sm">
           You have successfully completed all stages. Awaiting opponent's submission.
         </p>
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800/80 p-6 rounded-3xl backdrop-blur-md shadow-2xl space-y-6">
+      <div className="bg-card/60 border border-border/80 p-6 rounded-3xl backdrop-blur-md shadow-md space-y-6">
         {/* User own completed status */}
-        <div className="bg-zinc-950/60 border border-zinc-850 p-5 rounded-2xl flex items-center justify-between">
+        <div className="bg-background/60 border border-border p-5 rounded-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
             <div>
-              <span className="block text-xs font-bold text-white uppercase">Your Status</span>
-              <span className="text-[10px] text-zinc-500">
+              <span className="block text-xs font-bold text-foreground uppercase">Your Status</span>
+              <span className="text-[10px] text-muted-foreground">
                 {myState.resultStatus === 'DNF' ? 'DNF result submitted' : 'VALID solve time verified'}
               </span>
             </div>
           </div>
-          <span className="text-sm font-black font-mono text-white">
+          <span className="text-sm font-black font-mono text-foreground">
             {myState.resultStatus === 'DNF'
               ? 'DNF'
               : (() => {
@@ -93,13 +93,13 @@ export default function WaitingOpponentPage() {
         </div>
 
         {/* Opponent pending status card */}
-        <div className="border border-dashed border-zinc-850 bg-zinc-950/20 p-5 rounded-2xl flex items-center justify-between relative overflow-hidden">
+        <div className="border border-dashed border-border bg-background/20 p-5 rounded-2xl flex items-center justify-between relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-transparent pointer-events-none" />
           <div className="flex items-center gap-3 relative z-10">
             <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
             <div>
-              <span className="block text-xs font-bold text-white uppercase">Opponent Progress</span>
-              <span className="text-[10px] text-zinc-400">{oppStatusDesc}</span>
+              <span className="block text-xs font-bold text-foreground uppercase">Opponent Progress</span>
+              <span className="text-[10px] text-muted-foreground">{oppStatusDesc}</span>
             </div>
           </div>
           <span className={`text-[10px] font-extrabold uppercase border px-3 py-1 rounded-full relative z-10 ${oppPillColor}`}>
@@ -109,7 +109,7 @@ export default function WaitingOpponentPage() {
       </div>
 
       <div className="text-center">
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
           <Activity className="h-3.5 w-3.5 text-orange-500" /> Live camera stream viewing available in sidebar
         </span>
       </div>

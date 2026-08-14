@@ -68,7 +68,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
 
       // If switching matchId or re-starting, clean up previous recorder if any
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        try { mediaRecorderRef.current.stop(); } catch (e) {}
+        try { mediaRecorderRef.current.stop(); } catch (e) { }
       }
 
       statusRef.current = 'starting';
@@ -92,7 +92,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
         const videoTrack = activeStream.getVideoTracks()[0];
         if (videoTrack) {
           videoTrack.onended = () => {
-            console.warn('[REC] ⚠️ Video track ended during recording session!');
+            console.warn('[REC]  Video track ended during recording session!');
           };
         }
 
@@ -117,7 +117,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
           startedAtMsRef.current = Date.now();
           statusRef.current = 'recording';
           setStatus('recording');
-          console.log('[REC] ✅ Recording STARTED. mime:', recorder.mimeType, 'matchId:', matchId);
+          console.log('[REC]  Recording STARTED. mime:', recorder.mimeType, 'matchId:', matchId);
 
           let lastError: unknown;
           for (let attempt = 1; attempt <= 5 && !recordingMarkedRef.current; attempt += 1) {
@@ -170,7 +170,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
         blob = await fixWebmDuration(rawBlob, durationMs);
       }
 
-      console.log(`[REC] ✅ Handing off blob (${blob.size} bytes, ${durationSec}s) to MatchUploadQueueManager...`);
+      console.log(`[REC]  Handing off blob (${blob.size} bytes, ${durationSec}s) to MatchUploadQueueManager...`);
       void MatchUploadQueueManager.enqueueUpload({
         matchId: matchIdRef.current,
         blob,
@@ -178,7 +178,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
         durationSeconds: durationSec,
       });
     } else {
-      console.error(`[REC] ❌ Blob is EMPTY or matchId missing! blobSize=${rawBlob.size} matchId=${matchIdRef.current} — upload skipped.`);
+      console.error(`[REC]  Blob is EMPTY or matchId missing! blobSize=${rawBlob.size} matchId=${matchIdRef.current} — upload skipped.`);
     }
   }, []);
 
@@ -190,11 +190,11 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
         return;
       }
       if (mediaRecorderRef.current.state === 'inactive') {
-        console.warn('[REC] ⚠️ stopRecordingWithBuffer: recorder already INACTIVE — already stopped?');
+        console.warn('[REC]  stopRecordingWithBuffer: recorder already INACTIVE — already stopped?');
         return;
       }
       if (isBufferingRef.current) {
-        console.warn('[REC] ⚠️ stopRecordingWithBuffer: already buffering — duplicate call ignored.');
+        console.warn('[REC]  stopRecordingWithBuffer: already buffering — duplicate call ignored.');
         return;
       }
 
@@ -214,7 +214,7 @@ export function MatchLocalRecordingProvider({ children }: { children: ReactNode 
           mediaRecorderRef.current.stop();
           console.log('[REC] recorder.stop() called');
         } else {
-          console.error('[REC] ❌ Buffer timeout: recorder NULL or INACTIVE — cannot stop!');
+          console.error('[REC]  Buffer timeout: recorder NULL or INACTIVE — cannot stop!');
           isBufferingRef.current = false;
         }
       }, postSolveBufferMs);

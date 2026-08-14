@@ -154,11 +154,11 @@ export default function SolvingPage() {
   return (
     <div className="space-y-8 animate-fade-in max-w-xl mx-auto w-full text-center">
       <div className="space-y-2">
-        <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase animate-pulse">
+        <span className="bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase animate-pulse">
           SOLVING ACTIVE
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">SOLVING</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
+        <h2 className="text-3xl font-black text-foreground uppercase tracking-wider">SOLVING</h2>
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Solve the scramble on your Stackmat Timer. The solve time will automatically upload.
         </p>
       </div>
@@ -167,8 +167,8 @@ export default function SolvingPage() {
         <div
           className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border text-xs font-bold ${
             parseInt(countdownStr) < 30
-              ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
-              : 'border-orange-500/20 bg-orange-500/10 text-orange-400'
+              ? 'border-rose-500/30 bg-rose-500/10 text-rose-600'
+              : 'border-orange-500/20 bg-orange-500/10 text-orange-500'
           }`}
         >
           <span className="flex items-center gap-1.5">
@@ -180,42 +180,42 @@ export default function SolvingPage() {
       )}
 
       {/* Visual status panel */}
-      <div className="bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-3xl backdrop-blur-md shadow-2xl space-y-6 relative overflow-hidden">
+      <div className="bg-card/60 border border-border/80 p-8 rounded-3xl backdrop-blur-md shadow-md space-y-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 via-transparent to-transparent pointer-events-none" />
 
         <div className="space-y-2">
-          <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">
+          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
             {myState.resultStatus !== 'PENDING' ? 'OFFICIAL SOLVE TIME' : 'SOLVE TIME'}
           </span>
           {myState.resultStatus !== 'PENDING' && myState.timeMs !== null ? (
-            <span className="font-mono text-7xl font-black text-emerald-400 tracking-tighter block select-none animate-fade-in">
+            <span className="font-mono text-7xl font-black text-emerald-600 tracking-tighter block select-none animate-fade-in">
               {formatTime(myState.timeMs)}
             </span>
           ) : (
             <div className="py-2 flex flex-col items-center justify-center gap-1">
-              <span className="font-mono text-7xl font-black text-zinc-650 tracking-tighter block select-none animate-pulse">
+              <span className="font-mono text-7xl font-black text-muted-foreground/30 tracking-tighter block select-none animate-pulse">
                 --.--
               </span>
-              <span className="text-[9px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+              <span className="text-[9px] font-black text-orange-500 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
                 Awaiting Mobile Timer
               </span>
             </div>
           )}
         </div>
 
-        <div className="bg-zinc-950/60 border border-zinc-850 p-4 rounded-2xl flex items-center justify-center gap-3">
-          <Loader2 className="h-4.5 w-4.5 text-green-400 animate-spin" />
-          <span className="text-[10px] font-black text-zinc-400 tracking-wider uppercase">
+        <div className="bg-background/60 border border-border p-4 rounded-2xl flex items-center justify-center gap-3">
+          <Loader2 className="h-4.5 w-4.5 text-green-500 animate-spin" />
+          <span className="text-[10px] font-black text-muted-foreground tracking-wider uppercase">
             Awaiting Mobile Timer Submission...
           </span>
         </div>
 
         {/* Live stackmat connection indicator */}
-        <div className="flex items-center justify-center gap-2 pt-2 border-t border-zinc-850">
+        <div className="flex items-center justify-center gap-2 pt-2 border-t border-border">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
             myState.timerReady
-              ? 'text-emerald-400 border-emerald-500/25 bg-emerald-500/10'
-              : 'text-rose-400 border-rose-500/25 bg-rose-500/10'
+              ? 'text-emerald-600 border-emerald-500/25 bg-emerald-500/10'
+              : 'text-rose-600 border-rose-500/25 bg-rose-500/10'
           }`}>
             {myState.timerReady ? (
               <>
@@ -232,14 +232,14 @@ export default function SolvingPage() {
 
       {/* Developer simulation controls */}
       {isDev && myState.resultStatus === 'PENDING' && (
-        <div className="rounded-3xl border border-dashed border-zinc-800/80 bg-zinc-900/10 p-6 space-y-4 text-left animate-fade-in">
-          <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+        <div className="rounded-3xl border border-dashed border-border bg-card/10 p-6 space-y-4 text-left animate-fade-in">
+          <div className="flex items-center gap-2 border-b border-border/80 pb-3">
             <Cpu className="h-4.5 w-4.5 text-orange-500" />
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+            <h4 className="text-xs font-black text-foreground uppercase tracking-wider">
               [Dev Simulator] Solve Time Submission
             </h4>
           </div>
-          <p className="text-[11px] text-zinc-500 leading-normal">
+          <p className="text-[11px] text-muted-foreground leading-normal">
             Simulates a Stackmat Timer stop. Submits automatically to the API matching QR codes.
           </p>
 
@@ -247,14 +247,14 @@ export default function SolvingPage() {
             <button
               onClick={() => handleSimulateSubmit(false)}
               disabled={isSimulating}
-              className="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-850 hover:border-zinc-700/60 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+              className="flex-1 bg-card hover:bg-muted border border-border hover:border-border text-foreground font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSimulating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Simulate VALID Stop'}
             </button>
             <button
               onClick={() => handleSimulateSubmit(true)}
               disabled={isSimulating}
-              className="flex-1 bg-zinc-950 hover:bg-zinc-900 border border-rose-500/20 text-rose-400 font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+              className="flex-1 bg-muted hover:bg-muted/80 border border-rose-500/20 text-rose-600 font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSimulating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Simulate DNF Stop'}
             </button>
@@ -263,13 +263,13 @@ export default function SolvingPage() {
           <button
             onClick={handleMockFinish}
             disabled={isMockingFinish}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer border-none"
           >
             {isMockingFinish ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Dev: Mock Finish Solve'}
           </button>
 
           {simError && (
-            <div className="flex items-start gap-2 bg-rose-500/5 border border-rose-500/15 p-3 rounded-lg text-rose-400 text-[10px] leading-relaxed font-semibold">
+            <div className="flex items-start gap-2 bg-rose-500/5 border border-rose-500/25 p-3 rounded-lg text-rose-500 text-[10px] leading-relaxed font-semibold">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{simError}</span>
             </div>

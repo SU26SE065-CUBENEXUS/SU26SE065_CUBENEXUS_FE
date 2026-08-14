@@ -84,23 +84,23 @@ export default function ResultPage() {
       <div className="space-y-2">
         {isDraw ? (
           <div className="space-y-1">
-            <span className="bg-zinc-800/80 text-zinc-300 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase border border-zinc-700/50 inline-block">
+            <span className="bg-muted text-muted-foreground text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase border border-border inline-block">
               Draw Match
             </span>
-            <h2 className="text-3xl font-black text-white uppercase tracking-wider">DRAW GAME</h2>
+            <h2 className="text-3xl font-black text-foreground uppercase tracking-wider">DRAW GAME</h2>
           </div>
         ) : isWinner ? (
           <div className="space-y-1">
-            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
+            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
               Victory
             </span>
-            <h2 className="text-3xl font-black text-amber-400 uppercase tracking-wider">
+            <h2 className="text-3xl font-black text-amber-500 uppercase tracking-wider">
               VICTORY
             </h2>
           </div>
         ) : (
           <div className="space-y-1">
-            <span className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
+            <span className="bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[10px] font-bold tracking-wider px-2.5 py-0.5 rounded-md uppercase inline-block">
               Defeat
             </span>
             <h2 className="text-3xl font-black text-rose-500 uppercase tracking-wider">DEFEAT</h2>
@@ -109,19 +109,19 @@ export default function ResultPage() {
       </div>
 
       {/* Main Results card */}
-      <div className="bg-zinc-950 border border-zinc-800/80 p-6 sm:p-7 rounded-2xl backdrop-blur-md shadow-xl space-y-6 relative overflow-hidden text-left">
+      <div className="bg-card border border-border p-6 sm:p-7 rounded-2xl backdrop-blur-md shadow-md space-y-6 relative overflow-hidden text-left">
         <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
 
         {/* ELO Changes display */}
         {eloDelta !== null && eloAfter !== null && (
-          <div className="bg-zinc-950/60 border border-zinc-850 p-6 rounded-2xl flex flex-col items-center justify-center space-y-2 relative">
-            <span className="text-[9px] text-zinc-500 font-black tracking-widest uppercase">ELO Rating Impact</span>
+          <div className="bg-background/60 border border-border p-6 rounded-2xl flex flex-col items-center justify-center space-y-2 relative">
+            <span className="text-[9px] text-muted-foreground font-black tracking-widest uppercase">ELO Rating Impact</span>
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-black tracking-tight text-white">{eloAfter}</span>
+              <span className="text-3xl font-black tracking-tight text-foreground">{eloAfter}</span>
               <span className={`flex items-center gap-0.5 text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
                 eloDelta >= 0
-                  ? 'text-emerald-400 bg-emerald-500/10'
-                  : 'text-rose-400 bg-rose-500/10'
+                  ? 'text-emerald-600 bg-emerald-500/10'
+                  : 'text-rose-600 bg-rose-500/10'
               }`}>
                 {eloDelta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {eloDelta >= 0 ? `+${eloDelta}` : eloDelta} ELO
@@ -134,24 +134,24 @@ export default function ResultPage() {
         <div className="grid grid-cols-2 gap-4">
           {/* You card */}
           <div className={`p-5 rounded-2xl border text-left space-y-3 ${
-            isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-zinc-950/60 border-zinc-850'
+            isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
           }`}>
-            <span className="text-[9px] text-zinc-500 font-black tracking-wider uppercase block">You</span>
+            <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">You</span>
             <div className="space-y-1">
-              <span className="block text-2xl font-black font-mono text-white">
+              <span className="block text-2xl font-black font-mono text-foreground">
                 {formatTime(mePlayer.resultStatus, mePlayer.timeMs)}
               </span>
               <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                 mePlayer.resultStatus === 'DNF'
-                  ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                  : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                  ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                  : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
               }`}>
                 {mePlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
             </div>
-            <div className="text-[10px] text-zinc-500 font-semibold border-t border-zinc-900 pt-2 flex justify-between">
+            <div className="text-[10px] text-muted-foreground font-semibold border-t border-border pt-2 flex justify-between">
               <span>Finish Check:</span>
-              <span className={mePlayer.finishCheckStatus === 'PASSED' || mePlayer.finishCheckStatus === 'NOT_REQUIRED' ? 'text-emerald-400' : 'text-rose-400'}>
+              <span className={mePlayer.finishCheckStatus === 'PASSED' || mePlayer.finishCheckStatus === 'NOT_REQUIRED' ? 'text-emerald-500' : 'text-rose-500'}>
                 {mePlayer.finishCheckStatus}
               </span>
             </div>
@@ -159,26 +159,26 @@ export default function ResultPage() {
 
           {/* Opponent card */}
           <div className={`p-5 rounded-2xl border text-left space-y-3 ${
-            !isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-zinc-950/60 border-zinc-850'
+            !isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
           }`}>
-            <span className="text-[9px] text-zinc-500 font-black tracking-wider uppercase block">
+            <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">
               Player_{opponentPlayer.userId.slice(0, 6)}
             </span>
             <div className="space-y-1">
-              <span className="block text-2xl font-black font-mono text-white">
+              <span className="block text-2xl font-black font-mono text-foreground">
                 {formatTime(opponentPlayer.resultStatus, opponentPlayer.timeMs)}
               </span>
               <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                 opponentPlayer.resultStatus === 'DNF'
-                  ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                  : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                  ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                  : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
               }`}>
                 {opponentPlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
             </div>
-            <div className="text-[10px] text-zinc-500 font-semibold border-t border-zinc-900 pt-2 flex justify-between">
+            <div className="text-[10px] text-muted-foreground font-semibold border-t border-border pt-2 flex justify-between">
               <span>Finish Check:</span>
-              <span className={opponentPlayer.finishCheckStatus === 'PASSED' || opponentPlayer.finishCheckStatus === 'NOT_REQUIRED' ? 'text-emerald-400' : 'text-rose-400'}>
+              <span className={opponentPlayer.finishCheckStatus === 'PASSED' || opponentPlayer.finishCheckStatus === 'NOT_REQUIRED' ? 'text-emerald-500' : 'text-rose-500'}>
                 {opponentPlayer.finishCheckStatus}
               </span>
             </div>
@@ -187,14 +187,14 @@ export default function ResultPage() {
 
         {/* Video Recording Background Upload Status */}
         {hasRecordingStarted ? (
-          <div className="bg-zinc-950/80 border border-zinc-800 p-4 rounded-2xl flex items-center justify-between text-left">
+          <div className="bg-background border border-border p-4 rounded-2xl flex items-center justify-between text-left">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs font-black text-white uppercase tracking-wider">Match Replay Integrity</p>
-                <p className="text-[10px] text-zinc-400">
+                <p className="text-xs font-black text-foreground uppercase tracking-wider">Match Replay Integrity</p>
+                <p className="text-[10px] text-muted-foreground">
                   {uploadTask?.status === 'completed'
                     ? 'Local camera video saved and verified on server.'
                     : uploadTask?.status === 'uploading' || uploadTask?.status === 'finalizing'
@@ -208,35 +208,35 @@ export default function ResultPage() {
 
             <div>
               {uploadTask?.status === 'completed' ? (
-                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase flex items-center gap-1">
+                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 uppercase flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> Upload Complete
                 </span>
               ) : uploadTask?.status === 'uploading' || uploadTask?.status === 'finalizing' ? (
-                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 uppercase flex items-center gap-1">
+                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 uppercase flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" /> {uploadTask.progress}%
                 </span>
               ) : uploadTask?.status === 'failed' ? (
                 <button
                   onClick={() => matchId && MatchUploadQueueManager.retry(matchId)}
-                  className="text-[10px] font-bold px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 uppercase transition-all flex items-center gap-1"
+                  className="text-[10px] font-bold px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 uppercase transition-all flex items-center gap-1 cursor-pointer"
                 >
                   <AlertCircle className="h-3 w-3" /> Retry Upload
                 </button>
               ) : (
-                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase">
+                <span className="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 uppercase">
                   ✓ Upload Enqueued
                 </span>
               )}
             </div>
           </div>
         ) : (
-          <div className="bg-zinc-950/80 border border-zinc-800 p-4 rounded-2xl flex items-center gap-3 text-left">
-            <div className="h-8 w-8 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
-              <AlertCircle className="h-4 w-4 text-zinc-400" />
+          <div className="bg-background border border-border p-4 rounded-2xl flex items-center gap-3 text-left">
+            <div className="h-8 w-8 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-xs font-black text-zinc-300 uppercase tracking-wider">Recording Not Started</p>
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-xs font-black text-foreground uppercase tracking-wider">Recording Not Started</p>
+              <p className="text-[10px] text-muted-foreground">
                 Match ended before setup phase was completed. Camera recording starts only after setup is complete.
               </p>
             </div>
@@ -251,13 +251,13 @@ export default function ResultPage() {
       <div className="flex flex-col sm:flex-row gap-4 max-w-sm mx-auto">
         <button
           onClick={() => router.push('/online/matchmaking')}
-          className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-4 px-6 rounded-2xl shadow-xl shadow-orange-500/15 transition-all uppercase tracking-widest"
+          className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-4 px-6 rounded-2xl shadow-xl shadow-orange-500/15 transition-all uppercase tracking-widest cursor-pointer border-none"
         >
           <Swords className="h-4.5 w-4.5" /> Duel Again
         </button>
         <button
           onClick={() => router.push('/online')}
-          className="flex-1 flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 font-extrabold text-xs py-4 px-6 rounded-2xl transition-all uppercase tracking-widest"
+          className="flex-1 flex items-center justify-center gap-2 bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground font-extrabold text-xs py-4 px-6 rounded-2xl transition-all uppercase tracking-widest cursor-pointer"
         >
           <Home className="h-4.5 w-4.5" /> Return Lobby
         </button>
@@ -302,14 +302,14 @@ function ReplaySection({
       <div className="space-y-3">
         <button
           disabled
-          className="w-full py-3 px-4 bg-zinc-900/50 border border-zinc-800 text-zinc-500 font-black text-xs rounded-2xl uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
+          className="w-full py-3 px-4 bg-muted/50 border border-border text-muted-foreground font-black text-xs rounded-2xl uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
         >
-          <Video className="h-4 w-4 text-zinc-600" />
+          <Video className="h-4 w-4 text-muted-foreground/60" />
           🎬 Replay Unavailable (Setup Incomplete)
         </button>
         <button
           onClick={() => setIsReportModalOpen(true)}
-          className="w-full py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
+          className="w-full py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
         >
           <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud / Cheat
         </button>
@@ -378,18 +378,18 @@ function ReplaySection({
         <button
           onClick={fetchPlayback}
           disabled={isLoading}
-          className="flex-1 py-3 px-4 bg-zinc-900 hover:bg-zinc-800 border border-orange-500/30 hover:border-orange-500/60 text-orange-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/5"
+          className="flex-1 py-3 px-4 bg-card hover:bg-muted border border-orange-500/20 hover:border-orange-500/50 text-orange-500 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-orange-500/5"
         >
           {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
           ) : (
-            <Video className="h-4 w-4 text-orange-400" />
+            <Video className="h-4 w-4 text-orange-500" />
           )}
           {isLoading ? 'Fetching Replay...' : '🎬 Watch Replay'}
         </button>
         <button
           onClick={() => setIsReportModalOpen(true)}
-          className="flex-1 py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
+          className="flex-1 py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
         >
           <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud
         </button>

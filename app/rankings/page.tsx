@@ -19,6 +19,7 @@ import {
   Clock,
   Swords,
   Medal,
+  ArrowLeft,
 } from 'lucide-react';
 
 import {
@@ -41,6 +42,30 @@ export default function RankingsPage() {
   const [myProfile, setMyProfile] = useState<any>(null);
   const [recentMatches, setRecentMatches] = useState<OnlineMatchHistoryItemDto[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+
+  // Dynamic back routing state
+  const [fromParam, setFromParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      setFromParam(searchParams.get('from'));
+    }
+  }, []);
+
+  const handleBack = () => {
+    if (fromParam === 'arena') {
+      router.push('/online');
+    } else if (fromParam === 'header') {
+      router.push('/');
+    } else {
+      if (window.history.length > 1) {
+        router.back();
+      } else {
+        router.push('/');
+      }
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -161,7 +186,18 @@ export default function RankingsPage() {
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
       <Header />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-4">
+        {/* Back Button */}
+        <div className="flex items-center">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent hover:border-slate-200 rounded-xl transition-all cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Quay lại
+          </button>
+        </div>
+
         {/* Banner Section */}
         <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-3xl relative overflow-hidden shadow-2xs">
           <div className="absolute -top-12 -right-12 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -188,7 +224,7 @@ export default function RankingsPage() {
                 className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-6 py-5 text-xs tracking-wider shadow-md rounded-xl transition-all border-none uppercase flex items-center gap-2 cursor-pointer"
               >
                 <Link href="/online">
-                  Tham Gia Đấu Trường 3x3x3 <Play className="h-3.5 w-3.5 fill-current" />
+                  Tham Gia Đấu Trường Online <Play className="h-3.5 w-3.5 fill-current" />
                 </Link>
               </Button>
             </div>
@@ -339,9 +375,8 @@ export default function RankingsPage() {
                       <span className={match.isWinner ? 'text-emerald-600 font-bold' : match.isDraw ? 'text-amber-600 font-bold' : 'text-rose-500 font-bold'}>
                         {match.isWinner ? 'Chiến Thắng' : match.isDraw ? 'Hòa' : 'Thất Bại'}
                         {match.eloChange !== 0 && (
-                          <span className={`text-[10px] ml-1.5 px-1.5 py-0.2 rounded font-bold font-mono border ${
-                            match.eloChange > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
-                          }`}>
+                          <span className={`text-[10px] ml-1.5 px-1.5 py-0.2 rounded font-bold font-mono border ${match.eloChange > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                            }`}>
                             {match.eloChange > 0 ? `+${match.eloChange}` : match.eloChange}
                           </span>
                         )}
@@ -368,11 +403,10 @@ export default function RankingsPage() {
               <button
                 key={division.id}
                 onClick={() => setSelectedDivision(division.id)}
-                className={`px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer font-mono ${
-                  selectedDivision === division.id
+                className={`px-4 py-2 rounded-xl border text-xs font-bold transition cursor-pointer font-mono ${selectedDivision === division.id
                     ? 'border-amber-500 bg-amber-50 text-amber-700'
                     : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 {division.label}
               </button>
@@ -414,21 +448,19 @@ export default function RankingsPage() {
                         return (
                           <tr
                             key={player.rank}
-                            className={`hover:bg-slate-50 transition-colors ${
-                              isUser ? 'bg-amber-50/60 font-semibold' : ''
-                            }`}
+                            className={`hover:bg-slate-50 transition-colors ${isUser ? 'bg-amber-50/60 font-semibold' : ''
+                              }`}
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2.5">
                                 {player.rank <= 3 ? (
                                   <Trophy
-                                    className={`h-4.5 w-4.5 ${
-                                      player.rank === 1
+                                    className={`h-4.5 w-4.5 ${player.rank === 1
                                         ? 'text-amber-500'
                                         : player.rank === 2
-                                        ? 'text-slate-400'
-                                        : 'text-amber-700'
-                                    }`}
+                                          ? 'text-slate-400'
+                                          : 'text-amber-700'
+                                      }`}
                                   />
                                 ) : (
                                   <div className="w-4.5" />
