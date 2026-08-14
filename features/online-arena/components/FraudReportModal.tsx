@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ShieldAlert, Clock, AlertTriangle, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { createFraudReport, CreateFraudReportPayload } from '../api/onlineArenaApi';
 
@@ -29,8 +30,13 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const parseTimestampSeconds = (text: string): number => {
     const parts = text.split(':');
@@ -77,26 +83,26 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-zinc-950 border border-zinc-800/80 rounded-2xl w-full max-w-md shadow-2xl shadow-black/80 space-y-4 p-5 sm:p-6 relative text-left text-zinc-100">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-md shadow-2xl space-y-4 p-5 sm:p-6 relative text-left text-zinc-800">
         {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isSubmitting}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer z-10 disabled:opacity-50"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer z-10 disabled:opacity-50"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-3 pb-3 border-b border-zinc-800/80">
-          <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500">
+        <div className="flex items-center gap-3 pb-3 border-b border-zinc-200">
+          <div className="p-2.5 rounded-2xl bg-rose-50 border border-rose-250 text-rose-600">
             <ShieldAlert className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white uppercase tracking-wider">Báo cáo Gian lận Trận đấu</h3>
-            <p className="text-xs text-zinc-400">Gửi khiếu nại chi tiết kèm mốc thời gian để Trọng tài kiểm duyệt.</p>
+            <h3 className="text-lg font-black text-zinc-900 uppercase tracking-wider">Báo cáo Gian lận Trận đấu</h3>
+            <p className="text-xs text-zinc-500 font-semibold">Gửi khiếu nại chi tiết kèm mốc thời gian để Trọng tài kiểm duyệt.</p>
           </div>
         </div>
 
@@ -104,8 +110,8 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
           <div className="py-6 text-center space-y-4 animate-fade-in">
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-100 uppercase">Đã gửi Báo cáo Thành công!</h4>
-              <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+              <h4 className="text-base font-bold text-zinc-900 uppercase">Đã gửi Báo cáo Thành công!</h4>
+              <p className="text-xs text-zinc-500 max-w-xs mx-auto font-medium">
                 Báo cáo đã được chuyển đến Ban Quản Trị &amp; Trọng tài. Kết quả xử lý sẽ được cập nhật sớm nhất.
               </p>
             </div>
@@ -120,13 +126,13 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 1. Fraud Type */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-300">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750">
                 1. Loại hành vi gian lận (Fraud Type)
               </label>
               <select
                 value={fraudType}
                 onChange={(e) => setFraudType(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
               >
                 {FRAUD_TYPES.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -138,25 +144,25 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
 
             {/* 2. Timestamp */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750 flex items-center justify-between">
                 <span>2. Mốc thời gian xuất hiện gian lận (Timestamp)</span>
-                <span className="text-[10px] text-orange-400 font-mono">Định dạng MM:SS</span>
+                <span className="text-[10px] text-orange-600 font-mono">Định dạng MM:SS</span>
               </label>
               <div className="relative">
-                <Clock className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
+                <Clock className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
                   placeholder="01:15"
                   value={timestampText}
                   onChange={(e) => setTimestampText(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                 />
               </div>
             </div>
 
             {/* 3. Description */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-300">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750">
                 3. Chi tiết mô tả (Description)
               </label>
               <textarea
@@ -164,13 +170,13 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 placeholder="Ví dụ: Đối thủ giấu Rubik bên dưới mép bàn từ phút 01:15 đến 01:22..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
               />
             </div>
 
             {/* 4. Optional Evidence URL */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-300 flex items-center justify-between">
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750 flex items-center justify-between">
                 <span>4. Ảnh minh chứng bổ sung (Optional Screenshot URL)</span>
                 <span className="text-[10px] text-zinc-500 font-semibold">Tùy chọn</span>
               </label>
@@ -179,14 +185,14 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 placeholder="https://..."
                 value={evidenceScreenshotUrl}
                 onChange={(e) => setEvidenceScreenshotUrl(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
               />
             </div>
 
             {/* Error Banner */}
             {error && (
-              <div className="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-rose-300 text-xs font-semibold">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
+              <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-700 text-xs font-semibold">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
                 <span>{error}</span>
               </div>
             )}
@@ -197,14 +203,14 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="w-1/3 py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50"
+                className="w-1/3 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-2/3 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-black text-xs rounded-xl uppercase tracking-wider shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-2/3 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-black text-xs rounded-xl uppercase tracking-wider shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border-none"
               >
                 {isSubmitting ? (
                   <>
@@ -220,6 +226,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

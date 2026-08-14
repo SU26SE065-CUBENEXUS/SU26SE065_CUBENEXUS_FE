@@ -201,14 +201,14 @@ export function OnlineMatchHistory() {
                     : 'bg-card hover:bg-card/90 border-border/80 hover:border-orange-500/50';
 
             const barStyle = isGuilty
-              ? 'bg-gradient-to-b from-rose-500 via-rose-600 to-rose-700 w-2'
+              ? 'bg-rose-500 w-2'
               : isInnocent
-                ? 'bg-gradient-to-b from-emerald-400 via-teal-500 to-emerald-600 w-2'
+                ? 'bg-emerald-500 w-2'
                 : isInconclusive
-                  ? 'bg-gradient-to-b from-amber-400 via-orange-500 to-amber-600 w-2'
+                  ? 'bg-amber-500 w-2'
                   : match.isWinner
-                    ? 'bg-gradient-to-b from-emerald-400 to-teal-500 w-1.5'
-                    : 'bg-gradient-to-b from-rose-500 to-purple-600 w-1.5';
+                    ? 'bg-emerald-500 w-1.5'
+                    : 'bg-rose-500 w-1.5';
 
             return (
               <div
@@ -223,10 +223,10 @@ export function OnlineMatchHistory() {
                 <div className="flex items-center gap-4 w-full md:w-auto">
                   <div
                     className={`w-28 h-12 rounded-xl border text-center font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 shadow-sm shrink-0 ${match.isWinner
-                        ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-250'
                         : match.isDraw
                           ? 'bg-muted text-muted-foreground border-border'
-                          : 'bg-gradient-to-br from-rose-500/10 via-purple-500/5 to-rose-500/10 text-rose-600 border-rose-500/30'
+                          : 'bg-rose-50 text-rose-600 border-rose-250'
                       }`}
                   >
                     <span className="flex items-center gap-1 font-black">

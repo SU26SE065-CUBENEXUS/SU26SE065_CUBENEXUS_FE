@@ -87,8 +87,8 @@ export default function CountdownPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Stage 3 / 4
         </span>
-        <h2 className="text-2xl font-black text-white uppercase tracking-wider">PREPARE TO SOLVE</h2>
-        <p className="text-zinc-500 text-xs">Hands on stackmat. Cube on inspection mat.</p>
+        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-wider">PREPARE TO SOLVE</h2>
+        <p className="text-slate-500 text-xs font-semibold">Hands on stackmat. Cube on inspection mat.</p>
       </div>
 
       {/* Gigantic animated countdown circle */}
@@ -96,16 +96,16 @@ export default function CountdownPage() {
         <div className="absolute inset-0 rounded-full border-[6px] border-orange-500/10" />
         <div className="absolute inset-0 rounded-full border-[6px] border-t-orange-500 border-r-orange-500/30 border-b-orange-500/10 border-l-orange-500/40 animate-spin" />
 
-        <div className="h-44 w-44 rounded-full bg-zinc-900 border border-zinc-800 shadow-2xl flex flex-col items-center justify-center relative">
+        <div className="h-44 w-44 rounded-full bg-white border border-slate-200 shadow-2xl flex flex-col items-center justify-center relative">
           <span
             className={`font-mono font-black tracking-tighter select-none ${
-              secondsLeft === 0 ? 'text-5xl text-emerald-400 animate-bounce' : 'text-8xl text-white'
+              secondsLeft === 0 ? 'text-5xl text-emerald-600 animate-bounce' : 'text-8xl text-slate-900'
             }`}
           >
             {displayVal}
           </span>
           {secondsLeft > 0 && (
-            <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase mt-1 flex items-center gap-1">
+            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-1 flex items-center gap-1">
               <Timer className="h-3.5 w-3.5" /> SECONDS
             </span>
           )}
@@ -113,29 +113,29 @@ export default function CountdownPage() {
       </div>
 
       {/* Recording status panel */}
-      <div className="w-full max-w-sm bg-zinc-900/60 border border-zinc-800/80 rounded-2xl px-4 py-3 space-y-2">
-        <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest text-left">Video Recording Status</p>
+      <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl px-5 py-4 shadow-sm space-y-3">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Video Recording Status</p>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {recordingStatus === 'recording' || recordingStatus === 'buffering' ? (
               <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
             ) : recordingStatus === 'finished' ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             ) : recordingStatus === 'error' ? (
-              <AlertCircle className="h-4 w-4 text-rose-400" />
+              <AlertCircle className="h-4 w-4 text-rose-500" />
             ) : (
-              <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
+              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
             )}
             <span
               className={`text-xs font-bold uppercase ${
                 recordingStatus === 'recording' || recordingStatus === 'buffering'
-                  ? 'text-rose-400'
+                  ? 'text-rose-600'
                   : recordingStatus === 'finished'
-                  ? 'text-emerald-400'
+                  ? 'text-emerald-600'
                   : recordingStatus === 'error'
-                  ? 'text-rose-400'
-                  : 'text-zinc-400'
+                  ? 'text-rose-600'
+                  : 'text-slate-500'
               }`}
             >
               {recordingStatus === 'recording' || recordingStatus === 'buffering' ? '● ' : ''}
@@ -149,7 +149,7 @@ export default function CountdownPage() {
               onClick={() => {
                 if (matchId) void startRecording(matchId);
               }}
-              className="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xl uppercase"
+              className="px-3 py-1 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xl uppercase border-none cursor-pointer"
             >
               Retry
             </button>
@@ -157,33 +157,33 @@ export default function CountdownPage() {
         </div>
 
         {recordingError && (
-          <p className="text-[10px] text-rose-300 text-left">{recordingError}</p>
+          <p className="text-[10px] text-rose-500 text-left font-medium">{recordingError}</p>
         )}
 
         {/* Both recordings status */}
         <div className="flex gap-2 pt-1">
           <span
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
               myRecording
-                ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                : 'text-zinc-500 border-zinc-700/30 bg-zinc-800/30'
+                ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+                : 'text-slate-400 border-slate-200 bg-slate-50'
             }`}
           >
             {myRecording ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
             You
           </span>
           <span
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
               opponentRecording
-                ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
-                : 'text-zinc-500 border-zinc-700/30 bg-zinc-800/30'
+                ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+                : 'text-slate-400 border-slate-200 bg-slate-50'
             }`}
           >
             {opponentRecording ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
             Opponent
           </span>
           {myRecording && opponentRecording && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border text-orange-400 border-orange-500/30 bg-orange-500/10 animate-pulse">
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border text-orange-700 border-orange-200 bg-orange-50 animate-pulse">
               Transition imminent
             </span>
           )}
@@ -191,7 +191,7 @@ export default function CountdownPage() {
       </div>
 
       <div className="space-y-1">
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
           <Sparkles className="h-4 w-4 text-orange-500" /> Synchronization countdown active
         </span>
       </div>

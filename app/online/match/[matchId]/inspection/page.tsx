@@ -59,8 +59,8 @@ export default function InspectionPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
           Stage 4 / 4
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">INSPECTION</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
+        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-wider">INSPECTION</h2>
+        <p className="text-slate-500 text-xs sm:text-sm font-semibold">
           Inspect your Rubik's cube according to the scramble sequence shown below.
         </p>
       </div>
@@ -71,27 +71,27 @@ export default function InspectionPage() {
           secondsLeft <= 3 ? 'border-rose-500 animate-ping' : 'border-orange-500/40 animate-pulse'
         }`} />
 
-        <div className="h-44 w-44 rounded-full bg-zinc-900 border border-zinc-800 shadow-2xl flex flex-col items-center justify-center">
+        <div className="h-44 w-44 rounded-full bg-white border border-slate-200 shadow-2xl flex flex-col items-center justify-center">
           <span className={`font-mono font-black text-7xl tracking-tighter ${
-            secondsLeft <= 3 ? 'text-rose-500 animate-bounce' : 'text-white'
+            secondsLeft <= 3 ? 'text-rose-500 animate-bounce' : 'text-slate-900'
           }`}>
             {secondsLeft}
           </span>
-          <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase mt-1 flex items-center gap-1">
+          <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-1 flex items-center gap-1">
             <Timer className="h-3.5 w-3.5" /> SECONDS
           </span>
         </div>
       </div>
 
       {/* Scramble Display Card */}
-      <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-6 backdrop-blur-md shadow-xl space-y-4">
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
         <span className="block text-[10px] text-orange-500 font-black tracking-widest uppercase">
           Scramble Sequence
         </span>
-        <p className="font-mono text-lg sm:text-xl font-bold tracking-wide text-white leading-relaxed select-all">
+        <p className="font-mono text-lg sm:text-xl font-bold tracking-wide text-slate-800 leading-relaxed select-all">
           {state?.scrambleSequence || 'U R F2 L B2 D2 R2 ...'}
         </p>
-        <span className="block text-[9px] text-zinc-500 font-bold">
+        <span className="block text-[9px] text-slate-400 font-bold">
           * Tip: Triple click the scramble to select and copy.
         </span>
       </div>

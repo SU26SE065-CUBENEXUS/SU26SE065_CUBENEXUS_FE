@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowDownRight, Loader2, Sparkles, ShieldAlert } from 'lucide-react';
 import { SplitScreenReplayPlayer } from './SplitScreenReplayPlayer';
 import { FraudReportModal } from './FraudReportModal';
@@ -19,6 +20,11 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [reportDetail, setReportDetail] = useState<MatchFraudReportStatusDto | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen || !matchItem) {
@@ -65,7 +71,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
     };
   }, [isOpen, matchItem]);
 
-  if (!isOpen || !matchItem) return null;
+  if (!isOpen || !matchItem || !mounted) return null;
 
   const formatTimeStr = (ms?: number, isDnf?: boolean) => {
     if (isDnf) return 'DNF';
@@ -82,7 +88,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
     ? Math.abs(matchItem.eloChange)
     : -Math.abs(matchItem.eloChange);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6">
         <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-3xl shadow-2xl space-y-5 p-5 sm:p-6 relative text-left text-zinc-800 my-4 sm:my-6">
@@ -322,6 +328,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

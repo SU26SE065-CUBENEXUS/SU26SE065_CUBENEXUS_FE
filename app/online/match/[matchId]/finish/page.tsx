@@ -69,8 +69,8 @@ export default function FinishCheckPage() {
         <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase animate-pulse">
           SOLVE VERIFICATION ACTIVE
         </span>
-        <h2 className="text-3xl font-black text-white uppercase tracking-wider">FINISH CHECK</h2>
-        <p className="text-zinc-400 text-xs sm:text-sm">
+        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-wider">FINISH CHECK</h2>
+        <p className="text-slate-500 text-xs sm:text-sm font-semibold">
           Scan the 6 solved faces of your Rubik's cube to verify the solve validity using AI.
         </p>
       </div>
@@ -82,25 +82,25 @@ export default function FinishCheckPage() {
       />
 
       {retryWarning && (
-        <div className="animate-fade-in rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
+        <div className="animate-fade-in rounded-2xl border border-amber-500/35 bg-amber-55 p-5 space-y-3">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-black text-amber-400 uppercase tracking-wider">
+              <p className="text-sm font-black text-amber-700 uppercase tracking-wider">
                 RE-SCAN REQUIRED
               </p>
-              <p className="text-xs text-amber-300/80 leading-relaxed">
+              <p className="text-xs text-amber-800 leading-relaxed font-semibold">
                 {retryWarning}
               </p>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
+              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                 This may be caused by lighting conditions, camera angle, or cube orientation.
-                Make sure all 9 stickers on each face are clearly visible and press <strong className="text-zinc-400">Scan</strong> again.
+                Make sure all 9 stickers on each face are clearly visible and press <strong className="text-slate-700">Scan</strong> again.
               </p>
             </div>
           </div>
           <button
             onClick={() => setRetryWarning(null)}
-            className="text-[10px] font-bold text-amber-400/60 hover:text-amber-400 transition-colors uppercase tracking-widest"
+            className="text-[10px] font-bold text-amber-600 hover:text-amber-800 transition-colors uppercase tracking-widest border-none bg-transparent cursor-pointer"
           >
             ✕ Dismiss
           </button>
@@ -108,33 +108,33 @@ export default function FinishCheckPage() {
       )}
 
       <div className="text-center">
-        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse">
           <Radio className="h-3.5 w-3.5 text-orange-500" /> AI evaluating final solved face grids
         </span>
       </div>
 
       {isDev && (
-        <div className="rounded-3xl border border-dashed border-zinc-800/80 bg-zinc-900/10 p-6 space-y-4 text-left animate-fade-in">
-          <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-3">
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-6 space-y-4 text-left animate-fade-in">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <Cpu className="h-4.5 w-4.5 text-orange-500" />
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+            <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
               [Dev Simulator] Solve verification bypass
             </h4>
           </div>
-          <p className="text-[11px] text-zinc-500 leading-normal">
+          <p className="text-[11px] text-slate-500 leading-normal font-medium">
             Simulates a successful AI face scan verification of the solved Rubik's cube, passing the audit checklist.
           </p>
 
           <button
             onClick={handleMockFinish}
             disabled={isMocking}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-[10px] py-3 px-4 rounded-xl transition-all uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer border-none"
           >
             {isMocking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Dev: Mock Finish Scan Pass'}
           </button>
 
           {mockError && (
-            <div className="flex items-start gap-2 bg-rose-500/5 border border-rose-500/15 p-3 rounded-lg text-rose-400 text-[10px] leading-relaxed font-semibold">
+            <div className="flex items-start gap-2 bg-rose-50 border border-rose-200 p-3 rounded-lg text-rose-600 text-[10px] leading-relaxed font-semibold">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{mockError}</span>
             </div>

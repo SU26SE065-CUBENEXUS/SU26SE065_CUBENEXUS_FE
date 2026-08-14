@@ -1232,7 +1232,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
         
         {/* Left Side: Large Clean Camera Viewport (7 cols out of 12) */}
         <div className="lg:col-span-7 flex flex-col space-y-3">
-          <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-2xl backdrop-blur-md">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 shadow-2xl">
             {/* Camera Viewport 4:3 */}
             <div className="relative aspect-[4/3] w-full bg-black overflow-hidden">
               <video
@@ -1276,24 +1276,24 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
         <div className="lg:col-span-5 flex flex-col space-y-4">
           
           {/* Controls Panel Card */}
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-5 shadow-xl space-y-4 backdrop-blur-md">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                   Match Scanner Controls
                 </h3>
-                <span className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-orange-400">
+                <span className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-orange-600">
                   {validationType} MODE
                 </span>
               </div>
-              <p className="mt-1 text-xs text-orange-400 font-medium leading-relaxed">{statusMessage}</p>
+              <p className="mt-1 text-xs text-orange-600 font-semibold leading-relaxed">{statusMessage}</p>
             </div>
 
             {/* Primary SCAN / ACCEPT Button */}
             <button
               onClick={scanCurrentFace}
               disabled={cameraStatus !== 'ready' || isScanningFace || isPreparingSession}
-              className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-500 disabled:shadow-none"
+              className="w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
               {isScanningFace ? (
                 <>
@@ -1313,60 +1313,60 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
               <button
                 onClick={handleStartCamera}
                 disabled={cameraStatus === 'starting' || isScanningFace}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 hover:border-zinc-600 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
               >
-                <Camera className="h-4 w-4 text-orange-400 shrink-0" />
+                <Camera className="h-4 w-4 text-orange-500 shrink-0" />
                 <span>{cameraStatus === 'starting' ? 'Starting...' : 'Start Camera'}</span>
               </button>
 
               <button
                 onClick={handleStartSession}
                 disabled={isPreparingSession || isScanningFace}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-3.5 py-3 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-250 bg-emerald-50 px-3.5 py-3 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100/80 disabled:opacity-50"
               >
-                <Play className="h-4 w-4 text-emerald-400 shrink-0" />
+                <Play className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>{isPreparingSession ? 'Preparing...' : 'Start Session'}</span>
               </button>
 
               <button
                 onClick={handleLoadExistingSession}
                 disabled={isPreparingSession || isScanningFace}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
               >
-                <FolderOpen className="h-4 w-4 text-zinc-400 shrink-0" />
+                <FolderOpen className="h-4 w-4 text-slate-500 shrink-0" />
                 <span>Load Session</span>
               </button>
 
               <button
                 onClick={handleRetryFace}
                 disabled={!session || isScanningFace}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
               >
-                <RefreshCw className="h-4 w-4 text-zinc-400 shrink-0" />
+                <RefreshCw className="h-4 w-4 text-slate-500 shrink-0" />
                 <span>Retry Face</span>
               </button>
 
               <button
                 onClick={handleReset}
                 disabled={isScanningFace}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
               >
                 <span>Reset Session</span>
               </button>
 
               <button
                 onClick={handleStopCamera}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-3 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
               >
-                <Square className="h-4 w-4 text-rose-400 shrink-0" />
+                <Square className="h-4 w-4 text-rose-500 shrink-0" />
                 <span>Stop Camera</span>
               </button>
             </div>
           </div>
 
           {/* Realtime Metrics Grid Card */}
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-3 shadow-xl backdrop-blur-md">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Scan Status & Metrics</h4>
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3 shadow-sm">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Scan Status & Metrics</h4>
             <div className="grid grid-cols-2 gap-2.5 text-xs">
               <StatusItem
                 label="Target"
@@ -1386,17 +1386,17 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
           </div>
 
           {/* Remaining Center Colors Card */}
-          <div className="rounded-3xl border border-orange-500/20 bg-orange-500/5 p-4 space-y-2">
+          <div className="rounded-3xl border border-orange-200 bg-orange-50/50 p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <strong className="text-xs font-extrabold uppercase tracking-wider text-white">Remaining Colors</strong>
-              <span className="text-[10px] font-bold text-orange-400 uppercase">
+              <strong className="text-xs font-extrabold uppercase tracking-wider text-orange-950">Remaining Colors</strong>
+              <span className="text-[10px] font-bold text-orange-600 uppercase">
                 {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'All 5 Captured'}
               </span>
             </div>
-            <p className="text-xs text-zinc-200 font-semibold">
+            <p className="text-xs text-orange-850 font-bold">
               {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 center colors captured.'}
             </p>
-            <p className="text-[11px] text-zinc-400 leading-relaxed">{scannerGuidance}</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">{scannerGuidance}</p>
           </div>
         </div>
       </div>
@@ -1404,8 +1404,8 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       {/* Bottom Section: 5 Captured Face Cards Slots */}
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between px-1">
-          <h4 className="text-xs font-black uppercase tracking-wider text-zinc-400">Captured Face Slots</h4>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Hover slot & click 🔄 to re-scan single face</span>
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Captured Face Slots</h4>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Hover slot & click 🔄 to re-scan single face</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
@@ -1416,18 +1416,18 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             return (
               <div
                 key={idx}
-                className={`p-3 bg-zinc-950/60 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${
+                className={`p-3 bg-slate-50 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${
                   isActive
-                    ? 'border-orange-500 bg-orange-500/5'
+                    ? 'border-orange-500 bg-orange-50/70 shadow-orange-100/50 shadow-xs'
                     : face
-                      ? 'border-emerald-500/20 bg-emerald-500/5'
-                      : 'border-zinc-800/80'
+                      ? 'border-emerald-200 bg-emerald-50/50'
+                      : 'border-slate-200 bg-white/70'
                 }`}
               >
-                <header className="flex justify-between items-center text-[10px] font-black uppercase text-zinc-400">
+                <header className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
                   <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
                   <div className="flex items-center gap-1">
-                    <span className={face?.observedCenterColor ? 'text-orange-500 font-bold' : 'text-zinc-600'}>
+                    <span className={face?.observedCenterColor ? 'text-orange-600 font-bold' : 'text-slate-400'}>
                       {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'pending'}
                     </span>
                     {face && (
@@ -1435,14 +1435,14 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                         type="button"
                         onClick={() => rescanSingleFace(face)}
                         title="Quét lại mặt này"
-                        className="p-1 text-zinc-400 hover:text-orange-400 hover:bg-zinc-800 rounded-md transition-colors"
+                        className="p-1 text-slate-400 hover:text-orange-600 hover:bg-slate-200 rounded-md transition-colors border-none bg-transparent cursor-pointer"
                       >
                         <RotateCcw className="h-3 w-3" />
                       </button>
                     )}
                   </div>
                 </header>
-                <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-zinc-900 p-1.5 rounded-xl border border-zinc-800/60">
+                <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-slate-200 p-1.5 rounded-xl border border-slate-300/60">
                   {Array.from({ length: 9 }).map((_, cellIndex) => {
                     const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
                     return (
@@ -1461,46 +1461,46 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       </div>
 
       {session ? (
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/60">
-          <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
-            <strong className="text-sm font-bold text-white">{session.scanStatus}</strong>
-            <span className="text-xs text-zinc-500">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+            <strong className="text-sm font-bold text-slate-800">{session.scanStatus}</strong>
+            <span className="text-xs text-slate-500 font-medium">
               {session.matchStatus}
             </span>
           </div>
-          <pre className="max-h-96 overflow-auto p-4 text-xs leading-relaxed text-zinc-300">
+          <pre className="max-h-96 overflow-auto p-4 text-xs leading-relaxed text-slate-600 font-mono">
             {JSON.stringify(session, null, 2)}
           </pre>
         </div>
       ) : null}
 
       {session?.validation && !session.validation.matched && (
-        <div className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-3xl space-y-3">
+        <div className="bg-rose-50 border border-rose-200 p-5 rounded-3xl space-y-3">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
-            <h4 className="text-xs font-black text-rose-500 uppercase tracking-widest">Cube State Mismatch Detected</h4>
+            <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0" />
+            <h4 className="text-xs font-black text-rose-600 uppercase tracking-widest">Cube State Mismatch Detected</h4>
           </div>
-          <p className="text-[11px] text-zinc-400 leading-relaxed">
+          <p className="text-[11px] text-slate-600 leading-relaxed font-semibold">
             The scanned sticker states do not match the expected state of the scramble sequence.
             Compare the mismatched slots below and scramble your cube again if necessary:
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[10px] font-bold text-zinc-400">
+            <table className="w-full text-left border-collapse text-[10px] font-bold text-slate-500">
               <thead>
-                <tr className="border-b border-zinc-800 uppercase tracking-wider text-zinc-500">
+                <tr className="border-b border-slate-200 uppercase tracking-wider text-slate-400">
                   <th className="py-2">Face</th>
                   <th className="py-2">Sticker Pos</th>
-                  <th className="py-2 text-rose-400">Expected</th>
-                  <th className="py-2 text-orange-400">Observed</th>
+                  <th className="py-2 text-rose-600">Expected</th>
+                  <th className="py-2 text-orange-600">Observed</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900 font-mono">
+              <tbody className="divide-y divide-slate-100 font-mono">
                 {session.validation.mismatches.map((mismatch, idx) => (
-                  <tr key={idx} className="hover:bg-zinc-950/40">
-                    <td className="py-2 uppercase font-sans font-extrabold text-white">{mismatch.face}</td>
+                  <tr key={idx} className="hover:bg-slate-100">
+                    <td className="py-2 uppercase font-sans font-extrabold text-slate-800">{mismatch.face}</td>
                     <td className="py-2">Row {mismatch.row + 1}, Col {mismatch.column + 1}</td>
-                    <td className="py-2 uppercase text-rose-400">{mismatch.expected}</td>
-                    <td className="py-2 uppercase text-orange-400">{mismatch.observed}</td>
+                    <td className="py-2 uppercase text-rose-600">{mismatch.expected}</td>
+                    <td className="py-2 uppercase text-orange-600">{mismatch.observed}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1508,7 +1508,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
           </div>
           <button
             onClick={handleReset}
-            className="w-fit px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl uppercase transition-all"
+            className="w-fit px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl uppercase transition-all border-none cursor-pointer"
           >
             Reset Session & Re-scan
           </button>
@@ -1516,11 +1516,11 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       )}
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+        <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-xs font-bold text-rose-500 uppercase tracking-wider">Scanner Error</h4>
-            <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">{error}</p>
+            <h4 className="text-xs font-bold text-rose-600 uppercase tracking-wider">Scanner Error</h4>
+            <p className="text-[11px] text-rose-600 mt-0.5 leading-relaxed font-semibold">{error}</p>
           </div>
         </div>
       )}
