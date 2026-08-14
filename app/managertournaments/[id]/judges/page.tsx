@@ -14,6 +14,7 @@ import {
   shuffleTournamentJudges,
   toggleJudgeStatus,
   deactivateAllJudges,
+  activateAllJudges,
 } from '@/lib/api/tournaments';
 import type {
   TournamentDetailDto,
@@ -275,6 +276,18 @@ export default function JudgeManagementPage({
     }
   };
 
+  // Handler: Activate all judges for this tournament
+  const handleActivateAllJudges = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn mở khóa TOÀN BỘ tài khoản trọng tài của giải đấu này không?')) return;
+    try {
+      const updatedJudges = await activateAllJudges(id);
+      setJudges(updatedJudges);
+      toast.success('Đã mở khóa toàn bộ', 'Tất cả tài khoản trọng tài đã sẵn sàng hoạt động.');
+    } catch (err: any) {
+      toast.error('Thất bại', err?.message || 'Lỗi khi kích hoạt tất cả trọng tài.');
+    }
+  };
+
   // Handler: Deactivate all judges for this tournament
   const handleDeactivateAllJudges = async () => {
     if (!window.confirm('Bạn có chắc chắn muốn vô hiệu hóa TOÀN BỘ tài khoản trọng tài của giải đấu này không?')) return;
@@ -440,6 +453,16 @@ export default function JudgeManagementPage({
               className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition cursor-pointer shadow-2xs"
             >
               + Thêm Đơn Lẻ
+            </button>
+
+            <button
+              onClick={handleActivateAllJudges}
+              disabled={judges.length === 0}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-2.5 text-xs font-semibold text-emerald-700 transition cursor-pointer shadow-2xs disabled:opacity-50"
+              title="Mở khóa tất cả tài khoản trọng tài"
+            >
+              <Unlock className="h-3.5 w-3.5" />
+              Mở Khóa Tất Cả
             </button>
 
             <button

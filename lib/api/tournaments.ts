@@ -197,6 +197,13 @@ export async function deactivateAllJudges(tournamentId: string): Promise<Tournam
   });
 }
 
+/** POST /api/tournament-management/tournaments/{tournamentId}/judges/activate-all — Kích hoạt tất cả trọng tài */
+export async function activateAllJudges(tournamentId: string): Promise<TournamentJudgeDto[]> {
+  return apiFetch<TournamentJudgeDto[]>(`/api/tournament-management/tournaments/${tournamentId}/judges/activate-all`, {
+    method: 'POST',
+  });
+}
+
 /** DELETE /api/tournament-management/tournaments/{tournamentId}/judges/{judgeUserId} — Xóa Trọng tài */
 export async function deleteTournamentJudge(tournamentId: string, judgeUserId: string): Promise<{ message: string }> {
   return apiFetch<{ message: string }>(`/api/tournament-management/tournaments/${tournamentId}/judges/${judgeUserId}`, {

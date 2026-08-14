@@ -522,7 +522,7 @@ export default function RegistrationManagementPage({
                         {/* Registered At */}
                         <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-mono font-medium">
                           {formatDate(reg.registeredAt)}
-                        </td>`
+                        </td>
 
                         {/* Manager Action Options */}
                         <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">

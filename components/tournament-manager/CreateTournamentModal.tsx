@@ -30,6 +30,8 @@ interface EventFormState {
   timeLimitSec: string;
   cutoffTimeSec: string;
   solveCount: number;
+  totalRounds: number;
+  advanceTopN: number;
   maxCapacity: string;
   medleyPuzzles: Array<{ puzzleTypeId: string }>;
 }
@@ -111,6 +113,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       timeLimitSec: '',
       cutoffTimeSec: '',
       solveCount: 5,
+      totalRounds: 1,
+      advanceTopN: 16,
       maxCapacity: '',
       medleyPuzzles: [],
     },
@@ -130,6 +134,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               timeLimitSec: '',
               cutoffTimeSec: '',
               solveCount: 5,
+              totalRounds: 1,
+              advanceTopN: 16,
               maxCapacity: '',
               medleyPuzzles: [
                 { puzzleTypeId: types[0].id },
@@ -156,6 +162,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         timeLimitSec: '',
         cutoffTimeSec: '',
         solveCount: 5,
+        totalRounds: 1,
+        advanceTopN: 16,
         maxCapacity: '',
         medleyPuzzles: [
           { puzzleTypeId: firstId },
@@ -328,6 +336,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               timeLimitMs: ev.timeLimitSec ? Number(ev.timeLimitSec) * 1000 : undefined,
               cutoffTimeMs: ev.cutoffTimeSec ? Number(ev.cutoffTimeSec) * 1000 : undefined,
               solveCount: ev.solveCount,
+              totalRounds: ev.totalRounds || 1,
+              advanceTopN: ev.totalRounds > 1 ? (ev.advanceTopN || 16) : undefined,
               maxCapacity: ev.maxCapacity ? Number(ev.maxCapacity) : undefined,
               sortOrder: i + 1,
               medleyPuzzles: isMedley
@@ -709,7 +719,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     </div>
 
                     {/* WCA Scoring & Rules */}
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Time Limit (Giây)
@@ -748,7 +758,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Số Lượt Thử (Solve Count)
+                          Số Lượt Thử (Solves)
                         </label>
                         <input
                           type="number"
@@ -764,7 +774,44 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                           </p>
                         )}
                       </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Số Vòng Đấu (Rounds)
+                        </label>
+                        <select
+                          value={ev.totalRounds || 1}
+                          onChange={(e) => updateEvent(i, 'totalRounds', Number(e.target.value))}
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition font-semibold"
+                        >
+                          <option value={1}>1 Vòng (Chung kết luôn)</option>
+                          <option value={2}>2 Vòng (Round 1 ➔ Chung kết)</option>
+                          <option value={3}>3 Vòng (Round 1 ➔ Round 2 ➔ Chung kết)</option>
+                          <option value={4}>4 Vòng (4 Rounds)</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* Compact Advance Target Top N Box */}
+                    {ev.totalRounds > 1 && (
+                      <div className="mt-3 flex items-center justify-between p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-indigo-900 text-xs font-mono">🎯 Chỉ Tiêu Thăng Hạng:</span>
+                          <span className="text-indigo-700 font-medium">Tuyển chọn vào Vòng tiếp theo: Top</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={ev.advanceTopN || 16}
+                            onChange={(e) => updateEvent(i, 'advanceTopN', Math.max(1, Number(e.target.value)))}
+                            className="w-16 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-xs font-bold text-indigo-900 outline-none focus:border-indigo-600 text-center font-mono shadow-2xs"
+                          />
+                          <span className="text-indigo-700 font-medium">thí sinh xuất sắc nhất</span>
+                        </div>
+                        <span className="text-[10px] text-indigo-500 font-semibold font-mono bg-white/80 px-2 py-0.5 rounded border border-indigo-100">
+                          Mặc định Vòng 1 ➔ Vòng 2
+                        </span>
+                      </div>
+                    )}
 
                     {/* Event Capacity Limit */}
                     <div className="pt-3 border-t border-slate-100">

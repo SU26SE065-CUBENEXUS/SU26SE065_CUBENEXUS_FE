@@ -134,6 +134,8 @@ export interface EventDetailDto {
   timeLimitMs?: number;
   cutoffTimeMs?: number;
   solveCount: number;
+  totalRounds?: number;
+  advanceTopN?: number;
   sortOrder?: number;
   maxCapacity?: number;
   medleyPuzzles: MedleyPuzzleDetailDto[];
@@ -160,6 +162,8 @@ export interface CreateEventDto {
   timeLimitMs?: number;
   cutoffTimeMs?: number;
   solveCount?: number;
+  totalRounds?: number;
+  advanceTopN?: number;
   sortOrder?: number;
   medleyPuzzles?: CreateMedleyPuzzleDto[];
 }
@@ -281,6 +285,7 @@ export interface AdvanceRoundRequestDto {
   topN: number;
   competitorsPerGroup: number;
   stationCount: number;
+  selectedRegistrationEventIds?: string[];
 }
 
 export interface SubmitTraditionalResultDto {
@@ -455,5 +460,3 @@ export interface ShuffleTournamentJudgesDto {
   stationCount: number;
   judgesPerStation: number;
 }
-
-

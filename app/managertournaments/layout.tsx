@@ -462,23 +462,20 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
 // ─── Layout ──────────────────────────────────────────────────
 
 export default function ManagerLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [tournamentsList, setTournamentsList] = useState<TournamentDetailDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Protected route guard
+  // Protected route guard: Redirect unauthenticated users to login
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated) { router.replace('/login'); return; }
-    const role = user?.role?.toUpperCase();
-    if (role !== 'MANAGER' && role !== 'ADMIN') { router.replace('/'); return; }
-    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-      router.replace('/managertournaments');
+    if (!isAuthenticated) {
+      router.replace('/login');
     }
-  }, [isLoading, isAuthenticated, user, router, pathname]);
+  }, [isLoading, isAuthenticated, router]);
 
   // Fetch real tournaments list for switcher (Offline Only, No Mock Data)
   useEffect(() => {
@@ -544,12 +541,67 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     );
   }
 
-  if (!isAuthenticated || (user?.role?.toUpperCase() !== 'MANAGER' && user?.role?.toUpperCase() !== 'ADMIN')) {
+  if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 text-slate-900">
-        <ShieldAlert className="h-12 w-12 text-rose-500" />
-        <p className="text-lg font-semibold">Access Denied</p>
-        <p className="text-sm text-slate-500">Redirecting…</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userRole = user?.role?.toUpperCase();
+  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/managertournaments/async');
+  const isManagerRoute = pathname.startsWith('/managertournaments') && !pathname.startsWith('/managertournaments/async');
+
+  const isAccessDenied =
+    (isAdminRoute && userRole !== 'ADMIN') ||
+    (isManagerRoute && userRole !== 'MANAGER') ||
+    (userRole !== 'ADMIN' && userRole !== 'MANAGER');
+
+  if (isAccessDenied) {
+    let reasonText = 'Bạn không có quyền truy cập vào đường dẫn này.';
+    if (isAdminRoute && userRole === 'MANAGER') {
+      reasonText = `Đường dẫn "${pathname}" là tính năng dành riêng cho Quản Trị Viên (ADMIN). Tài khoản của bạn hiện tại có quyền Manager.`;
+    } else if (isManagerRoute && userRole === 'ADMIN') {
+      reasonText = `Đường dẫn "${pathname}" là phân hệ dành riêng cho Quản Lý Giải Đấu (MANAGER). Tài khoản của bạn hiện tại có quyền Admin.`;
+    }
+
+    const destinationPath = userRole === 'ADMIN' ? '/admin' : userRole === 'MANAGER' ? '/managertournaments' : '/';
+    const buttonLabel = userRole === 'ADMIN' ? 'Quay về Portal Admin' : userRole === 'MANAGER' ? 'Quay về Portal Manager' : 'Quay về Trang Chủ';
+
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 px-4 text-white">
+        <div className="w-full max-w-md rounded-3xl bg-slate-800/80 p-8 border border-slate-700/80 shadow-2xl text-center backdrop-blur-xl space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rose-300 border border-rose-500/30">
+              403 Forbidden
+            </span>
+            <h1 className="text-2xl font-black text-white tracking-tight">Không Có Quyền Truy Cập</h1>
+            <p className="text-xs text-slate-300 font-medium leading-relaxed pt-1">
+              {reasonText}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              onClick={() => router.push(destinationPath)}
+              className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg transition-all cursor-pointer border-none"
+            >
+              {buttonLabel}
+            </button>
+            <button
+              onClick={() => logout()}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-700/50 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all cursor-pointer border border-slate-600/50"
+            >
+              Đăng Xuất Tài Khoản
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

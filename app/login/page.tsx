@@ -21,11 +21,19 @@ export default function LoginPage() {
   }, []);
 
   // Redirect if already authenticated
+  const { user } = useAuth();
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/');
+    if (isAuthenticated && user) {
+      const role = user.role?.toUpperCase();
+      if (role === 'ADMIN') {
+        router.push('/admin');
+      } else if (role === 'MANAGER') {
+        router.push('/managertournaments');
+      } else {
+        router.push('/');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   return (
     <>

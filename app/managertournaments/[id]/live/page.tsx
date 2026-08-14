@@ -82,11 +82,18 @@ function EventRoundControlPanel({
   // Form configurations
   const [groupSize, setGroupSize] = useState('8');
   const [stationCount, setStationCount] = useState(defaultStationCount.toString());
-  const [advanceCount, setAdvanceCount] = useState('8');
+  const [advanceCount, setAdvanceCount] = useState(event.advanceTopN?.toString() || '16');
+  const [selectedCompEventIds, setSelectedCompEventIds] = useState<string[]>([]);
 
   useEffect(() => {
     setStationCount(defaultStationCount.toString());
   }, [defaultStationCount]);
+
+  useEffect(() => {
+    if (event.advanceTopN) {
+      setAdvanceCount(event.advanceTopN.toString());
+    }
+  }, [event.advanceTopN]);
 
   // Live board state
   const [liveBoard, setLiveBoard] = useState<any>(null);
@@ -98,6 +105,33 @@ function EventRoundControlPanel({
   // Modals
   const [isGenerateGroupsOpen, setIsGenerateGroupsOpen] = useState(false);
   const [isAdvanceOpen, setIsAdvanceOpen] = useState(false);
+
+  // Track if we already did the initial auto-populate for this modal open
+  const didAutoPopulate = useRef(false);
+
+  useEffect(() => {
+    if (isAdvanceOpen && liveBoard?.competitors && !didAutoPopulate.current) {
+      didAutoPopulate.current = true;
+      const topN = event.advanceTopN || Number(advanceCount);
+      const isAvg = (event.solveCount || 5) >= 3;
+      const eligible = [...liveBoard.competitors]
+        .filter((c: any) => {
+          if (!c.rank || c.isCutoffReached) return false;
+          return isAvg
+            ? c.averageTimeMs && c.averageTimeMs > 0 && c.averageTimeMs < 2147483647
+            : c.bestTimeMs && c.bestTimeMs > 0 && c.bestTimeMs < 2147483647;
+        })
+        .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999));
+
+      const topNIds = eligible.slice(0, topN).map((c: any) => c.registrationEventId || c.groupCompetitorId).filter(Boolean);
+      setSelectedCompEventIds(topNIds);
+    }
+    if (!isAdvanceOpen) {
+      // Reset flag when modal closes so next open will auto-populate again
+      didAutoPopulate.current = false;
+      setSelectedCompEventIds([]);
+    }
+  }, [isAdvanceOpen, liveBoard, event.advanceTopN, event.solveCount]);
 
   // Global actions loading & notifications
   const [isLoading, setIsLoading] = useState(false);
@@ -482,142 +516,274 @@ function EventRoundControlPanel({
           </div>
 
           {/* GENERATE GROUPS MODAL */}
-          {isGenerateGroupsOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-              <div className="relative w-full max-w-md p-6 bg-white border border-slate-200 rounded-xl shadow-2xl space-y-4 text-slate-900 overflow-hidden">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tạo Nhóm Thi Đấu</h3>
-                  <button onClick={() => setIsGenerateGroupsOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
-                </p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      Số lượng thí sinh trong 1 nhóm
-                    </label>
-                    <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+          {isGenerateGroupsOpen && (() => {
+            const totalEligibleCount = liveBoard?.competitors?.length || 0;
+            const gSize = Number(groupSize) || 0;
+            const sCount = defaultStationCount || 0;
+            const isGroupExceeded = totalEligibleCount > 0 && gSize > totalEligibleCount;
+            const isGroupLessThanStations = sCount > 0 && gSize > 0 && gSize < sCount;
+            const isNoStationsAssigned = sCount === 0;
+            const isInvalid = isGroupExceeded || isGroupLessThanStations || isNoStationsAssigned || gSize <= 0;
+
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="relative w-full max-w-md p-6 bg-white border border-slate-200 rounded-xl shadow-2xl space-y-4 text-slate-900 overflow-hidden">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 className="text-base font-bold text-slate-900">Cấu Hình Tạo Nhóm Thi Đấu</h3>
+                    <button onClick={() => setIsGenerateGroupsOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      Số trạm bàn thi khả dụng
-                    </label>
-                    <input type="number" min="1" value={stationCount} onChange={(e) => setStationCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                  </p>
+
+                  {/* NO STATIONS / JUDGES UNASSIGNED ALERT */}
+                  {isNoStationsAssigned && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 leading-relaxed flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+                      <div>
+                        <strong className="block font-bold mb-0.5">Chưa Phân Công Trọng Tài & Bàn Thi!</strong>
+                        Chưa có bàn thi đấu nào được gắn với Trọng tài. Vui lòng hoàn thành <strong>Bước 1 (Phân công Trọng tài & Bàn thi)</strong> trước khi tạo nhóm thi đấu.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                          Số lượng thí sinh trong 1 nhóm
+                        </label>
+                        {totalEligibleCount > 0 && (
+                          <span className="text-[10px] text-indigo-600 font-bold font-mono">
+                            Tổng đủ điều kiện: {totalEligibleCount} thí sinh
+                          </span>
+                        )}
+                      </div>
+                      <input type="number" min="1" max={totalEligibleCount || undefined} value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className={`w-full rounded-lg border ${isGroupExceeded || isGroupLessThanStations ? 'border-red-500 bg-red-50/50' : 'border-slate-200 bg-slate-50'} px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600`} />
+                    </div>
+
+                    {!isNoStationsAssigned && (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs flex items-center justify-between">
+                        <span className="text-slate-600 font-medium">Số bàn thi đấu khả dụng:</span>
+                        <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
+                          {sCount} Bàn (Đã phân công Trọng tài)
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                  <button onClick={() => setIsGenerateGroupsOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
-                    Hủy Bỏ
-                  </button>
-                  <button
-                    disabled={isLoading}
-                    onClick={() => {
-                      setIsGenerateGroupsOpen(false);
-                      doAction(
-                        () => generateGroups(event.id, { roundNumber: Number(roundNumber), competitorsPerGroup: Number(groupSize), stationCount: Number(stationCount) }),
-                        `Đã khởi tạo thành công các nhóm thi đấu cho Vòng ${roundNumber}!`
-                      );
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
-                  >
-                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Tạo Nhóm Ngay
-                  </button>
+
+                  {/* Validation Alerts & Helper Box */}
+                  {isGroupExceeded && (
+                    <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+                      <span>Số thí sinh/nhóm ({gSize}) không được lớn hơn tổng số thí sinh tham gia ({totalEligibleCount}).</span>
+                    </div>
+                  )}
+
+                  {isGroupLessThanStations && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                      <span>Số thí sinh/nhóm ({gSize}) không được ít hơn số bàn thi khả dụng ({sCount} bàn).</span>
+                    </div>
+                  )}
+
+
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button onClick={() => setIsGenerateGroupsOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
+                      Hủy Bỏ
+                    </button>
+                    <button
+                      disabled={isLoading || isInvalid}
+                      onClick={() => {
+                        setIsGenerateGroupsOpen(false);
+                        doAction(
+                          () => generateGroups(event.id, { roundNumber: Number(roundNumber), competitorsPerGroup: gSize, stationCount: sCount }),
+                          `Đã khởi tạo thành công các nhóm thi đấu cho Vòng ${roundNumber}!`
+                        );
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
+                    >
+                      {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Tạo Nhóm Ngay
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ADVANCE ROUND MODAL */}
-          {isAdvanceOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-              <div className="relative w-full max-w-2xl p-6 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[85vh] space-y-4 text-slate-900 overflow-hidden">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <h3 className="text-base font-bold text-slate-900">Cấu Hình Tăng Vòng (Advance Round)</h3>
-                  <button onClick={() => setIsAdvanceOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Tuyển chọn các thí sinh có thứ hạng xuất sắc nhất từ <strong className="text-indigo-600">Vòng {roundNumber}</strong> tiến vào <strong className="text-indigo-600">Vòng {Number(roundNumber) + 1}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      Số Lấy Vào (Top N)
-                    </label>
-                    <input type="number" min="1" value={advanceCount} onChange={(e) => setAdvanceCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+          {isAdvanceOpen && (() => {
+            const isAvgFormatLocal = (event.solveCount || 5) >= 3;
+            const eligibleAll = liveBoard?.competitors
+              ? [...liveBoard.competitors]
+                .filter((c: any) => {
+                  if (!c.rank || c.isCutoffReached) return false;
+                  return isAvgFormatLocal
+                    ? c.averageTimeMs && c.averageTimeMs > 0 && c.averageTimeMs < 2147483647
+                    : c.bestTimeMs && c.bestTimeMs > 0 && c.bestTimeMs < 2147483647;
+                })
+                .sort((a: any, b: any) => (a.rank ?? 999) - (b.rank ?? 999))
+              : [];
+
+            const topNVal = Number(advanceCount);
+            const candidateBoundary = eligibleAll[topNVal - 1];
+            const candidateOutside = eligibleAll[topNVal];
+            const hasTieBreakBoundary = candidateBoundary && candidateOutside && (
+              candidateBoundary.rank === candidateOutside.rank ||
+              (candidateBoundary.averageTimeMs === candidateOutside.averageTimeMs && candidateBoundary.bestTimeMs === candidateOutside.bestTimeMs)
+            );
+
+            const sCount = defaultStationCount || 0;
+            const isNoStationsAssigned = sCount === 0;
+
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="relative w-full max-w-2xl p-6 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[85vh] space-y-4 text-slate-900 overflow-hidden">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 className="text-base font-bold text-slate-900">Cấu Hình Tăng Vòng (Advance Round)</h3>
+                    <button onClick={() => setIsAdvanceOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div>
+
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Tuyển chọn các thí sinh xuất sắc từ <strong className="text-indigo-600">Vòng {roundNumber}</strong> tiến vào <strong className="text-indigo-600">Vòng {Number(roundNumber) + 1}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                  </p>
+
+                  {/* NO STATIONS ALERT */}
+                  {isNoStationsAssigned && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 leading-relaxed flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+                      <div>
+                        <strong className="block font-bold mb-0.5">Chưa Phân Công Trọng Tài & Bàn Thi!</strong>
+                        Chưa có bàn thi đấu nào được gắn với Trọng tài. Vui lòng hoàn thành <strong>Bước 1 (Phân công Trọng tài & Bàn thi)</strong> trước khi thăng hạng.
+                      </div>
+                    </div>
+                  )}
+
+
+                  {/* Top N Info banner - read only from event config */}
+                  {event.advanceTopN && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-xs text-indigo-700 font-medium">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                      Theo cấu hình giải đấu, <strong className="font-bold">{event.advanceTopN} thí sinh</strong> xuất sắc nhất sẽ tiến vào Vòng {Number(roundNumber) + 1}. Bạn có thể điều chỉnh lại bên dưới.
+                    </div>
+                  )}
+
+                  {/* Group size input only */}
+                  <div className="w-48">
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
                       Size Nhóm Mới
                     </label>
                     <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      Số Bàn Thi Mới
-                    </label>
-                    <input type="number" min="1" value={stationCount} onChange={(e) => setStationCount(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
-                  </div>
-                </div>
 
-                {/* Advance Preview Table */}
-                <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-white">
-                  <div className="p-2.5 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                    Danh Sách Thí Sinh Dự Kiến Đi Tiếp (Top {advanceCount})
-                  </div>
-                  {advancingCompetitors.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-slate-500 italic">Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán.</div>
-                  ) : (
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
-                          <th className="p-2.5 font-mono">Hạng</th>
-                          <th className="p-2.5 font-mono">Thí Sinh</th>
-                          <th className="p-2.5 font-mono">Best</th>
-                          <th className="p-2.5 font-mono">Average</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {advancingCompetitors.map((c: any) => (
-                          <tr key={c.groupCompetitorId} className="hover:bg-slate-50/80">
-                            <td className="p-2.5 font-bold font-mono text-indigo-600">#{c.rank}</td>
-                            <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
-                            <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
-                            <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Tie-Break Warning Badge */}
+                  {hasTieBreakBoundary && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                      <div>
+                        <span className="font-bold">⚠️ Cảnh báo Đồng Hạng (Tie-Break):</span> Phát hiện nhiều hơn {topNVal} thí sinh bằng điểm ở vị trí ranh giới Top {topNVal} (Hạng #{candidateBoundary.rank}). Vui lòng tích chọn đúng {topNVal} thí sinh thắng lượt đấu phụ offline để đi tiếp Vòng {Number(roundNumber) + 1}.
+                      </div>
+                    </div>
                   )}
-                </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                  <button onClick={() => setIsAdvanceOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
-                    Hủy Bỏ
-                  </button>
-                  <button
-                    disabled={isLoading}
-                    onClick={() => {
-                      setIsAdvanceOpen(false);
-                      doAction(
-                        () => advanceRound(event.id, Number(roundNumber), { nextRoundNumber: Number(roundNumber) + 1, topN: Number(advanceCount), competitorsPerGroup: Number(groupSize), stationCount: Number(stationCount) }),
-                        `Đã chuyển thành công Top ${advanceCount} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
-                      );
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
-                  >
-                    {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    Xác Nhận Chuyển Vòng
-                  </button>
+                  {/* Advance Preview Table with Manual Checkboxes */}
+                  <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-white">
+                    <div className="p-2.5 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono flex items-center justify-between">
+                      <span>Danh Sách Thí Sinh Tuyển Chọn</span>
+                      <span className="text-indigo-600 font-bold">
+                        Đã chọn: {selectedCompEventIds.length} / {topNVal} thí sinh
+                      </span>
+                    </div>
+                    {eligibleAll.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-slate-500 italic">Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán.</div>
+                    ) : (
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
+                            <th className="p-2.5 w-10 text-center">Chọn</th>
+                            <th className="p-2.5 font-mono">Hạng</th>
+                            <th className="p-2.5 font-mono">Thí Sinh</th>
+                            <th className="p-2.5 font-mono">Best</th>
+                            <th className="p-2.5 font-mono">Average</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {eligibleAll.map((c: any) => {
+                            const compId = c.registrationEventId || c.groupCompetitorId;
+                            const isChecked = selectedCompEventIds.includes(compId);
+                            const isLimitReached = !isChecked && selectedCompEventIds.length >= topNVal;
+                            const isBoundaryTied = candidateBoundary && c.rank === candidateBoundary.rank;
+
+                            return (
+                              <tr key={c.groupCompetitorId} className={`hover:bg-slate-50/80 ${isBoundaryTied ? 'bg-amber-50/50' : ''}`}>
+                                <td className="p-2.5 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    disabled={isLimitReached}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        if (selectedCompEventIds.length >= topNVal) {
+                                          return;
+                                        }
+                                        setSelectedCompEventIds((prev) => [...prev, compId]);
+                                      } else {
+                                        setSelectedCompEventIds((prev) => prev.filter((id) => id !== compId));
+                                      }
+                                    }}
+                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                                  />
+                                </td>
+                                <td className="p-2.5 font-bold font-mono text-indigo-600">
+                                  #{c.rank}
+                                  {isBoundaryTied && <span className="ml-1.5 text-[9px] bg-amber-100 text-amber-700 px-1 py-0.2 rounded font-semibold">TIE</span>}
+                                </td>
+                                <td className="p-2.5 font-bold text-slate-900">{c.competitorName}</td>
+                                <td className="p-2.5 font-mono text-slate-600">{msToDisplay(c.bestTimeMs)}</td>
+                                <td className="p-2.5 font-mono font-bold text-indigo-600">{msToDisplay(c.averageTimeMs)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button onClick={() => setIsAdvanceOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
+                      Hủy Bỏ
+                    </button>
+                    <button
+                      disabled={isLoading || selectedCompEventIds.length === 0 || isNoStationsAssigned}
+                      onClick={() => {
+                        setIsAdvanceOpen(false);
+                        doAction(
+                          () => advanceRound(event.id, Number(roundNumber), {
+                            nextRoundNumber: Number(roundNumber) + 1,
+                            topN: selectedCompEventIds.length || Number(advanceCount),
+                            competitorsPerGroup: Number(groupSize),
+                            stationCount: sCount,
+                            selectedRegistrationEventIds: selectedCompEventIds.length > 0 ? selectedCompEventIds : undefined
+                          }),
+                          `Đã chuyển thành công ${selectedCompEventIds.length} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
+                        );
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
+                    >
+                      {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Xác Nhận Chuyển Vòng ({selectedCompEventIds.length})
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>
@@ -780,7 +946,7 @@ export default function LiveOperationsPage({
   const assignedStations = judges
     .map((j) => j.assignedStationNumber)
     .filter((s): s is number => typeof s === 'number' && s > 0);
-  const detectedStations = assignedStations.length > 0 ? Math.max(...assignedStations) : 4;
+  const detectedStations = assignedStations.length > 0 ? Math.max(...assignedStations) : 0;
 
   // ─── Initialize ──────────────────────────────────────────
   useEffect(() => {
@@ -980,10 +1146,13 @@ export default function LiveOperationsPage({
   }, [selectedGroupId]);
   useEffect(() => {
     if (!selectedGroupCompetitorId || !liveState) return;
-    const compObj = liveState.competitors.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId);
+    const compObj = liveState.competitors?.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId);
     if (compObj) {
-      const next = compObj.completedSolves + 1;
-      setAttemptNumber(String(Math.min(next, liveState.solveCount)));
+      const totalSolves = liveState.solveCount || 5;
+      if (compObj.completedSolves < totalSolves) {
+        const next = compObj.completedSolves + 1;
+        setAttemptNumber(String(next));
+      }
     }
   }, [selectedGroupCompetitorId, liveState]);
 
@@ -1125,6 +1294,8 @@ export default function LiveOperationsPage({
     try {
       const sigData = tradHasSignature ? tradCanvasRef.current?.toDataURL() : undefined;
       const penaltyTypeId = isValidGuid(selectedPenaltyId) ? selectedPenaltyId : undefined;
+      const currentCompName = filteredTradCompetitors.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId)?.competitorName || 'Thí sinh';
+      const submittedTimeSec = formatMs(Math.round(Number(rawTimeMs) * 1000));
       await submitTraditionalResult({
         groupCompetitorId: selectedGroupCompetitorId,
         solveNumber: solveNum,
@@ -1133,10 +1304,43 @@ export default function LiveOperationsPage({
         scrambleId: matchingScramble.id,
         esignatureData: sigData,
       });
-      setSubmitTradResult({ ok: true, message: `✓ Solve #${solveNum} submitted — ${formatMs(Math.round(Number(rawTimeMs) * 1000))}s` });
-      setRawTimeMs(''); setSelectedPenaltyId('none'); clearTradSignature();
+
+      setRawTimeMs('');
+      setSelectedPenaltyId('none');
+      clearTradSignature();
+
       const state = await getLiveBoardState(selectedEventId, Number(roundNumber));
       setLiveState(state);
+
+      const totalSolves = state?.solveCount || 5;
+      const updatedComp = state?.competitors?.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId);
+
+      if (updatedComp && updatedComp.completedSolves >= totalSolves) {
+        // Competitor completed all solves! Find next incomplete competitor in group
+        const groupComps = state.competitors.filter((c: any) => c.groupId === selectedGroupId);
+        const nextComp = groupComps.find((c: any) => c.completedSolves < totalSolves);
+
+        if (nextComp) {
+          setSelectedGroupCompetitorId(nextComp.groupCompetitorId);
+          setSubmitTradResult({
+            ok: true,
+            message: `✓ Solve #${solveNum} (${submittedTimeSec}) đã lưu! ${currentCompName} đã hoàn thành đủ ${totalSolves} lượt. Tự động chuyển sang thí sinh tiếp theo: ${nextComp.competitorName}.`,
+          });
+        } else {
+          setSelectedGroupCompetitorId('');
+          setIsCorrectingMode(false);
+          setTargetCorrectionResultId(null);
+          setSubmitTradResult({
+            ok: true,
+            message: `✓ Solve #${solveNum} (${submittedTimeSec}) đã lưu! ${currentCompName} đã hoàn thành lượt thi cuối. Tất cả thí sinh trong nhóm đã hoàn thành.`,
+          });
+        }
+      } else {
+        setSubmitTradResult({
+          ok: true,
+          message: `✓ Solve #${solveNum} submitted — ${submittedTimeSec}`,
+        });
+      }
     } catch (err) {
       setSubmitTradResult({ ok: false, message: err instanceof Error ? err.message : 'Submission failed' });
     } finally { setIsSubmittingTrad(false); }
@@ -1219,6 +1423,17 @@ export default function LiveOperationsPage({
         await completeRound(roundMgmtEventId, Number(roundMgmtRound));
         setRoundActionResult({ ok: true, message: `Vòng ${roundMgmtRound} đã hoàn thành. Điểm số đã chốt và xếp hạng đã được tạo.` });
       } else if (action === 'complete_event') {
+        const selectedEv = tournament?.events.find((e) => e.id === roundMgmtEventId);
+        const configuredRounds = selectedEv?.totalRounds || 1;
+        const currentRoundNum = Number(roundMgmtRound);
+        if (currentRoundNum < configuredRounds) {
+          setRoundActionResult({
+            ok: false,
+            message: `❌ Không Thể Hoàn Thành Môn Thi!\n\nMôn thi này được cấu hình ${configuredRounds} vòng đấu nhưng hiện tại mới thực hiện xong Vòng ${currentRoundNum}.\nVui lòng bấm 'Advance Round' để tuyển chọn thí sinh thi tiếp Vòng ${currentRoundNum + 1}.`,
+          });
+          setIsRoundAction(false);
+          return;
+        }
         await completeEvent(roundMgmtEventId);
         setRoundActionResult({ ok: true, message: `Hạng mục thi đấu đã được Hoàn thành và chốt giải thành công!` });
       }

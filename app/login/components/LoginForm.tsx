@@ -90,13 +90,17 @@ export default function LoginForm() {
       const role =
         (payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
         (payload?.['role'] as string) ||
+        (res as any)?.role ||
         '';
 
       toast.success('Đăng nhập thành công!', `Chào mừng quay trở lại, ${res.displayName || email}!`);
 
-      if (role.toUpperCase() === 'MANAGER' || role.toUpperCase() === 'ADMIN') {
+      const upperRole = role.toUpperCase();
+      if (upperRole === 'ADMIN') {
+        router.push('/admin');
+      } else if (upperRole === 'MANAGER') {
         router.push('/managertournaments');
-      } else if (role.toUpperCase() === 'JUDGE') {
+      } else if (upperRole === 'JUDGE') {
         const assignedId = (res as any).assignedTournamentId || (payload?.['tournament_id'] as string);
         const judgeRole = (res as any).judgeRoleCode;
         const stationNum = (res as any).assignedStationNumber;
