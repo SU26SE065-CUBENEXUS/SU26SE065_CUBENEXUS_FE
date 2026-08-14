@@ -144,7 +144,7 @@ export default function TournamentManagerOverviewPage() {
       </div>
 
       {/* Clean Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => {
           return (
             <div
@@ -190,7 +190,7 @@ export default function TournamentManagerOverviewPage() {
             className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-600 transition"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap w-full sm:w-auto">
+        <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none whitespace-nowrap">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.value}

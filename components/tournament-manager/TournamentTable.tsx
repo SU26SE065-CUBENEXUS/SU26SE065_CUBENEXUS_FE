@@ -180,8 +180,8 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         </div>
       )}
 
-      {/* Clean Modern Light Table */}
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xs">
+      {/* Clean Modern Light Table (Desktop) */}
+      <div className="hidden xl:block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse text-slate-800">
             <thead>
@@ -356,7 +356,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-xs transition shadow-2xs"
                             title="Mở bảng Điều Hành Live"
                           >
-                            <Radio className="h-3.5 w-3.5 text-emerald-400" /> Live Ops
+                            <Radio className="h-3.5 w-3.5 text-red-400" /> Live Ops
                           </Link>
                         )}
 
@@ -381,6 +381,169 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile Card List View */}
+      <div className="xl:hidden space-y-4">
+        {tournaments.map((t) => {
+          const st = (t.statusCode || '').toUpperCase();
+          const isOngoing = st === 'ONGOING';
+          const isCompleted = st === 'COMPLETED';
+          const isOpenForLocking = st === 'PUBLISHED' || st === 'REGISTRATION_OPEN';
+          const canForceStart = !isOngoing && !isCompleted;
+          const canComplete = !isCompleted;
+
+          return (
+            <div key={t.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
+              {/* Header Info: Name, Status Badge, Type */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
+                    {t.name}
+                  </h3>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {t.isOnlineAsync ? (
+                      <span className="inline-block text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/80 whitespace-nowrap">
+                        Async A01 Single
+                      </span>
+                    ) : t.maxParticipants ? (
+                      <span className="inline-block text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/80 whitespace-nowrap">
+                        Tối đa {t.maxParticipants} thí sinh
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <StatusBadge status={t.statusCode as TournamentStatusCode} />
+                </div>
+              </div>
+
+              {/* Details: Date, Location, Events */}
+              <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Thời gian:</span>
+                  <span className="font-mono font-semibold text-[11px] text-slate-700">
+                    {formatDateRange(t.startDate, t.endDate)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Địa điểm:</span>
+                  <span className="font-medium text-slate-700 truncate max-w-[180px]">
+                    {t.isOnlineAsync ? (
+                      <span className="inline-flex items-center gap-1 font-bold text-indigo-600">
+                        <Globe className="h-3 w-3" /> Thi Trực Tuyến
+                      </span>
+                    ) : (
+                      t.location ?? '—'
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between">
+                  <span className="text-slate-400 font-medium shrink-0">Hạng mục:</span>
+                  <div className="text-right">
+                    {t.isOnlineAsync ? (
+                      <span className="inline-block rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-700 border border-indigo-200/80">
+                        {t.puzzleTypeName || '3x3x3 Cube'} (A01)
+                      </span>
+                    ) : t.events && t.events.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 justify-end">
+                        {t.events.map((e) => (
+                          <span
+                            key={e.id}
+                            className="rounded bg-slate-100 px-2 py-0.5 text-[9px] font-extrabold text-slate-700 border border-slate-200/80 whitespace-nowrap"
+                          >
+                            {formatEventLabel(e)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-normal italic">
+                        Chưa tạo hạng mục
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Grid */}
+              <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
+                {/* Force Start */}
+                {canForceStart && (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToStart(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
+                  >
+                    <Play className="h-3 w-3 fill-current" /> Bắt Đầu Ngay
+                  </button>
+                )}
+
+                {/* Lock Registration */}
+                {isOpenForLocking ? (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToClose(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-amber-400 bg-amber-50/70 hover:bg-amber-100 text-amber-900 font-extrabold text-[10px] transition cursor-pointer"
+                  >
+                    <Lock className="h-3 w-3 text-amber-700" /> Khóa Đăng Ký
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-400 font-extrabold text-[10px] cursor-default">
+                    <Lock className="h-3 w-3" /> Đã Khóa
+                  </span>
+                )}
+
+                {/* Complete Tournament */}
+                {canComplete && (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToComplete(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
+                  >
+                    <CheckCircle className="h-3 w-3" /> Hoàn Thành
+                  </button>
+                )}
+
+                {/* Review or Live Ops */}
+                {t.isOnlineAsync ? (
+                  <Link
+                    href={`/managertournaments/${t.id}/review`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] transition"
+                  >
+                    <Video className="h-3 w-3" /> Review A01
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/managertournaments/${t.id}/live`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-[10px] transition"
+                  >
+                    <Radio className="h-3 w-3 text-red-400" /> Live Ops
+                  </Link>
+                )}
+
+                {/* Details */}
+                <Link
+                  href={t.isOnlineAsync ? `/tournaments/${t.id}` : `/managertournaments/${t.id}`}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 hover:text-slate-900 hover:bg-slate-50 transition font-extrabold text-[10px]"
+                >
+                  Chi Tiết
+                </Link>
+              </div>
+            </div>
+          );
+        })}
+
+        {tournaments.length === 0 && (
+          <div className="py-16 text-center text-slate-400 text-sm font-semibold bg-white rounded-2xl border border-slate-200 shadow-2xs">
+            Chưa có giải đấu nào trong danh sách.
+          </div>
+        )}
       </div>
 
       {/* Full-Screen Image Lightbox Modal */}

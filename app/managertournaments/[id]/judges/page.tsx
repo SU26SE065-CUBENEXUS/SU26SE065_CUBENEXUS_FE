@@ -537,7 +537,9 @@ export default function JudgeManagementPage({
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
+        <>
+          {/* Clean Modern Light Table (Desktop) */}
+          <div className="hidden xl:block rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
@@ -659,7 +661,131 @@ export default function JudgeManagementPage({
             </table>
           </div>
         </div>
-      )}
+
+        {/* Mobile Card List View (Tablets / Mobiles) */}
+        <div className="xl:hidden space-y-4">
+          {filteredJudges.map((j, idx) => (
+            <div key={j.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
+              {/* Header: Avatar, Name, User Code, and Status */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center shrink-0">
+                    {j.displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
+                      {idx + 1}. {j.displayName}
+                    </h3>
+                    <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {(j.isActive ?? true) ? (
+                    <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                      Hoạt Động
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded bg-rose-50 border border-rose-200 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                      Đã Khóa
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Details: Role, Username, Initial Password */}
+              <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Vai trò:</span>
+                  <div>{renderRoleBadge(j)}</div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Tài khoản:</span>
+                  <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px]">
+                    {j.username}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 font-medium">Mật khẩu:</span>
+                  <div>
+                    {j.rawPassword ? (
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          {visiblePasswords[j.id] ? j.rawPassword : '••••••••'}
+                        </span>
+                        <button
+                          onClick={() => togglePasswordVisibility(j.id)}
+                          className="text-slate-400 hover:text-slate-700 p-1 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Hiện/Ẩn mật khẩu"
+                        >
+                          {visiblePasswords[j.id] ? (
+                            <EyeOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 italic">Đã bảo mật (Hash)</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Grid */}
+              <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
+                {/* Toggle Active Status */}
+                <button
+                  onClick={() => handleToggleJudgeStatus(j)}
+                  title={(j.isActive ?? true) ? 'Khóa tài khoản trọng tài' : 'Mở khóa tài khoản'}
+                  className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${(j.isActive ?? true)
+                      ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
+                      : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
+                    }`}
+                >
+                  {(j.isActive ?? true) ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                </button>
+
+                {/* Reset Password */}
+                <button
+                  onClick={() => {
+                    setSelectedJudge(j);
+                    setShowResetPasswordModal(true);
+                  }}
+                  title="Đặt lại mật khẩu"
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
+                >
+                  <Key className="h-3.5 w-3.5" />
+                </button>
+
+                {/* Edit */}
+                <button
+                  onClick={() => {
+                    setSelectedJudge(j);
+                    setEditName(j.displayName);
+                    setEditRoleCode(j.roleCode || 'STATION_JUDGE');
+                    setEditStationNumber(j.assignedStationNumber?.toString() || '');
+                    setShowEditModal(true);
+                  }}
+                  title="Sửa thông tin trọng tài"
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+
+                {/* Delete */}
+                <button
+                  onClick={() => setJudgeToDelete(j)}
+                  title="Xóa trọng tài"
+                  className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
 
       {/* ============================================================ */}
       {/* MODAL 1: ADVANCED BATCH CREATE */}
