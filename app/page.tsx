@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/auth-context';
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/hero-section';
 import { LiveSection } from '@/components/live-section';
-import { FlowsSection } from '@/components/flows-section';
 import { FeaturesSection } from '@/components/features-section';
 import { StatsSection } from '@/components/stats-section';
 import { CTASection } from '@/components/cta-section';
@@ -43,10 +42,7 @@ export default function Home() {
       <Header />
       <HeroSection />
       <LiveSection />
-      <FlowsSection />
       <FeaturesSection />
-      <StatsSection />
-      <CTASection />
       <Footer />
     </main>
   );

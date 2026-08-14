@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { BarChart3, Zap, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,11 @@ export function FeaturesSection() {
     {
       icon: BarChart3,
       title: 'LIVE LEADERBOARD',
-      description: 'See who\'s on top right now and track your progress.',
+      description: "See who's on top right now and track your progress.",
       cta: 'VIEW LEADERBOARD',
       tone: 'from-[#f44336]/15 to-[#ff9800]/15',
       iconColor: 'text-[#f44336]',
+      href: '/live',
     },
     {
       icon: Zap,
@@ -21,6 +23,7 @@ export function FeaturesSection() {
       cta: 'FIND AN OPPONENT',
       tone: 'from-[#ffeb3b]/20 to-[#ff9800]/15',
       iconColor: 'text-[#ff9800]',
+      href: '/online',
     },
     {
       icon: Trophy,
@@ -29,6 +32,7 @@ export function FeaturesSection() {
       cta: 'START PRACTICE',
       tone: 'from-[#4caf50]/15 to-[#2196f3]/15',
       iconColor: 'text-[#4caf50]',
+      href: '/practice',
     },
     {
       icon: Globe,
@@ -37,6 +41,7 @@ export function FeaturesSection() {
       cta: 'SEE RANKING',
       tone: 'from-[#2196f3]/15 to-[#f44336]/15',
       iconColor: 'text-[#2196f3]',
+      href: '/rankings',
     },
   ];
 
@@ -56,19 +61,22 @@ export function FeaturesSection() {
           const IconComponent = feature.icon;
           return (
             <Card key={index} className="border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                <div className={`mb-4 inline-block rounded-xl bg-gradient-to-br ${feature.tone} p-3`}>
-                  <IconComponent className={`h-6 w-6 ${feature.iconColor}`} />
+              <div className={`mb-4 inline-block rounded-xl bg-gradient-to-br ${feature.tone} p-3`}>
+                <IconComponent className={`h-6 w-6 ${feature.iconColor}`} />
               </div>
               <h3 className="mb-2 font-bold text-foreground">{feature.title}</h3>
               <p className="mb-6 text-sm text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
               <Button 
+                asChild
                 variant="ghost" 
-                className="h-auto p-0 font-semibold text-sm hover:bg-transparent"
+                className="h-auto p-0 font-semibold text-sm hover:bg-transparent cursor-pointer"
                 style={{ color: index === 0 ? '#f44336' : index === 1 ? '#ff9800' : index === 2 ? '#4caf50' : '#2196f3' }}
               >
-                {feature.cta} →
+                <Link href={feature.href}>
+                  {feature.cta} →
+                </Link>
               </Button>
             </Card>
           );

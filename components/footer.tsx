@@ -43,9 +43,9 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">PRODUCT</h4>
             <ul className="space-y-2">
               <li><a href="/arena" className="text-sm text-muted-foreground hover:text-accent transition">Arena</a></li>
-              <li><a href="/tournaments" className="text-sm text-muted-foreground hover:text-accent transition">Tournaments</a></li>
+              <li><a href="/tournaments" className="text-sm text-muted-foreground hover:text-accent transition">Even</a></li>
               <li><a href="/rankings" className="text-sm text-muted-foreground hover:text-accent transition">Rankings</a></li>
-              <li><a href="/live" className="text-sm text-muted-foreground hover:text-accent transition">Community</a></li>
+              <li><a href="/live" className="text-sm text-muted-foreground hover:text-accent transition">Live</a></li>
 
             </ul>
           </div>
