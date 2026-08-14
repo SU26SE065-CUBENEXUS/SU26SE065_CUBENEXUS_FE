@@ -117,7 +117,7 @@ export function DashboardAnalyticsCharts({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Giải Online Async</span>
+            <span>Giải Online</span>
             <Zap className="h-4 w-4 text-indigo-600" />
           </div>
           <p className="text-3xl font-black text-slate-900 font-mono">{asyncTournaments.length}</p>

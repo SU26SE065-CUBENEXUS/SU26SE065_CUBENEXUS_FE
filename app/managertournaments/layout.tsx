@@ -68,9 +68,8 @@ function Sidebar({
 
   return (
     <aside
-      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 z-40 bg-white border-r border-slate-200 shadow-2xs ${
-        collapsed ? 'w-[68px]' : 'w-60'
-      }`}
+      className={`relative flex flex-col shrink-0 transition-all duration-300 ease-in-out h-screen sticky top-0 z-40 bg-white border-r border-slate-200 shadow-2xs ${collapsed ? 'w-[68px]' : 'w-60'
+        }`}
     >
       {/* Logo */}
       <div className="relative flex h-[60px] items-center justify-between px-4 border-b border-slate-200 flex-shrink-0 bg-white">
@@ -148,11 +147,10 @@ function Sidebar({
           <li>
             <Link
               href={isAdmin ? '/admin' : '/managertournaments'}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                (isAdmin ? pathname === '/admin' : pathname === '/managertournaments')
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${(isAdmin ? pathname === '/admin' : pathname === '/managertournaments')
                   ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                   : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-              } ${collapsed ? 'justify-center px-2' : ''}`}
+                } ${collapsed ? 'justify-center px-2' : ''}`}
               title={collapsed ? 'Dashboard' : undefined}
             >
               <LayoutDashboard className="h-4 w-4 shrink-0 text-indigo-600" />
@@ -184,13 +182,12 @@ function Sidebar({
                           e.preventDefault();
                         }
                       }}
-                      className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                        !selectedId
+                      className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${!selectedId
                           ? 'opacity-40 cursor-not-allowed text-slate-400 border-transparent'
                           : active
                             ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                             : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                      } ${collapsed ? 'justify-center px-2' : ''}`}
+                        } ${collapsed ? 'justify-center px-2' : ''}`}
                       title={collapsed ? item.label : undefined}
                     >
                       <Icon className="h-4 w-4 shrink-0" />
@@ -221,16 +218,15 @@ function Sidebar({
               <li>
                 <Link
                   href="/managertournaments/async"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/managertournaments/async')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/managertournaments/async')
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'Giải Online Async (A01)' : undefined}
                 >
                   <Zap className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Giải Online Async (A01)</span>
+                    <span className="flex-1 truncate">Giải Online (A01)</span>
                   )}
                 </Link>
               </li>
@@ -238,11 +234,10 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/scrambles"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/scrambles')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/scrambles')
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'Kho đề Scramble' : undefined}
                 >
                   <Database className="h-4 w-4 shrink-0 text-indigo-500" />
@@ -253,11 +248,10 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/a01-video-review"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/a01-video-review')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/a01-video-review')
                       ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'A01 Video Review' : undefined}
                 >
                   <Video className="h-4 w-4 shrink-0 text-rose-500" />
@@ -276,11 +270,10 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/users"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/users')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/users')
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'Quản Lý Người Dùng' : undefined}
                 >
                   <Users className="h-4 w-4 shrink-0 text-indigo-500" />
@@ -292,11 +285,10 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/elo-management"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/elo-management')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/elo-management')
                       ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'Quản Lý ELO' : undefined}
                 >
                   <Zap className="h-4 w-4 shrink-0 text-orange-500" />
@@ -308,11 +300,10 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/fraud-reports"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                    pathname.startsWith('/admin/fraud-reports')
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/fraud-reports')
                       ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
-                  } ${collapsed ? 'justify-center px-2' : ''}`}
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
                   title={collapsed ? 'Fraud Reports' : undefined}
                 >
                   <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
@@ -483,7 +474,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
       (async () => {
         try {
           const publicList = await getPublicTournaments().catch(() => []);
-          
+
           // Load local draft tournaments created by Manager in this session
           const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
           const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];

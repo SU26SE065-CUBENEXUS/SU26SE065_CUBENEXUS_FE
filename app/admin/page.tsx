@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition">
-                  Giải Online Async (A01)
+                  Giải Online (A01)
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
                   Quản lý giải đấu Online A01, AI 5-Face Scan & Hand Timer 14s.
