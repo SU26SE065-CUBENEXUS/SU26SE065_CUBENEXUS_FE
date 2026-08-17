@@ -98,6 +98,7 @@ export type TournamentStatusCode =
   | 'published'
   | 'registration_open'
   | 'registration_closed'
+  | 'checking_in'
   | 'ongoing'
   | 'completed'
   | 'cancelled'

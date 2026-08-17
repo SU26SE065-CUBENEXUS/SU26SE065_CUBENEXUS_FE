@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import { StatusBadge } from './StatusBadge';
-import { Play, Lock, Video, Radio, CheckCircle, Globe, AlertTriangle } from 'lucide-react';
+import { Play, Lock, Video, Radio, CheckCircle, Globe, AlertTriangle, UserCheck } from 'lucide-react';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
@@ -27,8 +27,28 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
   const [targetTourToClose, setTargetTourToClose] = useState<TournamentDetailDto | null>(null);
   const [targetTourToStart, setTargetTourToStart] = useState<TournamentDetailDto | null>(null);
   const [targetTourToComplete, setTargetTourToComplete] = useState<TournamentDetailDto | null>(null);
+  const [targetTourToCheckIn, setTargetTourToCheckIn] = useState<TournamentDetailDto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Execute Open Check-in with fallback & exact error reporting
+  const executeOpenCheckIn = async () => {
+    if (!targetTourToCheckIn) return;
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const { updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
+      await updateAdminTournamentStatus(targetTourToCheckIn.id, 'CHECKING_IN');
+      targetTourToCheckIn.statusCode = 'checking_in' as any;
+      setTargetTourToCheckIn(null);
+      if (onRefresh) onRefresh();
+      else window.location.reload();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Không thể mở cửa check-in giải đấu.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Execute Close Registration with fallback & exact error reporting
   const executeCloseRegistration = async () => {
@@ -200,8 +220,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 const isOngoing = st === 'ONGOING';
                 const isCompleted = st === 'COMPLETED';
                 const isOpenForLocking = st === 'PUBLISHED' || st === 'REGISTRATION_OPEN';
-                const canForceStart = !isOngoing && !isCompleted;
-                const canComplete = !isCompleted;
+                const canOpenCheckIn = st === 'REGISTRATION_CLOSED';
+                const canForceStart = st === 'CHECKING_IN';
+                const canComplete = isOngoing || st === 'CHECKING_IN';
 
                 return (
                   <tr key={t.id} className="hover:bg-slate-50/80 transition-colors group align-middle">
@@ -300,9 +321,23 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToStart(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title="Cho diễn ra giải đấu ngay (Force Start)"
+                            title="Bắt đầu thi đấu giải đấu (ONGOING)"
                           >
                             <Play className="h-3.5 w-3.5 fill-current" /> Bắt Đầu Ngay
+                          </button>
+                        )}
+
+                        {/* Open Check-in Button */}
+                        {canOpenCheckIn && (
+                          <button
+                            onClick={() => {
+                              setErrorMessage(null);
+                              setTargetTourToCheckIn(t);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
+                            title="Mở cửa Check-in giải đấu"
+                          >
+                            <UserCheck className="h-3.5 w-3.5" /> Mở Check-in
                           </button>
                         )}
 
@@ -390,8 +425,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           const isOngoing = st === 'ONGOING';
           const isCompleted = st === 'COMPLETED';
           const isOpenForLocking = st === 'PUBLISHED' || st === 'REGISTRATION_OPEN';
-          const canForceStart = !isOngoing && !isCompleted;
-          const canComplete = !isCompleted;
+          const canOpenCheckIn = st === 'REGISTRATION_CLOSED';
+          const canForceStart = st === 'CHECKING_IN';
+          const canComplete = isOngoing || st === 'CHECKING_IN';
 
           return (
             <div key={t.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
@@ -477,6 +513,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
                   >
                     <Play className="h-3 w-3 fill-current" /> Bắt Đầu Ngay
+                  </button>
+                )}
+
+                {/* Open Check-in */}
+                {canOpenCheckIn && (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToCheckIn(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
+                  >
+                    <UserCheck className="h-3 w-3" /> Mở Check-in
                   </button>
                 )}
 
@@ -615,6 +664,28 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         onClose={() => {
           if (!isProcessing) {
             setTargetTourToComplete(null);
+            setErrorMessage(null);
+          }
+        }}
+      />
+
+      {/* Confirmation Modal for Open Check-in */}
+      <ConfirmModal
+        isOpen={Boolean(targetTourToCheckIn)}
+        title="Mở Cửa Check-in Giải Đấu"
+        description={
+          errorMessage
+            ? errorMessage
+            : `Bạn có chắc chắn muốn mở cửa Check-in cho giải "${targetTourToCheckIn?.name}"? Tài khoản các trọng tài của giải đấu sẽ được tự động kích hoạt trở lại.`
+        }
+        confirmText="Mở Check-in"
+        cancelText="Hủy Bỏ"
+        variant="primary"
+        isLoading={isProcessing}
+        onConfirm={executeOpenCheckIn}
+        onClose={() => {
+          if (!isProcessing) {
+            setTargetTourToCheckIn(null);
             setErrorMessage(null);
           }
         }}

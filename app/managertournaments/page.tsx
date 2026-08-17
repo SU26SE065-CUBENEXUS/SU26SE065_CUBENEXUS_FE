@@ -18,6 +18,7 @@ const STATUS_FILTERS: Array<{ label: string; value: TournamentStatusCode | 'all'
   { label: 'Đang diễn ra (Live)', value: 'ongoing' },
   { label: 'Đang mở đăng ký', value: 'registration_open' },
   { label: 'Sắp diễn ra', value: 'published' },
+  { label: 'Đang Check-in', value: 'checking_in' },
   { label: 'Đã hoàn thành', value: 'completed' },
   { label: 'Đã hủy', value: 'cancelled' },
 ];
