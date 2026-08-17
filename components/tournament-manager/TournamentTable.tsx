@@ -260,8 +260,8 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 const isOngoing = st === 'ONGOING';
                 const isCompleted = st === 'COMPLETED';
 
-                // Publish (DRAFT / DISABLED -> PUBLISHED)
-                const canPublish = st === 'DRAFT' || st === 'DISABLED';
+                // Publish (DRAFT / DISABLED -> PUBLISHED) - Only for Offline tournaments
+                const canPublish = !t.isOnlineAsync && (st === 'DRAFT' || st === 'DISABLED');
 
                 // Open Registration
                 const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
@@ -500,8 +500,8 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           const isOngoing = st === 'ONGOING';
           const isCompleted = st === 'COMPLETED';
 
-          // Publish (DRAFT / DISABLED -> PUBLISHED)
-          const canPublish = st === 'DRAFT' || st === 'DISABLED';
+          // Publish (DRAFT / DISABLED -> PUBLISHED) - Only for Offline tournaments
+          const canPublish = !t.isOnlineAsync && (st === 'DRAFT' || st === 'DISABLED');
 
           // Open Registration
           const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
