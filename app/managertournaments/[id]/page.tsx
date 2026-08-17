@@ -72,7 +72,7 @@ function formatDateRange(start: string, end: string): string {
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
@@ -97,7 +97,7 @@ export default function TournamentDetailDashboardPage({
       const data = await getTournamentById(id);
       setTournament(data);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải thông tin giải đấu từ máy chủ.');
+      setError(err?.message || 'Failed to load tournament details from server.');
       setTournament(null);
     } finally {
       setIsLoading(false);
@@ -116,12 +116,12 @@ export default function TournamentDetailDashboardPage({
       const updated = await completeTournament(id);
       setTournament(updated);
       setCompleteMsg({
-        text: 'Giải đấu đã được đánh dấu HOÀN THÀNH thành công!',
+        text: 'Tournament marked as COMPLETED successfully!',
         isError: false,
       });
     } catch (err: any) {
       setCompleteMsg({
-        text: err?.message || 'Không thể đánh dấu hoàn thành giải đấu.',
+        text: err?.message || 'Failed to complete tournament.',
         isError: true,
       });
     } finally {
@@ -145,14 +145,14 @@ export default function TournamentDetailDashboardPage({
         <div className="flex flex-col items-center gap-4 rounded-3xl border border-red-200 bg-red-50/50 p-12 text-center shadow-2xs">
           <AlertCircle className="h-10 w-10 text-red-500" />
           <div>
-            <p className="text-base font-extrabold text-red-900">Không Tìm Thấy Giải Đấu</p>
-            <p className="text-xs text-red-700 mt-1">{error || 'Giải đấu không tồn tại hoặc đã bị xóa.'}</p>
+            <p className="text-base font-extrabold text-red-900">Tournament Not Found</p>
+            <p className="text-xs text-red-700 mt-1">{error || 'Tournament does not exist or has been deleted.'}</p>
           </div>
           <button
             onClick={fetchTournament}
             className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-xs font-extrabold text-slate-800 hover:bg-slate-50 transition cursor-pointer shadow-2xs"
           >
-            <RefreshCw className="h-4 w-4" /> Thử Lại
+            <RefreshCw className="h-4 w-4" /> Retry
           </button>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function TournamentDetailDashboardPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
         <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
-          Giải Đấu
+          Tournaments
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <span className="text-slate-900 font-semibold">{tournament.name}</span>
@@ -183,7 +183,7 @@ export default function TournamentDetailDashboardPage({
             <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
           )}
           <span>{completeMsg.text}</span>
-          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline font-semibold cursor-pointer">Đóng</button>
+          <button onClick={() => setCompleteMsg(null)} className="ml-auto text-xs underline font-semibold cursor-pointer">Close</button>
         </div>
       )}
 
@@ -194,7 +194,7 @@ export default function TournamentDetailDashboardPage({
           <div
             onClick={() => setPreviewImage(tournament.bannerUrl!)}
             className="relative h-48 w-full overflow-hidden bg-slate-100 cursor-pointer border-b border-slate-200"
-            title="Bấm để xem ảnh phóng to"
+            title="Click to expand banner"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -212,7 +212,7 @@ export default function TournamentDetailDashboardPage({
                 <StatusBadge status={tournament.statusCode} />
                 {tournament.maxParticipants && (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                    Tối đa: {tournament.maxParticipants} thí sinh
+                    Max {tournament.maxParticipants} competitors
                   </span>
                 )}
                 <span className="text-xs text-slate-400 font-mono">
@@ -235,7 +235,7 @@ export default function TournamentDetailDashboardPage({
                   </span>
                 )}
                 <span>
-                  • Người tạo: {tournament.createdByUserName || 'Manager'}
+                  • Created by: {tournament.createdByUserName || 'Manager'}
                 </span>
               </div>
               {/* Events chips */}
@@ -257,7 +257,7 @@ export default function TournamentDetailDashboardPage({
                 onClick={fetchTournament}
                 disabled={isLoading}
                 className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 cursor-pointer"
-                title="Tải lại"
+                title="Reload"
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
@@ -270,7 +270,7 @@ export default function TournamentDetailDashboardPage({
                   {isCompleting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : null}
-                  Hoàn Thành Giải Đấu
+                  Complete Tournament
                 </button>
               )}
             </div>
@@ -279,16 +279,16 @@ export default function TournamentDetailDashboardPage({
           {/* Reg window */}
           <div className="mt-5 border-t border-slate-100 pt-4 flex flex-wrap gap-4 text-xs text-slate-500">
             <span>
-              <span className="font-semibold text-slate-700">Mở đăng ký:</span>{' '}
-              {new Date(tournament.registrationOpenAt).toLocaleString('vi-VN')}
+              <span className="font-semibold text-slate-700">Registration Opens:</span>{' '}
+              {new Date(tournament.registrationOpenAt).toLocaleString('en-US')}
             </span>
             <span>
-              <span className="font-semibold text-slate-700">Đóng đăng ký:</span>{' '}
-              {new Date(tournament.registrationCloseAt).toLocaleString('vi-VN')}
+              <span className="font-semibold text-slate-700">Registration Closes:</span>{' '}
+              {new Date(tournament.registrationCloseAt).toLocaleString('en-US')}
             </span>
             <span>
-              <span className="font-semibold text-slate-700">Ngày tạo:</span>{' '}
-              {new Date(tournament.createdAt).toLocaleDateString('vi-VN')}
+              <span className="font-semibold text-slate-700">Created:</span>{' '}
+              {new Date(tournament.createdAt).toLocaleDateString('en-US')}
             </span>
           </div>
         </div>
@@ -296,16 +296,16 @@ export default function TournamentDetailDashboardPage({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <DashboardCard title="Hạng mục thi" value={tournament.events?.length || 0} accent="blue" />
-        <DashboardCard title="Nhóm & Scramble" value="Sẵn sàng" accent="purple" />
-        <DashboardCard title="Thí sinh đăng ký" value="Chi tiết" accent="yellow" />
-        <DashboardCard title="Điều hành Live" value="Hoạt động" accent="emerald" />
+        <DashboardCard title="Events" value={tournament.events?.length || 0} accent="blue" />
+        <DashboardCard title="Groups & Scrambles" value="Ready" accent="purple" />
+        <DashboardCard title="Registrations" value="Details" accent="yellow" />
+        <DashboardCard title="Live Operations" value="Active" accent="emerald" />
       </div>
 
       {/* Quick Action Cards */}
       <div className="space-y-3">
         <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          Thao Tác Nhanh
+          Quick Actions
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {QUICK_ACTIONS.map((action) => {
@@ -330,17 +330,17 @@ export default function TournamentDetailDashboardPage({
       <ImageLightboxModal
         isOpen={Boolean(previewImage)}
         imageUrl={previewImage}
-        title={tournament ? `Poster Banner — ${tournament.name}` : 'Poster Giải Đấu'}
+        title={tournament ? `Poster Banner — ${tournament.name}` : 'Tournament Banner'}
         onClose={() => setPreviewImage(null)}
       />
 
       {/* Confirm Modal for Complete Tournament */}
       <ConfirmModal
         isOpen={showConfirmComplete}
-        title="Đánh Dấu Hoàn Thành Giải Đấu"
-        description={`Bạn có chắc chắn muốn kết thúc và đánh dấu giải đấu "${tournament.name}" là HOÀN THÀNH? Thao tác này không thể hoàn tác.`}
-        confirmText="Xác Nhận Hoàn Thành"
-        cancelText="Hủy Bỏ"
+        title="Complete Tournament"
+        description={`Are you sure you want to mark tournament "${tournament.name}" as COMPLETED? This action cannot be undone.`}
+        confirmText="Confirm Complete"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isCompleting}
         onConfirm={handleComplete}

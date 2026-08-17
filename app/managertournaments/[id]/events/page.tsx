@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 function msToDisplay(ms?: number | null): string {
-  if (!ms || ms <= 0) return 'Không giới hạn';
+  if (!ms || ms <= 0) return 'No limit';
   const totalSec = ms / 1000;
   if (totalSec >= 60) {
     const min = Math.floor(totalSec / 60);
@@ -29,8 +29,6 @@ function msToDisplay(ms?: number | null): string {
   }
   return `${totalSec.toFixed(2)}s`;
 }
-
-
 
 function EventCard({
   event,
@@ -58,7 +56,7 @@ function EventCard({
       const data = await getEventCompetitors(event.id);
       setCompetitors(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tải danh sách thí sinh');
+      setError(err instanceof Error ? err.message : 'Failed to load competitors');
     } finally {
       setLoadingComp(false);
     }
@@ -76,20 +74,18 @@ function EventCard({
     try {
       await closeEventRegistration(event.id);
       setIsLocallyClosed(true);
-      setMessage(`Đã khóa cổng đăng ký cho hạng mục ${formatEventLabel(event)}.`);
+      setMessage(`Registration closed for event ${formatEventLabel(event)}.`);
       setShowConfirmClose(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể khóa cổng đăng ký');
+      setError(err instanceof Error ? err.message : 'Failed to close registration');
     } finally {
       setClosingReg(false);
     }
   };
 
-
-
   const isMedley = event.eventFormatCode === 'MEDLEY';
   const formatLabel = isMedley
-    ? 'Thi Đấu Đội Phối Hợp (Medley Relay)'
+    ? 'Team Medley Relay'
     : event.solveCount === 5
     ? 'Average of 5 (Ao5)'
     : event.solveCount === 3
@@ -109,24 +105,24 @@ function EventCard({
               </h2>
               {isEventRegistrationClosed ? (
                 <span className="rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
-                  Đã Khóa Đăng Ký
+                  Registration Closed
                 </span>
               ) : (
                 <span className="rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                  Đang Mở Đăng Ký
+                  Registration Open
                 </span>
               )}
             </div>
 
             {/* WCA Rules Summary Line */}
             <p className="text-xs text-slate-500 font-medium mt-1">
-              {formatLabel} • Limit: <strong className="text-slate-700 font-mono">{msToDisplay(event.timeLimitMs)}</strong> • Cutoff: <strong className="text-slate-700 font-mono">{msToDisplay(event.cutoffTimeMs)}</strong> • Số lượt: <strong className="text-slate-700 font-mono">{event.solveCount} solves</strong> • Đăng ký: <strong className="text-indigo-600 font-mono">{competitors.length}{event.maxCapacity && event.maxCapacity > 0 ? ` / ${event.maxCapacity}` : ''}</strong>
+              {formatLabel} • Limit: <strong className="text-slate-700 font-mono">{msToDisplay(event.timeLimitMs)}</strong> • Cutoff: <strong className="text-slate-700 font-mono">{msToDisplay(event.cutoffTimeMs)}</strong> • Attempts: <strong className="text-slate-700 font-mono">{event.solveCount} solves</strong> • Registered: <strong className="text-indigo-600 font-mono">{competitors.length}{event.maxCapacity && event.maxCapacity > 0 ? ` / ${event.maxCapacity}` : ''}</strong>
             </p>
 
             {/* Medley Puzzle Chain */}
             {isMedley && event.medleyPuzzles && event.medleyPuzzles.length > 0 && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                <span className="text-[11px] text-slate-400">Chuỗi Rubik:</span>
+                <span className="text-[11px] text-slate-400">Puzzle Sequence:</span>
                 {event.medleyPuzzles
                   .sort((a, b) => a.sortOrder - b.sortOrder)
                   .map((p, idx) => (
@@ -146,9 +142,9 @@ function EventCard({
               <button
                 onClick={() => setShowConfirmClose(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition cursor-pointer"
-                title="Khóa cổng đăng ký cho môn này"
+                title="Close registration for this event"
               >
-                Khóa Đăng Ký Môn Thi
+                Close Event Registration
               </button>
             )}
 
@@ -166,14 +162,14 @@ function EventCard({
           <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-xs text-emerald-700 font-medium">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span>{message}</span>
-            <button onClick={() => setMessage(null)} className="ml-auto text-xs underline">Đóng</button>
+            <button onClick={() => setMessage(null)} className="ml-auto text-xs underline">Close</button>
           </div>
         )}
         {error && (
           <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-2.5 text-xs text-red-700 font-medium">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto text-xs underline">Đóng</button>
+            <button onClick={() => setError(null)} className="ml-auto text-xs underline">Close</button>
           </div>
         )}
       </div>
@@ -183,7 +179,7 @@ function EventCard({
         <div className="p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Thí Sinh Đã Đăng Ký ({competitors.length})
+              Registered Competitors ({competitors.length})
             </p>
             <button
               onClick={loadCompetitors}
@@ -191,16 +187,16 @@ function EventCard({
               className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loadingComp ? 'animate-spin' : ''}`} />
-              Tải lại
+              Reload
             </button>
           </div>
 
           {loadingComp && (
-            <div className="py-8 text-center text-xs text-slate-400">Đang tải danh sách thí sinh…</div>
+            <div className="py-8 text-center text-xs text-slate-400">Loading competitors…</div>
           )}
 
           {!loadingComp && competitors.length === 0 && (
-            <div className="py-8 text-center text-xs text-slate-400">Chưa có thí sinh nào đăng ký cho môn này.</div>
+            <div className="py-8 text-center text-xs text-slate-400">No competitors registered for this event yet.</div>
           )}
 
           {!loadingComp && competitors.length > 0 && (
@@ -208,8 +204,8 @@ function EventCard({
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="py-2.5 px-4 w-12 text-center">STT</th>
-                    <th className="py-2.5 px-4">Thí Sinh</th>
+                    <th className="py-2.5 px-4 w-12 text-center">No.</th>
+                    <th className="py-2.5 px-4">Competitor</th>
                     <th className="py-2.5 px-4">Email</th>
                   </tr>
                 </thead>
@@ -231,10 +227,10 @@ function EventCard({
       {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={showConfirmClose}
-        title="Khóa Cổng Đăng Ký Môn Thi"
-        description={`Bạn có chắc muốn đóng cổng đăng ký cho môn thi "${formatEventLabel(event)}"?`}
-        confirmText="Xác Nhận Khóa"
-        cancelText="Hủy Bỏ"
+        title="Close Event Registration"
+        description={`Are you sure you want to close registration for "${formatEventLabel(event)}"?`}
+        confirmText="Confirm Close"
+        cancelText="Cancel"
         variant="warning"
         isLoading={closingReg}
         onConfirm={handleCloseRegistration}
@@ -260,7 +256,7 @@ export default function EventConfigurationPage({
         const data = await getTournamentById(id);
         setTournament(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Không thể tải thông tin giải đấu');
+        setError(err instanceof Error ? err.message : 'Failed to load tournament info');
       } finally {
         setIsLoading(false);
       }
@@ -280,7 +276,7 @@ export default function EventConfigurationPage({
       <div className="mx-auto max-w-7xl px-4 py-10">
         <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-semibold">{error ?? 'Không tìm thấy giải đấu'}</p>
+          <p className="font-semibold">{error ?? 'Tournament not found'}</p>
         </div>
       </div>
     );
@@ -290,24 +286,24 @@ export default function EventConfigurationPage({
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
-        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Tournaments</Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-        <span className="text-slate-900 font-bold">Cấu Hình Hạng Mục & Thí Sinh</span>
+        <span className="text-slate-900 font-bold">Event & Competitor Configuration</span>
       </div>
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Hạng Mục & Quy Tắc</p>
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Events & Regulations</p>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
-            Cấu Hình Hạng Mục & Thí Sinh
+            Event & Competitor Configuration
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Quản lý quy định luật WCA (Time Limit, Cutoff) và theo dõi danh sách đăng ký thí sinh cho từng hạng mục.
+            Manage WCA regulation rules (Time Limit, Cutoff) and monitor competitor registrations for each event category.
           </p>
         </div>
         <StatusBadge status={tournament.statusCode} />
@@ -316,20 +312,20 @@ export default function EventConfigurationPage({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tổng Hạng Mục</span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{tournament.events.length} Môn Thi</p>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Events</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{tournament.events.length} Events</p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Quy Chuẩn Thi Đấu</span>
-          <p className="text-2xl font-bold text-slate-900 mt-1">Luật Thi WCA</p>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Rules Standard</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">WCA Regulations</p>
         </div>
       </div>
 
       {/* Main Content List */}
       {tournament.events.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center text-slate-400 shadow-2xs">
-          <p className="font-semibold text-sm">Chưa có hạng mục thi đấu nào được cấu hình.</p>
+          <p className="font-semibold text-sm">No events configured for this tournament yet.</p>
         </div>
       ) : (
         <div className="space-y-4">

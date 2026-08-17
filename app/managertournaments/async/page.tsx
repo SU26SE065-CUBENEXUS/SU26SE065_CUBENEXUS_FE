@@ -73,7 +73,7 @@ export default function AsyncTournamentManagerPage() {
 
       setTournaments(Array.from(combinedMap.values()));
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải danh sách giải Async Online.');
+      setError(err?.message || 'Failed to load Async Online tournaments.');
     } finally {
       setIsLoading(false);
     }
@@ -113,10 +113,10 @@ export default function AsyncTournamentManagerPage() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Quản Lý Giải Đấu Online Asynchronous (Admin)
+              Online Asynchronous Tournaments Management
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
-              Thi đấu bất đồng bộ Online A01 với tự động quét AI 5 mặt Rubik, đếm giờ phạt hand timer 14s, ghi hình trực tiếp và upload video bằng chứng lên R2 cho Admin duyệt.
+              Asynchronous online A01 competition with automated 5-face AI scan, 14s hand timer penalties, real-time recording and R2 video evidence submission for verification.
             </p>
           </div>
 
@@ -125,7 +125,7 @@ export default function AsyncTournamentManagerPage() {
               onClick={fetchAsyncTournaments}
               disabled={isLoading}
               className="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer disabled:opacity-50"
-              title="Tải lại danh sách"
+              title="Reload list"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -139,7 +139,7 @@ export default function AsyncTournamentManagerPage() {
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-md transition cursor-pointer"
             >
-              <Plus className="h-4 w-4" /> Tạo Giải Async A01 Mới
+              <Plus className="h-4 w-4" /> Create Async A01 Tournament
             </button>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function AsyncTournamentManagerPage() {
             onClick={fetchAsyncTournaments}
             className="px-3 py-1 bg-white border border-amber-300 rounded-lg text-amber-900 font-bold hover:bg-amber-100 transition cursor-pointer"
           >
-            Thử lại
+            Retry
           </button>
         </div>
       )}
@@ -168,7 +168,7 @@ export default function AsyncTournamentManagerPage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Tìm theo tên giải đấu Async..."
+            placeholder="Search by Async tournament name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2.5 text-xs font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-600 focus:bg-white transition"
@@ -183,14 +183,14 @@ export default function AsyncTournamentManagerPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3.5 py-2.5 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer focus:border-indigo-600 focus:bg-white transition"
           >
-            <option value="ALL">Tất Cả Trạng Thái</option>
-            <option value="ONGOING">Đang Diễn Ra (In Progress)</option>
-            <option value="COMPLETED">Đã Hoàn Thành (Completed)</option>
-            <option value="REGISTRATION_OPEN">Đang Mở Đăng Ký</option>
-            <option value="REGISTRATION_CLOSED">Đóng Đăng Ký</option>
-            <option value="PUBLISHED">Đã Công Bố</option>
-            <option value="DRAFT">Bản Nháp (Draft)</option>
-            <option value="DISABLED">Đã Vô Hiệu Hóa</option>
+            <option value="ALL">All Statuses</option>
+            <option value="ONGOING">Ongoing / In Progress</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="REGISTRATION_OPEN">Registration Open</option>
+            <option value="REGISTRATION_CLOSED">Registration Closed</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="DRAFT">Draft</option>
+            <option value="DISABLED">Disabled</option>
           </select>
         </div>
       </div>
@@ -199,15 +199,15 @@ export default function AsyncTournamentManagerPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Zap className="h-4 w-4 text-indigo-600" /> Danh Sách Giải Async Online ({filteredTournaments.length})
+            <Zap className="h-4 w-4 text-indigo-600" /> Async Online Tournaments ({filteredTournaments.length})
           </h2>
-          <span className="text-xs font-bold text-slate-500">Định dạng A01 • Full Dev Control Actions</span>
+          <span className="text-xs font-bold text-slate-500">A01 Format • Full Dev Control Actions</span>
         </div>
 
         {isLoading ? (
           <div className="p-12 bg-white rounded-3xl border border-slate-200 text-center">
             <RefreshCw className="h-6 w-6 animate-spin text-indigo-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-500">Đang tải danh sách giải đấu Async...</p>
+            <p className="text-xs font-semibold text-slate-500">Loading Async tournaments...</p>
           </div>
         ) : (
           <TournamentTable tournaments={filteredTournaments} onRefresh={fetchAsyncTournaments} />

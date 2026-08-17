@@ -202,13 +202,16 @@ function EventRoundControlPanel({
   });
   const isScramblesReady = scramblesGenerated;
 
+  const totalRoundsConfigured = event.totalRounds || 1;
+  const isFinalRound = Number(roundNumber) >= totalRoundsConfigured;
+
   const stepStatus = {
     groups: groupsExist ? 'Done' : 'Pending',
     scrambles: scramblesGenerated ? 'Done' : (groupsExist ? 'Ready' : 'Pending'),
     start: roundStatus !== 'PENDING' ? 'Done' : (groupsExist && scramblesGenerated ? 'Ready' : 'Blocked'),
     lock: (roundStatus === 'LOCKED' || roundStatus === 'COMPLETED') ? 'Done' : (roundStatus === 'ONGOING' ? 'Ready' : 'Blocked'),
     complete: roundStatus === 'COMPLETED' ? 'Done' : (roundStatus === 'LOCKED' ? 'Ready' : 'Blocked'),
-    advance: roundStatus === 'COMPLETED' ? 'Ready' : 'Blocked',
+    advance: isFinalRound ? 'Disabled' : (roundStatus === 'COMPLETED' ? 'Ready' : 'Blocked'),
   };
 
   const totalCompetitors = liveBoard?.progress?.totalCompetitors ?? 0;
@@ -255,6 +258,7 @@ function EventRoundControlPanel({
             <div className="text-xs text-slate-500 mt-0.5 font-medium">
               {event.solveCount} solves · Limit: {msToDisplay(event.timeLimitMs)}
               {event.cutoffTimeMs ? ` · Cutoff: ${msToDisplay(event.cutoffTimeMs)}` : ''}
+              {` · Total: ${totalRoundsConfigured} ${totalRoundsConfigured > 1 ? 'Rounds' : 'Final Round'}`}
             </div>
           </div>
         </button>
@@ -268,14 +272,18 @@ function EventRoundControlPanel({
                   disabled={Number(roundNumber) <= 1 || isLoading || isLiveBoardLoading}
                   onClick={() => setRoundNumber((prev) => String(Math.max(1, Number(prev) - 1)))}
                   className="p-1 rounded hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition-colors cursor-pointer"
+                  title="Previous Round"
                 >
                   <ChevronLeft className="h-3 w-3" />
                 </button>
-                <span className="text-[10px] font-bold px-2 text-slate-800 font-mono">Round {roundNumber}</span>
+                <span className="text-[10px] font-bold px-2 text-slate-800 font-mono">
+                  Round {roundNumber} / {totalRoundsConfigured}
+                </span>
                 <button
-                  disabled={isLoading || isLiveBoardLoading}
+                  disabled={Number(roundNumber) >= totalRoundsConfigured || isLoading || isLiveBoardLoading}
                   onClick={() => setRoundNumber((prev) => String(Number(prev) + 1))}
-                  className="p-1 rounded hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                  className="p-1 rounded hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition-colors cursor-pointer"
+                  title={Number(roundNumber) >= totalRoundsConfigured ? 'Final Round reached' : 'Next Round'}
                 >
                   <ChevronRight className="h-3 w-3" />
                 </button>
@@ -327,16 +335,16 @@ function EventRoundControlPanel({
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-slate-900">Round {roundNumber}</span>
               </div>
-              <span className="text-xs text-slate-500 mt-1">Trạng thái: <strong className="text-slate-900">{roundStatus}</strong></span>
+              <span className="text-xs text-slate-500 mt-1">Status: <strong className="text-slate-900">{roundStatus}</strong></span>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Participants & Groups</span>
               <div className="mt-2">
                 <span className="text-2xl font-bold text-slate-900">{totalCompetitors}</span>
-                <span className="text-xs text-slate-500 font-semibold ml-1">thí sinh</span>
+                <span className="text-xs text-slate-500 font-semibold ml-1">competitors</span>
               </div>
-              <span className="text-xs text-slate-500 mt-1">{groupsCount} nhóm · {activeStations} bàn thi</span>
+              <span className="text-xs text-slate-500 mt-1">{groupsCount} groups · {activeStations} stations</span>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
@@ -347,7 +355,7 @@ function EventRoundControlPanel({
                 </span>
                 <span className={`inline-block w-2.5 h-2.5 rounded-full ${isScramblesReady ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               </div>
-              <span className="text-xs text-indigo-600 font-semibold mt-1">{isScramblesReady ? 'Đã tạo chuỗi Scramble' : 'Chưa tạo Scramble'}</span>
+              <span className="text-xs text-indigo-600 font-semibold mt-1">{isScramblesReady ? 'Scrambles Generated' : 'Scrambles Missing'}</span>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs text-slate-900 flex flex-col justify-between">
@@ -366,7 +374,7 @@ function EventRoundControlPanel({
           <div className="space-y-4 max-w-4xl mx-auto w-full">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-slate-500 font-bold font-mono block">
-                QUY TRÌNH ĐIỀU HÀNH VÒNG THI (LIFECYCLE STEPPER)
+                ROUND LIFECYCLE CONTROLS
               </span>
               <button
                 onClick={() => fetchLiveBoard(Number(roundNumber))}
@@ -374,7 +382,7 @@ function EventRoundControlPanel({
                 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 p-1 transition cursor-pointer"
               >
                 <RefreshCw className={`h-3 w-3 ${isLiveBoardLoading ? 'animate-spin text-indigo-600' : ''}`} />
-                Đồng Bộ Dữ Liệu
+                Sync Data
               </button>
             </div>
 
@@ -386,8 +394,8 @@ function EventRoundControlPanel({
                     {stepStatus.groups === 'Done' ? <Check className="h-3.5 w-3.5" /> : '1'}
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">1. Tạo Nhóm Thi & Trạm Bàn Thi (Generate Groups & Stations)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Phân chia nhóm thi đấu và gán bàn thi cho từng thí sinh.</p>
+                    <p className="text-xs font-bold text-slate-900">1. Generate Groups & Assign Stations</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Partition competitors into heats and allocate competition stations.</p>
                   </div>
                 </div>
                 <button
@@ -407,8 +415,8 @@ function EventRoundControlPanel({
                     {stepStatus.scrambles === 'Done' ? <Check className="h-3.5 w-3.5" /> : '2'}
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">2. Tạo Chuỗi Scramble (Generate Scrambles)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">{isScramblesReady ? 'Đã khởi tạo xong chuỗi xáo trộn cho toàn bộ các nhóm.' : 'Sinh ngẫu nhiên bộ scramble chính thức cho vòng đấu này.'}</p>
+                    <p className="text-xs font-bold text-slate-900">2. Generate Official Scramble Sets</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">{isScramblesReady ? 'All group scramble sequences have been generated.' : 'Generate official random scramble sequences for this round.'}</p>
                   </div>
                 </div>
                 <button
@@ -431,8 +439,8 @@ function EventRoundControlPanel({
                     {stepStatus.start === 'Done' ? <Check className="h-3.5 w-3.5" /> : '3'}
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">3. Khai Mạc Vòng Đấu (Start Active Round)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Kích hoạt kết nối SignalR Hub cho các bàn thi và cho phép trọng tài quét mã QR.</p>
+                    <p className="text-xs font-bold text-slate-900">3. Start Active Round</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Activate SignalR Hub connections for judge stations and enable QR scan check-ins.</p>
                   </div>
                 </div>
                 <button
@@ -454,8 +462,8 @@ function EventRoundControlPanel({
                     {stepStatus.lock === 'Done' ? <Check className="h-3.5 w-3.5" /> : '4'}
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">4. Khóa Bảng Điểm (Lock Round Results)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Ngăn các trạm bàn thi gửi thêm điểm và chốt kiểm tra kết quả đối soát.</p>
+                    <p className="text-xs font-bold text-slate-900">4. Lock Round Results</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Prevent stations from submitting further times while auditing results.</p>
                   </div>
                 </div>
                 <button
@@ -477,8 +485,8 @@ function EventRoundControlPanel({
                     {stepStatus.complete === 'Done' ? <Check className="h-3.5 w-3.5" /> : '5'}
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">5. Hoàn Tất Vòng Đấu (Complete Round)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Xác nhận thứ hạng chính thức để chuẩn bị thăng hạng thí sinh.</p>
+                    <p className="text-xs font-bold text-slate-900">5. Complete Round</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Finalize official rankings to prepare for qualifying advancement.</p>
                   </div>
                 </div>
                 <button
@@ -494,20 +502,36 @@ function EventRoundControlPanel({
               </div>
 
               {/* Step 6: Advance Round */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900">
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-white shadow-2xs text-slate-900 ${isFinalRound ? 'opacity-60 bg-slate-50/50' : ''}`}>
                 <div className="flex items-start gap-3">
-                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-700'}`}>
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-mono shrink-0 ${!isFinalRound && stepStatus.advance === 'Ready' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 animate-pulse' : 'bg-slate-100 border border-slate-200 text-slate-400'}`}>
                     6
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">6. Thăng Hạng Thí Sinh Vào Vòng Kế (Advance Competitors)</p>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Chuyển top thí sinh xuất sắc nhất vào vòng tiếp theo và tự động tạo nhóm mới.</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-bold text-slate-900">6. Advance Qualifying Competitors</p>
+                      {isFinalRound && (
+                        <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                          Final Round (No Next Round)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {isFinalRound
+                        ? 'This is the final round of this event category. Competitor rankings are final.'
+                        : 'Promote top qualifiers to the next round and initialize new groups.'}
+                    </p>
                   </div>
                 </div>
                 <button
-                  disabled={isLoading || stepStatus.advance !== 'Ready'}
+                  disabled={isFinalRound || isLoading || stepStatus.advance !== 'Ready'}
                   onClick={() => setIsAdvanceOpen(true)}
-                  className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                  className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${
+                    isFinalRound
+                      ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 cursor-pointer'
+                  }`}
+                  title={isFinalRound ? 'Cannot advance: This is the final round.' : 'Advance qualifying competitors to next round'}
                 >
                   <Zap className="h-3.5 w-3.5" /> Advance Round
                 </button>
@@ -529,13 +553,13 @@ function EventRoundControlPanel({
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
                 <div className="relative w-full max-w-md p-6 bg-white border border-slate-200 rounded-xl shadow-2xl space-y-4 text-slate-900 overflow-hidden">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 className="text-base font-bold text-slate-900">Cấu Hình Tạo Nhóm Thi Đấu</h3>
+                    <h3 className="text-base font-bold text-slate-900">Configure Competition Groups</h3>
                     <button onClick={() => setIsGenerateGroupsOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Thiết lập thông số chia nhóm thi đấu cho <strong className="text-indigo-600">Vòng {roundNumber}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                    Set grouping parameters for <strong className="text-indigo-600">Round {roundNumber}</strong> - Event <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
                   </p>
 
                   {/* NO STATIONS / JUDGES UNASSIGNED ALERT */}
@@ -543,8 +567,8 @@ function EventRoundControlPanel({
                     <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 leading-relaxed flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
                       <div>
-                        <strong className="block font-bold mb-0.5">Chưa Phân Công Trọng Tài & Bàn Thi!</strong>
-                        Chưa có bàn thi đấu nào được gắn với Trọng tài. Vui lòng hoàn thành <strong>Bước 1 (Phân công Trọng tài & Bàn thi)</strong> trước khi tạo nhóm thi đấu.
+                        <strong className="block font-bold mb-0.5">Judges & Stations Not Assigned!</strong>
+                        No competition stations are assigned to judges. Please complete <strong>Step 1 (Assign Judges & Stations)</strong> before creating groups.
                       </div>
                     </div>
                   )}
@@ -553,11 +577,11 @@ function EventRoundControlPanel({
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                          Số lượng thí sinh trong 1 nhóm
+                          Competitors per Group
                         </label>
                         {totalEligibleCount > 0 && (
                           <span className="text-[10px] text-indigo-600 font-bold font-mono">
-                            Tổng đủ điều kiện: {totalEligibleCount} thí sinh
+                            Total eligible: {totalEligibleCount} competitors
                           </span>
                         )}
                       </div>
@@ -566,9 +590,9 @@ function EventRoundControlPanel({
 
                     {!isNoStationsAssigned && (
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs flex items-center justify-between">
-                        <span className="text-slate-600 font-medium">Số bàn thi đấu khả dụng:</span>
+                        <span className="text-slate-600 font-medium">Available Stations:</span>
                         <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
-                          {sCount} Bàn (Đã phân công Trọng tài)
+                          {sCount} Stations (Judges Assigned)
                         </span>
                       </div>
                     )}
@@ -578,22 +602,20 @@ function EventRoundControlPanel({
                   {isGroupExceeded && (
                     <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium flex items-center gap-1.5">
                       <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
-                      <span>Số thí sinh/nhóm ({gSize}) không được lớn hơn tổng số thí sinh tham gia ({totalEligibleCount}).</span>
+                      <span>Competitors per group ({gSize}) cannot exceed total eligible competitors ({totalEligibleCount}).</span>
                     </div>
                   )}
 
                   {isGroupLessThanStations && (
                     <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-center gap-1.5">
                       <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                      <span>Số thí sinh/nhóm ({gSize}) không được ít hơn số bàn thi khả dụng ({sCount} bàn).</span>
+                      <span>Competitors per group ({gSize}) cannot be fewer than available stations ({sCount} stations).</span>
                     </div>
                   )}
 
-
-
                   <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button onClick={() => setIsGenerateGroupsOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
-                      Hủy Bỏ
+                      Cancel
                     </button>
                     <button
                       disabled={isLoading || isInvalid}
@@ -601,13 +623,13 @@ function EventRoundControlPanel({
                         setIsGenerateGroupsOpen(false);
                         doAction(
                           () => generateGroups(event.id, { roundNumber: Number(roundNumber), competitorsPerGroup: gSize, stationCount: sCount }),
-                          `Đã khởi tạo thành công các nhóm thi đấu cho Vòng ${roundNumber}!`
+                          `Successfully generated groups for Round ${roundNumber}!`
                         );
                       }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
                     >
                       {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Tạo Nhóm Ngay
+                      Generate Groups
                     </button>
                   </div>
                 </div>
@@ -644,14 +666,14 @@ function EventRoundControlPanel({
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
                 <div className="relative w-full max-w-2xl p-6 bg-white border border-slate-200 rounded-xl shadow-2xl flex flex-col max-h-[85vh] space-y-4 text-slate-900 overflow-hidden">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 className="text-base font-bold text-slate-900">Cấu Hình Tăng Vòng (Advance Round)</h3>
+                    <h3 className="text-base font-bold text-slate-900">Advance Round Configuration</h3>
                     <button onClick={() => setIsAdvanceOpen(false)} className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors cursor-pointer">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Tuyển chọn các thí sinh xuất sắc từ <strong className="text-indigo-600">Vòng {roundNumber}</strong> tiến vào <strong className="text-indigo-600">Vòng {Number(roundNumber) + 1}</strong> - Môn <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
+                    Select qualifying competitors from <strong className="text-indigo-600">Round {roundNumber}</strong> to advance to <strong className="text-indigo-600">Round {Number(roundNumber) + 1}</strong> - Event <strong className="text-slate-900">{formatEventLabel(event)}</strong>.
                   </p>
 
                   {/* NO STATIONS ALERT */}
@@ -659,25 +681,24 @@ function EventRoundControlPanel({
                     <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 leading-relaxed flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
                       <div>
-                        <strong className="block font-bold mb-0.5">Chưa Phân Công Trọng Tài & Bàn Thi!</strong>
-                        Chưa có bàn thi đấu nào được gắn với Trọng tài. Vui lòng hoàn thành <strong>Bước 1 (Phân công Trọng tài & Bàn thi)</strong> trước khi thăng hạng.
+                        <strong className="block font-bold mb-0.5">Judges & Stations Not Assigned!</strong>
+                        No competition stations are assigned to judges. Please complete <strong>Step 1 (Assign Judges & Stations)</strong> before advancing.
                       </div>
                     </div>
                   )}
-
 
                   {/* Top N Info banner - read only from event config */}
                   {event.advanceTopN && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-xs text-indigo-700 font-medium">
                       <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-                      Theo cấu hình giải đấu, <strong className="font-bold">{event.advanceTopN} thí sinh</strong> xuất sắc nhất sẽ tiến vào Vòng {Number(roundNumber) + 1}. Bạn có thể điều chỉnh lại bên dưới.
+                      Per tournament configuration, the top <strong className="font-bold">{event.advanceTopN} competitors</strong> will advance to Round {Number(roundNumber) + 1}. You can fine-tune selections below.
                     </div>
                   )}
 
                   {/* Group size input only */}
                   <div className="w-48">
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      Size Nhóm Mới
+                      New Group Size
                     </label>
                     <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
                   </div>
@@ -687,7 +708,7 @@ function EventRoundControlPanel({
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
                       <div>
-                        <span className="font-bold">⚠️ Cảnh báo Đồng Hạng (Tie-Break):</span> Phát hiện nhiều hơn {topNVal} thí sinh bằng điểm ở vị trí ranh giới Top {topNVal} (Hạng #{candidateBoundary.rank}). Vui lòng tích chọn đúng {topNVal} thí sinh thắng lượt đấu phụ offline để đi tiếp Vòng {Number(roundNumber) + 1}.
+                        <span className="font-bold">⚠️ Tie-Break Warning:</span> Multiple competitors tied at Top {topNVal} cut-line (Rank #{candidateBoundary.rank}). Please select the exact {topNVal} competitors who won the offline tie-break to advance to Round {Number(roundNumber) + 1}.
                       </div>
                     </div>
                   )}
@@ -695,20 +716,20 @@ function EventRoundControlPanel({
                   {/* Advance Preview Table with Manual Checkboxes */}
                   <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg bg-white">
                     <div className="p-2.5 bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono flex items-center justify-between">
-                      <span>Danh Sách Thí Sinh Tuyển Chọn</span>
+                      <span>Selected Competitors List</span>
                       <span className="text-indigo-600 font-bold">
-                        Đã chọn: {selectedCompEventIds.length} / {topNVal} thí sinh
+                        Selected: {selectedCompEventIds.length} / {topNVal} competitors
                       </span>
                     </div>
                     {eligibleAll.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-slate-500 italic">Chưa có kết quả xếp hạng. Bấm Xác Nhận để hệ thống tự động tính toán.</div>
+                      <div className="p-6 text-center text-xs text-slate-500 italic">No ranked results available yet. Confirming will automatically compute from the live scoreboard.</div>
                     ) : (
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold text-[10px] uppercase">
-                            <th className="p-2.5 w-10 text-center">Chọn</th>
-                            <th className="p-2.5 font-mono">Hạng</th>
-                            <th className="p-2.5 font-mono">Thí Sinh</th>
+                            <th className="p-2.5 w-10 text-center">Select</th>
+                            <th className="p-2.5 font-mono">Rank</th>
+                            <th className="p-2.5 font-mono">Competitor</th>
                             <th className="p-2.5 font-mono">Best</th>
                             <th className="p-2.5 font-mono">Average</th>
                           </tr>
@@ -757,7 +778,7 @@ function EventRoundControlPanel({
 
                   <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button onClick={() => setIsAdvanceOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
-                      Hủy Bỏ
+                      Cancel
                     </button>
                     <button
                       disabled={isLoading || selectedCompEventIds.length === 0 || isNoStationsAssigned}
@@ -771,13 +792,13 @@ function EventRoundControlPanel({
                             stationCount: sCount,
                             selectedRegistrationEventIds: selectedCompEventIds.length > 0 ? selectedCompEventIds : undefined
                           }),
-                          `Đã chuyển thành công ${selectedCompEventIds.length} thí sinh vào Vòng ${Number(roundNumber) + 1}!`
+                          `Successfully advanced ${selectedCompEventIds.length} competitors to Round ${Number(roundNumber) + 1}!`
                         );
                       }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
                     >
                       {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      Xác Nhận Chuyển Vòng ({selectedCompEventIds.length})
+                      Confirm Advance ({selectedCompEventIds.length})
                     </button>
                   </div>
                 </div>
@@ -1261,7 +1282,7 @@ export default function LiveOperationsPage({
     // If in Correction Mode, call the correction endpoint instead of submit
     if (isCorrectingMode && targetCorrectionResultId) {
       if (!correctionReason.trim()) {
-        setSubmitTradResult({ ok: false, message: 'Lý do sửa đổi (Correction Reason) là bắt buộc.' });
+        setSubmitTradResult({ ok: false, message: 'Correction reason is required.' });
         return;
       }
       setIsSubmittingTrad(true);
@@ -1272,7 +1293,7 @@ export default function LiveOperationsPage({
           penaltyTypeId,
           reason: correctionReason.trim(),
         });
-        setSubmitTradResult({ ok: true, message: `✓ Đã sửa điểm Solve #${solveNum} thành ${rawTimeMs}s!` });
+        setSubmitTradResult({ ok: true, message: `✓ Updated Solve #${solveNum} score to ${rawTimeMs}s!` });
         setCorrectionReason('');
         // Refresh live state
         const state = await getLiveBoardState(selectedEventId, Number(roundNumber));
@@ -1294,7 +1315,7 @@ export default function LiveOperationsPage({
     try {
       const sigData = tradHasSignature ? tradCanvasRef.current?.toDataURL() : undefined;
       const penaltyTypeId = isValidGuid(selectedPenaltyId) ? selectedPenaltyId : undefined;
-      const currentCompName = filteredTradCompetitors.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId)?.competitorName || 'Thí sinh';
+      const currentCompName = filteredTradCompetitors.find((c: any) => c.groupCompetitorId === selectedGroupCompetitorId)?.competitorName || 'Competitor';
       const submittedTimeSec = formatMs(Math.round(Number(rawTimeMs) * 1000));
       await submitTraditionalResult({
         groupCompetitorId: selectedGroupCompetitorId,
@@ -1324,7 +1345,7 @@ export default function LiveOperationsPage({
           setSelectedGroupCompetitorId(nextComp.groupCompetitorId);
           setSubmitTradResult({
             ok: true,
-            message: `✓ Solve #${solveNum} (${submittedTimeSec}) đã lưu! ${currentCompName} đã hoàn thành đủ ${totalSolves} lượt. Tự động chuyển sang thí sinh tiếp theo: ${nextComp.competitorName}.`,
+            message: `✓ Solve #${solveNum} (${submittedTimeSec}) saved! ${currentCompName} completed all ${totalSolves} solves. Switched to next competitor: ${nextComp.competitorName}.`,
           });
         } else {
           setSelectedGroupCompetitorId('');
@@ -1332,7 +1353,7 @@ export default function LiveOperationsPage({
           setTargetCorrectionResultId(null);
           setSubmitTradResult({
             ok: true,
-            message: `✓ Solve #${solveNum} (${submittedTimeSec}) đã lưu! ${currentCompName} đã hoàn thành lượt thi cuối. Tất cả thí sinh trong nhóm đã hoàn thành.`,
+            message: `✓ Solve #${solveNum} (${submittedTimeSec}) saved! ${currentCompName} completed final attempt. All competitors in this group have finished.`,
           });
         }
       } else {
@@ -1358,7 +1379,7 @@ export default function LiveOperationsPage({
     if (!totalTimeStr) {
       totalTimeStr = Object.values(medleyTimes).find((v) => !!v) || '';
     }
-    if (!totalTimeStr) { setSubmitMedleyResultStatus({ ok: false, message: `Vui lòng nhập tổng thời gian thi đấu Medley.` }); return; }
+    if (!totalTimeStr) { setSubmitMedleyResultStatus({ ok: false, message: `Please enter the total Medley relay time.` }); return; }
 
     let idx = 0;
     for (const puzzle of activeEvent.medleyPuzzles) {
@@ -1415,13 +1436,13 @@ export default function LiveOperationsPage({
     try {
       if (action === 'start') {
         await startRound(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Round ${roundMgmtRound} started! Trạm trọng tài đã mở để bắt đầu thi đấu.` });
+        setRoundActionResult({ ok: true, message: `Round ${roundMgmtRound} started! Judge stations are open to begin solves.` });
       } else if (action === 'lock') {
         await lockRoundResults(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Đã khóa kết quả Vòng ${roundMgmtRound}. Tất cả các trạm không thể gửi thêm điểm.` });
+        setRoundActionResult({ ok: true, message: `Locked Round ${roundMgmtRound} results. Stations cannot submit additional scores.` });
       } else if (action === 'complete') {
         await completeRound(roundMgmtEventId, Number(roundMgmtRound));
-        setRoundActionResult({ ok: true, message: `Vòng ${roundMgmtRound} đã hoàn thành. Điểm số đã chốt và xếp hạng đã được tạo.` });
+        setRoundActionResult({ ok: true, message: `Round ${roundMgmtRound} completed. Official rankings generated.` });
       } else if (action === 'complete_event') {
         const selectedEv = tournament?.events.find((e) => e.id === roundMgmtEventId);
         const configuredRounds = selectedEv?.totalRounds || 1;
@@ -1429,20 +1450,20 @@ export default function LiveOperationsPage({
         if (currentRoundNum < configuredRounds) {
           setRoundActionResult({
             ok: false,
-            message: `❌ Không Thể Hoàn Thành Môn Thi!\n\nMôn thi này được cấu hình ${configuredRounds} vòng đấu nhưng hiện tại mới thực hiện xong Vòng ${currentRoundNum}.\nVui lòng bấm 'Advance Round' để tuyển chọn thí sinh thi tiếp Vòng ${currentRoundNum + 1}.`,
+            message: `❌ Cannot Complete Event!\n\nThis event is configured for ${configuredRounds} rounds, but currently only Round ${currentRoundNum} is finished.\nPlease click 'Advance Round' to promote competitors to Round ${currentRoundNum + 1}.`,
           });
           setIsRoundAction(false);
           return;
         }
         await completeEvent(roundMgmtEventId);
-        setRoundActionResult({ ok: true, message: `Hạng mục thi đấu đã được Hoàn thành và chốt giải thành công!` });
+        setRoundActionResult({ ok: true, message: `Event finalized and results completed successfully!` });
       }
 
       // Refresh round state after action
       const state = await getLiveBoardState(roundMgmtEventId, Number(roundMgmtRound));
       setRoundState(state);
     } catch (err) {
-      setRoundActionResult({ ok: false, message: err instanceof Error ? err.message : 'Thực hiện thao tác thất bại.' });
+      setRoundActionResult({ ok: false, message: err instanceof Error ? err.message : 'Action failed.' });
     } finally {
       setIsRoundAction(false);
     }
@@ -1483,7 +1504,7 @@ export default function LiveOperationsPage({
       <div className="mx-auto max-w-7xl px-4 py-10">
         <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-semibold">{errorMain ?? 'Không tìm thấy giải đấu'}</p>
+          <p className="font-semibold">{errorMain ?? 'Tournament not found'}</p>
         </div>
       </div>
     );
@@ -1496,20 +1517,20 @@ export default function LiveOperationsPage({
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
 
   const TABS = [
-    { id: 'traditional', label: 'Bảng Xếp Hạng & Nhập Điểm', icon: ClipboardEdit },
-    { id: 'medley', label: 'Thi Đấu Medley', icon: TimerIcon },
-    { id: 'round', label: 'Điều Hành Vòng Thi', icon: Play },
+    { id: 'traditional', label: 'Leaderboard & Score Entry', icon: ClipboardEdit },
+    { id: 'medley', label: 'Medley Relay', icon: TimerIcon },
+    { id: 'round', label: 'Round Controls', icon: Play },
   ] as const;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
-        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Tournaments</Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">{tournament.name}</Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-        <span className="text-slate-900 font-bold">Điều Hành Trực Tiếp (Live)</span>
+        <span className="text-slate-900 font-bold">Live Operations</span>
       </div>
 
       {/* Page Header */}
@@ -1520,10 +1541,10 @@ export default function LiveOperationsPage({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Điều Hành Trực Tiếp</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Live Operations</h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Theo dõi trạm bàn thi, nhập điểm và điều hành tiến trình vòng thi thời gian thực.
+            Monitor judge stations, submit attempt times, and control round lifecycle in real-time.
           </p>
         </div>
 
@@ -1531,7 +1552,7 @@ export default function LiveOperationsPage({
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border text-emerald-700 border-emerald-200 bg-emerald-50">
             <Wifi className="h-3.5 w-3.5" />
-            <span>Hệ Thống Trực Tiếp Sẵn Sàng</span>
+            <span>Live System Ready</span>
           </div>
         </div>
       </div>
@@ -1554,20 +1575,18 @@ export default function LiveOperationsPage({
           );
         })}
       </div>
-
-      {/* ─── TAB 1: CHECK-IN ──────────────────────────────────── */}
       {activeTab === 'checkin' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 max-w-xl mx-auto w-full shadow-2xs text-slate-900">
           <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <QrCode className="h-4 w-4 text-indigo-600" /> Check-In Thí Sinh Sảnh Đấu
+            <QrCode className="h-4 w-4 text-indigo-600" /> Venue Competitor Check-In
           </h2>
-          <p className="text-xs text-slate-500 mb-5">Nhập hoặc quét mã QR thí sinh để xác nhận sự có mặt tại giải đấu.</p>
+          <p className="text-xs text-slate-500 mb-5">Scan QR badge or enter token code to confirm competitor attendance at venue.</p>
           <form onSubmit={handleCheckIn} className="space-y-3">
             <div className="relative">
               <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text" value={qrInput} onChange={(e) => setQrInput(e.target.value)}
-                placeholder="Quét mã hoặc nhập mã QR token thí sinh..."
+                placeholder="Scan or enter competitor QR badge token..."
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                 autoFocus
               />
@@ -1577,7 +1596,7 @@ export default function LiveOperationsPage({
               className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
             >
               {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              {isCheckingIn ? 'Đang xác nhận...' : 'Xác Nhận Check-In'}
+              {isCheckingIn ? 'Checking in...' : 'Confirm Check-In'}
             </button>
           </form>
           {checkInResult && (
@@ -1603,10 +1622,10 @@ export default function LiveOperationsPage({
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 uppercase tracking-tight">
-                  Bảng Xếp Hạng Trực Tiếp & Đối Soát Tờ Ghi Điểm Minh Chứng
+                  Live Leaderboard & Evidence Scorecard Audit
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Bấm vào kết quả bất kỳ (Lượt 1…5) hoặc biểu tượng 📸 Ảnh Minh Chứng để mở tờ ghi điểm và điều chỉnh điểm.
+                  Click any attempt result (Solve 1…5) or 📸 Evidence Photo icon to inspect scorecard and adjust scores.
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1634,7 +1653,7 @@ export default function LiveOperationsPage({
                     }
                   }}
                   className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition"
-                  title="Làm mới bảng điểm"
+                  title="Refresh Leaderboard"
                 >
                   <RefreshCw className="h-4 w-4" />
                 </button>
@@ -1646,12 +1665,12 @@ export default function LiveOperationsPage({
               <div className="flex flex-wrap items-center gap-4 px-4 py-2 bg-slate-50 border border-b-0 border-slate-200 text-xs text-slate-600 font-sans rounded-t-lg">
                 {currentEvent.timeLimitMs && (
                   <span className="flex items-center gap-1 font-medium">
-                    <span className="font-semibold text-slate-700">Time Limit:</span> <strong className="text-slate-900 font-mono">{formatMs(currentEvent.timeLimitMs)}</strong> <span className="text-[11px] text-slate-500">(Vượt mốc = DNF)</span>
+                    <span className="font-semibold text-slate-700">Time Limit:</span> <strong className="text-slate-900 font-mono">{formatMs(currentEvent.timeLimitMs)}</strong> <span className="text-[11px] text-slate-500">(Exceeded = DNF)</span>
                   </span>
                 )}
                 {currentEvent.cutoffTimeMs && (
                   <span className="flex items-center gap-1 font-medium">
-                    <span className="font-semibold text-slate-700">Cutoff Time:</span> <strong className="text-amber-700 font-mono">{formatMs(currentEvent.cutoffTimeMs)}</strong> <span className="text-[11px] text-slate-500">(Mốc tối đa lượt thi đầu để được thi tiếp)</span>
+                    <span className="font-semibold text-slate-700">Cutoff Time:</span> <strong className="text-amber-700 font-mono">{formatMs(currentEvent.cutoffTimeMs)}</strong> <span className="text-[11px] text-slate-500">(Max threshold on opening solves to continue)</span>
                   </span>
                 )}
               </div>
@@ -1664,16 +1683,16 @@ export default function LiveOperationsPage({
               </div>
             ) : !liveState || !liveState.competitors || liveState.competitors.length === 0 ? (
               <div className="text-center py-12 text-xs text-slate-500">
-                Chưa có dữ liệu bảng điểm trực tiếp cho hạng mục và round này.
+                No live scoreboard data available for this event and round yet.
               </div>
             ) : (
               <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center w-10">Hạng</th>
-                      <th className="px-3 py-2 font-bold uppercase text-slate-500">Thí Sinh</th>
-                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center">Nhóm</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center w-10">Rank</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500">Competitor</th>
+                      <th className="px-3 py-2 font-bold uppercase text-slate-500 text-center">Group</th>
                       {Array.from({ length: liveState.solveCount || 5 }, (_, i) => (
                         <th key={i} className="px-2 py-2 font-bold uppercase text-slate-500 text-center">
                           Solve #{i + 1}
@@ -1744,7 +1763,7 @@ export default function LiveOperationsPage({
                             return (
                               <td key={i} className="px-2 py-2.5 text-center">
                                 {isCutoffStoppedCell ? (
-                                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Dừng thi do không đạt mốc Cutoff ở các lượt đầu">
+                                  <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Stopped due to Cutoff threshold in opening attempts">
                                     CUTOFF
                                   </span>
                                 ) : (
@@ -1778,22 +1797,22 @@ export default function LiveOperationsPage({
                                       }`}
                                     title={
                                       attempt
-                                        ? `Solve #${i + 1}: ${val} ${isOverTimeLimit ? '(Vượt mốc Time Limit => DNF)' : isOverCutoff ? '(Vượt mốc Cutoff)' : ''} ${hasPhoto ? '(Bấm để mở ảnh tờ ghi điểm R2)' : '(Bấm để sửa điểm)'}`
-                                        : 'Chưa thi đấu'
+                                        ? `Solve #${i + 1}: ${val} ${isOverTimeLimit ? '(Time Limit Exceeded => DNF)' : isOverCutoff ? '(Cutoff Exceeded)' : ''} ${hasPhoto ? '(Click to view scorecard photo)' : '(Click to edit solve)'}`
+                                        : 'Not attempted yet'
                                     }
                                   >
                                     <span>{val}</span>
                                     {isOverTimeLimit ? (
-                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatMs(rawOrFinalMs)}) vượt mốc Time Limit (${formatMs(timeLimitMs!)})`}>
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Time (${formatMs(rawOrFinalMs)}) exceeded Time Limit (${formatMs(timeLimitMs!)})`}>
                                         Time Limit (DNF)
                                       </span>
                                     ) : isOverCutoff ? (
-                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatMs(finalMs)}) vượt mốc Cutoff (${formatMs(cutoffMs!)})`}>
+                                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Time (${formatMs(finalMs)}) exceeded Cutoff (${formatMs(cutoffMs!)})`}>
                                         Cutoff
                                       </span>
                                     ) : null}
                                     {!isOverTimeLimit && attempt?.penaltyCode === 'PLUS_2' && <span className="text-[9px] text-amber-600 font-bold ml-0.5">+2</span>}
-                                    {hasPhoto && <span className="text-[10px] ml-0.5" title="Có ảnh R2">📸</span>}
+                                    {hasPhoto && <span className="text-[10px] ml-0.5" title="Has scorecard photo">📸</span>}
                                   </button>
                                 )}
                               </td>
@@ -1821,24 +1840,24 @@ export default function LiveOperationsPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
               <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-                <ClipboardEdit className="h-4 w-4 text-indigo-600" /> Nhập Điểm Trực Tiếp (Traditional Result Entry)
+                <ClipboardEdit className="h-4 w-4 text-indigo-600" /> Traditional Result Entry
               </h2>
-              <p className="text-xs text-slate-500 mb-5">Nhập kết quả các lượt giải thi đấu truyền thống.</p>
+              <p className="text-xs text-slate-500 mb-5">Enter solve attempts manually for traditional puzzle formats.</p>
 
               {currentEvent?.eventFormatCode === 'MEDLEY' ? (
                 <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-6 text-center text-xs text-indigo-900 space-y-2">
-                  <p className="font-bold text-sm">📌 Hạng Mục Đang Chọn: {formatEventLabel(currentEvent)}</p>
+                  <p className="font-bold text-sm">📌 Active Event: {formatEventLabel(currentEvent)}</p>
                   <p className="text-slate-600">
-                    Bảng xếp hạng trực tiếp của Medley Relay đã được hiển thị ở bảng phía trên. Để nhập điểm Medley thủ công trên Web Manager, vui lòng chọn Tab <button type="button" onClick={() => setActiveTab('medley')} className="font-bold text-indigo-600 underline">Thi Đấu Medley</button> hoặc sử dụng App Trọng Tài trên Mobile.
+                    The live leaderboard for Medley Relay is shown above. To enter Medley scores manually on Web Manager, please select the <button type="button" onClick={() => setActiveTab('medley')} className="font-bold text-indigo-600 underline">Medley Relay</button> tab or use the Referee Mobile App.
                   </p>
                 </div>
               ) : traditionalEvents.length === 0 ? (
-                <p className="text-center py-10 text-xs text-slate-500">Không có hạng mục thi đấu truyền thống.</p>
+                <p className="text-center py-10 text-xs text-slate-500">No traditional events configured.</p>
               ) : (
                 <form onSubmit={handleTraditionalSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Event</label>
                       <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}
                         className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
@@ -1848,21 +1867,21 @@ export default function LiveOperationsPage({
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
                       <input type="number" min="1" value={roundNumber} onChange={(e) => setRoundNumber(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm (Group)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Group</label>
                       {isLoadingLiveState ? (
-                        <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
+                        <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Loading...</div>
                       ) : (
                         <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                         >
-                          <option value="">-- Chọn Nhóm Thi --</option>
+                          <option value="">-- Select Group --</option>
                           {liveState?.groups.map((g: any) => (
                             <option key={g.groupId} value={g.groupId}>{g.groupName} ({g.statusCode})</option>
                           ))}
@@ -1870,14 +1889,14 @@ export default function LiveOperationsPage({
                       )}
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Competitor</label>
                       <select value={selectedGroupCompetitorId} onChange={(e) => setSelectedGroupCompetitorId(e.target.value)}
                         disabled={!selectedGroupId}
                         className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
                       >
-                        <option value="">-- Chọn Thí Sinh --</option>
+                        <option value="">-- Select Competitor --</option>
                         {filteredTradCompetitors.map((c: any) => (
-                          <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Trạm {c.stationNumber ?? '—'})</option>
+                          <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName} (Station {c.stationNumber ?? '—'})</option>
                         ))}
                       </select>
                     </div>
@@ -1887,7 +1906,7 @@ export default function LiveOperationsPage({
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve #</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Solve #</label>
                           <select value={attemptNumber} onChange={(e) => setAttemptNumber(e.target.value)}
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                           >
@@ -1898,19 +1917,19 @@ export default function LiveOperationsPage({
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">
-                            {isCorrectingMode ? 'Thời Gian Sửa (Giây)' : 'Thời Gian Solve (Giây)'}
+                            {isCorrectingMode ? 'Corrected Time (Seconds)' : 'Solve Time (Seconds)'}
                           </label>
                           <input type="number" step="0.01" value={rawTimeMs} onChange={(e) => setRawTimeMs(e.target.value)}
-                            placeholder="Ví dụ: 10.25"
+                            placeholder="e.g. 10.25"
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 font-mono"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Hình Phạt (Penalty)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 font-mono">Penalty</label>
                           <select value={selectedPenaltyId} onChange={(e) => setSelectedPenaltyId(e.target.value)}
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                           >
-                            <option value="none">OK (Hợp lệ)</option>
+                            <option value="none">OK (No penalty)</option>
                             {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                           </select>
                         </div>
@@ -1919,11 +1938,11 @@ export default function LiveOperationsPage({
                       {isCorrectingMode ? (
                         /* Correction Reason Input (Audit Trail) */
                         <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-bold text-amber-600 uppercase font-mono">Lý Do Đổi Điểm (Bắt buộc)</label>
+                          <label className="block text-[10px] font-bold text-amber-600 uppercase font-mono">Correction Reason (Required)</label>
                           <textarea
                             value={correctionReason}
                             onChange={(e) => setCorrectionReason(e.target.value)}
-                            placeholder="Ví dụ: Trọng tài ghi nhầm giây trên scorecard giấy..."
+                            placeholder="e.g. Referee misread timer tenths, verified against paper scorecard..."
                             rows={2}
                             className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600"
                           />
@@ -1942,8 +1961,8 @@ export default function LiveOperationsPage({
                           {/* Signature */}
                           <div>
                             <div className="flex items-center justify-between mb-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
-                              <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">Competitor Signature</label>
+                              <button type="button" onClick={clearTradSignature} className="text-[10px] font-bold text-red-600 hover:underline">Clear</button>
                             </div>
                             <canvas
                               ref={tradCanvasRef} width={400} height={80}
@@ -1961,7 +1980,7 @@ export default function LiveOperationsPage({
                   {isCorrectingMode && !isHubConnected && (
                     <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 animate-in fade-in duration-200">
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>Yêu cầu kết nối truyền dữ liệu trực tiếp đang hoạt động mới được phép điều chỉnh điểm.</span>
+                      <span>Real-time Live Hub connection required to adjust scores.</span>
                     </div>
                   )}
 
@@ -1976,7 +1995,7 @@ export default function LiveOperationsPage({
                     ) : (
                       <ClipboardEdit className="h-4 w-4" />
                     )}
-                    {isSubmittingTrad ? 'Đang gửi...' : isCorrectingMode ? 'Cập Nhật Điều Chỉnh Điểm' : 'Gửi Kết Quả Thi'}
+                    {isSubmittingTrad ? 'Submitting...' : isCorrectingMode ? 'Save Score Correction' : 'Submit Attempt Result'}
                   </button>
                 </form>
               )}
@@ -1992,11 +2011,11 @@ export default function LiveOperationsPage({
 
             {/* Results Monitor sidebar */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
-              <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Nhóm</h3>
+              <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Group Progress</h3>
               {isLoadingLiveState ? (
                 <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
               ) : filteredTradCompetitors.length === 0 ? (
-                <p className="text-xs text-slate-400">Chọn nhóm thi để xem danh sách thí sinh.</p>
+                <p className="text-xs text-slate-400">Select a group to view competitor roster.</p>
               ) : (
                 <div className="space-y-3">
                   {filteredTradCompetitors.map((c: any) => (
@@ -2041,7 +2060,7 @@ export default function LiveOperationsPage({
                                     : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                               ) : 'bg-slate-100 text-slate-400 cursor-default'
                                 }`}
-                              title={result ? "Bấm để xem ảnh minh chứng / Sửa điểm" : "Lượt thi chưa hoàn thành"}
+                              title={result ? "Click to view scorecard evidence / Edit score" : "Solve not completed yet"}
                             >
                               {result ? (result.isDnf ? 'DNF' : `${(result.finalTimeMs / 1000).toFixed(2)}`) : `S${i + 1}`}
                             </button>
@@ -2062,17 +2081,17 @@ export default function LiveOperationsPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
             <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-              <TimerIcon className="h-4 w-4 text-indigo-600" /> Nhập Điểm Medley Relay
+              <TimerIcon className="h-4 w-4 text-indigo-600" /> Medley Relay Score Entry
             </h2>
-            <p className="text-xs text-slate-500 mb-5">Nhập kết quả thi đấu đồng đội liên hoàn theo từng loại Rubik.</p>
+            <p className="text-xs text-slate-500 mb-5">Enter team relay results across multiple puzzle categories.</p>
 
             {medleyEvents.length === 0 ? (
-              <p className="text-center py-10 text-xs text-slate-500">Chưa cấu hình môn thi Medley.</p>
+              <p className="text-center py-10 text-xs text-slate-500">No Medley events configured.</p>
             ) : (
               <form onSubmit={handleMedleySubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi Medley</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Medley Event</label>
                     <select value={medleyEventId} onChange={(e) => setMedleyEventId(e.target.value)}
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                     >
@@ -2082,11 +2101,11 @@ export default function LiveOperationsPage({
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Round</label>
                     <input type="number" min="1" value={medleyRoundNumber} onChange={(e) => setMedleyRoundNumber(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Lượt Solve (#)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Solve #</label>
                     <select
                       value={medleyAttemptNumber}
                       onChange={(e) => setMedleyAttemptNumber(e.target.value)}
@@ -2106,14 +2125,14 @@ export default function LiveOperationsPage({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Nhóm</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Group</label>
                     {isLoadingMedleyLive ? (
-                      <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Đang tải...</div>
+                      <div className="flex items-center gap-2 py-2 text-xs text-slate-500"><Loader2 className="h-3 w-3 animate-spin" /> Loading...</div>
                     ) : (
                       <select value={medleyGroupId} onChange={(e) => setMedleyGroupId(e.target.value)}
                         className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                       >
-                        <option value="">-- Chọn Nhóm --</option>
+                        <option value="">-- Select Group --</option>
                         {medleyLiveState?.groups.map((g: any) => (
                           <option key={g.groupId} value={g.groupId}>{g.groupName}</option>
                         ))}
@@ -2121,7 +2140,7 @@ export default function LiveOperationsPage({
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Thí Sinh</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Competitor</label>
                     <select
                       value={medleyCompetitorId}
                       onChange={(e) => {
@@ -2139,7 +2158,7 @@ export default function LiveOperationsPage({
                       disabled={!medleyGroupId}
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 disabled:opacity-50"
                     >
-                      <option value="">-- Chọn Thí Sinh --</option>
+                      <option value="">-- Select Competitor --</option>
                       {filteredMedleyCompetitors.map((c: any) => (
                         <option key={c.groupCompetitorId} value={c.groupCompetitorId}>{c.competitorName}</option>
                       ))}
@@ -2151,10 +2170,10 @@ export default function LiveOperationsPage({
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase">Tổng Thời Gian Medley</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">Total Medley Time</p>
                         {tournament.events.find((ev) => ev.id === medleyEventId) && (
                           <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                            Gồm {tournament.events.find((ev) => ev.id === medleyEventId)?.medleyPuzzles.length || 0} khối
+                            Includes {tournament.events.find((ev) => ev.id === medleyEventId)?.medleyPuzzles.length || 0} puzzles
                           </span>
                         )}
                       </div>
@@ -2162,8 +2181,8 @@ export default function LiveOperationsPage({
                       <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-3">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <label className="block text-xs font-bold text-slate-900">Tổng Thời Gian (giây)</label>
-                            <p className="text-[10px] text-slate-500">Ví dụ: nhập 45.20</p>
+                            <label className="block text-xs font-bold text-slate-900">Total Time (seconds)</label>
+                            <p className="text-[10px] text-slate-500">e.g. 45.20</p>
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Penalty</label>
@@ -2172,7 +2191,7 @@ export default function LiveOperationsPage({
                               onChange={(e) => setMedleyPenalties({ total: e.target.value })}
                               className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                             >
-                              <option value="none">OK (Không phạt)</option>
+                              <option value="none">OK (No penalty)</option>
                               {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                             </select>
                           </div>
@@ -2183,7 +2202,7 @@ export default function LiveOperationsPage({
                           step="0.01"
                           value={medleyTimes['total'] || ''}
                           onChange={(e) => setMedleyTimes({ total: e.target.value })}
-                          placeholder="VD: 45.20"
+                          placeholder="e.g. 45.20"
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 font-mono font-bold outline-none focus:bg-white focus:border-indigo-600"
                         />
                       </div>
@@ -2192,8 +2211,8 @@ export default function LiveOperationsPage({
                     {/* Signature */}
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Chữ Ký Thí Sinh</label>
-                        <button type="button" onClick={clearMedleySignature} className="text-[10px] font-bold text-red-600 hover:underline">Xóa chữ ký</button>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Competitor Signature</label>
+                        <button type="button" onClick={clearMedleySignature} className="text-[10px] font-bold text-red-600 hover:underline">Clear</button>
                       </div>
                       <canvas
                         ref={medleyCanvasRef} width={400} height={80}
@@ -2210,7 +2229,7 @@ export default function LiveOperationsPage({
                   className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
                 >
                   {isSubmittingMedley ? <Loader2 className="h-4 w-4 animate-spin" /> : <TimerIcon className="h-4 w-4" />}
-                  {isSubmittingMedley ? 'Đang gửi...' : 'Gửi Kết Quả Medley'}
+                  {isSubmittingMedley ? 'Submitting...' : 'Submit Medley Result'}
                 </button>
               </form>
             )}
@@ -2226,11 +2245,11 @@ export default function LiveOperationsPage({
 
           {/* Medley Monitor */}
           <div className="rounded-xl border border-slate-200 bg-white p-5 h-fit shadow-2xs text-slate-900">
-            <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Tiến Độ Medley</h3>
+            <h3 className="font-bold text-xs text-slate-700 mb-4 uppercase tracking-wider">Medley Progress</h3>
             {isLoadingMedleyLive ? (
               <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-indigo-600" /></div>
             ) : filteredMedleyCompetitors.length === 0 ? (
-              <p className="text-xs text-slate-400">Chọn nhóm thi Medley.</p>
+              <p className="text-xs text-slate-400">Select a Medley group.</p>
             ) : (
               <div className="space-y-3">
                 {filteredMedleyCompetitors.map((c: any) => (
@@ -2238,7 +2257,7 @@ export default function LiveOperationsPage({
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-slate-900 truncate mr-2">{c.competitorName}</span>
                       <span className={`text-[10px] font-bold ${c.completedSolves > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                        {c.completedSolves > 0 ? 'HOÀN THÀNH' : 'ĐANG THI'}
+                        {c.completedSolves > 0 ? 'COMPLETED' : 'IN PROGRESS'}
                       </span>
                     </div>
                   </div>
@@ -2253,13 +2272,13 @@ export default function LiveOperationsPage({
       {activeTab === 'verify' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 max-w-2xl mx-auto w-full shadow-2xs text-slate-900">
           <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Xác Nhận QR Trạm Trọng Tài
+            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Verify Referee Station QR
           </h2>
-          <p className="text-xs text-slate-500 mb-5">Kiểm tra thông tin thẻ QR thí sinh tại trạm bàn thi cụ thể.</p>
+          <p className="text-xs text-slate-500 mb-5">Inspect competitor QR badge token information at a specific station.</p>
           <form onSubmit={handleVerifyStation} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Môn Thi</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Event</label>
                 <select value={verifyForm.eventId} onChange={(e) => setVerifyForm((v) => ({ ...v, eventId: e.target.value }))}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                 >
@@ -2275,19 +2294,19 @@ export default function LiveOperationsPage({
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Số Trạm Bàn Thi</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Station Number</label>
               <input type="number" min="1" value={verifyForm.stationNumber}
                 onChange={(e) => setVerifyForm((v) => ({ ...v, stationNumber: e.target.value }))}
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">QR Token Thí Sinh</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Competitor QR Token</label>
               <div className="relative">
                 <Scan className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input type="text" value={verifyForm.qrToken}
                   onChange={(e) => setVerifyForm((v) => ({ ...v, qrToken: e.target.value }))}
-                  placeholder="Nhập mã QR token..."
+                  placeholder="Enter QR token string..."
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                 />
               </div>
@@ -2296,7 +2315,7 @@ export default function LiveOperationsPage({
               className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition disabled:opacity-50 shadow-2xs"
             >
               {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-              {isVerifying ? 'Đang xác thực...' : 'Xác Thực Trạm Thi'}
+              {isVerifying ? 'Verifying...' : 'Verify Station'}
             </button>
           </form>
 
@@ -2316,8 +2335,8 @@ export default function LiveOperationsPage({
                   <div className="mt-2 space-y-1 text-xs text-slate-600">
                     <p>Group Competitor ID: <strong className="text-slate-900 font-mono">{verifyResult.groupCompetitorId}</strong></p>
                     <p>Event: <strong className="text-slate-900">{verifyResult.eventName}</strong></p>
-                    <p>Group / Station: <strong className="text-slate-900">{verifyResult.groupName} / Trạm {verifyResult.stationNumber}</strong></p>
-                    <p>Lượt tiếp theo: <strong className="font-bold text-indigo-600">#{verifyResult.nextSolveNumber} / {verifyResult.solveCount}</strong></p>
+                    <p>Group / Station: <strong className="text-slate-900">{verifyResult.groupName} / Station {verifyResult.stationNumber}</strong></p>
+                    <p>Next Solve: <strong className="font-bold text-indigo-600">#{verifyResult.nextSolveNumber} / {verifyResult.solveCount}</strong></p>
                     {verifyResult.currentScramble && (
                       <ScrambleDisplay sequence={verifyResult.currentScramble.sequence} solveNumber={verifyResult.nextSolveNumber} className="mt-2" />
                     )}
@@ -2335,21 +2354,21 @@ export default function LiveOperationsPage({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
             <div>
               <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider font-mono">
-                Điều Hành Tiến Trình Vòng Thi
+                Round Operations & Progression
               </p>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight mt-0.5 flex items-center gap-2">
                 <Play className="h-5 w-5 text-indigo-600" />
                 Round Control Lifecycle Stepper
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Khởi tạo nhóm thi đấu, tạo chuỗi scramble, khai mạc vòng đấu, khóa kết quả và thăng hạng thí sinh cho từng môn thi.
+                Initialize heats, generate scrambles, start round, lock results, and advance competitors for each event category.
               </p>
             </div>
           </div>
 
           {tournament.events.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-white py-12 text-center shadow-2xs">
-              <p className="text-slate-400 font-semibold text-sm">Chưa có hạng mục thi đấu nào cho giải này.</p>
+              <p className="text-slate-400 font-semibold text-sm">No events configured for this tournament.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -2373,12 +2392,12 @@ export default function LiveOperationsPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 text-slate-900">
             <div>
-              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider font-mono">BÀN ĐIỀU CHỈNH ĐIỂM</span>
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider font-mono">RESULT CORRECTION</span>
               <h3 className="text-base font-bold text-slate-900 mt-0.5 leading-tight">
-                Sửa điểm {editingResult.competitorName} — Solve #{editingResult.solveNumber}
+                Edit {editingResult.competitorName} — Solve #{editingResult.solveNumber}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Sửa đổi điểm thi trực tiếp của đấu thủ. Thao tác này sẽ ghi nhận lại điểm số trên Live Leaderboard.
+                Adjust competitor's solve score directly. This change will update the Live Leaderboard immediately.
               </p>
             </div>
 
@@ -2388,13 +2407,13 @@ export default function LiveOperationsPage({
               return formattedUrl ? (
                 <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">📸 Ảnh Minh Chứng / Tờ Ghi Điểm</span>
+                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">📸 Scorecard Photo / Evidence</span>
                     <button
                       type="button"
                       onClick={() => window.open(formattedUrl, '_blank')}
                       className="text-[10px] font-semibold text-indigo-600 hover:underline inline-flex items-center gap-1"
                     >
-                      Mở Tab Mới ↗
+                      Open in New Tab ↗
                     </button>
                   </div>
                   <div
@@ -2414,25 +2433,25 @@ export default function LiveOperationsPage({
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Thời Gian Sửa (Giây)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Corrected Time (Seconds)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={editingResultTime}
                   onChange={(e) => setEditingResultTime(e.target.value)}
-                  placeholder="Ví dụ: 12.34"
+                  placeholder="e.g. 12.34"
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Hình Phạt (Penalty)</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Penalty</label>
                 <select
                   value={editingResultPenalty}
                   onChange={(e) => setEditingResultPenalty(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600"
                 >
-                  <option value="none">OK (Hợp lệ)</option>
+                  <option value="none">OK (No penalty)</option>
                   {penaltyTypes.filter((p) => p.code !== 'OK').map((p) => (
                     <option key={p.id} value={p.id}>{p.label}</option>
                   ))}
@@ -2440,11 +2459,11 @@ export default function LiveOperationsPage({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Lý Do Đổi Điểm</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Correction Reason</label>
                 <textarea
                   value={editingResultReason}
                   onChange={(e) => setEditingResultReason(e.target.value)}
-                  placeholder="Ví dụ: Trọng tài nhập sai hàng chục, đối sánh với scorecard giấy..."
+                  placeholder="e.g. Judge entered digit wrong, verified against paper scorecard..."
                   rows={2}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600"
                 />
@@ -2466,7 +2485,7 @@ export default function LiveOperationsPage({
                 onClick={() => setEditingResult(null)}
                 className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
               >
-                Hủy Bỏ
+                Cancel
               </button>
               <button
                 type="button"
@@ -2475,7 +2494,7 @@ export default function LiveOperationsPage({
                 className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition shadow-2xs"
               >
                 {isCorrectingSubmit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                Xác Nhận Đổi Điểm
+                Confirm Correction
               </button>
             </div>
           </div>

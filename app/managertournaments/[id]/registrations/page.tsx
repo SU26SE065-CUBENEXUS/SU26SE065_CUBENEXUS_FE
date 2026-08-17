@@ -42,7 +42,7 @@ function msToDisplay(ms?: number | null): string {
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('vi-VN', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -236,13 +236,13 @@ export default function RegistrationManagementPage({
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
-        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Giải Đấu</Link>
+        <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Tournaments</Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <Link href={`/managertournaments/${tournamentId}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-        <span className="text-slate-900 font-bold">Danh Sách Đăng Ký</span>
+        <span className="text-slate-900 font-bold">Registrations</span>
       </div>
 
       {/* Action feedbacks */}
@@ -264,14 +264,14 @@ export default function RegistrationManagementPage({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
-              <span>Địa điểm: {tournament.location || 'Offline'}</span>
-              <span>• Thời gian: {new Date(tournament.startDate).toLocaleDateString('vi-VN')} – {new Date(tournament.endDate).toLocaleDateString('vi-VN')}</span>
+              <span>Location: {tournament.location || 'Offline'}</span>
+              <span>• Dates: {new Date(tournament.startDate).toLocaleDateString('en-US')} – {new Date(tournament.endDate).toLocaleDateString('en-US')}</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               {tournament.name}
             </h1>
             <p className="text-xs text-slate-500">
-              Thời gian mở đăng ký: <span className="font-semibold text-slate-700">{formatDate(tournament.registrationOpenAt)}</span> đến <span className="font-semibold text-slate-700">{formatDate(tournament.registrationCloseAt)}</span>
+              Registration Window: <span className="font-semibold text-slate-700">{formatDate(tournament.registrationOpenAt)}</span> to <span className="font-semibold text-slate-700">{formatDate(tournament.registrationCloseAt)}</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -283,11 +283,11 @@ export default function RegistrationManagementPage({
       {/* Summary Status Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
-          { label: 'Tổng số đăng ký', value: totalRegisteredCount, color: 'text-slate-900' },
-          { label: 'Chờ duyệt', value: pendingCount, color: 'text-amber-600' },
-          { label: 'Đã duyệt', value: confirmedCount, color: 'text-emerald-600' },
-          { label: 'Đã Check-In', value: checkedInCount, color: 'text-indigo-600' },
-          { label: 'Đã hủy', value: cancelledCount, color: 'text-slate-400' }
+          { label: 'Total Registrations', value: totalRegisteredCount, color: 'text-slate-900' },
+          { label: 'Pending Approval', value: pendingCount, color: 'text-amber-600' },
+          { label: 'Confirmed', value: confirmedCount, color: 'text-emerald-600' },
+          { label: 'Checked-In', value: checkedInCount, color: 'text-indigo-600' },
+          { label: 'Cancelled', value: cancelledCount, color: 'text-slate-400' }
         ].map((s) => (
           <div key={s.label} className="rounded-xl bg-white border border-slate-200 p-4 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{s.label}</p>
@@ -299,7 +299,7 @@ export default function RegistrationManagementPage({
       {/* Events Summary Grid */}
       <div className="space-y-2">
         <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500">
-          SỨC CHỨA HẠNG MỤC THI ĐẤU
+          EVENT CAPACITY & REGISTRATIONS
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           {tournament.events.map(ev => {
@@ -311,9 +311,9 @@ export default function RegistrationManagementPage({
               <div key={ev.id} className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
                 <p className="font-bold text-xs text-slate-900">{formatEventLabel(ev)}</p>
                 <div className="flex justify-between items-center text-xs text-slate-500 font-medium pt-1">
-                  <span>Đã đăng ký: <strong className="text-indigo-600">{count}</strong></span>
+                  <span>Registered: <strong className="text-indigo-600">{count}</strong></span>
                   {ev.maxCapacity && (
-                    <span>Tối đa: {ev.maxCapacity}</span>
+                    <span>Max: {ev.maxCapacity}</span>
                   )}
                 </div>
                 {ev.maxCapacity && (
@@ -340,7 +340,7 @@ export default function RegistrationManagementPage({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Tìm thí sinh, email..."
+                placeholder="Search competitors, email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:bg-white focus:border-indigo-600 transition"
@@ -353,7 +353,7 @@ export default function RegistrationManagementPage({
               onChange={(e) => setFilterEvent(e.target.value)}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-600 shadow-2xs"
             >
-              <option value="ALL">Tất cả môn thi</option>
+              <option value="ALL">All Events</option>
               {tournament.events.map(ev => (
                 <option key={ev.id} value={ev.id}>{formatEventLabel(ev)}</option>
               ))}
@@ -365,11 +365,11 @@ export default function RegistrationManagementPage({
               onChange={(e) => setFilterStatus(e.target.value)}
               className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-600 font-medium"
             >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="PENDING">Chờ duyệt</option>
-              <option value="CONFIRMED">Đã duyệt</option>
-              <option value="CHECKED_IN">Đã Check-In</option>
-              <option value="CANCELLED">Đã hủy</option>
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="CHECKED_IN">Checked-In</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
 
             {/* Filter by Check-In status */}
@@ -378,19 +378,17 @@ export default function RegistrationManagementPage({
               onChange={(e) => setFilterCheckIn(e.target.value)}
               className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-600 font-medium"
             >
-              <option value="ALL">Tất cả Check-In</option>
-              <option value="CHECKED_IN">Đã Check-In</option>
-              <option value="NOT_CHECKED_IN">Chưa Check-In</option>
+              <option value="ALL">All Check-In</option>
+              <option value="CHECKED_IN">Checked-In</option>
+              <option value="NOT_CHECKED_IN">Not Checked-In</option>
             </select>
-
-
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             <button
               onClick={() => loadData(true)}
               className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs"
-              title="Tải lại"
+              title="Reload"
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
@@ -400,7 +398,7 @@ export default function RegistrationManagementPage({
               disabled={registrations.length === 0}
               className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 h-8 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs disabled:opacity-50"
             >
-              Xuất CSV
+              Export CSV
             </button>
           </div>
         </div>
@@ -412,13 +410,13 @@ export default function RegistrationManagementPage({
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="px-4 py-3.5 w-12 text-center">#</th>
-                  <th className="px-4 py-3.5">Thí Sinh</th>
+                  <th className="px-4 py-3.5">Competitor</th>
                   <th className="px-4 py-3.5">Email</th>
-                  <th className="px-4 py-3.5 text-center">Trạng Thái</th>
-                  <th className="px-4 py-3.5">Hạng Mục</th>
+                  <th className="px-4 py-3.5 text-center">Status</th>
+                  <th className="px-4 py-3.5">Events</th>
                   <th className="px-4 py-3.5 text-center">Check-In</th>
-                  <th className="px-4 py-3.5 text-center w-28">Ngày Đăng Ký</th>
-                  <th className="px-4 py-3.5 text-right w-44">Thao Tác</th>
+                  <th className="px-4 py-3.5 text-center w-28">Registered At</th>
+                  <th className="px-4 py-3.5 text-right w-44">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

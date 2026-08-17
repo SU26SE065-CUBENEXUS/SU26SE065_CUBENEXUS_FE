@@ -234,12 +234,12 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Tên giải đấu là bắt buộc';
-    if (!location.trim()) errs.location = 'Địa điểm thi đấu là bắt buộc';
-    if (!startDate) errs.startDate = 'Thời gian bắt đầu giải đấu là bắt buộc';
-    if (!endDate) errs.endDate = 'Thời gian kết thúc giải đấu là bắt buộc';
-    if (!regOpen) errs.regOpen = 'Thời gian mở đăng ký là bắt buộc';
-    if (!regClose) errs.regClose = 'Thời gian đóng đăng ký là bắt buộc';
+    if (!name.trim()) errs.name = 'Tournament name is required';
+    if (!location.trim()) errs.location = 'Location is required';
+    if (!startDate) errs.startDate = 'Tournament start date is required';
+    if (!endDate) errs.endDate = 'Tournament end date is required';
+    if (!regOpen) errs.regOpen = 'Registration opening date is required';
+    if (!regClose) errs.regClose = 'Registration closing date is required';
 
     const now = new Date();
     // Allow up to 5 minutes tolerance for form submission latency
@@ -248,28 +248,28 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
     if (regOpen) {
       const open = new Date(regOpen);
       if (open < minAllowedTime) {
-        errs.regOpen = 'Thời gian mở đăng ký không được ở trong quá khứ';
+        errs.regOpen = 'Registration opening date cannot be in the past';
       }
     }
 
     if (regClose) {
       const close = new Date(regClose);
       if (close < minAllowedTime) {
-        errs.regClose = 'Thời gian đóng đăng ký không được ở trong quá khứ';
+        errs.regClose = 'Registration closing date cannot be in the past';
       }
     }
 
     if (startDate) {
       const start = new Date(startDate);
       if (start < minAllowedTime) {
-        errs.startDate = 'Thời gian bắt đầu giải đấu không được ở trong quá khứ';
+        errs.startDate = 'Tournament start date cannot be in the past';
       }
     }
 
     if (endDate) {
       const end = new Date(endDate);
       if (end < minAllowedTime) {
-        errs.endDate = 'Thời gian kết thúc giải đấu không được ở trong quá khứ';
+        errs.endDate = 'Tournament end date cannot be in the past';
       }
     }
 
@@ -277,7 +277,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       const open = new Date(regOpen);
       const close = new Date(regClose);
       if (close <= open) {
-        errs.regClose = 'Thời gian đóng đăng ký phải sau thời gian mở đăng ký';
+        errs.regClose = 'Registration closing date must be after opening date';
       }
     }
 
@@ -285,7 +285,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       const close = new Date(regClose);
       const start = new Date(startDate);
       if (start < close) {
-        errs.startDate = 'Thời gian bắt đầu giải đấu phải sau hoặc cùng thời gian đóng đăng ký';
+        errs.startDate = 'Tournament start date must be on or after registration closing date';
       }
     }
 
@@ -293,7 +293,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (end <= start) {
-        errs.endDate = 'Thời gian kết thúc giải đấu phải sau thời gian bắt đầu giải đấu';
+        errs.endDate = 'Tournament end date must be after start date';
       }
     }
 
@@ -319,7 +319,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       }
       if (ev.eventFormatCode === 'MEDLEY') {
         if (!ev.medleyPuzzles || ev.medleyPuzzles.length < 2) {
-          errs[`event_${idx}_medley`] = 'Hạng mục Medley Relay phải chứa tối thiểu 2 khối Rubik trong chuỗi liên hoàn.';
+          errs[`event_${idx}_medley`] = 'Medley Relay event must contain at least 2 Rubik puzzles.';
         }
       }
       if (evMaxCap && tourMaxPart && evMaxCap > tourMaxPart) {
@@ -409,8 +409,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">Tạo Giải Đấu Mới</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Cấu hình thông tin chi tiết, lịch trình và các hạng mục thi đấu.</p>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">Create New Tournament</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Configure tournament details, schedule, and competition events.</p>
           </div>
           <button
             onClick={onClose}
@@ -426,7 +426,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
             <div className="flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-200 p-3.5 text-xs text-red-700 font-medium">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Lỗi khởi tạo:</span> {error}
+                <span className="font-bold">Initialization Error:</span> {error}
               </div>
             </div>
           )}
@@ -434,19 +434,19 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
           {/* Section 1: Basic Information */}
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Thông Tin Cơ Bản</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Basic Information</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Tên Giải Đấu <span className="text-red-500 font-bold">*</span>
+                  Tournament Name <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ví dụ: CubeNexus Open 2026"
+                  placeholder="e.g., CubeNexus Open 2026"
                   className={`w-full rounded-lg border ${errors.name ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
                 {errors.name && (
@@ -458,13 +458,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Địa Điểm <span className="text-red-500 font-bold">*</span>
+                  Location / Venue <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ví dụ: Đại học FPT, TP. Hồ Chí Minh"
+                  placeholder="e.g., FPT University, Ho Chi Minh City"
                   className={`w-full rounded-lg border ${errors.location ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
                 {errors.location && (
@@ -475,12 +475,12 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Mô Tả Giải Đấu</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tournament Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="Giới thiệu quy định, lịch trình, nhà tài trợ..."
+                  placeholder="Information about rules, schedule, sponsors..."
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition resize-none"
                 />
               </div>
@@ -488,14 +488,14 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               {/* Max Participants */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Giới Hạn Thí Sinh (Tối Đa)
+                  Competitor Limit (Max)
                 </label>
                 <input
                   type="number"
                   min="1"
                   value={maxParticipants}
                   onChange={(e) => setMaxParticipants(e.target.value)}
-                  placeholder="Để trống nếu không giới hạn"
+                  placeholder="Leave blank for unlimited"
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
               </div>
@@ -503,12 +503,12 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               {/* Tournament Banner Image */}
               <div className="md:col-span-2 space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Ảnh Banner / Poster
+                  Banner / Poster Image
                 </label>
                 {!bannerPhoto ? (
                   <label className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer hover:bg-slate-50 transition">
-                    <span className="text-xs font-semibold text-slate-700">Tải lên ảnh Banner / Poster</span>
-                    <span className="text-[10px] text-slate-400">Hỗ trợ JPG, PNG, WEBP</span>
+                    <span className="text-xs font-semibold text-slate-700">Upload Banner / Poster Image</span>
+                    <span className="text-[10px] text-slate-400">Supports JPG, PNG, WEBP</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -533,7 +533,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                         onClick={() => setBannerPhoto(null)}
                         className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold shadow-2xs"
                       >
-                        Xóa Ảnh Banner
+                        Remove Banner
                       </button>
                     </div>
                   </div>
@@ -545,14 +545,14 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
           {/* Section 2: Schedule */}
           <div className="space-y-4">
             <div className="pb-2 border-b border-slate-100">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Lịch Trình Thời Gian</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Schedule & Timeline</h3>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               {/* Registration Open */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Mở Đăng Ký <span className="text-red-500 font-bold">*</span>
+                  Registration Opens <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -567,14 +567,14 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     onClick={() => setRegOpen(getPresetDate('now'))}
                     className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Bây giờ
+                    Now
                   </button>
                   <button
                     type="button"
                     onClick={() => setRegOpen(getPresetDate('tomorrow_9'))}
                     className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Sáng mai 9:00
+                    Tomorrow 9:00
                   </button>
                 </div>
                 {errors.regOpen && (
@@ -587,7 +587,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               {/* Registration Close */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Đóng Đăng Ký <span className="text-red-500 font-bold">*</span>
+                  Registration Closes <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -602,7 +602,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     onClick={() => setRegClose(getPresetDate('in_7_days'))}
                     className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Sau 7 ngày
+                    In 7 days
                   </button>
                 </div>
                 {errors.regClose && (
@@ -615,7 +615,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               {/* Start Date */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Bắt Đầu Giải Đấu <span className="text-red-500 font-bold">*</span>
+                  Tournament Starts <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -630,7 +630,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     onClick={() => setStartDate(getPresetDate('next_sat_9'))}
                     className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Thứ 7 tuần tới 9:00
+                    Next Sat 9:00
                   </button>
                 </div>
                 {errors.startDate && (
@@ -643,7 +643,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               {/* End Date */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Kết Thúc Giải Đấu <span className="text-red-500 font-bold">*</span>
+                  Tournament Ends <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -658,7 +658,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     onClick={() => setEndDate(getPresetDate('next_sun_17'))}
                     className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition font-medium"
                   >
-                    Chủ nhật tuần tới 17:00
+                    Next Sun 17:00
                   </button>
                 </div>
                 {errors.endDate && (
@@ -673,13 +673,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
           {/* Section 3: Events */}
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Cấu Hình Môn Thi</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Configuration</h3>
               <button
                 type="button"
                 onClick={addEvent}
                 className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition"
               >
-                + Thêm Môn Thi
+                + Add Event
               </button>
             </div>
 
@@ -695,7 +695,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                   {/* Event Card Header */}
                   <div className="flex items-center justify-between bg-slate-50 px-4 py-2.5 border-b border-slate-200">
                     <span className="text-xs font-bold text-slate-800">
-                      Môn Thi #{i + 1}
+                      Event #{i + 1}
                     </span>
                     {events.length > 1 && (
                       <button
@@ -703,7 +703,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                         onClick={() => removeEvent(i)}
                         className="text-[11px] text-red-600 hover:bg-red-50 font-medium px-2 py-1 rounded transition"
                       >
-                        Xóa Môn Thi
+                        Remove Event
                       </button>
                     )}
                   </div>
@@ -713,7 +713,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Thể Thức Thi Đấu
+                          Event Format
                         </label>
                         <select
                           value={ev.eventFormatCode}
@@ -729,7 +729,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       {ev.eventFormatCode === 'TRADITIONAL' ? (
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Loại Rubik <span className="text-red-500 font-bold">*</span>
+                            Puzzle Type <span className="text-red-500 font-bold">*</span>
                           </label>
                           <select
                             value={ev.puzzleTypeId}
@@ -737,7 +737,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition"
                           >
                             {puzzleTypes.length === 0 ? (
-                              <option value="">Không tìm thấy loại Rubik</option>
+                              <option value="">No puzzle types available</option>
                             ) : (
                               puzzleTypes.map((p) => (
                                 <option key={p.id} value={p.id}>{p.name} ({p.code})</option>
@@ -745,26 +745,20 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                             )}
                           </select>
                         </div>
-                      ) : (
-                        <div className="flex items-center">
-                          {/* <span className="text-xs font-[14px] text-purple-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
-                            Đã chọn Thể Thức Medley Relay
-                          </span> */}
-                        </div>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* WCA Scoring & Rules */}
                     <div className="grid gap-4 md:grid-cols-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Time Limit (Giây)
+                          Time Limit (Sec)
                         </label>
                         <input
                           type="number"
                           value={ev.timeLimitSec}
                           onChange={(e) => updateEvent(i, 'timeLimitSec', e.target.value)}
-                          placeholder="Ví dụ: 600"
+                          placeholder="e.g., 600"
                           className={`w-full rounded-lg border ${errors[`event_${i}_timeLimit`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                         />
                         {errors[`event_${i}_timeLimit`] && (
@@ -776,13 +770,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Cutoff Time (Giây)
+                          Cutoff Time (Sec)
                         </label>
                         <input
                           type="number"
                           value={ev.cutoffTimeSec}
                           onChange={(e) => updateEvent(i, 'cutoffTimeSec', e.target.value)}
-                          placeholder="Ví dụ: 60 (để trống nếu không có)"
+                          placeholder="e.g., 60 (leave blank if none)"
                           className={`w-full rounded-lg border ${errors[`event_${i}_cutoffTime`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                         />
                         {errors[`event_${i}_cutoffTime`] && (
@@ -794,7 +788,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Số Lượt Thử (Solves)
+                          Solves Count
                         </label>
                         <input
                           type="number"
@@ -813,17 +807,17 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Số Vòng Đấu (Rounds)
+                          Rounds
                         </label>
                         <select
                           value={ev.totalRounds || 1}
                           onChange={(e) => updateEvent(i, 'totalRounds', Number(e.target.value))}
                           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition font-semibold"
                         >
-                          <option value={1}>1 Vòng (Chung kết luôn)</option>
-                          <option value={2}>2 Vòng (Round 1 ➔ Chung kết)</option>
-                          <option value={3}>3 Vòng (Round 1 ➔ Round 2 ➔ Chung kết)</option>
-                          <option value={4}>4 Vòng (4 Rounds)</option>
+                          <option value={1}>1 Round (Finals only)</option>
+                          <option value={2}>2 Rounds (Round 1 ➔ Finals)</option>
+                          <option value={3}>3 Rounds (Round 1 ➔ Round 2 ➔ Finals)</option>
+                          <option value={4}>4 Rounds (4 Rounds)</option>
                         </select>
                       </div>
                     </div>
@@ -832,8 +826,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     {ev.totalRounds > 1 && (
                       <div className="mt-3 flex items-center justify-between p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-indigo-900 text-xs font-mono">🎯 Chỉ Tiêu Thăng Hạng:</span>
-                          <span className="text-indigo-700 font-medium">Tuyển chọn vào Vòng tiếp theo: Top</span>
+                          <span className="font-bold text-indigo-900 text-xs font-mono">🎯 Advancement Target:</span>
+                          <span className="text-indigo-700 font-medium">Advance to next round: Top</span>
                           <input
                             type="number"
                             min="1"
@@ -841,10 +835,10 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                             onChange={(e) => updateEvent(i, 'advanceTopN', Math.max(1, Number(e.target.value)))}
                             className="w-16 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-xs font-bold text-indigo-900 outline-none focus:border-indigo-600 text-center font-mono shadow-2xs"
                           />
-                          <span className="text-indigo-700 font-medium">thí sinh xuất sắc nhất</span>
+                          <span className="text-indigo-700 font-medium">best competitors</span>
                         </div>
                         <span className="text-[10px] text-indigo-500 font-semibold font-mono bg-white/80 px-2 py-0.5 rounded border border-indigo-100">
-                          Mặc định Vòng 1 ➔ Vòng 2
+                          Default Round 1 ➔ Round 2
                         </span>
                       </div>
                     )}
@@ -854,13 +848,13 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       <div className="grid gap-4 md:grid-cols-2">
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            Giới Hạn Thí Sinh Môn Thi (Tối Đa)
+                            Event Competitor Limit (Max)
                           </label>
                           <input
                             type="number"
                             value={ev.maxCapacity}
                             onChange={(e) => updateEvent(i, 'maxCapacity', e.target.value)}
-                            placeholder="Để trống nếu áp dụng chung giải đấu"
+                            placeholder="Leave blank to use tournament limit"
                             className={`w-full rounded-lg border ${errors[`event_${i}_maxCapacity`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
                             min="1"
                           />
@@ -878,14 +872,14 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                       <div className="mt-2 border-t border-slate-100 pt-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-slate-700">
-                            Chuỗi Rubik Liên Hoàn (Tối thiểu 2)
+                            Medley Relay Chain (Min 2)
                           </span>
                           <button
                             type="button"
                             onClick={() => addMedleyPuzzle(i)}
                             className="rounded border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-700 transition"
                           >
-                            + Thêm Rubik
+                            + Add Puzzle
                           </button>
                         </div>
 
@@ -908,7 +902,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                                   onClick={() => removeMedleyPuzzle(i, mpIdx)}
                                   className="text-red-600 hover:bg-red-50 p-1 rounded text-xs transition font-medium"
                                 >
-                                  Xóa
+                                  Remove
                                 </button>
                               )}
                             </div>
@@ -930,7 +924,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
             onClick={onClose}
             className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
           >
-            Hủy Bỏ
+            Cancel
           </button>
           <button
             type="button"
@@ -938,7 +932,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
             disabled={isLoading || puzzleTypes.length === 0}
             className="rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white shadow-2xs transition disabled:opacity-60"
           >
-            {isLoading ? 'Đang Tạo…' : 'Tạo Giải Đấu'}
+            {isLoading ? 'Creating…' : 'Create Tournament'}
           </button>
         </div>
       </div>

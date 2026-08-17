@@ -243,7 +243,7 @@ export default function DisputeManagementPage({
       <div className="mx-auto max-w-7xl px-4 py-10">
         <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
           <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-semibold">{errorMain ?? 'Không tìm thấy giải đấu'}</p>
+          <p className="font-semibold">{errorMain ?? 'Tournament not found'}</p>
         </div>
       </div>
     );
@@ -254,23 +254,23 @@ export default function DisputeManagementPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
         <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">
-          Giải Đấu
+          Tournaments
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <Link href={`/managertournaments/${id}`} className="hover:text-slate-900 transition-colors">
           {tournament.name}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-        <span className="text-slate-900 font-bold">Khiếu Nại & Đối Soát Kết Quả</span>
+        <span className="text-slate-900 font-bold">Disputes & Results Audit</span>
       </div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Đối Soát & Xử Lý Khiếu Nại</p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">Khiếu Nại & Đối Soát Kết Quả</h1>
+          <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Audit & Dispute Resolution</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mt-0.5">Disputes & Results Audit</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Đối soát thời gian làm bài, điều chỉnh kết quả nhập sai và giải quyết báo cáo khiếu nại từ thí sinh.
+            Audit solve times, correct erroneous score submissions, and resolve dispute tickets reported by competitors.
           </p>
         </div>
       </div>
@@ -285,7 +285,7 @@ export default function DisputeManagementPage({
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          Đối Soát Điểm Trực Tiếp (Live Audit)
+          Live Score Audit (Live Audit)
         </button>
         <button
           onClick={() => setActiveSubTab('mock_disputes')}
@@ -295,7 +295,7 @@ export default function DisputeManagementPage({
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           }`}
         >
-          Đơn Khiếu Nại Báo Cáo ({disputes.filter((d) => d.status === 'Open').length} Đang Xử Lý)
+          Dispute Tickets ({disputes.filter((d) => d.status === 'Open').length} Open)
         </button>
       </div>
 

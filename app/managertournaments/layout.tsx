@@ -132,7 +132,7 @@ function Sidebar({
                 ))
               ) : (
                 <option value="" disabled className="text-slate-400">
-                  Chưa có giải Offline nào
+                  No Offline tournaments available
                 </option>
               )}
             </select>
@@ -222,11 +222,11 @@ function Sidebar({
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Giải Online Async (A01)' : undefined}
+                  title={collapsed ? 'Async Online (A01)' : undefined}
                 >
                   <Zap className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Giải Online (A01)</span>
+                    <span className="flex-1 truncate">Async Online (A01)</span>
                   )}
                 </Link>
               </li>
@@ -238,10 +238,10 @@ function Sidebar({
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Kho đề Scramble' : undefined}
+                  title={collapsed ? 'Scramble Management' : undefined}
                 >
                   <Database className="h-4 w-4 shrink-0 text-indigo-500" />
-                  {!collapsed && <span className="flex-1 truncate">Kho đề Scramble</span>}
+                  {!collapsed && <span className="flex-1 truncate">Scramble Management</span>}
                 </Link>
               </li>
 
@@ -274,11 +274,11 @@ function Sidebar({
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Quản Lý Người Dùng' : undefined}
+                  title={collapsed ? 'User Management' : undefined}
                 >
                   <Users className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý Người Dùng</span>
+                    <span className="flex-1 truncate">User Management</span>
                   )}
                 </Link>
               </li>
@@ -289,11 +289,11 @@ function Sidebar({
                       ? 'text-orange-600 bg-orange-50 border border-orange-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
-                  title={collapsed ? 'Quản Lý ELO' : undefined}
+                  title={collapsed ? 'ELO Configuration' : undefined}
                 >
                   <Zap className="h-4 w-4 shrink-0 text-orange-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý & Cấu Hình ELO</span>
+                    <span className="flex-1 truncate">ELO Configuration</span>
                   )}
                 </Link>
               </li>
@@ -308,7 +308,7 @@ function Sidebar({
                 >
                   <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
+                    <span className="flex-1 truncate">Fraud Reports</span>
                   )}
                 </Link>
               </li>
@@ -340,15 +340,15 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
   const lastSegment = pathSegments[pathSegments.length - 1];
   const pageLabels: Record<string, string> = {
     managertournaments: 'Dashboard',
-    async: 'Giải Online Async (A01)',
-    offline: 'Thống Kê Giải Offline Manager',
+    async: 'Async Online (A01)',
+    offline: 'Manager Offline Tournaments',
     registrations: 'Registrations',
     events: 'Events & Competitors',
     groups: 'Groups & Scrambles',
     live: 'Live Operations',
     judges: 'Judge Management',
     'fraud-reports': 'Fraud Reports Queue',
-    'elo-management': 'Quản Lý ELO',
+    'elo-management': 'ELO Management',
     scrambles: 'Scramble Control Center',
     'a01-video-review': 'A01 Video Review',
   };
@@ -553,15 +553,15 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     (userRole !== 'ADMIN' && userRole !== 'MANAGER');
 
   if (isAccessDenied) {
-    let reasonText = 'Bạn không có quyền truy cập vào đường dẫn này.';
+    let reasonText = 'You do not have permission to access this page.';
     if (isAdminRoute && userRole === 'MANAGER') {
-      reasonText = `Đường dẫn "${pathname}" là tính năng dành riêng cho Quản Trị Viên (ADMIN). Tài khoản của bạn hiện tại có quyền Manager.`;
+      reasonText = `The path "${pathname}" is restricted to Administrators (ADMIN). Your account has Manager permissions.`;
     } else if (isManagerRoute && userRole === 'ADMIN') {
-      reasonText = `Đường dẫn "${pathname}" là phân hệ dành riêng cho Quản Lý Giải Đấu (MANAGER). Tài khoản của bạn hiện tại có quyền Admin.`;
+      reasonText = `The path "${pathname}" is restricted to Tournament Managers (MANAGER). Your account has Admin permissions.`;
     }
 
     const destinationPath = userRole === 'ADMIN' ? '/admin' : userRole === 'MANAGER' ? '/managertournaments' : '/';
-    const buttonLabel = userRole === 'ADMIN' ? 'Quay về Portal Admin' : userRole === 'MANAGER' ? 'Quay về Portal Manager' : 'Quay về Trang Chủ';
+    const buttonLabel = userRole === 'ADMIN' ? 'Back to Admin Portal' : userRole === 'MANAGER' ? 'Back to Manager Portal' : 'Back to Home';
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 px-4 text-white">
@@ -573,7 +573,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
             <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rose-300 border border-rose-500/30">
               403 Forbidden
             </span>
-            <h1 className="text-2xl font-black text-white tracking-tight">Không Có Quyền Truy Cập</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Access Denied</h1>
             <p className="text-xs text-slate-300 font-medium leading-relaxed pt-1">
               {reasonText}
             </p>
@@ -589,7 +589,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
               onClick={() => logout()}
               className="w-full py-2.5 px-4 rounded-xl bg-slate-700/50 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all cursor-pointer border border-slate-600/50"
             >
-              Đăng Xuất Tài Khoản
+              Log Out
             </button>
           </div>
         </div>

@@ -55,7 +55,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
       const list = await getAttemptsForReview(tournamentId);
       setAttempts(list);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải danh sách attempt review.');
+      setError(err?.message || 'Failed to load attempt reviews.');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
       setSelectedAttempt(null);
       fetchData();
     } catch (err: any) {
-      alert(err?.message || 'Không thể thực hiện review.');
+      alert(err?.message || 'Failed to submit review.');
     } finally {
       setIsSubmitting(false);
     }
@@ -100,13 +100,13 @@ export default function AdminAttemptReviewPage({ params }: Props) {
             onClick={() => router.push('/managertournaments')}
             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition mb-1 cursor-pointer"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Quản lý giải đấu
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Tournaments
           </button>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             Review Attempts - {tournament?.name || 'Online Async Tournament'}
           </h1>
           <p className="text-xs text-slate-500">
-            Xem lại video ghi hình, kiểm tra Scramble & Solved status để Duyệt (Approved) hoặc Từ chối (Rejected).
+            Inspect video recordings, verify Scramble & Solved states to Approve or Reject attempts.
           </p>
         </div>
 
@@ -130,23 +130,23 @@ export default function AdminAttemptReviewPage({ params }: Props) {
         {isLoading ? (
           <div className="p-12 text-center text-xs font-semibold text-slate-500">
             <RefreshCw className="h-6 w-6 animate-spin text-indigo-600 mx-auto mb-2" />
-            Đang tải dữ liệu...
+            Loading attempts data...
           </div>
         ) : attempts.length === 0 ? (
           <div className="p-12 text-center text-xs font-semibold text-slate-500">
-            Chưa có competitor nào nộp attempt cho giải đấu này.
+            No competitors have submitted attempts for this tournament yet.
           </div>
         ) : (
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-400 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-4">Thí sinh</th>
+                <th className="py-3.5 px-4">Competitor</th>
                 <th className="py-3.5 px-4 text-right">Solve Time (Raw)</th>
-                <th className="py-3.5 px-4 text-center">Phạt (Penalty)</th>
-                <th className="py-3.5 px-4 text-right">Kết quả cuối</th>
+                <th className="py-3.5 px-4 text-center">Penalty</th>
+                <th className="py-3.5 px-4 text-right">Final Result</th>
                 <th className="py-3.5 px-4 text-center">Review Status</th>
                 <th className="py-3.5 px-4 text-center">Video Evidence</th>
-                <th className="py-3.5 px-4 text-right">Hành động</th>
+                <th className="py-3.5 px-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -193,7 +193,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
                       >
-                        <Video className="h-3.5 w-3.5" /> Ghi hình
+                        <Video className="h-3.5 w-3.5" /> Recording
                       </a>
                     ) : (
                       <span className="text-slate-400 text-[11px]">N/A</span>
@@ -204,7 +204,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                       onClick={() => handleOpenReview(att)}
                       className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 transition cursor-pointer"
                     >
-                      Review & Duyệt
+                      Review & Decide
                     </button>
                   </td>
                 </tr>
@@ -223,7 +223,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                 <h3 className="text-base font-extrabold text-slate-900">
                   Review Attempt: {selectedAttempt.userFullName}
                 </h3>
-                <p className="text-xs text-slate-500">Kiểm tra minh chứng video và điều chỉnh penalty nếu cần.</p>
+                <p className="text-xs text-slate-500">Inspect video evidence and adjust penalty if needed.</p>
               </div>
               <button
                 onClick={() => setSelectedAttempt(null)}
@@ -241,7 +241,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                 </p>
               </div>
               <div>
-                <p className="text-slate-400 font-bold">Hiển thị kết quả ban đầu</p>
+                <p className="text-slate-400 font-bold">Original Result Display</p>
                 <p className="text-lg font-mono font-extrabold text-indigo-600 mt-0.5">
                   {selectedAttempt.displayResult}
                 </p>
@@ -258,14 +258,14 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                 />
               ) : (
                 <div className="p-4 bg-slate-100 rounded-xl text-xs text-slate-500 text-center">
-                  Video đã được tự động lưu trữ trên server.
+                  Video has been stored securely on server.
                 </div>
               )}
             </div>
 
             {/* Penalty adjustment */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">Điều chỉnh Penalty / Hình phạt</label>
+              <label className="block text-xs font-bold text-slate-700">Adjust Penalty</label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -305,9 +305,9 @@ export default function AdminAttemptReviewPage({ params }: Props) {
 
             {/* Note */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Ghi chú Review (Tùy chọn)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Review Notes (Optional)</label>
               <textarea
-                placeholder="Nhập ghi chú hoặc lý do duyệt/từ chối..."
+                placeholder="Enter review explanation or reason for decision..."
                 value={reviewNote}
                 onChange={(e) => setReviewNote(e.target.value)}
                 rows={2}
@@ -323,7 +323,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                 disabled={isSubmitting}
                 className="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold hover:bg-red-100 transition cursor-pointer disabled:opacity-50 text-xs"
               >
-                Hủy / REJECT
+                Reject Attempt
               </button>
               <button
                 type="button"
@@ -331,7 +331,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                 disabled={isSubmitting}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50 text-xs"
               >
-                DUYỆT RESULT (APPROVE)
+                Approve Result
               </button>
             </div>
           </div>

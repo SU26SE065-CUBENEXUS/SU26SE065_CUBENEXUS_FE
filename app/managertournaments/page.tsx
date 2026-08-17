@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 
 const STATUS_FILTERS: Array<{ label: string; value: TournamentStatusCode | 'all' }> = [
-  { label: 'Tất cả trạng thái', value: 'all' },
-  { label: 'Đang diễn ra (Live)', value: 'ongoing' },
-  { label: 'Đang mở đăng ký', value: 'registration_open' },
-  { label: 'Sắp diễn ra', value: 'published' },
-  { label: 'Đang Check-in', value: 'checking_in' },
-  { label: 'Đã hoàn thành', value: 'completed' },
-  { label: 'Đã hủy', value: 'cancelled' },
+  { label: 'All Statuses', value: 'all' },
+  { label: 'Ongoing (Live)', value: 'ongoing' },
+  { label: 'Registration Open', value: 'registration_open' },
+  { label: 'Upcoming / Published', value: 'published' },
+  { label: 'Checking In', value: 'checking_in' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 
 export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
@@ -67,7 +67,7 @@ export default function TournamentManagerOverviewPage() {
       const combined = [...drafts, ...publicList].filter(isOfflineManagerTournament);
       setTournaments(combined);
     } catch (err: any) {
-      setError(err?.message || 'Không thể kết nối đến máy chủ BE.');
+      setError(err?.message || 'Failed to connect to backend server.');
       setTournaments([]);
     } finally {
       setIsLoading(false);
@@ -104,10 +104,10 @@ export default function TournamentManagerOverviewPage() {
   }, [tournaments, searchTerm, activeFilter]);
 
   const statCards = [
-    { label: 'Tổng số giải đấu Offline', value: stats.total, color: 'text-slate-900', hint: 'Hội trường WCA' },
-    { label: 'Đang diễn ra (Live)', value: stats.ongoing, color: 'text-emerald-600', hint: 'Live Operations' },
-    { label: 'Sắp diễn ra / Mở đăng ký', value: stats.upcoming, color: 'text-indigo-600', hint: 'Nhận đăng ký' },
-    { label: 'Đã hoàn thành', value: stats.completed, color: 'text-slate-500', hint: 'Đã kết thúc' },
+    { label: 'Total Offline Tournaments', value: stats.total, color: 'text-slate-900', hint: 'WCA Venue' },
+    { label: 'Ongoing (Live)', value: stats.ongoing, color: 'text-emerald-600', hint: 'Live Operations' },
+    { label: 'Upcoming / Reg Open', value: stats.upcoming, color: 'text-indigo-600', hint: 'Accepting Reg' },
+    { label: 'Completed', value: stats.completed, color: 'text-slate-500', hint: 'Concluded' },
   ];
 
   return (
@@ -116,13 +116,13 @@ export default function TournamentManagerOverviewPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
           <p className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
-            Quản Lý Giải Đấu Offline WCA
+            Offline WCA Tournament Management
           </p>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight sm:text-3xl">
             Tournament Dashboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal">
-            Tạo, quản lý và điều hành các giải đấu Speedcubing trực tiếp tại hội trường.
+            Create, configure, and manage on-site Speedcubing competitions.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
@@ -130,7 +130,7 @@ export default function TournamentManagerOverviewPage() {
             onClick={fetchTournaments}
             disabled={isLoading}
             className="rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 cursor-pointer"
-            title="Tải lại dữ liệu"
+            title="Reload data"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -139,7 +139,7 @@ export default function TournamentManagerOverviewPage() {
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-2xs transition-all border-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Tạo Giải Đấu
+            Create Tournament
           </button>
         </div>
       </div>
@@ -167,14 +167,14 @@ export default function TournamentManagerOverviewPage() {
         <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
           <div className="flex-1">
-            <p className="font-semibold text-amber-900">Thông báo kết nối Backend</p>
+            <p className="font-semibold text-amber-900">Backend Connection Notice</p>
             <p className="text-amber-700 text-[11px] mt-0.5">{error}</p>
           </div>
           <button
             onClick={fetchTournaments}
             className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition shadow-2xs cursor-pointer"
           >
-            Thử lại
+            Retry
           </button>
         </div>
       )}
@@ -185,7 +185,7 @@ export default function TournamentManagerOverviewPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên giải hoặc địa điểm..."
+            placeholder="Search by tournament name or location..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-indigo-600 transition"

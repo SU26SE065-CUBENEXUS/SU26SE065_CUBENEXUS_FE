@@ -50,7 +50,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Vui lòng nhập tên giải đấu');
+      setError('Please enter a tournament name.');
       return;
     }
 
@@ -62,47 +62,47 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
     const competitionStart = new Date(startDate);
     const competitionEnd = new Date(endDate);
     if ([registrationOpen, registrationClose, competitionStart, competitionEnd].some((date) => Number.isNaN(date.getTime()))) {
-      setError('Vui lòng nhập đầy đủ thời gian hợp lệ.');
+      setError('Please enter valid dates for all schedule fields.');
       return;
     }
 
     if (registrationOpen < minAllowedTime) {
-      setError('Thời gian mở đăng ký không được ở trong quá khứ.');
+      setError('Registration opening date cannot be in the past.');
       return;
     }
 
     if (registrationClose < minAllowedTime) {
-      setError('Thời gian đóng đăng ký không được ở trong quá khứ.');
+      setError('Registration closing date cannot be in the past.');
       return;
     }
 
     if (competitionStart < minAllowedTime) {
-      setError('Thời gian bắt đầu giải đấu không được ở trong quá khứ.');
+      setError('Tournament start date cannot be in the past.');
       return;
     }
 
     if (competitionEnd < minAllowedTime) {
-      setError('Thời gian kết thúc giải đấu không được ở trong quá khứ.');
+      setError('Tournament end date cannot be in the past.');
       return;
     }
 
     if (registrationOpen >= registrationClose) {
-      setError('Thời gian mở đăng ký phải trước thời gian đóng đăng ký.');
+      setError('Registration opening date must be before closing date.');
       return;
     }
 
     if (competitionStart < registrationClose) {
-      setError('Thời gian bắt đầu giải đấu phải sau hoặc cùng thời gian đóng đăng ký.');
+      setError('Tournament start date must be on or after registration closing date.');
       return;
     }
 
     if (competitionStart >= competitionEnd) {
-      setError('Thời gian bắt đầu giải đấu phải trước thời gian kết thúc giải đấu.');
+      setError('Tournament start date must be before end date.');
       return;
     }
 
     if (!Number.isInteger(attemptTimeLimitMins) || attemptTimeLimitMins < 1 || attemptTimeLimitMins > 60) {
-      setError('Tổng thời gian attempt phải từ 1 đến 60 phút.');
+      setError('Attempt time limit must be between 1 and 60 minutes.');
       return;
     }
 
@@ -122,7 +122,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
 
       onCreated(created);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tạo giải đấu online. Vui lòng thử lại.');
+      setError(err?.message || 'Failed to create online tournament. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -145,8 +145,8 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Tạo Giải Đấu Online Asynchronous (AO1)</h2>
-            <p className="text-xs text-slate-500">Mỗi thí sinh có 1 attempt duy nhất, thi tự do trong thời gian mở giải</p>
+            <h2 className="text-lg font-bold text-slate-900">Create Online Asynchronous Tournament (A01)</h2>
+            <p className="text-xs text-slate-500">Each competitor has 1 attempt only, competed freely during the tournament window</p>
           </div>
         </div>
 
@@ -158,10 +158,10 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Tên Giải Đấu</label>
+            <label className="block font-bold text-slate-700 mb-1">Tournament Name</label>
             <input
               type="text"
-              placeholder="VD: CubeNexus Async Online Cup 2026"
+              placeholder="e.g., CubeNexus Async Online Cup 2026"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-xl border border-slate-200 p-2.5 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition"
@@ -170,9 +170,9 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Mô tả / Thể lệ</label>
+            <label className="block font-bold text-slate-700 mb-1">Description / Rules</label>
             <textarea
-              placeholder="Mô tả chi tiết giải đấu..."
+              placeholder="Detailed rules, schedule, sponsor notes..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -183,7 +183,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-                <Puzzle className="h-3.5 w-3.5 text-indigo-600" /> Loại Rubik / Puzzle
+                <Puzzle className="h-3.5 w-3.5 text-indigo-600" /> Puzzle Type
               </label>
               <select
                 value={puzzleTypeId}
@@ -204,7 +204,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
 
             <div>
               <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 text-indigo-600" /> Tổng Time Remain (Phút)
+                <Clock className="h-3.5 w-3.5 text-indigo-600" /> Attempt Time Limit (Minutes)
               </label>
               <input
                 type="number"
@@ -219,11 +219,11 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
 
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-3">
             <p className="font-bold text-slate-800 flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-indigo-600" /> Cấu hình Khung Thời gian
+              <Calendar className="h-4 w-4 text-indigo-600" /> Schedule & Timeline Configuration
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Bắt đầu Đăng ký</label>
+                <label className="block text-slate-600 font-semibold mb-1">Registration Opens</label>
                 <input
                   type="datetime-local"
                   value={registrationOpenAt}
@@ -234,7 +234,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 />
               </div>
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Kết thúc Đăng ký</label>
+                <label className="block text-slate-600 font-semibold mb-1">Registration Closes</label>
                 <input
                   type="datetime-local"
                   value={registrationCloseAt}
@@ -245,7 +245,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 />
               </div>
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Bắt đầu Giải đấu (Comp Start)</label>
+                <label className="block text-slate-600 font-semibold mb-1">Competition Starts (Comp Start)</label>
                 <input
                   type="datetime-local"
                   value={startDate}
@@ -256,7 +256,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 />
               </div>
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Kết thúc Giải đấu (Comp End)</label>
+                <label className="block text-slate-600 font-semibold mb-1">Competition Ends (Comp End)</label>
                 <input
                   type="datetime-local"
                   value={endDate}
@@ -275,14 +275,14 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
               onClick={onClose}
               className="rounded-xl border border-slate-200 px-4 py-2.5 text-slate-600 hover:bg-slate-50 transition cursor-pointer"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="rounded-xl bg-indigo-600 px-5 py-2.5 font-bold text-white hover:bg-indigo-700 transition disabled:opacity-50 cursor-pointer"
             >
-              {isSubmitting ? 'Đang tạo...' : 'Tạo Giải Đấu Online'}
+              {isSubmitting ? 'Creating...' : 'Create Online Tournament'}
             </button>
           </div>
         </form>

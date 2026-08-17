@@ -18,7 +18,7 @@ function formatDateRange(start: string, end: string): string {
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
@@ -46,7 +46,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       if (onRefresh) onRefresh();
       else window.location.reload();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể công bố (publish) giải đấu.');
+      setErrorMessage(err.message || 'Failed to publish tournament.');
     } finally {
       setIsProcessing(false);
     }
@@ -65,7 +65,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       if (onRefresh) onRefresh();
       else window.location.reload();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể mở cổng đăng ký giải đấu.');
+      setErrorMessage(err.message || 'Failed to open tournament registration.');
     } finally {
       setIsProcessing(false);
     }
@@ -84,7 +84,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       if (onRefresh) onRefresh();
       else window.location.reload();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể mở cửa check-in giải đấu.');
+      setErrorMessage(err.message || 'Failed to open check-in.');
     } finally {
       setIsProcessing(false);
     }
@@ -126,9 +126,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         lastErr = e2;
       }
 
-      setErrorMessage(`Lỗi từ Backend: ${lastErr?.message || 'Không thể khóa cổng đăng ký.'}`);
+      setErrorMessage(`Backend Error: ${lastErr?.message || 'Failed to close registration.'}`);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể khóa cổng đăng ký giải đấu.');
+      setErrorMessage(err.message || 'Failed to close registration.');
     } finally {
       setIsProcessing(false);
     }
@@ -165,9 +165,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         lastErr = e2;
       }
 
-      setErrorMessage(`Lỗi từ Backend: ${lastErr?.message || 'Không thể cho diễn ra giải đấu.'}`);
+      setErrorMessage(`Backend Error: ${lastErr?.message || 'Failed to force start tournament.'}`);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Không thể cho diễn ra giải đấu ngay.');
+      setErrorMessage(err.message || 'Failed to force start tournament.');
     } finally {
       setIsProcessing(false);
     }
@@ -206,10 +206,10 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         lastErr = e2;
       }
 
-      const detail = lastErr?.message || lastErr?.detail || 'Máy chủ từ chối chuyển trạng thái sang COMPLETED.';
-      setErrorMessage(`Lỗi từ Backend: ${detail}`);
+      const detail = lastErr?.message || lastErr?.detail || 'Server refused status update to COMPLETED.';
+      setErrorMessage(`Backend Error: ${detail}`);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Không thể hoàn thành giải đấu.');
+      setErrorMessage(err?.message || 'Failed to complete tournament.');
     } finally {
       setIsProcessing(false);
     }
@@ -220,7 +220,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Count Header */}
       <div className="flex items-center justify-between px-1">
         <p className="text-xs font-extrabold text-slate-600 uppercase tracking-wider">
-          Tìm thấy {tournaments.length} giải đấu
+          Found {tournaments.length} tournaments
         </p>
       </div>
 
@@ -235,7 +235,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
             onClick={() => setErrorMessage(null)}
             className="px-2.5 py-1 bg-white border border-rose-300 rounded-lg text-rose-900 font-extrabold hover:bg-rose-100 transition cursor-pointer"
           >
-            Đóng
+            Close
           </button>
         </div>
       )}
@@ -246,12 +246,12 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           <table className="w-full text-sm text-left border-collapse text-slate-800">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/90">
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">GIẢI ĐẤU</th>
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">TRẠNG THÁI</th>
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">THỜI GIAN</th>
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">ĐỊA ĐIỂM</th>
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">HẠNG MỤC THI ĐẤU</th>
-                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-right">QUẢN LÝ GIẢI (ACTIONS)</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">TOURNAMENT</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">STATUS</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">DATES</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">LOCATION</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">EVENTS</th>
+                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-right">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -260,21 +260,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 const isOngoing = st === 'ONGOING';
                 const isCompleted = st === 'COMPLETED';
 
-                // Publish (Nút công bố giải đấu từ DRAFT / DISABLED sang PUBLISHED)
+                // Publish (DRAFT / DISABLED -> PUBLISHED)
                 const canPublish = st === 'DRAFT' || st === 'DISABLED';
 
-                // Mở Đăng Ký (Nút xanh mở đăng ký)
+                // Open Registration
                 const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
 
-                // Khóa Đăng Ký (Nút vàng khóa đăng ký)
+                // Lock Registration
                 const canLockRegistration = st === 'REGISTRATION_OPEN';
 
-                // Check-in (CHỈ dành cho giải offline khi đã đóng đăng ký)
+                // Check-in (Offline tournaments only when registration closed)
                 const canOpenCheckIn = !t.isOnlineAsync && st === 'REGISTRATION_CLOSED';
 
-                // Bắt đầu ngay (Force Start):
-                // - Async Online: cho phép bắt đầu bất kỳ lúc nào khi REGISTRATION_OPEN, REGISTRATION_CLOSED, PUBLISHED, DRAFT (kể cả khi chưa tới ngày thi)
-                // - Offline: chỉ bắt đầu khi đang ở bước CHECKING_IN
+                // Force Start:
                 const canForceStart = t.isOnlineAsync
                   ? (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT')
                   : (st === 'CHECKING_IN');
@@ -290,7 +288,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           <div
                             onClick={() => setPreviewImage({ url: t.bannerUrl!, name: t.name })}
                             className="w-16 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100 relative cursor-pointer hover:border-indigo-500 transition shadow-2xs"
-                            title="Bấm để xem ảnh banner"
+                            title="Click to view banner"
                           >
                             <img src={t.bannerUrl} alt={t.name} className="w-full h-full object-cover" />
                           </div>
@@ -310,7 +308,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                             </span>
                           ) : t.maxParticipants ? (
                             <span className="inline-block mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/80 whitespace-nowrap">
-                              Tối đa {t.maxParticipants} thí sinh
+                              Max {t.maxParticipants} competitors
                             </span>
                           ) : null}
                         </div>
@@ -331,7 +329,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     <td className="px-5 py-4 text-xs text-slate-700 max-w-[180px]">
                       {t.isOnlineAsync ? (
                         <span className="inline-flex items-center gap-1 font-bold text-indigo-600">
-                          <Globe className="h-3.5 w-3.5" /> Thi Trực Tuyến
+                          <Globe className="h-3.5 w-3.5" /> Online Competition
                         </span>
                       ) : (
                         <p className="line-clamp-1 truncate font-medium">{t.location ?? '—'}</p>
@@ -362,7 +360,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                         </div>
                       ) : (
                         <span className="text-[11px] text-slate-400 font-normal italic">
-                          Chưa tạo hạng mục
+                          No events created
                         </span>
                       )}
                     </td>
@@ -370,7 +368,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     {/* Action Buttons Matching Custom Pill Styles */}
                     <td className="px-5 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Nút Publish (Xanh Sky) */}
+                        {/* Publish Button (Sky Blue) */}
                         {canPublish && (
                           <button
                             onClick={() => {
@@ -378,12 +376,12 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToPublish(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title="Công bố / Xuất bản giải đấu (PUBLISHED)"
+                            title="Publish tournament (PUBLISHED)"
                           >
                             <Send className="h-3.5 w-3.5" /> Publish
                           </button>
                         )}
-                        {/* Nút Mở Đăng Ký (Xanh) */}
+                        {/* Open Registration (Emerald) */}
                         {canOpenRegistration && (
                           <button
                             onClick={() => {
@@ -391,13 +389,13 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToOpenReg(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title="Mở cổng đăng ký giải đấu (REGISTRATION_OPEN)"
+                            title="Open tournament registration (REGISTRATION_OPEN)"
                           >
-                            <Unlock className="h-3.5 w-3.5" /> Mở Đăng Ký
+                            <Unlock className="h-3.5 w-3.5" /> Open Reg
                           </button>
                         )}
 
-                        {/* Nút Khóa Đăng Ký (Vàng) */}
+                        {/* Lock Registration (Amber) */}
                         {canLockRegistration && (
                           <button
                             onClick={() => {
@@ -405,13 +403,13 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToClose(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-400 bg-amber-50/70 hover:bg-amber-100 text-amber-900 font-extrabold text-xs transition cursor-pointer"
-                            title="Khóa cổng đăng ký ngay lập tức"
+                            title="Close registration immediately"
                           >
-                            <Lock className="h-3.5 w-3.5 text-amber-700" /> Khóa Đăng Ký
+                            <Lock className="h-3.5 w-3.5 text-amber-700" /> Close Reg
                           </button>
                         )}
 
-                        {/* Nút Bắt Đầu Ngay (Force Start - Emerald) */}
+                        {/* Force Start (Indigo) */}
                         {canForceStart && (
                           <button
                             onClick={() => {
@@ -419,13 +417,13 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToStart(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title={t.isOnlineAsync ? "Bắt đầu thi đấu giải đấu Async ngay lập tức (ONGOING)" : "Bắt đầu thi đấu giải đấu (ONGOING)"}
+                            title={t.isOnlineAsync ? "Start Async competition immediately (ONGOING)" : "Start tournament (ONGOING)"}
                           >
-                            <Play className="h-3.5 w-3.5 fill-current" /> Bắt Đầu Ngay
+                            <Play className="h-3.5 w-3.5 fill-current" /> Force Start
                           </button>
                         )}
 
-                        {/* Nút Mở Check-in (CHỈ DÀNH CHO OFFLINE) */}
+                        {/* Open Check-in (Offline only) */}
                         {canOpenCheckIn && (
                           <button
                             onClick={() => {
@@ -433,9 +431,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToCheckIn(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title="Mở cửa Check-in giải đấu offline"
+                            title="Open offline check-in desk"
                           >
-                            <UserCheck className="h-3.5 w-3.5" /> Mở Check-in
+                            <UserCheck className="h-3.5 w-3.5" /> Open Check-in
                           </button>
                         )}
 
@@ -447,9 +445,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                               setTargetTourToComplete(t);
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
-                            title="Kết thúc / Hoàn thành giải đấu"
+                            title="Conclude / complete tournament"
                           >
-                            <CheckCircle className="h-3.5 w-3.5" /> Hoàn Thành
+                            <CheckCircle className="h-3.5 w-3.5" /> Complete
                           </button>
                         )}
 
@@ -466,7 +464,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           <Link
                             href={`/managertournaments/${t.id}/live`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-xs transition shadow-2xs"
-                            title="Mở bảng Điều Hành Live"
+                            title="Open Live Ops Control Room"
                           >
                             <Radio className="h-3.5 w-3.5 text-red-400" /> Live Ops
                           </Link>
@@ -476,9 +474,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                         <Link
                           href={t.isOnlineAsync ? `/tournaments/${t.id}` : `/managertournaments/${t.id}`}
                           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 hover:text-slate-900 hover:bg-slate-50 transition font-extrabold text-xs cursor-pointer shadow-2xs"
-                          title={t.isOnlineAsync ? 'Xem Leaderboard Async A01' : 'Vào trang quản lý cấu hình Offline'}
+                          title={t.isOnlineAsync ? 'View Async Leaderboard' : 'Manage Tournament Settings'}
                         >
-                          Chi Tiết
+                          Details
                         </Link>
                       </div>
                     </td>
@@ -489,7 +487,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           </table>
           {tournaments.length === 0 && (
             <div className="py-16 text-center text-slate-400 text-sm font-semibold">
-              Chưa có giải đấu nào trong danh sách.
+              No tournaments found in the list.
             </div>
           )}
         </div>
@@ -502,21 +500,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           const isOngoing = st === 'ONGOING';
           const isCompleted = st === 'COMPLETED';
 
-          // Publish (Nút công bố giải đấu từ DRAFT / DISABLED sang PUBLISHED)
+          // Publish (DRAFT / DISABLED -> PUBLISHED)
           const canPublish = st === 'DRAFT' || st === 'DISABLED';
 
-          // Mở Đăng Ký (Nút xanh mở đăng ký)
+          // Open Registration
           const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
 
-          // Khóa Đăng Ký (Nút vàng khóa đăng ký)
+          // Lock Registration
           const canLockRegistration = st === 'REGISTRATION_OPEN';
 
-          // Check-in (CHỈ dành cho giải offline khi đã đóng đăng ký)
+          // Check-in (Offline only)
           const canOpenCheckIn = !t.isOnlineAsync && st === 'REGISTRATION_CLOSED';
 
-          // Bắt đầu ngay (Force Start):
-          // - Async Online: cho phép bắt đầu bất kỳ lúc nào khi REGISTRATION_OPEN, REGISTRATION_CLOSED, PUBLISHED, DRAFT (kể cả khi chưa tới ngày thi)
-          // - Offline: chỉ bắt đầu khi đang ở bước CHECKING_IN
+          // Force Start:
           const canForceStart = t.isOnlineAsync
             ? (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT')
             : (st === 'CHECKING_IN');
@@ -538,7 +534,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                       </span>
                     ) : t.maxParticipants ? (
                       <span className="inline-block text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/80 whitespace-nowrap">
-                        Tối đa {t.maxParticipants} thí sinh
+                        Max {t.maxParticipants} competitors
                       </span>
                     ) : null}
                   </div>
@@ -551,17 +547,17 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
               {/* Details: Date, Location, Events */}
               <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-medium">Thời gian:</span>
+                  <span className="text-slate-400 font-medium">Dates:</span>
                   <span className="font-mono font-semibold text-[11px] text-slate-700">
                     {formatDateRange(t.startDate, t.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-medium">Địa điểm:</span>
+                  <span className="text-slate-400 font-medium">Location:</span>
                   <span className="font-medium text-slate-700 truncate max-w-[180px]">
                     {t.isOnlineAsync ? (
                       <span className="inline-flex items-center gap-1 font-bold text-indigo-600">
-                        <Globe className="h-3 w-3" /> Thi Trực Tuyến
+                        <Globe className="h-3 w-3" /> Online Competition
                       </span>
                     ) : (
                       t.location ?? '—'
@@ -569,7 +565,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                   </span>
                 </div>
                 <div className="flex items-start justify-between">
-                  <span className="text-slate-400 font-medium shrink-0">Hạng mục:</span>
+                  <span className="text-slate-400 font-medium shrink-0">Events:</span>
                   <div className="text-right">
                     {t.isOnlineAsync ? (
                       <span className="inline-block rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-700 border border-indigo-200/80">
@@ -588,7 +584,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                       </div>
                     ) : (
                       <span className="text-[10px] text-slate-400 font-normal italic">
-                        Chưa tạo hạng mục
+                        No events created
                       </span>
                     )}
                   </div>
@@ -597,7 +593,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
 
               {/* Actions Grid */}
               <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
-                {/* Nút Publish (Xanh Sky) */}
+                {/* Publish Button (Sky Blue) */}
                 {canPublish && (
                   <button
                     onClick={() => {
@@ -605,13 +601,13 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                       setTargetTourToPublish(t);
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
-                    title="Công bố / Xuất bản giải đấu (PUBLISHED)"
+                    title="Publish tournament (PUBLISHED)"
                   >
                     <Send className="h-3 w-3" /> Publish
                   </button>
                 )}
 
-                {/* Nút Mở Đăng Ký (Xanh) */}
+                {/* Open Registration */}
                 {canOpenRegistration && (
                   <button
                     onClick={() => {
@@ -620,11 +616,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
                   >
-                    <Unlock className="h-3 w-3" /> Mở Đăng Ký
+                    <Unlock className="h-3 w-3" /> Open Reg
                   </button>
                 )}
 
-                {/* Nút Khóa Đăng Ký (Vàng) */}
+                {/* Close Registration */}
                 {canLockRegistration && (
                   <button
                     onClick={() => {
@@ -633,11 +629,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-amber-400 bg-amber-50/70 hover:bg-amber-100 text-amber-900 font-extrabold text-[10px] transition cursor-pointer"
                   >
-                    <Lock className="h-3 w-3 text-amber-700" /> Khóa Đăng Ký
+                    <Lock className="h-3 w-3 text-amber-700" /> Close Reg
                   </button>
                 )}
 
-                {/* Nút Bắt Đầu Ngay (Force Start - Emerald) */}
+                {/* Force Start */}
                 {canForceStart && (
                   <button
                     onClick={() => {
@@ -646,11 +642,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
                   >
-                    <Play className="h-3 w-3 fill-current" /> Bắt Đầu Ngay
+                    <Play className="h-3 w-3 fill-current" /> Force Start
                   </button>
                 )}
 
-                {/* Nút Mở Check-in (CHỈ DÀNH CHO OFFLINE) */}
+                {/* Open Check-in (Offline only) */}
                 {canOpenCheckIn && (
                   <button
                     onClick={() => {
@@ -659,7 +655,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
                   >
-                    <UserCheck className="h-3 w-3" /> Mở Check-in
+                    <UserCheck className="h-3 w-3" /> Open Check-in
                   </button>
                 )}
 
@@ -672,7 +668,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
                   >
-                    <CheckCircle className="h-3 w-3" /> Hoàn Thành
+                    <CheckCircle className="h-3 w-3" /> Complete
                   </button>
                 )}
 
@@ -698,7 +694,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                   href={t.isOnlineAsync ? `/tournaments/${t.id}` : `/managertournaments/${t.id}`}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 hover:text-slate-900 hover:bg-slate-50 transition font-extrabold text-[10px]"
                 >
-                  Chi Tiết
+                  Details
                 </Link>
               </div>
             </div>
@@ -707,7 +703,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
 
         {tournaments.length === 0 && (
           <div className="py-16 text-center text-slate-400 text-sm font-semibold bg-white rounded-2xl border border-slate-200 shadow-2xs">
-            Chưa có giải đấu nào trong danh sách.
+            No tournaments found in the list.
           </div>
         )}
       </div>
@@ -723,14 +719,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Publish Tournament */}
       <ConfirmModal
         isOpen={Boolean(targetTourToPublish)}
-        title="Công Bố (Publish) Giải Đấu"
+        title="Publish Tournament"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn công bố giải đấu "${targetTourToPublish?.name}"? Sau khi công bố, trạng thái giải đấu sẽ chuyển thành PUBLISHED và giải sẽ hiển thị công khai để mọi người có thể xem.`
+            : `Are you sure you want to publish tournament "${targetTourToPublish?.name}"? Once published, the status will become PUBLISHED and the tournament will be publicly visible.`
         }
-        confirmText="Publish Ngay"
-        cancelText="Hủy Bỏ"
+        confirmText="Publish Now"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isProcessing}
         onConfirm={executePublishTournament}
@@ -745,14 +741,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Open Registration */}
       <ConfirmModal
         isOpen={Boolean(targetTourToOpenReg)}
-        title="Mở Cổng Đăng Ký Giải Đấu"
+        title="Open Tournament Registration"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn mở cổng đăng ký cho giải "${targetTourToOpenReg?.name}"? Thí sinh sẽ có thể tham gia đăng ký giải đấu.`
+            : `Are you sure you want to open registration for "${targetTourToOpenReg?.name}"? Competitors will be able to register for events.`
         }
-        confirmText="Mở Đăng Ký"
-        cancelText="Hủy Bỏ"
+        confirmText="Open Registration"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isProcessing}
         onConfirm={executeOpenRegistration}
@@ -767,14 +763,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Lock Registration */}
       <ConfirmModal
         isOpen={Boolean(targetTourToClose)}
-        title="Khóa Cổng Đăng Ký Giải Đấu"
+        title="Close Tournament Registration"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn khóa cổng đăng ký cho giải "${targetTourToClose?.name}" ngay lập tức? Thí sinh sẽ không thể đăng ký thêm.`
+            : `Are you sure you want to close registration for "${targetTourToClose?.name}" immediately? No more competitors will be able to register.`
         }
-        confirmText="Xác Nhận Khóa"
-        cancelText="Hủy Bỏ"
+        confirmText="Close Registration"
+        cancelText="Cancel"
         variant="warning"
         isLoading={isProcessing}
         onConfirm={executeCloseRegistration}
@@ -789,14 +785,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Force Start Tournament */}
       <ConfirmModal
         isOpen={Boolean(targetTourToStart)}
-        title="Cho Diễn Ra Giải Đấu Ngay (Force Start)"
+        title="Force Start Tournament"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn cho giải đấu "${targetTourToStart?.name}" diễn ra ngay lập tức? Trạng thái sẽ được chuyển sang ONGOING.`
+            : `Are you sure you want to start tournament "${targetTourToStart?.name}" immediately? Status will change to ONGOING.`
         }
-        confirmText="Cho Diễn Ra Ngay"
-        cancelText="Hủy Bỏ"
+        confirmText="Start Now"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isProcessing}
         onConfirm={executeForceStart}
@@ -811,14 +807,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Complete Tournament */}
       <ConfirmModal
         isOpen={Boolean(targetTourToComplete)}
-        title="Hoàn Thành Giải Đấu"
+        title="Complete Tournament"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn hoàn thành giải đấu "${targetTourToComplete?.name}"? Trạng thái sẽ được chuyển sang COMPLETED.`
+            : `Are you sure you want to complete tournament "${targetTourToComplete?.name}"? Status will change to COMPLETED.`
         }
-        confirmText="Xác Nhận Hoàn Thành"
-        cancelText="Hủy Bỏ"
+        confirmText="Confirm Complete"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isProcessing}
         onConfirm={executeCompleteTournament}
@@ -833,14 +829,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       {/* Confirmation Modal for Open Check-in */}
       <ConfirmModal
         isOpen={Boolean(targetTourToCheckIn)}
-        title="Mở Cửa Check-in Giải Đấu"
+        title="Open Tournament Check-in"
         description={
           errorMessage
             ? errorMessage
-            : `Bạn có chắc chắn muốn mở cửa Check-in cho giải "${targetTourToCheckIn?.name}"? Tài khoản các trọng tài của giải đấu sẽ được tự động kích hoạt trở lại.`
+            : `Are you sure you want to open check-in for "${targetTourToCheckIn?.name}"? Tournament judges and on-site check-in desks will be activated.`
         }
-        confirmText="Mở Check-in"
-        cancelText="Hủy Bỏ"
+        confirmText="Open Check-in"
+        cancelText="Cancel"
         variant="primary"
         isLoading={isProcessing}
         onConfirm={executeOpenCheckIn}

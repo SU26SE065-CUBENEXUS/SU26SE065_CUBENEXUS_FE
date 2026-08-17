@@ -71,7 +71,7 @@ export default function OfflineTournamentManagerPage() {
       const offlineOnly = [...localOfflineDrafts, ...publicList].filter(isOfflineManagerTournament);
       setTournaments(offlineOnly);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải danh sách giải Offline.');
+      setError(err?.message || 'Failed to load offline tournaments.');
     } finally {
       setIsLoading(false);
     }
@@ -89,15 +89,15 @@ export default function OfflineTournamentManagerPage() {
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
-                <Trophy className="h-3.5 w-3.5 text-amber-400" /> Manager Workflow - Giải Đấu Offline WCA
+                <Trophy className="h-3.5 w-3.5 text-amber-400" /> Manager Workflow - Offline WCA Tournaments
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              {isAdmin ? 'Thống Kê Giải Đấu Offline Do Manager Khởi Tạo' : 'Quản Lý Giải Đấu Trực Tiếp tại Hội Trường (Offline)'}
+              {isAdmin ? 'Manager Offline Tournaments Overview' : 'Manage On-Site Offline Tournaments'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
-              Thi đấu trực tiếp tại hội trường với điều phối bàn đấu (Live Stations), phân nhóm xoay scramble WCA, phân công trọng tài runner và bảng hiển thị Live màn hình lớn.
+              On-site tournament operations with Live Station control, WCA scramble group assignment, judge and runner dispatch, and big screen live displays.
             </p>
           </div>
 
@@ -106,7 +106,7 @@ export default function OfflineTournamentManagerPage() {
               onClick={fetchOfflineTournaments}
               disabled={isLoading}
               className="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer disabled:opacity-50"
-              title="Tải lại danh sách"
+              title="Reload list"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -115,7 +115,7 @@ export default function OfflineTournamentManagerPage() {
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md transition cursor-pointer"
               >
-                <Plus className="h-4 w-4" /> Tạo Giải Offline Mới
+                <Plus className="h-4 w-4" /> Create Offline Tournament
               </button>
             )}
           </div>
@@ -133,7 +133,7 @@ export default function OfflineTournamentManagerPage() {
             onClick={fetchOfflineTournaments}
             className="px-3 py-1 bg-white border border-amber-300 rounded-lg text-amber-900 font-bold hover:bg-amber-100 transition cursor-pointer"
           >
-            Thử lại
+            Retry
           </button>
         </div>
       )}
@@ -142,7 +142,7 @@ export default function OfflineTournamentManagerPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" /> Danh Sách Giải Offline WCA ({tournaments.length})
+            <Trophy className="h-4 w-4 text-amber-500" /> Offline WCA Tournaments ({tournaments.length})
           </h2>
           <span className="text-xs font-bold text-slate-500">Live Station Control • Venue Events</span>
         </div>
@@ -150,23 +150,23 @@ export default function OfflineTournamentManagerPage() {
         {isLoading ? (
           <div className="p-12 bg-white rounded-3xl border border-slate-200 text-center">
             <RefreshCw className="h-6 w-6 animate-spin text-amber-600 mx-auto mb-2" />
-            <p className="text-xs font-semibold text-slate-500">Đang tải giải đấu Offline...</p>
+            <p className="text-xs font-semibold text-slate-500">Loading offline tournaments...</p>
           </div>
         ) : tournaments.length === 0 ? (
           <div className="p-12 bg-white rounded-3xl border border-dashed border-slate-300 text-center space-y-3">
             <Trophy className="h-10 w-10 text-slate-300 mx-auto" />
-            <p className="text-sm font-extrabold text-slate-800">Chưa có giải đấu Offline nào được khởi tạo</p>
+            <p className="text-sm font-extrabold text-slate-800">No offline tournaments created yet</p>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               {!isAdmin
-                ? 'Bấm nút "Tạo Giải Offline Mới" ở trên để tạo sự kiện thi đấu trực tiếp đầu tiên tại hội trường WCA.'
-                : 'Hiện tại chưa có Manager nào khởi tạo giải đấu Offline WCA trong hệ thống.'}
+                ? 'Click "Create Offline Tournament" above to start your first on-site WCA event.'
+                : 'No Manager has initialized an Offline WCA tournament in the system yet.'}
             </p>
             {!isAdmin && (
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="inline-flex items-center gap-2 bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md hover:bg-amber-700 transition cursor-pointer"
               >
-                <Plus className="h-4 w-4" /> Tạo Giải Offline Mới Ngay
+                <Plus className="h-4 w-4" /> Create Offline Tournament Now
               </button>
             )}
           </div>
@@ -196,7 +196,7 @@ export default function OfflineTournamentManagerPage() {
                         {tourney.statusCode || 'PUBLISHED'}
                       </span>
                       <span className="text-[11px] font-extrabold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md">
-                        {tourney.events?.length || 1} Hạng Mục WCA
+                        {tourney.events?.length || 1} WCA Events
                       </span>
                     </div>
 
@@ -205,7 +205,7 @@ export default function OfflineTournamentManagerPage() {
                         {tourney.name}
                       </h3>
                       <p className="text-xs text-slate-500 line-clamp-2 mt-1 font-normal">
-                        {tourney.description || 'Giải đấu Speedcubing trực tiếp tại hội trường do Manager tạo.'}
+                        {tourney.description || 'On-site Speedcubing tournament created by Manager.'}
                       </p>
                     </div>
 
@@ -216,7 +216,7 @@ export default function OfflineTournamentManagerPage() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                        <span>Thi đấu: {new Date(tourney.startDate).toLocaleDateString()} - {new Date(tourney.endDate).toLocaleDateString()}</span>
+                        <span>Dates: {new Date(tourney.startDate).toLocaleDateString()} - {new Date(tourney.endDate).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -233,7 +233,7 @@ export default function OfflineTournamentManagerPage() {
                       onClick={() => router.push(`/managertournaments/${tourney.id}`)}
                       className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-slate-100 text-slate-800 hover:bg-slate-200 px-3 py-2.5 text-xs font-extrabold transition cursor-pointer"
                     >
-                      Chi Tiết <ArrowRight className="h-3.5 w-3.5" />
+                      Details <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
