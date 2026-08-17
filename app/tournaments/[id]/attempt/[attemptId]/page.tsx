@@ -158,6 +158,10 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
   useEffect(() => {
     stepEnteredAtRef.current = Date.now();
+    if (step === 'TIMER_READY') {
+      setHandTimerStart(Date.now());
+      setHandElapsedMs(0);
+    }
     if (step === 'FINISH_SCAN') {
       setScanFaces([]);
       setScanResetToken((prev) => prev + 1);
@@ -178,9 +182,6 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         if (attempt.attemptDeadlineAt) {
           setAttemptDeadlineAt(attempt.attemptDeadlineAt);
         }
-        if (attempt.handTimerStartedAt) {
-          setHandTimerStart(new Date(attempt.handTimerStartedAt).getTime());
-        }
         if (attempt.penaltyCode === 'PLUS2') {
           setActivePenaltyCode('PLUS2');
         }
@@ -188,6 +189,8 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
           setFinalResult(attempt);
           setStep('RESULT');
         } else if (attempt.attemptStatus === 'SCRAMBLE_VERIFIED') {
+          setHandTimerStart(Date.now());
+          setHandElapsedMs(0);
           setStep('TIMER_READY');
         } else if (attempt.attemptStatus === 'SOLVING') {
           if (attempt.solveStartedAt) {
@@ -388,7 +391,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         return;
       }
       setAttemptDeadlineAt(result.attemptDeadlineAt ?? null);
-      setHandTimerStart(result.handTimerStartedAt ? new Date(result.handTimerStartedAt).getTime() : Date.now());
+      setHandTimerStart(Date.now());
       setHandElapsedMs(0);
       setScanFaces([]);
       setStep('TIMER_READY');
