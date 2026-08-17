@@ -29,23 +29,23 @@ const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.relay.metered.ca:80' },
   {
     urls: 'turn:global.relay.metered.ca:80',
-    username: 'a4f71c16d93a4d93a1606469',
-    credential: 'Sd4FqrtH/VgLi6oO',
+    username: 'c0833e0b6871eb787b022ec5',
+    credential: '6E5jHUl1Gvm88Mbi',
   },
   {
     urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-    username: 'a4f71c16d93a4d93a1606469',
-    credential: 'Sd4FqrtH/VgLi6oO',
+    username: 'c0833e0b6871eb787b022ec5',
+    credential: '6E5jHUl1Gvm88Mbi',
   },
   {
     urls: 'turn:global.relay.metered.ca:443',
-    username: 'a4f71c16d93a4d93a1606469',
-    credential: 'Sd4FqrtH/VgLi6oO',
+    username: 'c0833e0b6871eb787b022ec5',
+    credential: '6E5jHUl1Gvm88Mbi',
   },
   {
     urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-    username: 'a4f71c16d93a4d93a1606469',
-    credential: 'Sd4FqrtH/VgLi6oO',
+    username: 'c0833e0b6871eb787b022ec5',
+    credential: '6E5jHUl1Gvm88Mbi',
   },
 ];
 
