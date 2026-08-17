@@ -67,7 +67,7 @@ export default function ProfilePage() {
   // Redirect if unauthenticated
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      toast.error('Vui lòng đăng nhập để xem thông tin cá nhân');
+      toast.error('Please log in to view profile details');
       router.push('/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
@@ -83,7 +83,7 @@ export default function ProfilePage() {
       setAddress(data.address || '');
     } catch (err: any) {
       console.error('Failed to load profile:', err);
-      toast.error(err.message || 'Không thể tải thông tin hồ sơ');
+      toast.error(err.message || 'Failed to load profile details');
     } finally {
       setIsLoadingProfile(false);
     }
@@ -99,7 +99,7 @@ export default function ProfilePage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim()) {
-      toast.error('Tên hiển thị không được bỏ trống');
+      toast.error('Display name cannot be empty');
       return;
     }
 
@@ -112,10 +112,10 @@ export default function ProfilePage() {
       });
       setProfile(updated);
       await refreshUser();
-      toast.success('Cập nhật hồ sơ cá nhân thành công!');
+      toast.success('Profile updated successfully!');
     } catch (err: any) {
       console.error('Update profile error:', err);
-      toast.error(err.message || 'Cập nhật hồ sơ thất bại');
+      toast.error(err.message || 'Profile update failed');
     } finally {
       setIsSavingProfile(false);
     }
@@ -127,20 +127,20 @@ export default function ProfilePage() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Kích thước file không được vượt quá 5MB');
+      toast.error('File size cannot exceed 5MB');
       return;
     }
 
     try {
       setIsUploadingAvatar(true);
-      toast.info('Đang tải ảnh lên Cloudflare R2...');
+      toast.info('Uploading avatar...');
       const updated = await uploadAvatarApi(file);
       setProfile(updated);
       await refreshUser();
-      toast.success('Đổi ảnh đại diện thành công!');
+      toast.success('Avatar updated successfully!');
     } catch (err: any) {
       console.error('Avatar upload error:', err);
-      toast.error(err.message || 'Tải ảnh đại diện thất bại');
+      toast.error(err.message || 'Avatar upload failed');
     } finally {
       setIsUploadingAvatar(false);
       if (e.target) e.target.value = '';
@@ -151,15 +151,15 @@ export default function ProfilePage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword) {
-      toast.error('Vui lòng nhập mật khẩu hiện tại');
+      toast.error('Please enter your current password');
       return;
     }
     if (newPassword.length < 6) {
-      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      toast.error('New password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error('Xác nhận mật khẩu mới không trùng khớp');
+      toast.error('New password confirmation does not match');
       return;
     }
 
@@ -169,13 +169,13 @@ export default function ProfilePage() {
         currentPassword,
         newPassword,
       });
-      toast.success('Đổi mật khẩu thành công!');
+      toast.success('Password changed successfully!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       console.error('Change password error:', err);
-      toast.error(err.message || 'Đổi mật khẩu thất bại');
+      toast.error(err.message || 'Password change failed');
     } finally {
       setIsChangingPassword(false);
     }
@@ -186,7 +186,7 @@ export default function ProfilePage() {
     if (!profile?.userCode) return;
     navigator.clipboard.writeText(profile.userCode);
     setIsCopied(true);
-    toast.success('Đã sao chép mã số!');
+    toast.success('Code copied to clipboard!');
     setTimeout(() => setIsCopied(false), 2000);
   };
 
@@ -201,7 +201,7 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-3">
             <Loader2 className={`h-9 w-9 animate-spin ${isManagerOrAdmin ? 'text-indigo-600' : 'text-amber-500'}`} />
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-              Đang tải thông tin hồ sơ...
+              Loading profile information...
             </p>
           </div>
         </main>
@@ -216,7 +216,7 @@ export default function ProfilePage() {
   if (isManagerOrAdmin) {
     return (
       <div className="flex flex-col min-h-screen bg-slate-100 text-slate-900 font-sans">
-        
+
         {/* Top Navigation Bar for Manager Workspace */}
         <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 shadow-2xs">
           <div className="flex items-center gap-4">
@@ -289,7 +289,7 @@ export default function ProfilePage() {
 
         {/* Main Content Area for Manager / Admin */}
         <main className="flex-grow max-w-6xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          
+
           {/* Header Title Bar */}
           <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
             <div>
@@ -320,7 +320,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Left Column: Avatar & Summary Card */}
             <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs text-center relative overflow-hidden">
@@ -417,7 +417,7 @@ export default function ProfilePage() {
 
             {/* Right Column: Forms */}
             <div className="lg:col-span-2 space-y-6">
-              
+
               {/* Personal Details Form (Indigo Theme) */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs space-y-6">
                 <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -434,7 +434,7 @@ export default function ProfilePage() {
 
                 <form onSubmit={handleSaveProfile} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    
+
                     {/* Display Name */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
@@ -654,7 +654,7 @@ export default function ProfilePage() {
       <Header />
 
       <main className="flex-grow max-w-5xl w-full mx-auto px-4 py-10 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Navigation & Header Title */}
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -663,19 +663,19 @@ export default function ProfilePage() {
               className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 transition-colors group mb-2"
             >
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              Trang Chủ
+              Home
             </Link>
             <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-900 flex items-center gap-2.5">
-              Hồ Sơ Cá Nhân <Sparkles className="h-6 w-6 text-amber-500" />
+              User Profile <Sparkles className="h-6 w-6 text-amber-500" />
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
-              Quản lý thông tin tài khoản thí sinh, ảnh đại diện và bảo mật hệ thống CubeNexus.
+              Manage competitor account info, avatar, and CubeNexus system security.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column: Avatar & Summary Card */}
           <div className="space-y-6">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs text-center relative overflow-hidden">
@@ -698,7 +698,7 @@ export default function ProfilePage() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingAvatar}
                   className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg hover:bg-amber-600 transition cursor-pointer disabled:opacity-50"
-                  title="Thay đổi ảnh đại diện"
+                  title="Change avatar"
                 >
                   {isUploadingAvatar ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -730,7 +730,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleCopyCode}
                     className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
-                    title="Bấm để sao chép Mã thí sinh"
+                    title="Click to copy competitor code"
                   >
                     <FileBadge className="h-3 w-3 text-amber-600" />
                     <span>Code: {profile.userCode}</span>
@@ -747,24 +747,24 @@ export default function ProfilePage() {
             {/* Quick System Info Card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Thông tin thí sinh
+                Competitor Information
               </h3>
               <div className="space-y-2 text-xs font-medium text-slate-600">
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span>ID Thí Sinh</span>
+                {/* <div className="flex justify-between py-1.5 border-b border-slate-100">
+                  <span>Competitor ID</span>
                   <span className="font-mono text-slate-900 text-[11px]">
                     {profile?.id?.slice(0, 8)}...
                   </span>
-                </div>
+                </div> */}
                 <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span>Trạng Thái Tài Khoản</span>
+                  <span>Account Status</span>
                   <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px]">
-                    Đã Xác Thực
+                    Verified
                   </span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span>Vai Trò Hệ Thống</span>
-                  <span className="font-bold text-amber-600">THÍ SINH (COMPETITOR)</span>
+                  <span>System Role</span>
+                  <span className="font-bold text-amber-600">COMPETITOR</span>
                 </div>
               </div>
             </div>
@@ -772,7 +772,7 @@ export default function ProfilePage() {
 
           {/* Right Column: Profile Edit & Security Forms */}
           <div className="lg:col-span-2 space-y-8">
-            
+
             {/* Personal Details Form (Amber Theme) */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs space-y-6">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -780,20 +780,20 @@ export default function ProfilePage() {
                   <User className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Thông Tin Cá Nhân Thí Sinh</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Personal Information</h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Cập nhật tên hiển thị, số điện thoại và địa chỉ liên lạc.
+                    Update display name, phone number, and contact address.
                   </p>
                 </div>
               </div>
 
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  
+
                   {/* Display Name */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Tên Hiển Thị <span className="text-red-500">*</span>
+                      Display Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -801,7 +801,7 @@ export default function ProfilePage() {
                         type="text"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Nhập tên hiển thị..."
+                        placeholder="Enter display name..."
                         required
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
                       />
@@ -811,7 +811,7 @@ export default function ProfilePage() {
                   {/* Email (Readonly) */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Email Trực Tuyến
+                      Email Address
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -828,7 +828,7 @@ export default function ProfilePage() {
                   {/* Phone */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Số Điện Thoại
+                      Phone Number
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -836,7 +836,7 @@ export default function ProfilePage() {
                         type="text"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="Nhập số điện thoại..."
+                        placeholder="Enter phone number..."
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
                       />
                     </div>
@@ -845,7 +845,7 @@ export default function ProfilePage() {
                   {/* User Code */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Mã Số Thí Sinh
+                      Competitor Code
                     </label>
                     <div className="relative">
                       <FileBadge className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -863,7 +863,7 @@ export default function ProfilePage() {
                 {/* Address */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                    Địa Chỉ Liên Hệ
+                    Contact Address
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
@@ -871,7 +871,7 @@ export default function ProfilePage() {
                       rows={2}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Nhập địa chỉ của bạn..."
+                      placeholder="Enter your address..."
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition resize-none"
                     />
                   </div>
@@ -886,11 +886,11 @@ export default function ProfilePage() {
                   >
                     {isSavingProfile ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Đang lưu...
+                        <Loader2 className="h-4 w-4 animate-spin" /> Saving...
                       </>
                     ) : (
                       <>
-                        <Save className="h-4 w-4" /> Lưu Thay Đổi
+                        <Save className="h-4 w-4" /> Save Changes
                       </>
                     )}
                   </button>
@@ -905,9 +905,9 @@ export default function ProfilePage() {
                   <Key className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Đổi Mật Khẩu Thí Sinh</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Change Password</h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Cập nhật mật khẩu bảo vệ tài khoản định kỳ.
+                    Update password periodically to protect your account.
                   </p>
                 </div>
               </div>
@@ -916,7 +916,7 @@ export default function ProfilePage() {
                 {/* Current Password */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                    Mật Khẩu Hiện Tại <span className="text-red-500">*</span>
+                    Current Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -935,7 +935,7 @@ export default function ProfilePage() {
                   {/* New Password */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Mật Khẩu Mới <span className="text-red-500">*</span>
+                      New Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -943,7 +943,7 @@ export default function ProfilePage() {
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Tối thiểu 6 ký tự..."
+                        placeholder="At least 6 characters..."
                         required
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
                       />
@@ -953,7 +953,7 @@ export default function ProfilePage() {
                   {/* Confirm Password */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                      Xác Nhận Mật Khẩu Mới <span className="text-red-500">*</span>
+                      Confirm New Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -961,7 +961,7 @@ export default function ProfilePage() {
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Nhập lại mật khẩu mới..."
+                        placeholder="Re-enter new password..."
                         required
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500 focus:bg-white transition"
                       />
@@ -978,11 +978,11 @@ export default function ProfilePage() {
                   >
                     {isChangingPassword ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Đang cập nhật...
+                        <Loader2 className="h-4 w-4 animate-spin" /> Updating...
                       </>
                     ) : (
                       <>
-                        <Key className="h-4 w-4" /> Đổi Mật Khẩu
+                        <Key className="h-4 w-4" /> Change Password
                       </>
                     )}
                   </button>

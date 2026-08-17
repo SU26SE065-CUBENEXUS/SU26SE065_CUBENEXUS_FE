@@ -121,8 +121,8 @@ export default function RankingsPage() {
   }, [apiRankings]);
 
   const divisions = [
-    { id: 'global', label: 'Tất Cả Đấu Thủ (All Rankings)' },
-    { id: 'master', label: 'Bảng Cao Thủ (Master Tier >= 2700 ELO)' },
+    { id: 'global', label: 'All Rankings' },
+    { id: 'master', label: 'Master Tier (>= 2700 ELO)' },
   ];
 
   const getChangeIcon = (change: string) => {
@@ -194,7 +194,7 @@ export default function RankingsPage() {
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent hover:border-slate-200 rounded-xl transition-all cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Quay lại
+            Back
           </button>
         </div>
 
@@ -215,7 +215,7 @@ export default function RankingsPage() {
                 ARENA LEADERBOARD (3X3X3)
               </h1>
               <p className="text-slate-600 max-w-2xl text-xs sm:text-sm leading-relaxed">
-                Bảng xếp hạng ELO Rating chính thức của chế độ Đấu trường 3x3x3 Online. Tích lũy điểm ELO qua từng trận solo 1v1 để thăng hạng và xuất hiện trên Bảng xếp hạng.
+                Official 3x3x3 Online Arena ELO Rating Leaderboard. Accumulate ELO points through 1v1 duels to rank up and appear on the Leaderboard.
               </p>
             </div>
             <div>
@@ -224,7 +224,7 @@ export default function RankingsPage() {
                 className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-6 py-5 text-xs tracking-wider shadow-md rounded-xl transition-all border-none uppercase flex items-center gap-2 cursor-pointer"
               >
                 <Link href="/online">
-                  Tham Gia Đấu Trường Online <Play className="h-3.5 w-3.5 fill-current" />
+                  Join Online Arena <Play className="h-3.5 w-3.5 fill-current" />
                 </Link>
               </Button>
             </div>
@@ -253,7 +253,7 @@ export default function RankingsPage() {
                   </div>
                 </div>
                 <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                  <span>Số trận thắng: <strong className="text-indigo-600 font-mono">{top2.duels}</strong></span>
+                  <span>Wins: <strong className="text-indigo-600 font-mono">{top2.duels}</strong></span>
                 </div>
               </div>
             ) : null}
@@ -277,7 +277,7 @@ export default function RankingsPage() {
                   </div>
                 </div>
                 <div className="pt-3 mt-3 border-t border-amber-200/60 flex items-center justify-between text-xs font-semibold text-slate-600">
-                  <span>Số trận thắng: <strong className="text-emerald-600 font-mono text-sm">{top1.duels}</strong></span>
+                  <span>Wins: <strong className="text-emerald-600 font-mono text-sm">{top1.duels}</strong></span>
                 </div>
               </div>
             ) : null}
@@ -301,7 +301,7 @@ export default function RankingsPage() {
                   </div>
                 </div>
                 <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                  <span>Số trận thắng: <strong className="text-indigo-600 font-mono">{top3.duels}</strong></span>
+                  <span>Wins: <strong className="text-indigo-600 font-mono">{top3.duels}</strong></span>
                 </div>
               </div>
             ) : null}
@@ -309,8 +309,8 @@ export default function RankingsPage() {
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500 shadow-2xs space-y-2">
             <Trophy className="h-10 w-10 text-amber-500/40 mx-auto" />
-            <p className="font-bold text-sm text-slate-900">Chưa có người chơi nào hoàn thành 5 trận phân hạng.</p>
-            <p className="text-xs text-slate-500">Hãy tham gia thi đấu Arena 3x3x3 để trở thành người đầu tiên có tên trên Bảng xếp hạng!</p>
+            <p className="font-bold text-sm text-slate-900">No players have completed 5 placement matches yet.</p>
+            <p className="text-xs text-slate-500">Join 3x3x3 Arena matches to become the first player on the Leaderboard!</p>
           </div>
         )}
 
@@ -322,10 +322,10 @@ export default function RankingsPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider font-mono flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" /> Thông Tin Hồ Sơ Arena Của Bạn
+                    <Sparkles className="h-3 w-3" /> Your Arena Profile Info
                   </span>
                   <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                    {isPlacementDone ? 'Đã Hoàn Thành Phân Hạng' : `Đang Phân Hạng (${placementDoneCount}/5 trận)`}
+                    {isPlacementDone ? 'Placement Completed' : `Placing (${placementDoneCount}/5 matches)`}
                   </p>
                 </div>
                 <div className="text-right">
@@ -336,7 +336,7 @@ export default function RankingsPage() {
 
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex justify-between text-xs text-slate-600 font-semibold mb-2">
-                  <span>ELO Cao Nhất Ghi Nhận (Peak ELO):</span>
+                  <span>Recorded Peak ELO:</span>
                   <span className="text-amber-700 font-mono font-bold">{userPeakElo} ELO</span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200">
@@ -350,9 +350,9 @@ export default function RankingsPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-4 text-xs pt-4 text-slate-500 font-semibold border-t border-slate-100 mt-4 font-mono">
               <span className="flex items-center gap-1.5">
-                <Flame className="h-4 w-4 text-amber-500" /> Trận thắng: <strong className="text-emerald-600">{totalWins}</strong> / <strong className="text-slate-900">{totalMatches} trận</strong>
+                <Flame className="h-4 w-4 text-amber-500" /> Wins: <strong className="text-emerald-600">{totalWins}</strong> / <strong className="text-slate-900">{totalMatches} matches</strong>
               </span>
-              <span>Trạng thái ELO: <strong className="text-slate-900">{isPlacementDone ? 'Công Khai' : 'Tạm Ẩn'}</strong></span>
+              <span>ELO Status: <strong className="text-slate-900">{isPlacementDone ? 'Public' : 'Hidden'}</strong></span>
             </div>
           </div>
 
@@ -360,7 +360,7 @@ export default function RankingsPage() {
           <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 shadow-2xs text-slate-900">
             <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 font-mono flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-500" />
-              Lịch Sử Trận Gần Đây
+              Recent Match History
             </h3>
             {recentMatches.length > 0 ? (
               <div className="space-y-3">
@@ -373,7 +373,7 @@ export default function RankingsPage() {
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[11px] font-semibold">
                       <span className={match.isWinner ? 'text-emerald-600 font-bold' : match.isDraw ? 'text-amber-600 font-bold' : 'text-rose-500 font-bold'}>
-                        {match.isWinner ? 'Chiến Thắng' : match.isDraw ? 'Hòa' : 'Thất Bại'}
+                        {match.isWinner ? 'Victory' : match.isDraw ? 'Draw' : 'Defeat'}
                         {match.eloChange !== 0 && (
                           <span className={`text-[10px] ml-1.5 px-1.5 py-0.2 rounded font-bold font-mono border ${match.eloChange > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
                             }`}>
@@ -390,7 +390,7 @@ export default function RankingsPage() {
               </div>
             ) : (
               <div className="py-6 text-center text-xs text-slate-400 italic">
-                Chưa có dữ liệu lịch sử trận đấu gần đây.
+                No recent match history available.
               </div>
             )}
           </div>
@@ -417,7 +417,7 @@ export default function RankingsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm đấu thủ..."
+              placeholder="Search competitors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 font-medium placeholder-slate-400 outline-none focus:bg-white focus:border-amber-500 transition"
@@ -435,11 +435,11 @@ export default function RankingsPage() {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                        <th className="px-6 py-4">Hạng</th>
-                        <th className="px-6 py-4">Đấu Thủ 3x3x3</th>
+                        <th className="px-6 py-4">Rank</th>
+                        <th className="px-6 py-4">3x3x3 Competitor</th>
                         <th className="px-6 py-4 text-center">ELO Rating</th>
-                        <th className="px-6 py-4 text-center">Tổng Số Trận Thắng</th>
-                        <th className="px-6 py-4 text-center">Xu Hướng</th>
+                        <th className="px-6 py-4 text-center">Total Wins</th>
+                        <th className="px-6 py-4 text-center">Trend</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-900">
@@ -475,7 +475,7 @@ export default function RankingsPage() {
                                 </span>
                                 {isUser && (
                                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500 text-white font-mono uppercase">
-                                    BẠN
+                                    YOU
                                   </span>
                                 )}
                               </div>
@@ -486,7 +486,7 @@ export default function RankingsPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-center font-bold font-mono text-slate-700 text-xs">
-                              {player.duels} trận
+                              {player.duels} wins
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex justify-center">{getChangeIcon(player.change)}</div>
@@ -511,7 +511,7 @@ export default function RankingsPage() {
                       <span className="font-extrabold text-amber-600 font-mono text-xs">{player.rating} ELO</span>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
-                      <span>Số trận thắng: <strong className="text-slate-900">{player.duels}</strong></span>
+                      <span>Wins: <strong className="text-slate-900">{player.duels}</strong></span>
                       <div className="flex items-center gap-1">{getChangeIcon(player.change)}</div>
                     </div>
                   </div>
@@ -520,8 +520,8 @@ export default function RankingsPage() {
             </>
           ) : (
             <div className="py-12 text-center text-slate-500 space-y-2">
-              <p className="font-bold text-sm text-slate-900">Không tìm thấy dữ liệu đấu thủ nào.</p>
-              <p className="text-xs text-slate-400">Các đấu thủ hoàn thành đủ 5 trận phân hạng sẽ được hiển thị tại đây.</p>
+              <p className="font-bold text-sm text-slate-900">No competitor data found.</p>
+              <p className="text-xs text-slate-400">Competitors who complete 5 placement matches will be displayed here.</p>
             </div>
           )}
         </div>

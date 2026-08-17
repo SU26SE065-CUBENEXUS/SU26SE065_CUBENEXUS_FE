@@ -7,13 +7,13 @@ import { Header } from '@/components/header';
 import { listOnlineAsyncTournaments, type OnlineAsyncTournamentDto } from '@/lib/api/online-async';
 
 const statusLabels: Record<string, string> = {
-  PUBLISHED: 'Sắp mở đăng ký',
-  REGISTRATION_OPEN: 'Đang mở đăng ký',
-  REGISTRATION_CLOSED: 'Đã đóng đăng ký',
-  ONGOING: 'Đang diễn ra',
-  COMPLETED: 'Đã kết thúc',
-  DISABLED: 'Tạm ngưng',
-  CANCELLED: 'Đã hủy',
+  PUBLISHED: 'Upcoming',
+  REGISTRATION_OPEN: 'Registration Open',
+  REGISTRATION_CLOSED: 'Registration Closed',
+  ONGOING: 'Ongoing',
+  COMPLETED: 'Completed',
+  DISABLED: 'Disabled',
+  CANCELLED: 'Cancelled',
 };
 
 const statusStyles: Record<string, string> = {
@@ -27,7 +27,7 @@ const statusStyles: Record<string, string> = {
 };
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat('en-US', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
   }).format(new Date(value));
 }
@@ -42,18 +42,18 @@ export default function OnlineAsyncTournamentsPage() {
     let active = true;
     listOnlineAsyncTournaments()
       .then((items) => active && setTournaments(items))
-      .catch((err: Error) => active && setError(err.message || 'Không thể tải danh sách giải đấu.'))
+      .catch((err: Error) => active && setError(err.message || 'Failed to load tournament list.'))
       .finally(() => active && setIsLoading(false));
     return () => { active = false; };
   }, []);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase('vi-VN');
+    const term = search.trim().toLocaleLowerCase('en-US');
     if (!term) return tournaments;
     return tournaments.filter((tournament) =>
       [tournament.name, tournament.description, tournament.puzzleTypeName, tournament.statusCode]
         .filter(Boolean)
-        .some((value) => value!.toLocaleLowerCase('vi-VN').includes(term)),
+        .some((value) => value!.toLocaleLowerCase('en-US').includes(term)),
     );
   }, [search, tournaments]);
 
@@ -67,14 +67,14 @@ export default function OnlineAsyncTournamentsPage() {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-500">
                 <Trophy className="h-3.5 w-3.5 text-orange-500" /> Online Asynchronous
               </span>
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Giải đấu Online A01</h1>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">Mỗi giải chỉ có một puzzle, một scramble chung và một attempt cho mỗi thí sinh.</p>
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Online AO1 Tournaments</h1>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">Each tournament features a single puzzle, a shared scramble, and one attempt per competitor.</p>
             </div>
             <div className="w-full sm:w-80">
-              <label className="sr-only" htmlFor="tournament-search">Tìm giải đấu</label>
+              <label className="sr-only" htmlFor="tournament-search">Search tournaments</label>
               <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <input id="tournament-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên giải, puzzle..." className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 text-foreground" />
+                <input id="tournament-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tournament name, puzzle..." className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 text-foreground" />
               </div>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function OnlineAsyncTournamentsPage() {
           ) : error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">{error}</div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card py-16 text-center"><Trophy className="mx-auto h-9 w-9 text-muted-foreground/30" /><p className="mt-3 text-sm font-semibold text-muted-foreground">Chưa có giải A01 phù hợp.</p></div>
+            <div className="rounded-3xl border border-dashed border-border bg-card py-16 text-center"><Trophy className="mx-auto h-9 w-9 text-muted-foreground/30" /><p className="mt-3 text-sm font-semibold text-muted-foreground">No matching AO1 tournaments found.</p></div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((tournament) => {
@@ -96,13 +96,13 @@ export default function OnlineAsyncTournamentsPage() {
                     <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wider text-orange-500">{tournament.puzzleTypeName || 'Puzzle'} · AO1</p><h2 className="mt-1 truncate text-lg font-bold text-foreground">{tournament.name}</h2></div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${statusStyles[status] || statusStyles.COMPLETED}`}>{statusLabels[status] || status}</span>
                   </div>
-                  <p className="mt-3 min-h-10 text-sm leading-5 text-muted-foreground">{tournament.description || 'Giải speedcubing trực tuyến, kết quả được duyệt sau khi nộp attempt.'}</p>
+                  <p className="mt-3 min-h-10 text-sm leading-5 text-muted-foreground">{tournament.description || 'Online speedcubing competition with results approved after attempt submission.'}</p>
                   <div className="mt-5 space-y-2.5 border-t border-border pt-4 text-xs text-muted-foreground">
-                    <p className="flex gap-2"><CalendarDays className="h-4 w-4 shrink-0 text-orange-500" /><span>Đăng ký: {formatDate(tournament.registrationOpenAt)} – {formatDate(tournament.registrationCloseAt)}</span></p>
-                    <p className="flex gap-2"><Clock3 className="h-4 w-4 shrink-0 text-orange-500" /><span>Thi đấu: {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</span></p>
-                    <p className="flex gap-2"><Users className="h-4 w-4 shrink-0 text-orange-500" /><span>1 attempt · giới hạn {Math.round(tournament.attemptTimeLimitMs / 60000)} phút</span></p>
+                    <p className="flex gap-2"><CalendarDays className="h-4 w-4 shrink-0 text-orange-500" /><span>Registration: {formatDate(tournament.registrationOpenAt)} – {formatDate(tournament.registrationCloseAt)}</span></p>
+                    <p className="flex gap-2"><Clock3 className="h-4 w-4 shrink-0 text-orange-500" /><span>Competition: {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</span></p>
+                    <p className="flex gap-2"><Users className="h-4 w-4 shrink-0 text-orange-500" /><span>1 attempt · {Math.round(tournament.attemptTimeLimitMs / 60000)} min limit</span></p>
                   </div>
-                  <Link href={`/tournaments/${tournament.id}`} className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2.5 text-sm font-bold text-white transition">Xem giải & đăng ký <ChevronRight className="h-4 w-4" /></Link>
+                  <Link href={`/tournaments/${tournament.id}`} className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2.5 text-sm font-bold text-white transition">View & Register <ChevronRight className="h-4 w-4" /></Link>
                 </article>;
               })}
             </div>

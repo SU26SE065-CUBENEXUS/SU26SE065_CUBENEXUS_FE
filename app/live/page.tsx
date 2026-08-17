@@ -19,7 +19,7 @@ import {
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('vi-VN', {
+  return date.toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -174,44 +174,44 @@ export default function PublicLiveTournamentsPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayedTournaments.map((t) => {
-                let statusText = 'Sắp Diễn Ra';
+                let statusText = 'Upcoming';
                 let badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
                 let ctaStyle = 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/15';
-                let ctaLabel = 'Xem Lịch Thi Đấu';
+                let ctaLabel = 'View Schedule';
 
                 const codeUpper = (t.status || '').toUpperCase();
 
                 if (t.isLive) {
-                  statusText = 'ĐANG THI ĐẤU (LIVE)';
+                  statusText = 'LIVE SPECTATING';
                   badgeStyle = 'border-red-200 text-red-700 bg-red-50 font-extrabold';
                   ctaStyle = 'bg-red-600 hover:bg-red-700 text-white shadow-2xs';
-                  ctaLabel = 'Xem Bảng Live';
+                  ctaLabel = 'View Live Board';
                 } else if (codeUpper === 'ONGOING') {
-                  statusText = 'Đang Thi Đấu';
+                  statusText = 'Ongoing';
                   badgeStyle = 'border-purple-200 text-purple-700 bg-purple-50 font-bold';
                   ctaStyle = 'bg-purple-600 hover:bg-purple-700 text-white shadow-2xs';
-                  ctaLabel = 'Xem Bảng Live';
+                  ctaLabel = 'View Live Board';
                 } else if (codeUpper === 'COMPLETED') {
-                  statusText = 'Đã Hoàn Thành';
+                  statusText = 'Completed';
                   badgeStyle = 'border-border text-muted-foreground bg-muted';
                   ctaStyle = 'bg-muted hover:bg-muted/80 text-foreground border border-border';
-                  ctaLabel = 'Xem Kết Quả';
+                  ctaLabel = 'View Results';
                 } else if (codeUpper === 'REGISTRATION_OPEN') {
-                  statusText = 'Mở Đăng Ký';
+                  statusText = 'Registration Open';
                   badgeStyle = 'border-emerald-200 text-emerald-700 bg-emerald-50';
-                  ctaLabel = 'Xem Chi Tiết';
+                  ctaLabel = 'View Details';
                 } else if (codeUpper === 'REGISTRATION_CLOSED') {
-                  statusText = 'Đóng Đăng Ký';
+                  statusText = 'Registration Closed';
                   badgeStyle = 'border-amber-200 text-amber-700 bg-amber-50';
-                  ctaLabel = 'Xem Lịch Thi Đấu';
+                  ctaLabel = 'View Schedule';
                 } else if (codeUpper === 'CANCELLED') {
-                  statusText = 'Đã Hủy';
+                  statusText = 'Cancelled';
                   badgeStyle = 'border-red-200 text-red-700 bg-red-50';
-                  ctaLabel = 'Xem Chi Tiết';
+                  ctaLabel = 'View Details';
                 } else if (codeUpper === 'PUBLISHED') {
-                  statusText = 'Công Bố / Sắp Khởi Tranh';
+                  statusText = 'Upcoming';
                   badgeStyle = 'border-blue-200 text-blue-700 bg-blue-50';
-                  ctaLabel = 'Xem Lịch Thi Đấu';
+                  ctaLabel = 'View Schedule';
                 }
 
                 return (
@@ -226,9 +226,6 @@ export default function PublicLiveTournamentsPage() {
                           {t.isLive && <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping mr-0.5" />}
                           {statusText}
                         </span>
-                        {/* <span className="text-[10px] text-muted-foreground font-mono font-medium">
-                          {t.id.slice(0, 8)}
-                        </span> */}
                       </div>
 
                       {/* Name and description */}
@@ -257,7 +254,7 @@ export default function PublicLiveTournamentsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Layers className="h-4.5 w-4.5 text-orange-500 shrink-0" />
-                          <span>{t.eventsCount} Hạng mục thi đấu</span>
+                          <span>{t.eventsCount} {t.eventsCount === 1 ? 'Event Category' : 'Event Categories'}</span>
                         </div>
                       </div>
                     </div>
@@ -284,7 +281,7 @@ export default function PublicLiveTournamentsPage() {
                   onClick={() => setVisibleCount((prev) => prev + 3)}
                   className="px-6 py-3 rounded-2xl bg-card hover:bg-muted border border-border text-xs font-extrabold text-orange-500 hover:text-orange-600 transition-all shadow-2xs inline-flex items-center gap-2 cursor-pointer font-mono"
                 >
-                  <span>XEM THÊM GIẢI ĐẤU ({filteredTournaments.length - visibleCount} GIẢI CÒN LẠI)</span>
+                  <span>LOAD MORE TOURNAMENTS ({filteredTournaments.length - visibleCount} REMAINING)</span>
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </div>

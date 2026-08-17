@@ -29,15 +29,15 @@ export function LiveSection() {
             
             {/* Main Heading using Theme Gradient */}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground uppercase leading-tight">
-              Trực Tiếp <br className="hidden sm:inline" />
+              Live <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-primary to-accent">
-                Giải Đấu Rubik
+                Rubik Tournaments
               </span>
             </h2>
 
             {/* Description using text-muted-foreground for high legibility */}
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl font-medium">
-              Theo dõi diễn biến trực tiếp, lịch thi đấu và bảng xếp hạng thời gian thực của các giải đấu Rubik công khai. Đồng hành cùng hàng ngàn đấu thủ trên khắp thế giới trong những màn giải đố đầy kịch tính.
+              Follow live matches, tournament schedules, and real-time standings of public Rubik's Cube competitions. Join thousands of competitors worldwide in thrilling puzzle-solving matches.
             </p>
 
             {/* CTA Link aligned to the left */}
@@ -46,7 +46,7 @@ export function LiveSection() {
                 href="/live"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 via-primary to-accent px-6 py-4 text-xs font-black uppercase tracking-widest text-white shadow-md hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
-                <span>Xem Trực Tiếp</span>
+                <span>Watch Live</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -59,9 +59,9 @@ export function LiveSection() {
                 <Activity className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">Bảng xếp hạng trực tiếp</h4>
+                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">Live Leaderboards</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                  Liveboard cập nhật kết quả từng lượt giải của đấu thủ ngay lập tức.
+                  Liveboards update each competitor's solve results instantly.
                 </p>
               </div>
             </div>
@@ -71,9 +71,9 @@ export function LiveSection() {
                 <Trophy className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">Định dạng giải đấu WCA</h4>
+                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">WCA Tournament Formats</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                  Hỗ trợ đầy đủ các thể thức thi đấu Ao5, Bo3, Mo3 tiêu chuẩn chuyên nghiệp.
+                  Full support for standard professional tournament formats: Ao5, Bo3, and Mo3.
                 </p>
               </div>
             </div>
@@ -83,9 +83,9 @@ export function LiveSection() {
                 <Users className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">Cộng đồng toàn cầu</h4>
+                <h4 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">Global Community</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-                  Hàng ngàn khán giả và đấu thủ cùng tham gia theo dõi trực tuyến.
+                  Thousands of spectators and competitors tuning in online.
                 </p>
               </div>
             </div>

@@ -43,7 +43,7 @@ function formatDateRange(start: string, end: string): string {
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   return `${fmt(s)} – ${fmt(e)}`;
 }
 
@@ -506,27 +506,27 @@ export default function PublicLiveBoardDetailPage({
             {tournament.status !== 'ONGOING' && tournament.status !== 'COMPLETED' ? (
               <div className="text-center py-20 bg-white border border-dashed border-slate-200 rounded-3xl max-w-xl mx-auto space-y-4 shadow-2xs">
                 <CalendarDays className="h-12 w-12 text-indigo-600/40 mx-auto" />
-                <h3 className="font-extrabold text-lg uppercase tracking-tight text-slate-900">
+                <h3 className="font-extrabold text-base text-slate-900 mb-1">
                   {tournament.status === 'REGISTRATION_CLOSED'
-                    ? 'Giải Đấu Đã Đóng Đăng Ký — Sắp Khởi Tranh'
+                    ? 'Registration Closed — Starting Soon'
                     : tournament.status === 'REGISTRATION_OPEN'
-                    ? 'Giải Đấu Đang Mở Đăng Ký Thi Đấu'
-                    : 'Giải Đấu Chưa Khởi Tranh'}
+                    ? 'Registration Currently Open'
+                    : 'Tournament Has Not Started Yet'}
                 </h3>
                 <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
                   {tournament.status === 'REGISTRATION_CLOSED'
-                    ? `Cổng đăng ký đã khép lại. Giải đấu sẽ chính thức khởi tranh vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Hãy quay lại khi giải bắt đầu để xem kết quả Live trực tiếp!`
+                    ? `Registration has closed. The tournament will officially start on ${new Date(tournament.startTime).toLocaleDateString('en-US')}. Please check back when it starts for live results!`
                     : tournament.status === 'REGISTRATION_OPEN'
-                    ? `Giải đấu đang mở cổng đăng ký cho các thí sinh. Thời gian thi đấu chính thức bắt đầu từ ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}.`
-                    : `Giải đấu dự kiến bắt đầu vào ngày ${new Date(tournament.startTime).toLocaleDateString('vi-VN')}. Vui lòng quay lại sau để xem bảng xếp hạng trực tiếp.`}
+                    ? `Registration is currently open. Official matches begin on ${new Date(tournament.startTime).toLocaleDateString('en-US')}.`
+                    : `Tournament is scheduled to start on ${new Date(tournament.startTime).toLocaleDateString('en-US')}. Please check back later for live rankings.`}
                 </p>
                 <div className="pt-2">
                   <span className="inline-flex rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-700 uppercase shadow-2xs">
-                    TRẠNG THÁI: {
-                      tournament.status === 'REGISTRATION_OPEN' ? 'ĐANG MỞ ĐĂNG KÝ' :
-                      tournament.status === 'REGISTRATION_CLOSED' ? 'ĐÃ ĐÓNG ĐĂNG KÝ' :
-                      tournament.status === 'PUBLISHED' ? 'CÔNG BỐ / SẮP KHỞI TRANH' :
-                      tournament.status === 'DRAFT' ? 'BẢN NHÁP' :
+                    STATUS: {
+                      tournament.status === 'REGISTRATION_OPEN' ? 'REGISTRATION OPEN' :
+                      tournament.status === 'REGISTRATION_CLOSED' ? 'REGISTRATION CLOSED' :
+                      tournament.status === 'PUBLISHED' ? 'UPCOMING' :
+                      tournament.status === 'DRAFT' ? 'DRAFT' :
                       tournament.status.replace('_', ' ')
                     }
                   </span>
@@ -1129,28 +1129,28 @@ export default function PublicLiveBoardDetailPage({
                                 const isLocal = url.startsWith('file://') || url.startsWith('ph://') || url.startsWith('content://');
                                 const isBase64 = url.startsWith('data:image');
                                 if (isLocal) {
-                                  fallbackDiv.innerHTML = '⚠️ Đường dẫn ảnh lưu ở bộ nhớ máy di động.<br/><span class="text-[10px] text-gray-400 font-normal">Trọng tài cần sử dụng phiên bản ứng dụng di động mới nhất để tải ảnh trực tiếp.</span>';
+                                  fallbackDiv.innerHTML = '⚠️ Image path saved on mobile local storage.<br/><span class="text-[10px] text-gray-400 font-normal">Judges need to use the latest mobile app version to upload directly.</span>';
                                 } else if (isBase64) {
-                                  fallbackDiv.innerHTML = '⚠️ Ảnh quá lớn, trình duyệt không thể hiển thị trực tiếp.<br/><span class="text-[10px] text-gray-400 font-normal">Vui lòng bấm "Mở Ảnh Gốc Tab Mới" bên trên để xem ảnh.</span>';
+                                  fallbackDiv.innerHTML = '⚠️ Image size too large to render directly in browser.<br/><span class="text-[10px] text-gray-400 font-normal">Please click "Open Original Image (New Tab)" above to view.</span>';
                                 } else {
-                                  fallbackDiv.innerHTML = '⚠️ Tạm thời không tải được ảnh minh chứng.<br/><span class="text-[10px] text-gray-400 font-normal">Vui lòng thử lại sau.</span>';
+                                  fallbackDiv.innerHTML = '⚠️ Unable to load score card evidence photo temporarily.<br/><span class="text-[10px] text-gray-400 font-normal">Please try again later.</span>';
                                 }
                                 parent.appendChild(fallbackDiv);
                               }
                             }}
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-extrabold gap-2">
-                            <ExternalLink className="h-5 w-5 text-primary" /> Click để mở ảnh gốc độ phân giải cao (Tab Mới)
+                            <ExternalLink className="h-5 w-5 text-primary" /> Click to open high resolution original image (New Tab)
                           </div>
                           <div className="absolute bottom-2.5 right-2.5 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[10px] text-white font-extrabold border border-white/20 flex items-center gap-1 shadow-lg">
-                            <ExternalLink className="h-3 w-3 text-primary" /> Click Phóng To Ảnh Gốc
+                            <ExternalLink className="h-3 w-3 text-primary" /> Click to Enlarge Original
                           </div>
                         </div>
                       ) : (
                         <div className="rounded-2xl border border-dashed border-border/80 bg-muted/10 py-10 px-4 text-center space-y-2">
                           <Camera className="h-8 w-8 text-muted-foreground/30 mx-auto" />
-                          <p className="text-xs font-bold text-muted-foreground">Chưa có ảnh tờ ghi điểm minh chứng cho lượt thi này.</p>
-                          <p className="text-[10px] text-muted-foreground/60">Trọng tài đã nhập trực tiếp điểm số qua ứng dụng di động.</p>
+                          <p className="text-xs font-bold text-muted-foreground">No score sheet photo evidence for this solve.</p>
+                          <p className="text-[10px] text-muted-foreground/60">Judge submitted results directly via mobile app.</p>
                         </div>
                       )}
 
@@ -1162,7 +1162,7 @@ export default function PublicLiveBoardDetailPage({
               {/* Digital Signature */}
               {selectedInspectSolve.esignatureData && (
                 <div className="border-t border-border pt-3">
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Chữ Ký Trọng Tài / Thí Sinh:</p>
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Judge / Competitor Signature:</p>
                   <div className="rounded-xl border border-border bg-black/40 p-2 flex justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={selectedInspectSolve.esignatureData} alt="Digital Signature" className="max-h-16 object-contain" />
@@ -1176,7 +1176,7 @@ export default function PublicLiveBoardDetailPage({
                   onClick={() => setSelectedInspectSolve(null)}
                   className="w-full rounded-xl bg-muted py-2.5 text-xs font-bold text-foreground hover:bg-muted/80 transition"
                 >
-                  Đóng Khung Xem
+                  Close Modal
                 </button>
               </div>
             </div>

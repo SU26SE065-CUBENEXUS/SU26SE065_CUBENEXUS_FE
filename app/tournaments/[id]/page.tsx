@@ -53,7 +53,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
       const lb = await getAsyncLeaderboard(tournamentId);
       setLeaderboard(lb);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải thông tin giải đấu.');
+      setError(err?.message || 'Failed to load tournament info.');
     } finally {
       setIsLoading(false);
     }
@@ -68,10 +68,10 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
     setError(null);
     try {
       await registerOnlineAsyncTournament(tournamentId);
-      setSuccessMsg('Đăng ký tham gia giải đấu thành công!');
+      setSuccessMsg('Successfully registered for tournament!');
       fetchData();
     } catch (err: any) {
-      setError(err?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
+      setError(err?.message || 'Registration failed. Please try again.');
     } finally {
       setIsActionLoading(false);
     }
@@ -84,7 +84,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
       const resp = await startOnlineAsyncAttempt(tournamentId);
       router.push(`/tournaments/${tournamentId}/attempt/${resp.attemptId}`);
     } catch (err: any) {
-      setError(err?.message || 'Không thể bắt đầu attempt.');
+      setError(err?.message || 'Failed to start attempt.');
       setIsActionLoading(false);
     }
   };
@@ -93,7 +93,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16 text-center">
         <RefreshCw className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-3" />
-        <p className="text-sm font-semibold text-muted-foreground">Đang tải thông tin giải đấu Online...</p>
+        <p className="text-sm font-semibold text-muted-foreground">Loading Online tournament details...</p>
       </div>
     );
   }
@@ -102,8 +102,8 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16 text-center">
         <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-slate-800">Không tìm thấy giải đấu</h2>
-        <p className="text-sm text-slate-500 mt-1">{error || 'Giải đấu không tồn tại hoặc đã bị gỡ.'}</p>
+        <h2 className="text-xl font-bold text-slate-800">Tournament Not Found</h2>
+        <p className="text-sm text-slate-500 mt-1">{error || 'Tournament does not exist or has been removed.'}</p>
       </div>
     );
   }
@@ -128,7 +128,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
             onClick={() => router.push('/tournaments')}
             className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition bg-transparent border-none cursor-pointer p-0"
           >
-            <ArrowLeft className="h-4 w-4" /> Quay lại danh sách giải
+            <ArrowLeft className="h-4 w-4" /> Back to Tournaments
           </button>
         </div>
 
@@ -152,39 +152,39 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
                 {tournament.name}
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                {tournament.description || 'Giải đấu Asynchronous Online Speedcubing chính thức. Mỗi thí sinh thực hiện 1 attempt duy nhất.'}
+                {tournament.description || 'Official Asynchronous Online Speedcubing Tournament. Each competitor makes a single attempt.'}
               </p>
 
               <div className="flex flex-wrap gap-3 text-xs font-medium text-muted-foreground pt-2">
                 <div className="flex items-center gap-1.5 bg-background px-3.5 py-2 rounded-xl border border-border">
                   <Calendar className="h-4 w-4 text-orange-500" />
-                  <span>Đăng ký: {regOpen.toLocaleDateString('vi-VN')} - {regClose.toLocaleDateString('vi-VN')}</span>
+                  <span>Registration: {regOpen.toLocaleDateString('en-US')} - {regClose.toLocaleDateString('en-US')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-background px-3.5 py-2 rounded-xl border border-border">
                   <Clock className="h-4 w-4 text-orange-500" />
-                  <span>Thi đấu: {compStart.toLocaleDateString('vi-VN')} - {compEnd.toLocaleDateString('vi-VN')}</span>
+                  <span>Competition: {compStart.toLocaleDateString('en-US')} - {compEnd.toLocaleDateString('en-US')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-background px-3.5 py-2 rounded-xl border border-border">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Attempt Time Limit: {Math.round(tournament.attemptTimeLimitMs / 60000)} phút</span>
+                  <span>Attempt Time Limit: {Math.round(tournament.attemptTimeLimitMs / 60000)} mins</span>
                 </div>
               </div>
             </div>
 
             {/* Action Box */}
             <div className="flex flex-col items-center justify-center bg-background/50 backdrop-blur-md p-6 rounded-2xl border border-border text-center min-w-[260px] space-y-4 shadow-2xs">
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Trạng thái tham gia</p>
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Participation Status</p>
 
               {tournament.userAttemptId ? (
                 <div className="space-y-3 w-full">
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 w-full justify-center">
-                    <CheckCircle className="h-4 w-4 text-emerald-500" /> Đã hoàn thành Attempt
+                    <CheckCircle className="h-4 w-4 text-emerald-500" /> Attempt Completed
                   </div>
                   <button
                     onClick={() => router.push(`/tournaments/${tournamentId}/attempt/${tournament.userAttemptId}`)}
                     className="w-full text-xs font-bold bg-card text-foreground py-2.5 px-4 rounded-xl shadow-xs border border-border hover:bg-muted transition cursor-pointer"
                   >
-                    Xem Kết Quả Của Tôi
+                    View My Results
                   </button>
                 </div>
               ) : isCompWindow && tournament.isRegistered ? (
@@ -194,7 +194,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 border-none"
                 >
                   <Play className="h-4 w-4 fill-white" />
-                  {isActionLoading ? 'Đang khởi tạo...' : 'VÀO THI NGAY (START ATTEMPT)'}
+                  {isActionLoading ? 'Initializing...' : 'START ATTEMPT NOW'}
                 </button>
               ) : isRegWindow && !tournament.isRegistered ? (
                 <button
@@ -203,15 +203,15 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
                   className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md transition cursor-pointer disabled:opacity-50 border-none shadow-orange-500/15"
                 >
                   <UserCheck className="h-4 w-4" />
-                  {isActionLoading ? 'Đăng ký...' : 'Đăng Ký Tham Gia'}
+                  {isActionLoading ? 'Registering...' : 'Register Now'}
                 </button>
               ) : tournament.isRegistered && !isCompWindow ? (
                 <div className="text-xs text-amber-700 font-semibold bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-                  Đã đăng ký. Chờ đến khung giờ thi đấu ({compStart.toLocaleString('vi-VN')})
+                  Registered. Waiting for competition window ({compStart.toLocaleString('en-US')})
                 </div>
               ) : (
                 <div className="text-xs text-muted-foreground font-medium bg-muted p-2.5 rounded-xl border border-border w-full">
-                  {now < regOpen ? 'Chưa tới thời gian mở đăng ký' : 'Cổng đăng ký đã đóng'}
+                  {now < regOpen ? 'Registration not open yet' : 'Registration closed'}
                 </div>
               )}
             </div>
@@ -237,21 +237,21 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
               <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-amber-500" /> Final Leaderboard (AO1)
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Xếp hạng theo thời gian giải sau phạt. Chỉ hiển thị kết quả đã qua Admin Review (APPROVED).</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Ranked by solve time after penalties. Displays approved results reviewed by Admins.</p>
             </div>
             <button
               onClick={fetchData}
               className="flex items-center gap-1.5 text-xs font-semibold text-orange-500 bg-orange-500/10 px-3 py-1.5 rounded-lg hover:bg-orange-500/20 transition cursor-pointer border-none"
             >
-              <RefreshCw className="h-3.5 w-3.5" /> Tải lại Bảng xếp hạng
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh Leaderboard
             </button>
           </div>
 
           {leaderboard.length === 0 ? (
             <div className="text-center py-12 bg-muted/30 rounded-2xl border border-dashed border-border">
               <Medal className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-foreground">Chưa có kết quả được duyệt</p>
-              <p className="text-xs text-muted-foreground mt-1">Kết quả sẽ tự động xuất hiện sau khi Admin review video recording.</p>
+              <p className="text-sm font-semibold text-foreground">No approved results yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Results will appear automatically after Admin reviews video recording.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -259,10 +259,10 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
                 <thead>
                   <tr className="border-b border-border text-muted-foreground/60 font-bold uppercase tracking-wider">
                     <th className="py-3 px-4">Rank</th>
-                    <th className="py-3 px-4">Thí sinh</th>
-                    <th className="py-3 px-4 text-right">Thời gian Solve (Raw)</th>
-                    <th className="py-3 px-4 text-center">Phạt (Penalty)</th>
-                    <th className="py-3 px-4 text-right">Kết Quả Cuối (Final)</th>
+                    <th className="py-3 px-4">Competitor</th>
+                    <th className="py-3 px-4 text-right">Solve Time (Raw)</th>
+                    <th className="py-3 px-4 text-center">Penalty</th>
+                    <th className="py-3 px-4 text-right">Final Result</th>
                     <th className="py-3 px-4 text-center">Video Evidence</th>
                   </tr>
                 </thead>
