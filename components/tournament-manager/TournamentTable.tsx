@@ -465,10 +465,24 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           const st = (t.statusCode || '').toUpperCase();
           const isOngoing = st === 'ONGOING';
           const isCompleted = st === 'COMPLETED';
-          const isOpenForLocking = st === 'PUBLISHED' || st === 'REGISTRATION_OPEN';
-          const canOpenCheckIn = st === 'REGISTRATION_CLOSED';
-          const canForceStart = st === 'CHECKING_IN';
-          const canComplete = isOngoing || st === 'CHECKING_IN';
+
+          // Mở Đăng Ký (Nút xanh mở đăng ký)
+          const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
+
+          // Khóa Đăng Ký (Nút vàng khóa đăng ký)
+          const canLockRegistration = st === 'REGISTRATION_OPEN';
+
+          // Check-in (CHỈ dành cho giải offline khi đã đóng đăng ký)
+          const canOpenCheckIn = !t.isOnlineAsync && st === 'REGISTRATION_CLOSED';
+
+          // Bắt đầu ngay (Force Start):
+          // - Async Online: cho phép bắt đầu bất kỳ lúc nào khi REGISTRATION_OPEN, REGISTRATION_CLOSED, PUBLISHED, DRAFT (kể cả khi chưa tới ngày thi)
+          // - Offline: chỉ bắt đầu khi đang ở bước CHECKING_IN
+          const canForceStart = t.isOnlineAsync
+            ? (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT')
+            : (st === 'CHECKING_IN');
+
+          const canComplete = isOngoing || (!t.isOnlineAsync && st === 'CHECKING_IN');
 
           return (
             <div key={t.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
