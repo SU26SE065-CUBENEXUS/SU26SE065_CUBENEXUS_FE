@@ -553,13 +553,12 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             return (
               <div key={s.key} className="flex items-center gap-1.5 shrink-0">
                 <span
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] transition-all ${
-                    isActive
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] transition-all ${isActive
                       ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20 font-extrabold'
                       : isPassed
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold'
-                      : 'bg-slate-100 text-slate-400 border-slate-200 font-medium'
-                  }`}
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold'
+                        : 'bg-slate-100 text-slate-400 border-slate-200 font-medium'
+                    }`}
                 >
                   {isPassed ? <CheckCircle className="h-3.5 w-3.5" /> : `${s.num}.`} {s.label}
                 </span>
@@ -604,9 +603,8 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 <Video className="h-4 w-4 text-indigo-600" /> Camera & AI Scanner
               </span>
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  isRecording ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-600'
-                }`}
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isRecording ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-600'
+                  }`}
               >
                 <span className={`h-2 w-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-slate-400'}`} />
                 {isRecording ? 'REC LIVE' : 'CAM READY'}
@@ -738,32 +736,29 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               </div>
 
               {/* Inspection Countdown & Penalty Status Card */}
-              <div className={`rounded-3xl border p-6 text-center shadow-sm space-y-3 transition-colors ${
-                handElapsedMs > 14_000
+              <div className={`rounded-3xl border p-6 text-center shadow-sm space-y-3 transition-colors ${handElapsedMs > 14_000
                   ? 'border-rose-300 bg-rose-50/80 text-rose-950'
                   : handElapsedMs > 6_000
                     ? 'border-amber-300 bg-amber-50/80 text-amber-950'
                     : 'border-emerald-300 bg-emerald-50/80 text-emerald-950'
-              }`}>
+                }`}>
                 <div className="flex items-center justify-between px-2">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 font-mono">
                     Thời Gian Quan Sát / Chuẩn Bị
                   </span>
-                  <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
-                    handElapsedMs > 14_000
+                  <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase border ${handElapsedMs > 14_000
                       ? 'bg-rose-200 text-rose-800 border-rose-300 animate-pulse'
                       : handElapsedMs > 6_000
                         ? 'bg-amber-200 text-amber-800 border-amber-300'
                         : 'bg-emerald-200 text-emerald-800 border-emerald-300'
-                  }`}>
+                    }`}>
                     {handElapsedMs > 14_000 ? 'DNF (Quá 14s)' : handElapsedMs > 6_000 ? '+2 Giây Penalty (Quá 6s)' : 'Hợp Lệ (Không Phạt)'}
                   </span>
                 </div>
 
                 <div className="py-2">
-                  <p className={`font-mono text-5xl sm:text-6xl font-black tracking-tight ${
-                    handElapsedMs > 14_000 ? 'text-rose-700' : handElapsedMs > 6_000 ? 'text-amber-700' : 'text-emerald-700'
-                  }`}>
+                  <p className={`font-mono text-5xl sm:text-6xl font-black tracking-tight ${handElapsedMs > 14_000 ? 'text-rose-700' : handElapsedMs > 6_000 ? 'text-amber-700' : 'text-emerald-700'
+                    }`}>
                     {(handElapsedMs / 1000).toFixed(2)}s
                   </p>
                   <p className="mt-1.5 text-xs font-bold text-slate-600">
@@ -776,18 +771,32 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 </div>
 
                 {/* Regulation helper pills */}
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-[10px] font-bold text-left">
-                  <div className={`p-2 rounded-xl border ${handElapsedMs <= 6_000 ? 'bg-emerald-100/90 border-emerald-300 text-emerald-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
-                    <p className="uppercase">0.00s - 6.00s</p>
-                    <p className="font-medium text-[9px] mt-0.5">Không bị phạt</p>
-                  </div>
-                  <div className={`p-2 rounded-xl border ${handElapsedMs > 6_000 && handElapsedMs <= 14_000 ? 'bg-amber-100/90 border-amber-300 text-amber-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
-                    <p className="uppercase">6.01s - 14.00s</p>
-                    <p className="font-medium text-[9px] mt-0.5">Phạt +2 giây (+2s)</p>
-                  </div>
-                  <div className={`p-2 rounded-xl border ${handElapsedMs > 14_000 ? 'bg-rose-100/90 border-rose-300 text-rose-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
-                    <p className="uppercase">&gt; 14.00s</p>
-                    <p className="font-medium text-[9px] mt-0.5">Xử thua (DNF)</p>
+                <div className="pt-3 border-t border-slate-200/80 text-left space-y-2">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono">
+                    Quy định mốc thời gian chuẩn bị:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-bold">
+                    <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs <= 6_000
+                        ? 'bg-emerald-100 border-emerald-400 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-400'
+                        : 'bg-white/70 border-slate-200 text-slate-400'
+                      }`}>
+                      <p className="uppercase text-[11px] font-extrabold">🟢 0.00s – 6.00s</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-emerald-850">Chuẩn bị hợp lệ (Không phạt)</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs > 6_000 && handElapsedMs <= 14_000
+                        ? 'bg-amber-100 border-amber-400 text-amber-950 font-black shadow-xs ring-1 ring-amber-400'
+                        : 'bg-white/70 border-slate-200 text-slate-400'
+                      }`}>
+                      <p className="uppercase text-[11px] font-extrabold">🟡 6.01s – 14.00s</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-amber-850">Phạt +2 giây (+2s)</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs > 14_000
+                        ? 'bg-rose-100 border-rose-400 text-rose-950 font-black shadow-xs ring-1 ring-rose-400'
+                        : 'bg-white/70 border-slate-200 text-slate-400'
+                      }`}>
+                      <p className="uppercase text-[11px] font-extrabold">🔴 &gt; 14.00s</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-rose-850">Quá hạn: Xử thua (DNF)</p>
+                    </div>
                   </div>
                 </div>
               </div>
