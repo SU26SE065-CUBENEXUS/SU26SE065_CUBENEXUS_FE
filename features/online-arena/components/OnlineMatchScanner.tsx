@@ -1460,20 +1460,6 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
         </div>
       </div>
 
-      {session ? (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-            <strong className="text-sm font-bold text-slate-800">{session.scanStatus}</strong>
-            <span className="text-xs text-slate-500 font-medium">
-              {session.matchStatus}
-            </span>
-          </div>
-          <pre className="max-h-96 overflow-auto p-4 text-xs leading-relaxed text-slate-600 font-mono">
-            {JSON.stringify(session, null, 2)}
-          </pre>
-        </div>
-      ) : null}
-
       {session?.validation && !session.validation.matched && (
         <div className="bg-rose-50 border border-rose-200 p-5 rounded-3xl space-y-3">
           <div className="flex items-center gap-2">
@@ -1530,9 +1516,9 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
 function StatusItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <span className="block text-[11px] uppercase tracking-wide text-zinc-500">{label}</span>
-      <strong className="mt-1 block text-sm font-bold text-white">{value}</strong>
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">{label}</span>
+      <strong className="mt-1 block text-sm font-extrabold text-slate-900">{value}</strong>
     </div>
   );
 }
