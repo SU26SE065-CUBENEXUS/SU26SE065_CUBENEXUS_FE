@@ -727,47 +727,80 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 2 / 5 • Sẵn Sàng Giải Rubik
+                  Bước 2 / 5 • Thời Gian Quan Sát & Chuẩn Bị (Inspection Timer)
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   Xác Minh Scramble Thành Công!
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Khối Rubik của bạn đã hợp lệ. Hãy đặt khối Rubik xuống bàn và chuẩn bị tư thế sẵn sàng giải.
+                  Khối Rubik của bạn đã hợp lệ. Hãy đặt khối Rubik xuống bàn, quan sát và chuẩn bị tư thế sẵn sàng giải.
                 </p>
               </div>
 
-              {/* Ready Status Card */}
-              <div className="text-center p-8 bg-gradient-to-br from-emerald-50/60 via-white to-indigo-50/60 rounded-3xl border border-slate-200 space-y-3 shadow-sm">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 mb-1">
-                  <CheckCircle className="h-8 w-8" />
+              {/* Inspection Countdown & Penalty Status Card */}
+              <div className={`rounded-3xl border p-6 text-center shadow-sm space-y-3 transition-colors ${
+                handElapsedMs > 14_000
+                  ? 'border-rose-300 bg-rose-50/80 text-rose-950'
+                  : handElapsedMs > 6_000
+                    ? 'border-amber-300 bg-amber-50/80 text-amber-950'
+                    : 'border-emerald-300 bg-emerald-50/80 text-emerald-950'
+              }`}>
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 font-mono">
+                    Thời Gian Quan Sát / Chuẩn Bị
+                  </span>
+                  <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase border ${
+                    handElapsedMs > 14_000
+                      ? 'bg-rose-200 text-rose-800 border-rose-300 animate-pulse'
+                      : handElapsedMs > 6_000
+                        ? 'bg-amber-200 text-amber-800 border-amber-300'
+                        : 'bg-emerald-200 text-emerald-800 border-emerald-300'
+                  }`}>
+                    {handElapsedMs > 14_000 ? 'DNF (Quá 14s)' : handElapsedMs > 6_000 ? '+2 Giây Penalty (Quá 6s)' : 'Hợp Lệ (Không Phạt)'}
+                  </span>
                 </div>
-                <p className="text-lg font-black text-slate-900">
-                  Đồng Hồ Đang Ở Trạng Thái Chờ (READY)
-                </p>
-                <p className="text-xs text-slate-600 max-w-md mx-auto font-medium leading-relaxed">
-                  Thời gian giải <strong>CHƯA BẮT ĐẦU TÍNH</strong>. Bạn hoàn toàn làm chủ thời gian. Khi đã đặt Rubik xuống bàn và sẵn sàng, bấm nút bên dưới hoặc nhấn phím <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-slate-900">SPACE</kbd> để bắt đầu tính giờ giải.
-                </p>
+
+                <div className="py-2">
+                  <p className={`font-mono text-5xl sm:text-6xl font-black tracking-tight ${
+                    handElapsedMs > 14_000 ? 'text-rose-700' : handElapsedMs > 6_000 ? 'text-amber-700' : 'text-emerald-700'
+                  }`}>
+                    {(handElapsedMs / 1000).toFixed(2)}s
+                  </p>
+                  <p className="mt-1.5 text-xs font-bold text-slate-600">
+                    {handElapsedMs > 14_000
+                      ? 'Đã vượt quá 14 giây chuẩn bị — Lượt thi đấu sẽ bị xử DNF!'
+                      : handElapsedMs > 6_000
+                        ? 'Đã vượt quá 6 giây quan sát — Sẽ bị cộng +2.00s vào kết quả giải.'
+                        : 'Bấm BẮT ĐẦU hoặc nhấn SPACE ngay để không bị phạt thời gian!'}
+                  </p>
+                </div>
+
+                {/* Regulation helper pills */}
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-[10px] font-bold text-left">
+                  <div className={`p-2 rounded-xl border ${handElapsedMs <= 6_000 ? 'bg-emerald-100/90 border-emerald-300 text-emerald-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
+                    <p className="uppercase">0.00s - 6.00s</p>
+                    <p className="font-medium text-[9px] mt-0.5">Không bị phạt</p>
+                  </div>
+                  <div className={`p-2 rounded-xl border ${handElapsedMs > 6_000 && handElapsedMs <= 14_000 ? 'bg-amber-100/90 border-amber-300 text-amber-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
+                    <p className="uppercase">6.01s - 14.00s</p>
+                    <p className="font-medium text-[9px] mt-0.5">Phạt +2 giây (+2s)</p>
+                  </div>
+                  <div className={`p-2 rounded-xl border ${handElapsedMs > 14_000 ? 'bg-rose-100/90 border-rose-300 text-rose-900 font-black' : 'bg-white/60 border-slate-200 text-slate-400'}`}>
+                    <p className="uppercase">&gt; 14.00s</p>
+                    <p className="font-medium text-[9px] mt-0.5">Xử thua (DNF)</p>
+                  </div>
+                </div>
               </div>
 
-              <div className={`rounded-2xl border p-5 text-center shadow-sm ${handElapsedMs > 14_000 ? 'border-rose-300 bg-rose-50' : handElapsedMs > 6_000 ? 'border-amber-300 bg-amber-50' : 'border-emerald-300 bg-emerald-50'}`}>
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Time Penalty</p>
-                <p className={`font-mono text-4xl font-black ${handElapsedMs > 14_000 ? 'text-rose-700' : handElapsedMs > 6_000 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                  {(handElapsedMs / 1000).toFixed(2)}s
-                </p>
-                <p className="mt-1 text-xs font-bold text-slate-600">
-                  {handElapsedMs > 14_000 ? 'DNF nếu bắt đầu lúc này' : handElapsedMs > 6_000 ? '+2 giây nếu bắt đầu lúc này' : 'Không bị phạt'}
-                </p>
-              </div>
-
+              {/* Ready notice */}
               <div className="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
                 <p className="font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <Hand className="h-4 w-4 text-indigo-600" /> Hướng dẫn giải Rubik:
+                  <Hand className="h-4 w-4 text-indigo-600" /> Lưu ý quan trọng:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-slate-500">
-                  <li>Bấm nút <strong>"BẮT ĐẦU TÍNH GIỜ GIẢI"</strong> (hoặc nhấn <strong>SPACE</strong>) để đồng hồ chạy.</li>
-                  <li>Giải Rubik và hoàn tất finish scan trước khi Time Remain về 0.</li>
-                  <li>Giải xong → Nhấn phím <strong>SPACE</strong> (hoặc bấm Dừng) để chốt thời gian và sang Bước 4.</li>
+                  <li>Thời gian giải Rubik chính thức <strong>CHƯA CHẠY</strong>.</li>
+                  <li>Khi bạn bấm nút bên dưới hoặc nhấn <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd>, <strong>Đồng hồ giải sẽ bắt đầu chạy từ 00.00s</strong>.</li>
+                  <li>Sau khi xoay xong Rubik $\rightarrow$ Nhấn <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd> (hoặc bấm Dừng) để chốt thời gian giải.</li>
                 </ul>
               </div>
 
@@ -776,7 +809,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 disabled={isProcessing}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:brightness-105 px-6 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 transition cursor-pointer"
               >
-                <Play className="h-5 w-5 fill-current" /> BẮT ĐẦU TÍNH GIỜ GIẢI (NHẤN SPACE HOẶC BẤM NÚT NÀY)
+                <Play className="h-5 w-5 fill-current" /> BẮT ĐẦU TÍNH GIỜ GIẢI (NHẤN SPACE HOẶC BẤM VÀO ĐÂY)
               </button>
             </div>
           )}
@@ -786,20 +819,20 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-8 text-center my-auto">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 3 / 5 • Solving In Progress
+                  Bước 3 / 5 • Đồng Hồ Giải Rubik Đang Chạy
                 </span>
                 <h2 className="text-2xl font-black text-slate-900">SOLVING IN PROGRESS</h2>
                 <p className="text-xs text-slate-500 font-medium">
                   Giải khối Rubik thật nhanh và dừng timer trước khi Time Remain về 0.
                 </p>
-                <p className={`inline-flex rounded-full px-3 py-1 text-[11px] font-extrabold ${activePenaltyCode === 'PLUS2' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                  Penalty đã chốt: {activePenaltyCode === 'PLUS2' ? '+2 giây' : 'Không phạt'}
+                <p className={`inline-flex rounded-full px-3 py-1 text-[11px] font-extrabold ${activePenaltyCode === 'PLUS2' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
+                  {activePenaltyCode === 'PLUS2' ? '⚠️ Penalty từ bước chuẩn bị: +2.00 giây' : '✅ Chuẩn bị hợp lệ: Không bị phạt (0s)'}
                 </p>
               </div>
 
-              {/* Large Solve Timer */}
+              {/* Large Solve Timer (Runs starting from 0.00s) */}
               <div className="p-8 bg-slate-900 rounded-3xl text-white shadow-xl border border-slate-800 space-y-2">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Solve Timer</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider font-mono">Solve Time (Thời Gian Giải)</p>
                 <p className="text-6xl sm:text-7xl font-mono font-black text-indigo-400 tracking-tight">
                   {(solveElapsedMs / 1000).toFixed(2)}s
                 </p>
