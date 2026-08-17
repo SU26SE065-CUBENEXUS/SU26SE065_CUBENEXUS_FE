@@ -54,6 +54,9 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
       return;
     }
 
+    const now = new Date();
+    const minAllowedTime = new Date(now.getTime() - 5 * 60 * 1000);
+
     const registrationOpen = new Date(registrationOpenAt);
     const registrationClose = new Date(registrationCloseAt);
     const competitionStart = new Date(startDate);
@@ -62,10 +65,42 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
       setError('Vui lòng nhập đầy đủ thời gian hợp lệ.');
       return;
     }
-    if (registrationOpen >= registrationClose || registrationClose > competitionStart || competitionStart >= competitionEnd) {
-      setError('Thời gian phải theo thứ tự: mở đăng ký < đóng đăng ký ≤ bắt đầu thi < kết thúc thi.');
+
+    if (registrationOpen < minAllowedTime) {
+      setError('Thời gian mở đăng ký không được ở trong quá khứ.');
       return;
     }
+
+    if (registrationClose < minAllowedTime) {
+      setError('Thời gian đóng đăng ký không được ở trong quá khứ.');
+      return;
+    }
+
+    if (competitionStart < minAllowedTime) {
+      setError('Thời gian bắt đầu giải đấu không được ở trong quá khứ.');
+      return;
+    }
+
+    if (competitionEnd < minAllowedTime) {
+      setError('Thời gian kết thúc giải đấu không được ở trong quá khứ.');
+      return;
+    }
+
+    if (registrationOpen >= registrationClose) {
+      setError('Thời gian mở đăng ký phải trước thời gian đóng đăng ký.');
+      return;
+    }
+
+    if (competitionStart < registrationClose) {
+      setError('Thời gian bắt đầu giải đấu phải sau hoặc cùng thời gian đóng đăng ký.');
+      return;
+    }
+
+    if (competitionStart >= competitionEnd) {
+      setError('Thời gian bắt đầu giải đấu phải trước thời gian kết thúc giải đấu.');
+      return;
+    }
+
     if (!Number.isInteger(attemptTimeLimitMins) || attemptTimeLimitMins < 1 || attemptTimeLimitMins > 60) {
       setError('Tổng thời gian attempt phải từ 1 đến 60 phút.');
       return;
@@ -92,6 +127,8 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
       setIsSubmitting(false);
     }
   };
+
+  const nowMinStr = new Date().toISOString().slice(0, 16);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
@@ -190,6 +227,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 <input
                   type="datetime-local"
                   value={registrationOpenAt}
+                  min={nowMinStr}
                   onChange={(e) => setRegistrationOpenAt(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white p-2 outline-none"
                   required
@@ -200,6 +238,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 <input
                   type="datetime-local"
                   value={registrationCloseAt}
+                  min={registrationOpenAt || nowMinStr}
                   onChange={(e) => setRegistrationCloseAt(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white p-2 outline-none"
                   required
@@ -210,6 +249,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 <input
                   type="datetime-local"
                   value={startDate}
+                  min={registrationCloseAt || registrationOpenAt || nowMinStr}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white p-2 outline-none"
                   required
@@ -220,6 +260,7 @@ export function CreateOnlineAsyncTournamentModal({ onClose, onCreated }: Props) 
                 <input
                   type="datetime-local"
                   value={endDate}
+                  min={startDate || registrationCloseAt || registrationOpenAt || nowMinStr}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white p-2 outline-none"
                   required

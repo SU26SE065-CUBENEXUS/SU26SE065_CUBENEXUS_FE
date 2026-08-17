@@ -234,18 +234,42 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Tournament name is required';
-    if (!location.trim()) errs.location = 'Location is required';
-    if (!startDate) errs.startDate = 'Start date is required';
-    if (!endDate) errs.endDate = 'End date is required';
-    if (!regOpen) errs.regOpen = 'Registration start date is required';
-    if (!regClose) errs.regClose = 'Registration close date is required';
+    if (!name.trim()) errs.name = 'Tên giải đấu là bắt buộc';
+    if (!location.trim()) errs.location = 'Địa điểm thi đấu là bắt buộc';
+    if (!startDate) errs.startDate = 'Thời gian bắt đầu giải đấu là bắt buộc';
+    if (!endDate) errs.endDate = 'Thời gian kết thúc giải đấu là bắt buộc';
+    if (!regOpen) errs.regOpen = 'Thời gian mở đăng ký là bắt buộc';
+    if (!regClose) errs.regClose = 'Thời gian đóng đăng ký là bắt buộc';
 
-    if (startDate && endDate) {
+    const now = new Date();
+    // Allow up to 5 minutes tolerance for form submission latency
+    const minAllowedTime = new Date(now.getTime() - 5 * 60 * 1000);
+
+    if (regOpen) {
+      const open = new Date(regOpen);
+      if (open < minAllowedTime) {
+        errs.regOpen = 'Thời gian mở đăng ký không được ở trong quá khứ';
+      }
+    }
+
+    if (regClose) {
+      const close = new Date(regClose);
+      if (close < minAllowedTime) {
+        errs.regClose = 'Thời gian đóng đăng ký không được ở trong quá khứ';
+      }
+    }
+
+    if (startDate) {
       const start = new Date(startDate);
+      if (start < minAllowedTime) {
+        errs.startDate = 'Thời gian bắt đầu giải đấu không được ở trong quá khứ';
+      }
+    }
+
+    if (endDate) {
       const end = new Date(endDate);
-      if (end <= start) {
-        errs.endDate = 'End date must be after the start date';
+      if (end < minAllowedTime) {
+        errs.endDate = 'Thời gian kết thúc giải đấu không được ở trong quá khứ';
       }
     }
 
@@ -253,15 +277,23 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
       const open = new Date(regOpen);
       const close = new Date(regClose);
       if (close <= open) {
-        errs.regClose = 'Registration close date must be after the opening date';
+        errs.regClose = 'Thời gian đóng đăng ký phải sau thời gian mở đăng ký';
       }
     }
 
     if (regClose && startDate) {
       const close = new Date(regClose);
       const start = new Date(startDate);
-      if (close > start) {
-        errs.regClose = 'Registration must close before or on the tournament start date';
+      if (start < close) {
+        errs.startDate = 'Thời gian bắt đầu giải đấu phải sau hoặc cùng thời gian đóng đăng ký';
+      }
+    }
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end <= start) {
+        errs.endDate = 'Thời gian kết thúc giải đấu phải sau thời gian bắt đầu giải đấu';
       }
     }
 
@@ -525,6 +557,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                 <input
                   type="datetime-local"
                   value={regOpen}
+                  min={formatToLocalDateTime(new Date())}
                   onChange={(e) => setRegOpen(e.target.value)}
                   className={`w-full rounded-lg border ${errors.regOpen ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
@@ -559,6 +592,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                 <input
                   type="datetime-local"
                   value={regClose}
+                  min={regOpen || formatToLocalDateTime(new Date())}
                   onChange={(e) => setRegClose(e.target.value)}
                   className={`w-full rounded-lg border ${errors.regClose ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
@@ -586,6 +620,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                 <input
                   type="datetime-local"
                   value={startDate}
+                  min={regClose || regOpen || formatToLocalDateTime(new Date())}
                   onChange={(e) => setStartDate(e.target.value)}
                   className={`w-full rounded-lg border ${errors.startDate ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
@@ -613,6 +648,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                 <input
                   type="datetime-local"
                   value={endDate}
+                  min={startDate || regClose || regOpen || formatToLocalDateTime(new Date())}
                   onChange={(e) => setEndDate(e.target.value)}
                   className={`w-full rounded-lg border ${errors.endDate ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
                 />
