@@ -25,7 +25,6 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
   const [fraudType, setFraudType] = useState<string>('HIDDEN_CUBE');
   const [timestampText, setTimestampText] = useState<string>('01:15');
   const [description, setDescription] = useState<string>('');
-  const [evidenceScreenshotUrl, setEvidenceScreenshotUrl] = useState<string>('');
   
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +63,6 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
       timestampText,
       timestampSeconds: seconds,
       description: description.trim(),
-      evidenceScreenshotUrl: evidenceScreenshotUrl.trim() || undefined,
     };
 
     try {
@@ -171,21 +169,6 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
-              />
-            </div>
-
-            {/* 4. Optional Evidence URL */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750 flex items-center justify-between">
-                <span>4. Ảnh minh chứng bổ sung (Optional Screenshot URL)</span>
-                <span className="text-[10px] text-zinc-500 font-semibold">Tùy chọn</span>
-              </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={evidenceScreenshotUrl}
-                onChange={(e) => setEvidenceScreenshotUrl(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
               />
             </div>
 

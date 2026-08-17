@@ -74,8 +74,8 @@ export default function ResultPage() {
 
   const hasRecordingStarted = Boolean(
     (state?.player1?.recordingStarted || state?.player2?.recordingStarted) &&
-      state?.cancelReason !== 'SETUP_TIMEOUT' &&
-      state?.cancelReason !== 'READY_TIMEOUT'
+    state?.cancelReason !== 'SETUP_TIMEOUT' &&
+    state?.cancelReason !== 'READY_TIMEOUT'
   );
 
   return (
@@ -118,11 +118,10 @@ export default function ResultPage() {
             <span className="text-[9px] text-muted-foreground font-black tracking-widest uppercase">ELO Rating Impact</span>
             <div className="flex items-center gap-2">
               <span className="text-3xl font-black tracking-tight text-foreground">{eloAfter}</span>
-              <span className={`flex items-center gap-0.5 text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
-                eloDelta >= 0
+              <span className={`flex items-center gap-0.5 text-sm font-extrabold px-2.5 py-0.5 rounded-full ${eloDelta >= 0
                   ? 'text-emerald-600 bg-emerald-500/10'
                   : 'text-rose-600 bg-rose-500/10'
-              }`}>
+                }`}>
                 {eloDelta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {eloDelta >= 0 ? `+${eloDelta}` : eloDelta} ELO
               </span>
@@ -133,19 +132,17 @@ export default function ResultPage() {
         {/* Duels Comparison Table */}
         <div className="grid grid-cols-2 gap-4">
           {/* You card */}
-          <div className={`p-5 rounded-2xl border text-left space-y-3 ${
-            isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
-          }`}>
+          <div className={`p-5 rounded-2xl border text-left space-y-3 ${isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
+            }`}>
             <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">You</span>
             <div className="space-y-1">
               <span className="block text-2xl font-black font-mono text-foreground">
                 {formatTime(mePlayer.resultStatus, mePlayer.timeMs)}
               </span>
-              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                mePlayer.resultStatus === 'DNF'
+              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${mePlayer.resultStatus === 'DNF'
                   ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
                   : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
-              }`}>
+                }`}>
                 {mePlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
             </div>
@@ -158,9 +155,8 @@ export default function ResultPage() {
           </div>
 
           {/* Opponent card */}
-          <div className={`p-5 rounded-2xl border text-left space-y-3 ${
-            !isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
-          }`}>
+          <div className={`p-5 rounded-2xl border text-left space-y-3 ${!isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
+            }`}>
             <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">
               Player_{opponentPlayer.userId.slice(0, 6)}
             </span>
@@ -168,11 +164,10 @@ export default function ResultPage() {
               <span className="block text-2xl font-black font-mono text-foreground">
                 {formatTime(opponentPlayer.resultStatus, opponentPlayer.timeMs)}
               </span>
-              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                opponentPlayer.resultStatus === 'DNF'
+              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${opponentPlayer.resultStatus === 'DNF'
                   ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
                   : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
-              }`}>
+                }`}>
                 {opponentPlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
             </div>
@@ -198,10 +193,10 @@ export default function ResultPage() {
                   {uploadTask?.status === 'completed'
                     ? 'Local camera video saved and verified on server.'
                     : uploadTask?.status === 'uploading' || uploadTask?.status === 'finalizing'
-                    ? `Uploading footage to Cloud storage... (${uploadTask.progress}%)`
-                    : uploadTask?.status === 'failed'
-                    ? 'Video upload encountered an error.'
-                    : 'Camera footage buffered and uploading in background.'}
+                      ? `Uploading footage to Cloud storage... (${uploadTask.progress}%)`
+                      : uploadTask?.status === 'failed'
+                        ? 'Video upload encountered an error.'
+                        : 'Camera footage buffered and uploading in background.'}
                 </p>
               </div>
             </div>
@@ -282,8 +277,8 @@ function ReplaySection({
 }) {
   const hasRecordingStarted = Boolean(
     (state?.player1?.recordingStarted || state?.player2?.recordingStarted) &&
-      state?.cancelReason !== 'SETUP_TIMEOUT' &&
-      state?.cancelReason !== 'READY_TIMEOUT'
+    state?.cancelReason !== 'SETUP_TIMEOUT' &&
+    state?.cancelReason !== 'READY_TIMEOUT'
   );
 
   const [isOpen, setIsOpen] = useState(false);
@@ -311,7 +306,7 @@ function ReplaySection({
           onClick={() => setIsReportModalOpen(true)}
           className="w-full py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
         >
-          <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud / Cheat
+          <ShieldAlert className="h-4 w-4 text-rose-500" />  Report Fraud / Cheat
         </button>
         <FraudReportModal
           matchId={matchId}
@@ -369,8 +364,8 @@ function ReplaySection({
   const winnerUsername = state?.winnerId === state?.player1?.userId
     ? (state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
     : state?.winnerId === state?.player2?.userId
-    ? (state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'))
-    : undefined;
+      ? (state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'))
+      : undefined;
 
   return (
     <div className="space-y-4">
@@ -385,13 +380,13 @@ function ReplaySection({
           ) : (
             <Video className="h-4 w-4 text-orange-500" />
           )}
-          {isLoading ? 'Fetching Replay...' : '🎬 Watch Replay'}
+          {isLoading ? 'Fetching Replay...' : ' Watch Replay'}
         </button>
         <button
           onClick={() => setIsReportModalOpen(true)}
           className="flex-1 py-3 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-500 font-black text-xs rounded-2xl transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-rose-500/5"
         >
-          <ShieldAlert className="h-4 w-4 text-rose-500" /> 🚨 Report Fraud
+          <ShieldAlert className="h-4 w-4 text-rose-500" />  Report Fraud
         </button>
       </div>
 

@@ -67,11 +67,10 @@ function CountdownTimer({ deadlineIso, serverNowIso }: { deadlineIso: string | n
   if (!deadlineIso) return null;
   return (
     <div
-      className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border text-xs font-bold ${
-        parseInt(countdownStr) < 60
+      className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border text-xs font-bold ${parseInt(countdownStr) < 60
           ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
           : 'border-orange-500/20 bg-orange-500/10 text-orange-400'
-      }`}
+        }`}
     >
       <span className="flex items-center gap-1.5">
         <Clock className="h-3.5 w-3.5" />
@@ -102,19 +101,17 @@ function ChecklistRow({
 }) {
   return (
     <div
-      className={`flex items-start justify-between p-4 rounded-2xl border transition-all duration-300 ${
-        done
+      className={`flex items-start justify-between p-4 rounded-2xl border transition-all duration-300 ${done
           ? 'bg-emerald-500/5 border-emerald-500/20'
           : status === 'error'
-          ? 'bg-rose-500/5 border-rose-500/20'
-          : 'bg-card border-border hover:border-orange-500/50'
-      }`}
+            ? 'bg-rose-500/5 border-rose-500/20'
+            : 'bg-card border-border hover:border-orange-500/50'
+        }`}
     >
       <div className="flex items-start gap-3 flex-1">
         <div
-          className={`mt-0.5 shrink-0 ${
-            done ? 'text-emerald-500' : status === 'error' ? 'text-rose-500' : 'text-muted-foreground'
-          }`}
+          className={`mt-0.5 shrink-0 ${done ? 'text-emerald-500' : status === 'error' ? 'text-rose-500' : 'text-muted-foreground'
+            }`}
         >
           {done ? (
             <CheckCircle2 className="h-5 w-5" />
@@ -144,11 +141,10 @@ function ChecklistRow({
 function OpponentChecklistBadge({ done, label }: { done: boolean; label: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-        done
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${done
           ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
           : 'text-muted-foreground border-border bg-muted/40'
-      }`}
+        }`}
     >
       {done ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
       {label}
@@ -341,8 +337,8 @@ function WebRtcConnectStep({
                     {status === 'connected' || alreadyConnected
                       ? 'Stream pending...'
                       : status === 'connecting'
-                      ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...')
-                      : 'P2P Stall'}
+                        ? (isP1 ? 'P2P Connecting...' : 'Awaiting P2P Offer...')
+                        : 'P2P Stall'}
                   </span>
                 </div>
                 <button
@@ -359,7 +355,7 @@ function WebRtcConnectStep({
                   className="w-full py-1 bg-zinc-800 hover:bg-emerald-800/60 border border-zinc-700 hover:border-emerald-600/50 text-zinc-400 hover:text-emerald-400 text-[9px] font-bold rounded-lg uppercase tracking-wider cursor-pointer transition-colors"
                   title="Mark P2P as connected and proceed (use when auto-connect fails)"
                 >
-                  ⚡ Force Connect &amp; Proceed
+                  Force Connect &amp; Proceed
                 </button>
               )}
             </div>
@@ -435,7 +431,7 @@ export default function RoomSetupPage() {
               <p className="text-xs text-muted-foreground">
                 Scan the QR code below using your mobile device to pair it as a Stackmat-compatible solve timer.
               </p>
-              
+
               {state.qrSessionCode ? (
                 <div className="flex flex-col items-center justify-center p-6 bg-background border border-border/60 rounded-2xl gap-4">
                   <div className="bg-white p-3 rounded-2xl border border-border shadow-inner">
@@ -487,7 +483,7 @@ export default function RoomSetupPage() {
         {/* Right checklist column (md:col-span-1) */}
         <div className="md:col-span-1 bg-card/60 border border-border/80 rounded-3xl p-5 backdrop-blur-md shadow-md flex flex-col gap-3">
           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">My Progress</span>
-          
+
           <ChecklistRow
             icon={<Radio className="h-4 w-4" />}
             label="Scramble Scan"
@@ -511,8 +507,8 @@ export default function RoomSetupPage() {
             done={myState.webRtcConnected}
             status={
               myState.webRtcConnected ? 'ok'
-              : currentStep === 'webrtc' ? 'loading'
-              : 'pending'
+                : currentStep === 'webrtc' ? 'loading'
+                  : 'pending'
             }
           />
 
