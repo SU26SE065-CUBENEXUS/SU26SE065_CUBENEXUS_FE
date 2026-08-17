@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import { StatusBadge } from './StatusBadge';
-import { Play, Lock, Video, Radio, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus } from 'lucide-react';
+import { Play, Lock, Video, Radio, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus, Send } from 'lucide-react';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
@@ -24,6 +24,7 @@ function formatDateRange(start: string, end: string): string {
 
 export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps) {
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
+  const [targetTourToPublish, setTargetTourToPublish] = useState<TournamentDetailDto | null>(null);
   const [targetTourToOpenReg, setTargetTourToOpenReg] = useState<TournamentDetailDto | null>(null);
   const [targetTourToClose, setTargetTourToClose] = useState<TournamentDetailDto | null>(null);
   const [targetTourToStart, setTargetTourToStart] = useState<TournamentDetailDto | null>(null);
@@ -31,6 +32,25 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
   const [targetTourToCheckIn, setTargetTourToCheckIn] = useState<TournamentDetailDto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Execute Publish Tournament (DRAFT -> PUBLISHED)
+  const executePublishTournament = async () => {
+    if (!targetTourToPublish) return;
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const { updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
+      await updateAdminTournamentStatus(targetTourToPublish.id, 'PUBLISHED');
+      targetTourToPublish.statusCode = 'published' as any;
+      setTargetTourToPublish(null);
+      if (onRefresh) onRefresh();
+      else window.location.reload();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Không thể công bố (publish) giải đấu.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Execute Open Registration
   const executeOpenRegistration = async () => {
@@ -240,6 +260,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 const isOngoing = st === 'ONGOING';
                 const isCompleted = st === 'COMPLETED';
 
+                // Publish (Nút công bố giải đấu từ DRAFT / DISABLED sang PUBLISHED)
+                const canPublish = st === 'DRAFT' || st === 'DISABLED';
+
                 // Mở Đăng Ký (Nút xanh mở đăng ký)
                 const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
 
@@ -347,6 +370,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     {/* Action Buttons Matching Custom Pill Styles */}
                     <td className="px-5 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Nút Publish (Xanh Sky) */}
+                        {canPublish && (
+                          <button
+                            onClick={() => {
+                              setErrorMessage(null);
+                              setTargetTourToPublish(t);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
+                            title="Công bố / Xuất bản giải đấu (PUBLISHED)"
+                          >
+                            <Send className="h-3.5 w-3.5" /> Publish
+                          </button>
+                        )}
                         {/* Nút Mở Đăng Ký (Xanh) */}
                         {canOpenRegistration && (
                           <button
@@ -466,6 +502,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           const isOngoing = st === 'ONGOING';
           const isCompleted = st === 'COMPLETED';
 
+          // Publish (Nút công bố giải đấu từ DRAFT / DISABLED sang PUBLISHED)
+          const canPublish = st === 'DRAFT' || st === 'DISABLED';
+
           // Mở Đăng Ký (Nút xanh mở đăng ký)
           const canOpenRegistration = st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_CLOSED' || st === 'DISABLED';
 
@@ -558,6 +597,20 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
 
               {/* Actions Grid */}
               <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
+                {/* Nút Publish (Xanh Sky) */}
+                {canPublish && (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToPublish(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
+                    title="Công bố / Xuất bản giải đấu (PUBLISHED)"
+                  >
+                    <Send className="h-3 w-3" /> Publish
+                  </button>
+                )}
+
                 {/* Nút Mở Đăng Ký (Xanh) */}
                 {canOpenRegistration && (
                   <button
@@ -665,6 +718,28 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         imageUrl={previewImage?.url || null}
         title={previewImage ? `Poster Banner — ${previewImage.name}` : undefined}
         onClose={() => setPreviewImage(null)}
+      />
+
+      {/* Confirmation Modal for Publish Tournament */}
+      <ConfirmModal
+        isOpen={Boolean(targetTourToPublish)}
+        title="Công Bố (Publish) Giải Đấu"
+        description={
+          errorMessage
+            ? errorMessage
+            : `Bạn có chắc chắn muốn công bố giải đấu "${targetTourToPublish?.name}"? Sau khi công bố, trạng thái giải đấu sẽ chuyển thành PUBLISHED và giải sẽ hiển thị công khai để mọi người có thể xem.`
+        }
+        confirmText="Publish Ngay"
+        cancelText="Hủy Bỏ"
+        variant="primary"
+        isLoading={isProcessing}
+        onConfirm={executePublishTournament}
+        onClose={() => {
+          if (!isProcessing) {
+            setTargetTourToPublish(null);
+            setErrorMessage(null);
+          }
+        }}
       />
 
       {/* Confirmation Modal for Open Registration */}

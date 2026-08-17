@@ -34,7 +34,7 @@ export function Header() {
         <div className="hidden items-center gap-6 lg:flex">
           <Link href="/" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">HOME</Link>
           <Link href="/online" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">ARENA</Link>
-          <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">EVEN</Link>
+          <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">EVENT</Link>
           <Link href="/rankings?from=header" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-400 transition-colors">RANKINGS</Link>
           <Link href="/practice" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">PRACTICE</Link>
           <Link href="/live" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">LIVE</Link>

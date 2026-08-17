@@ -24,6 +24,7 @@ import {
   registerOnlineAsyncTournament,
   startOnlineAsyncAttempt,
   getAsyncLeaderboard,
+  resolveVideoEvidenceUrl,
   type OnlineAsyncTournamentDto,
   type AsyncLeaderboardEntryDto,
 } from '@/lib/api/online-async';
@@ -301,7 +302,7 @@ export default function OnlineAsyncTournamentDetailPage({ params }: Props) {
                       <td className="py-3.5 px-4 text-center">
                         {entry.videoEvidenceUrl ? (
                           <a
-                            href={entry.videoEvidenceUrl}
+                            href={resolveVideoEvidenceUrl(entry.videoEvidenceUrl) || '#'}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600"

@@ -257,3 +257,12 @@ export async function getAsyncAttemptVideoPlayback(attemptId: string): Promise<{
 export async function getAsyncLeaderboard(tournamentId: string): Promise<AsyncLeaderboardEntryDto[]> {
   return apiFetch<AsyncLeaderboardEntryDto[]>(`/api/tournaments/online-async/${tournamentId}/leaderboard`);
 }
+
+export const R2_PUBLIC_BASE_URL = 'https://pub-f9f0382bc7dd4c9c84e77214ef801b09.r2.dev';
+
+export function resolveVideoEvidenceUrl(url?: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
+  const clean = url.replace(/^\/+/, '');
+  return `${R2_PUBLIC_BASE_URL}/${clean}`;
+}

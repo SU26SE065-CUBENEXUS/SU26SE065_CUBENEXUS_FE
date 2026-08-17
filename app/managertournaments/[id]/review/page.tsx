@@ -20,6 +20,7 @@ import {
   getAttemptsForReview,
   reviewAttempt,
   getOnlineAsyncTournamentById,
+  resolveVideoEvidenceUrl,
   type AsyncLeaderboardEntryDto,
   type OnlineAsyncTournamentDto,
 } from '@/lib/api/online-async';
@@ -187,7 +188,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
                   <td className="py-3.5 px-4 text-center">
                     {att.videoEvidenceUrl ? (
                       <a
-                        href={att.videoEvidenceUrl}
+                        href={resolveVideoEvidenceUrl(att.videoEvidenceUrl) || '#'}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
@@ -251,7 +252,7 @@ export default function AdminAttemptReviewPage({ params }: Props) {
             <div className="space-y-2">
               {selectedAttempt.videoEvidenceUrl ? (
                 <SingleVideoReplayPlayer
-                  videoUrl={selectedAttempt.videoEvidenceUrl}
+                  videoUrl={resolveVideoEvidenceUrl(selectedAttempt.videoEvidenceUrl) || ''}
                   title={`Video Evidence - ${selectedAttempt.userFullName}`}
                   downloadFilename={`attempt-${selectedAttempt.attemptId}.webm`}
                 />
