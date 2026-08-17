@@ -27,6 +27,7 @@ import {
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { BanUserModal } from '@/components/admin/BanUserModal';
 import { ChangeRoleModal } from '@/components/admin/ChangeRoleModal';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserDto[]>([]);
@@ -43,6 +44,7 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { t } = useLanguage();
 
   // Modals state
   const [selectedUserDetail, setSelectedUserDetail] = useState<AdminUserDto | null>(null);
@@ -161,9 +163,9 @@ export default function AdminUsersPage() {
             <Users className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản Lý Người Dùng</h1>
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">{t('admin', 'usersPageTitle')}</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Nâng/hạ cấp vai trò, cấm tài khoản có giới hạn thời gian và quản lý danh sách tài khoản toàn hệ thống.
+              {t('admin', 'usersPageSubtitle')}
             </p>
           </div>
         </div>
@@ -175,7 +177,7 @@ export default function AdminUsersPage() {
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-             Làm mới
+             {t('common', 'refresh')}
           </button>
         </div>
       </div>
@@ -187,7 +189,7 @@ export default function AdminUsersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Tìm theo Tên, Email, Mã User..."
+            placeholder={t('admin', 'searchUsers')}
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -207,7 +209,7 @@ export default function AdminUsersPage() {
             }}
             className="px-3 py-2 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer focus:border-indigo-600 focus:bg-white transition"
           >
-            <option value="ALL">Tất cả Role</option>
+            <option value="ALL">{t('admin', 'allRoles')}</option>
             <option value="ADMIN">Role ADMIN</option>
             <option value="MANAGER">Role MANAGER</option>
             <option value="JUDGE">Role JUDGE</option>

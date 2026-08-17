@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronRight, Clock3, Loader2, Search, Trophy, Users } from 'lucide-react';
 import { Header } from '@/components/header';
+import { useLanguage } from '@/contexts/language-context';
 import { listOnlineAsyncTournaments, type OnlineAsyncTournamentDto } from '@/lib/api/online-async';
 
 const statusLabels: Record<string, string> = {
@@ -37,6 +38,7 @@ export default function OnlineAsyncTournamentsPage() {
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let active = true;
@@ -67,14 +69,14 @@ export default function OnlineAsyncTournamentsPage() {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-500">
                 <Trophy className="h-3.5 w-3.5 text-orange-500" /> Online Asynchronous
               </span>
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Giải đấu Online A01</h1>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">Mỗi giải chỉ có một puzzle, một scramble chung và một attempt cho mỗi thí sinh.</p>
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">{t('competitor', 'tournamentsTitle')}</h1>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{t('competitor', 'tournamentsSubtitle')}</p>
             </div>
             <div className="w-full sm:w-80">
               <label className="sr-only" htmlFor="tournament-search">Tìm giải đấu</label>
               <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 shadow-xs focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <input id="tournament-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm tên giải, puzzle..." className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 text-foreground" />
+                <input id="tournament-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('common', 'search') + '...'} className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 text-foreground" />
               </div>
             </div>
           </div>
@@ -86,7 +88,7 @@ export default function OnlineAsyncTournamentsPage() {
           ) : error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">{error}</div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card py-16 text-center"><Trophy className="mx-auto h-9 w-9 text-muted-foreground/30" /><p className="mt-3 text-sm font-semibold text-muted-foreground">Chưa có giải A01 phù hợp.</p></div>
+            <div className="rounded-3xl border border-dashed border-border bg-card py-16 text-center"><Trophy className="mx-auto h-9 w-9 text-muted-foreground/30" /><p className="mt-3 text-sm font-semibold text-muted-foreground">{t('competitor', 'noTournaments')}</p></div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((tournament) => {
@@ -102,7 +104,7 @@ export default function OnlineAsyncTournamentsPage() {
                     <p className="flex gap-2"><Clock3 className="h-4 w-4 shrink-0 text-orange-500" /><span>Thi đấu: {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</span></p>
                     <p className="flex gap-2"><Users className="h-4 w-4 shrink-0 text-orange-500" /><span>1 attempt · giới hạn {Math.round(tournament.attemptTimeLimitMs / 60000)} phút</span></p>
                   </div>
-                  <Link href={`/tournaments/${tournament.id}`} className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2.5 text-sm font-bold text-white transition">Xem giải & đăng ký <ChevronRight className="h-4 w-4" /></Link>
+                  <Link href={`/tournaments/${tournament.id}`} className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2.5 text-sm font-bold text-white transition">{t('competitor', 'viewTournament')} <ChevronRight className="h-4 w-4" /></Link>
                 </article>;
               })}
             </div>

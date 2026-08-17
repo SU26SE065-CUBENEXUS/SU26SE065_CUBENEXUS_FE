@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { ShieldCheck, Trophy, History, Zap, Play, Swords, User } from 'lucide-react';
 import { getMyProfiles, initProfile } from '@/features/online-arena/api/onlineArenaApi';
 
 export default function OnlineLobbyPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
   const [elo, setElo] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,10 +56,10 @@ export default function OnlineLobbyPage() {
               </span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight uppercase text-foreground">
-              1V1 ONLINE ARENA
+              {t('competitor', 'arenaTitle')}
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-xl leading-relaxed">
-              Match up with speedcubers worldwide. Verify scrambles and final solves using our real-time AI computer vision checker.
+              {t('competitor', 'arenaSubtitle')}
             </p>
           </div>
 
@@ -101,7 +103,7 @@ export default function OnlineLobbyPage() {
                 onClick={() => router.push('/online/matchmaking')}
                 className="w-full sm:w-fit flex items-center justify-center gap-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl shadow-orange-500/25 transition-all uppercase tracking-widest text-xs cursor-pointer"
               >
-                <Play className="h-4.5 w-4.5 fill-current" /> FIND MATCH
+                <Play className="h-4.5 w-4.5 fill-current" /> {t('competitor', 'findMatch')}
               </button>
             </div>
           </div>
@@ -117,7 +119,7 @@ export default function OnlineLobbyPage() {
                 <Trophy className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">Arena Leaderboard</h4>
+                <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">{t('competitor', 'rankingsTitle')}</h4>
                 <p className="text-muted-foreground text-[10px] sm:text-xs">Compare with top cubers worldwide.</p>
               </div>
             </div>
@@ -131,7 +133,7 @@ export default function OnlineLobbyPage() {
                 <History className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-foreground uppercase tracking-wider group-hover:text-orange-500 transition-colors">Match History</h4>
+                <h4 className="text-sm font-bold text-foreground uppercase tracking-wider group-hover:text-orange-500 transition-colors">{t('competitor', 'recentMatches')}</h4>
                 <p className="text-muted-foreground text-[10px] sm:text-xs">Review past matches, times, ELO changes, and video replays.</p>
               </div>
             </div>

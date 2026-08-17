@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/language-context';
 import {
   Trophy,
   ArrowRight,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 
 export function LiveSection() {
+  const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 animate-fade-in">
       {/* Premium Promotional Banner Card with softer shadow-md and synced bg */}
@@ -29,15 +31,15 @@ export function LiveSection() {
             
             {/* Main Heading using Theme Gradient */}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground uppercase leading-tight">
-              Trực Tiếp <br className="hidden sm:inline" />
+              {t('competitor', 'liveTitle')} <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-primary to-accent">
-                Giải Đấu Rubik
+                {t('competitor', 'liveSubtitle')}
               </span>
             </h2>
 
             {/* Description using text-muted-foreground for high legibility */}
             <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-xl font-medium">
-              Theo dõi diễn biến trực tiếp, lịch thi đấu và bảng xếp hạng thời gian thực của các giải đấu Rubik công khai. Đồng hành cùng hàng ngàn đấu thủ trên khắp thế giới trong những màn giải đố đầy kịch tính.
+              {t('competitor', 'noLive')}
             </p>
 
             {/* CTA Link aligned to the left */}
@@ -46,7 +48,7 @@ export function LiveSection() {
                 href="/live"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 via-primary to-accent px-6 py-4 text-xs font-black uppercase tracking-widest text-white shadow-md hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
-                <span>Xem Trực Tiếp</span>
+                <span>{t('competitor', 'watchLive')}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

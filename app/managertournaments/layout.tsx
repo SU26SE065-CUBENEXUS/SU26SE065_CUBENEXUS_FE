@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
 import type { TournamentDetailDto } from '@/lib/api/types';
 import {
@@ -50,6 +51,7 @@ function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
   const isActive = (href: string, exact?: boolean) => {
@@ -58,12 +60,12 @@ function Sidebar({
   };
 
   const navItems = [
-    { label: 'Live Operations', href: selectedId ? `/managertournaments/${selectedId}/live` : '#', icon: Radio, exact: false },
-    { label: 'Overview', href: selectedId ? `/managertournaments/${selectedId}` : '#', icon: Trophy, exact: true },
-    { label: 'Manage Judges', href: selectedId ? `/managertournaments/${selectedId}/judges` : '#', icon: UserCheck, exact: false },
-    { label: 'Registrations', href: selectedId ? `/managertournaments/${selectedId}/registrations` : '#', icon: Users, exact: false },
-    { label: 'Events & Competitors', href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
-    { label: 'Groups & Scrambles', href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
+    { label: t('manager', 'liveOperations'), href: selectedId ? `/managertournaments/${selectedId}/live` : '#', icon: Radio, exact: false },
+    { label: t('manager', 'overview'), href: selectedId ? `/managertournaments/${selectedId}` : '#', icon: Trophy, exact: true },
+    { label: t('manager', 'manageJudges'), href: selectedId ? `/managertournaments/${selectedId}/judges` : '#', icon: UserCheck, exact: false },
+    { label: t('manager', 'registrations'), href: selectedId ? `/managertournaments/${selectedId}/registrations` : '#', icon: Users, exact: false },
+    { label: t('manager', 'eventsCompetitors'), href: selectedId ? `/managertournaments/${selectedId}/events` : '#', icon: Settings, exact: false },
+    { label: t('manager', 'groupsScrambles'), href: selectedId ? `/managertournaments/${selectedId}/groups` : '#', icon: Layers, exact: false },
   ];
 
   return (
@@ -84,7 +86,7 @@ function Sidebar({
                 <span className="text-[13px] font-extrabold tracking-tight text-indigo-600">NEXUS</span>
               </div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 truncate">
-                {isAdmin ? 'Admin Portal' : 'Manager Portal'}
+              {isAdmin ? t('nav', 'adminPortal') : t('nav', 'managerPortal')}
               </p>
             </div>
           </Link>
@@ -109,7 +111,7 @@ function Sidebar({
       {!isAdmin && !collapsed && (
         <div className="px-3 pt-3.5 pb-3 border-b border-slate-200 flex-shrink-0 bg-slate-50/50">
           <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-            Active Offline Tournament
+            {t('manager', 'activeOfflineTournament')}
           </label>
           <div className="relative">
             <select
@@ -132,7 +134,7 @@ function Sidebar({
                 ))
               ) : (
                 <option value="" disabled className="text-slate-400">
-                  Chưa có giải Offline nào
+                  {t('manager', 'noOfflineTournament')}
                 </option>
               )}
             </select>
@@ -154,7 +156,7 @@ function Sidebar({
               title={collapsed ? 'Dashboard' : undefined}
             >
               <LayoutDashboard className="h-4 w-4 shrink-0 text-indigo-600" />
-              {!collapsed && <span>Dashboard</span>}
+              {!collapsed && <span>{t('nav', 'dashboard')}</span>}
             </Link>
           </li>
 
@@ -164,7 +166,7 @@ function Sidebar({
               {!collapsed && (
                 <li className="pt-3 pb-1">
                   <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-slate-400">
-                    Tournament
+                    {t('manager', 'tournaments')}
                   </span>
                 </li>
               )}
@@ -210,7 +212,7 @@ function Sidebar({
               {!collapsed && (
                 <li className="pt-3 pb-1">
                   <span className="px-3 text-[9px] font-extrabold uppercase tracking-wider text-amber-600 flex items-center gap-1">
-                    <Trophy className="h-3 w-3" /> Tournaments
+                    <Trophy className="h-3 w-3" /> {t('manager', 'tournaments')}
                   </span>
                 </li>
               )}
@@ -226,7 +228,7 @@ function Sidebar({
                 >
                   <Zap className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Giải Online (A01)</span>
+                    <span className="flex-1 truncate">{t('manager', 'asyncTournaments')}</span>
                   )}
                 </Link>
               </li>
@@ -241,7 +243,7 @@ function Sidebar({
                   title={collapsed ? 'Kho đề Scramble' : undefined}
                 >
                   <Database className="h-4 w-4 shrink-0 text-indigo-500" />
-                  {!collapsed && <span className="flex-1 truncate">Kho đề Scramble</span>}
+                  {!collapsed && <span className="flex-1 truncate">{t('manager', 'scramblePool')}</span>}
                 </Link>
               </li>
 
@@ -255,7 +257,7 @@ function Sidebar({
                   title={collapsed ? 'A01 Video Review' : undefined}
                 >
                   <Video className="h-4 w-4 shrink-0 text-rose-500" />
-                  {!collapsed && <span className="flex-1 truncate">A01 Video Review</span>}
+                  {!collapsed && <span className="flex-1 truncate">{t('manager', 'videoReview')}</span>}
                 </Link>
               </li>
 
@@ -278,7 +280,7 @@ function Sidebar({
                 >
                   <Users className="h-4 w-4 shrink-0 text-indigo-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý Người Dùng</span>
+                    <span className="flex-1 truncate">{t('manager', 'userManagement')}</span>
                   )}
                 </Link>
               </li>
@@ -293,7 +295,7 @@ function Sidebar({
                 >
                   <Zap className="h-4 w-4 shrink-0 text-orange-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Quản Lý & Cấu Hình ELO</span>
+                    <span className="flex-1 truncate">{t('manager', 'eloManagement')}</span>
                   )}
                 </Link>
               </li>
@@ -308,7 +310,7 @@ function Sidebar({
                 >
                   <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
                   {!collapsed && (
-                    <span className="flex-1 truncate">Fraud Reports (Khiếu nại)</span>
+                    <span className="flex-1 truncate">{t('manager', 'fraudReports')}</span>
                   )}
                 </Link>
               </li>
@@ -329,9 +331,31 @@ function Sidebar({
   );
 }
 
+// ─── Language Toggle ──────────────────────────────────────────
+function LangToggle() {
+  const { lang, setLang } = useLanguage();
+  return (
+    <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs">
+      <button
+        onClick={() => setLang('en')}
+        className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all cursor-pointer ${
+          lang === 'en' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-700'
+        }`}
+      >EN</button>
+      <button
+        onClick={() => setLang('vi')}
+        className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all cursor-pointer ${
+          lang === 'vi' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-700'
+        }`}
+      >VI</button>
+    </div>
+  );
+}
+
 // ─── Top Header Bar ──────────────────────────────────────────
 function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string }) {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
 
@@ -371,8 +395,11 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
         )}
       </div>
 
-      {/* Right: Profile */}
-      <div
+      {/* Right: Lang Toggle + Profile */}
+      <div className="flex items-center gap-3">
+        {/* Language Toggle */}
+        <LangToggle />
+        <div
         className="relative"
         onMouseEnter={() => setIsDropdownOpen(true)}
         onMouseLeave={() => setIsDropdownOpen(false)}
@@ -432,19 +459,20 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
                   className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 >
                   <User size={13} />
-                  <span>My Profile</span>
+                  <span>{t('nav', 'profile')}</span>
                 </Link>
                 <button
                   onClick={logout}
                   className="w-full flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors text-left border-none bg-transparent cursor-pointer"
                 >
                   <LogOut size={13} />
-                  <span>Log Out</span>
+                  <span>{t('nav', 'logout')}</span>
                 </button>
               </div>
             </div>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

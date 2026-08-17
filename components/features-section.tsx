@@ -4,41 +4,43 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { BarChart3, Zap, Trophy, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/language-context';
 
 export function FeaturesSection() {
+  const { t } = useLanguage();
   const features = [
     {
       icon: BarChart3,
-      title: 'LIVE LEADERBOARD',
-      description: "See who's on top right now and track your progress.",
-      cta: 'VIEW LEADERBOARD',
+      title: t('competitor', 'featureLive'),
+      description: t('competitor', 'featureLiveDesc'),
+      cta: t('competitor', 'featureLiveCta'),
       tone: 'from-[#f44336]/15 to-[#ff9800]/15',
       iconColor: 'text-[#f44336]',
       href: '/live',
     },
     {
       icon: Zap,
-      title: 'ONLINE ARENA',
-      description: 'Challenge real players in exciting 1v1 matches.',
-      cta: 'FIND AN OPPONENT',
+      title: t('competitor', 'featureArena'),
+      description: t('competitor', 'featureArenaDesc'),
+      cta: t('competitor', 'featureArenaCta'),
       tone: 'from-[#ffeb3b]/20 to-[#ff9800]/15',
       iconColor: 'text-[#ff9800]',
       href: '/online',
     },
     {
       icon: Trophy,
-      title: 'PRACTICE TIMER',
-      description: 'Train, improve, and beat your best time.',
-      cta: 'START PRACTICE',
+      title: t('competitor', 'featurePractice'),
+      description: t('competitor', 'featurePracticeDesc'),
+      cta: t('competitor', 'featurePracticeCta'),
       tone: 'from-[#4caf50]/15 to-[#2196f3]/15',
       iconColor: 'text-[#4caf50]',
       href: '/practice',
     },
     {
       icon: Globe,
-      title: 'GLOBAL RANKING',
-      description: 'Compete worldwide and climb the ranks.',
-      cta: 'SEE RANKING',
+      title: t('competitor', 'featureRanking'),
+      description: t('competitor', 'featureRankingDesc'),
+      cta: t('competitor', 'featureRankingCta'),
       tone: 'from-[#2196f3]/15 to-[#f44336]/15',
       iconColor: 'text-[#2196f3]',
       href: '/rankings',
@@ -49,10 +51,10 @@ export function FeaturesSection() {
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="mb-12 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          Everything You Need to Compete
+          {t('competitor', 'featuresTitle')}
         </h2>
         <p className="mt-3 text-lg text-muted-foreground">
-          All the tools to dominate the speedcubing arena
+          {t('competitor', 'featuresSubtitle')}
         </p>
       </div>
 

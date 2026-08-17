@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import {
   getMyProfileApi,
   updateProfileApi,
@@ -40,6 +41,7 @@ import {
 export default function ProfilePage() {
   const { user: authUser, isAuthenticated, isLoading: isAuthLoading, refreshUser, logout } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -241,7 +243,7 @@ export default function ProfilePage() {
               href="/managertournaments"
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
             >
-              <Trophy className="h-3.5 w-3.5" /> Quản Lý Giải Đấu
+              <Trophy className="h-3.5 w-3.5" /> {t('manager', 'dashboardTitle')}
             </Link>
 
             {/* Profile Dropdown */}

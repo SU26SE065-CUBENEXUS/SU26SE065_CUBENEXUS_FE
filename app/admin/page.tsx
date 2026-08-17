@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { DashboardAnalyticsCharts } from '@/features/admin/components/DashboardAnalyticsCharts';
 import { getPublicTournaments } from '@/lib/api/tournaments';
 import { listOnlineAsyncTournaments } from '@/lib/api/online-async';
@@ -12,6 +13,7 @@ import { Zap, Trophy, Video, Users, ArrowRight, ShieldCheck, Database } from 'lu
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [tournaments, setTournaments] = useState<TournamentDetailDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,9 +72,9 @@ export default function AdminDashboardPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900 tracking-tight">
-            Truy Cập Nhanh Phân Hệ Admin System
+            {t('admin', 'quickAccess')}
           </h2>
-          <span className="text-xs font-bold text-slate-400">Điều hành hệ thống</span>
+          <span className="text-xs font-bold text-slate-400">{t('admin', 'systemControl')}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -92,15 +94,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition">
-                  Giải Online (A01)
+                  {t('admin', 'asyncTournamentTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Quản lý giải đấu Online A01, AI 5-Face Scan & Hand Timer 14s.
+                  {t('admin', 'asyncTournamentDesc')}
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-indigo-600">
-              <span>Quản Lý Async</span>
+              <span>{t('admin', 'asyncTournamentBtn')}</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
@@ -121,15 +123,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-emerald-600 transition">
-                  Kho Đề Scramble Center
+                  {t('admin', 'scramblePoolTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Sinh đề xoay tự động, duyệt 1-click & thu hồi đề Rubik.
+                  {t('admin', 'scramblePoolDesc')}
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-emerald-600">
-              <span>Mở Kho Đề</span>
+              <span>{t('admin', 'scramblePoolBtn')}</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
@@ -150,15 +152,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-rose-600 transition">
-                  A01 Video Review
+                  {t('admin', 'videoReviewTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Kiểm duyệt Video bằng chứng của thí sinh nộp bài Async.
+                  {t('admin', 'videoReviewDesc')}
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-rose-600">
-              <span>Review Video</span>
+              <span>{t('admin', 'videoReviewBtn')}</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
@@ -179,15 +181,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-slate-800 transition">
-                  Quản Lý Người Dùng
+                  {t('admin', 'userMgmtTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Quản lý tài khoản, phân quyền Manager/Admin & hệ thống.
+                  {t('admin', 'userMgmtDesc')}
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-slate-700">
-              <span>Quản Lý User</span>
+              <span>{t('admin', 'userMgmtBtn')}</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>

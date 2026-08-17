@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { LoaderCircle } from 'lucide-react';
 import {
   ArrowUp,
@@ -33,6 +34,7 @@ import {
 export default function RankingsPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [selectedDivision, setSelectedDivision] = useState('global');
   const [searchQuery, setSearchQuery] = useState('');
@@ -194,7 +196,7 @@ export default function RankingsPage() {
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 border border-transparent hover:border-slate-200 rounded-xl transition-all cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Quay lại
+            {t('common', 'goBack')}
           </button>
         </div>
 
@@ -212,10 +214,10 @@ export default function RankingsPage() {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 uppercase">
-                ARENA LEADERBOARD (3X3X3)
+                {t('competitor', 'rankingsTitle')} (3X3X3)
               </h1>
               <p className="text-slate-600 max-w-2xl text-xs sm:text-sm leading-relaxed">
-                Bảng xếp hạng ELO Rating chính thức của chế độ Đấu trường 3x3x3 Online. Tích lũy điểm ELO qua từng trận solo 1v1 để thăng hạng và xuất hiện trên Bảng xếp hạng.
+                {t('competitor', 'rankingsSubtitle')}
               </p>
             </div>
             <div>

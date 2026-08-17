@@ -4,8 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Play } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export function HeroSection() {
+  const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
@@ -20,18 +22,18 @@ export function HeroSection() {
           </div>
 
           <p className="max-w-lg text-pretty text-base leading-relaxed text-foreground/80">
-            Compete. Improve. Climb the ranks. Join a global community of cubers and prove your speed.
+            {t('competitor', 'heroSubtitle')}
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-400 text-white font-semibold shadow-lg shadow-red-200/60">
-              <Link href="/online">COMPETE NOW</Link>
+              <Link href="/online">{t('competitor', 'getStarted').toUpperCase()}</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-foreground/20 text-foreground hover:bg-foreground/5 font-semibold">
               <Link href="/tournaments">
                 <Play className="mr-2 h-4 w-4" />
-                HOW IT WORKS
+                {t('competitor', 'viewTournament').toUpperCase()}
               </Link>
             </Button>
           </div>

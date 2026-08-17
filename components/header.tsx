@@ -5,10 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
-import { LogOut, User, ChevronDown } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
+import { LogOut, User, ChevronDown, Globe } from 'lucide-react';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md transition-all duration-200">
@@ -32,17 +34,41 @@ export function Header() {
 
         {/* Navigation */}
         <div className="hidden items-center gap-6 lg:flex">
-          <Link href="/" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">HOME</Link>
-          <Link href="/online" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">ARENA</Link>
-          <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">EVEN</Link>
-          <Link href="/rankings?from=header" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-400 transition-colors">RANKINGS</Link>
-          <Link href="/practice" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">PRACTICE</Link>
-          <Link href="/live" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">LIVE</Link>
-
+          <Link href="/" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">{t('nav', 'home')}</Link>
+          <Link href="/online" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">{t('nav', 'arena')}</Link>
+          <Link href="/tournaments" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-orange-400 transition-colors">{t('nav', 'events')}</Link>
+          <Link href="/rankings?from=header" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-blue-400 transition-colors">{t('nav', 'rankings')}</Link>
+          <Link href="/practice" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-emerald-400 transition-colors">{t('nav', 'practice')}</Link>
+          <Link href="/live" className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-amber-400 transition-colors">{t('nav', 'live')}</Link>
         </div>
 
         {/* Auth / Profile Area */}
         <div className="flex items-center gap-3">
+          {/* Language Toggle */}
+          <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/60 p-0.5">
+            <Globe size={11} className="text-muted-foreground mx-1.5 shrink-0" />
+            <button
+              onClick={() => setLang('en')}
+              className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
+                lang === 'en'
+                  ? 'bg-accent text-accent-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLang('vi')}
+              className={`px-2 py-1 text-[10px] font-black rounded-md transition-all cursor-pointer ${
+                lang === 'vi'
+                  ? 'bg-accent text-accent-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              VI
+            </button>
+          </div>
+
           {isAuthenticated ? (
             <div 
               className="relative"
@@ -90,7 +116,7 @@ export function Header() {
                         className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent/10 hover:text-accent transition-colors"
                       >
                         <User size={13} />
-                        <span>MY PROFILE</span>
+                        <span>{t('nav', 'profile')}</span>
                       </Link>
                       
                       <button 
@@ -98,7 +124,7 @@ export function Header() {
                         className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors text-left border-none bg-transparent cursor-pointer"
                       >
                         <LogOut size={13} />
-                        <span>LOG OUT</span>
+                        <span>{t('nav', 'logout')}</span>
                       </button>
                     </div>
                   </div>
@@ -108,10 +134,10 @@ export function Header() {
           ) : (
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="h-8 text-xs font-semibold">
-                <Link href="/login">LOGIN</Link>
+                <Link href="/login">{t('nav', 'login')}</Link>
               </Button>
               <Button asChild size="sm" className="h-8 text-xs font-bold bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/signup">SIGN UP</Link>
+                <Link href="/signup">{t('nav', 'signup')}</Link>
               </Button>
             </div>
           )}
@@ -120,3 +146,4 @@ export function Header() {
     </header>
   );
 }
+

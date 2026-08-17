@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
+import { useLanguage } from '@/contexts/language-context';
 import { useRouter } from 'next/navigation';
 import { parseJwt } from '@/lib/api/config';
 import { toast } from '@/lib/toast';
@@ -45,6 +46,7 @@ function isValidEmail(email: string): boolean {
 export default function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -239,7 +241,7 @@ export default function LoginForm() {
               margin: 0,
             }}
           >
-            Sign in to your account
+            {t('auth', 'loginTitle')}
           </h2>
           <p
             style={{
@@ -249,7 +251,7 @@ export default function LoginForm() {
               lineHeight: 1.5,
             }}
           >
-            Enter your credentials to access the arena
+            {t('auth', 'loginSubtitle')}
           </p>
         </div>
 
@@ -257,7 +259,7 @@ export default function LoginForm() {
         <form onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div style={{ marginBottom: 18 }}>
-            <label htmlFor="login-email" style={labelStyle}>Email Address</label>
+            <label htmlFor="login-email" style={labelStyle}>{t('auth', 'emailLabel')}</label>
             <div style={{ position: 'relative' }}>
               <Mail size={18} style={iconStyle(emailFocused)} />
               <input
@@ -297,7 +299,7 @@ export default function LoginForm() {
 
           {/* Password */}
           <div style={{ marginBottom: 20 }}>
-            <label htmlFor="login-password" style={labelStyle}>Password</label>
+            <label htmlFor="login-password" style={labelStyle}>{t('auth', 'passwordLabel')}</label>
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={iconStyle(passwordFocused)} />
               <input
@@ -412,7 +414,7 @@ export default function LoginForm() {
                 textDecoration: 'none',
               }}
             >
-              Forgot password?
+              {t('auth', 'forgotPassword')}
             </Link>
           </div>
 
@@ -445,11 +447,11 @@ export default function LoginForm() {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
-                Signing in...
+                {t('common', 'loading')}
               </>
             ) : (
               <>
-                Sign In
+                {t('auth', 'loginButton')}
                
               </>
             )}
@@ -526,12 +528,12 @@ export default function LoginForm() {
 
         {/* ── Sign up link ── */}
         <p style={{ textAlign: 'center', fontSize: 14, color: '#64748b', marginTop: 28 }}>
-          Don&apos;t have an account?{' '}
+          {t('auth', 'noAccount')}{' '}
           <Link
             href="/signup"
             style={{ color: '#e07a00', fontWeight: 700, textDecoration: 'none' }}
           >
-            Sign up now
+            {t('auth', 'signupLink')}
           </Link>
         </p>
       </div>

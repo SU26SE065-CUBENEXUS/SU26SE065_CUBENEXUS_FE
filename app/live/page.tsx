@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import { useLanguage } from '@/contexts/language-context';
 import { getPublicLiveTournaments, type PublicLiveTournamentDto } from '@/lib/api/live';
 import {
   Trophy,
@@ -33,6 +34,7 @@ export default function PublicLiveTournamentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'UPCOMING' | 'COMPLETED'>('ALL');
   const [visibleCount, setVisibleCount] = useState<number>(3);
+  const { t } = useLanguage();
 
   const fetchTournaments = async () => {
     setIsLoading(true);
@@ -89,10 +91,10 @@ export default function PublicLiveTournamentsPage() {
             <Trophy className="h-3.5 w-3.5 text-orange-500" /> CubeNexus Live Portal
           </span>
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-foreground uppercase mb-4 leading-tight">
-            Follow Live <span className="text-orange-500 font-black">Tournaments</span>
+            {t('competitor', 'livePageTitle')} <span className="text-orange-500 font-black">Tournaments</span>
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base leading-relaxed font-medium">
-            Spectate official speedcubing tournaments in real-time. View group assignments, live solves, stations, and rankings instantly.
+            {t('competitor', 'livePageSubtitle')}
           </p>
         </div>
 
