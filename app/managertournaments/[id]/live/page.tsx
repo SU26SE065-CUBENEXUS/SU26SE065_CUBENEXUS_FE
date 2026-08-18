@@ -53,6 +53,7 @@ import {
   Zap,
   Shuffle,
   X,
+  PenTool,
 } from 'lucide-react';
 
 function msToDisplay(ms: number | null | undefined): string {
@@ -2430,6 +2431,60 @@ export default function LiveOperationsPage({
                 </div>
               ) : null;
             })()}
+
+            {/* Competitor / Judge E-Signature */}
+            {editingResult.esignatureData && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                    <PenTool className="h-3 w-3 text-indigo-600" /> Chữ Ký Xác Nhận (E-Signature)
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <ShieldCheck className="h-3 w-3" /> Đã Ký
+                  </span>
+                </div>
+
+                <div className="bg-white rounded-md border border-slate-200 p-2 flex items-center justify-center min-h-[50px]">
+                  {(() => {
+                    const sig = (editingResult.esignatureData || '').trim();
+                    const isImage = sig.startsWith('data:image') || sig.startsWith('http://') || sig.startsWith('https://');
+                    const isSvg = sig.startsWith('<svg');
+                    const isLegacyPoint = sig.startsWith('SIGN_') && sig.endsWith('_POINTS');
+
+                    if (isImage) {
+                      return (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={sig} alt="Digital Signature" className="max-h-16 w-auto object-contain" />
+                      );
+                    }
+
+                    if (isSvg) {
+                      return (
+                        <div
+                          className="max-h-16 overflow-hidden flex items-center justify-center"
+                          dangerouslySetInnerHTML={{ __html: sig }}
+                        />
+                      );
+                    }
+
+                    if (isLegacyPoint) {
+                      const count = sig.replace('SIGN_', '').replace('_POINTS', '');
+                      return (
+                        <span className="text-xs font-mono text-emerald-600">
+                          Chữ ký cảm ứng di động ({count} điểm vẽ)
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <span className="font-serif italic text-sm font-bold text-indigo-600">
+                        "{sig}"
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <div>

@@ -37,6 +37,8 @@ import {
   ExternalLink,
   X,
   FileText,
+  PenTool,
+  ShieldCheck,
 } from 'lucide-react';
 
 function formatDateRange(start: string, end: string): string {
@@ -1161,11 +1163,66 @@ export default function PublicLiveBoardDetailPage({
 
               {/* Digital Signature */}
               {selectedInspectSolve.esignatureData && (
-                <div className="border-t border-border pt-3">
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Judge / Competitor Signature:</p>
-                  <div className="rounded-xl border border-border bg-black/40 p-2 flex justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={selectedInspectSolve.esignatureData} alt="Digital Signature" className="max-h-16 object-contain" />
+                <div className="border-t border-border pt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+                      <PenTool className="h-3.5 w-3.5 text-primary" />
+                      Chữ Ký Trọng Tài / Thí Sinh (E-Signature)
+                    </p>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-extrabold border border-emerald-500/20">
+                      <ShieldCheck className="h-3 w-3" /> Đã Ký Xác Nhận
+                    </span>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-card/60 p-3 flex flex-col items-center justify-center min-h-[64px]">
+                    {(() => {
+                      const sig = selectedInspectSolve.esignatureData.trim();
+                      const isImage = sig.startsWith('data:image') || sig.startsWith('http://') || sig.startsWith('https://');
+                      const isSvg = sig.startsWith('<svg');
+                      const isLegacyPoint = sig.startsWith('SIGN_') && sig.endsWith('_POINTS');
+
+                      if (isImage) {
+                        return (
+                          <div className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={sig}
+                              alt="Digital Signature"
+                              className="max-h-20 w-auto object-contain"
+                            />
+                          </div>
+                        );
+                      }
+
+                      if (isSvg) {
+                        return (
+                          <div
+                            className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40 max-h-20 overflow-hidden"
+                            dangerouslySetInnerHTML={{ __html: sig }}
+                          />
+                        );
+                      }
+
+                      if (isLegacyPoint) {
+                        const pointCount = sig.replace('SIGN_', '').replace('_POINTS', '');
+                        return (
+                          <div className="flex items-center gap-2 text-xs font-mono text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+                            <PenTool className="h-3.5 w-3.5" />
+                            <span>Chữ ký cảm ứng di động hợp lệ ({pointCount} điểm vẽ)</span>
+                          </div>
+                        );
+                      }
+
+                      // Typed name / initials
+                      return (
+                        <div className="text-center py-1">
+                          <p className="font-serif italic text-base sm:text-lg font-black text-primary tracking-wider">
+                            "{sig}"
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Xác nhận bằng ký danh / mã thí sinh điện tử</p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
