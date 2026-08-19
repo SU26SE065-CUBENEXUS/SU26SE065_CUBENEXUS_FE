@@ -26,7 +26,10 @@ import {
   Filter,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  QrCode,
+  Copy,
+  Printer
 } from 'lucide-react';
 
 function msToDisplay(ms?: number | null): string {
@@ -73,6 +76,10 @@ export default function RegistrationManagementPage({
   // Action feedback
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // QR Modal State
+  const [selectedRegForQr, setSelectedRegForQr] = useState<TournamentRegistrationDetailDto | null>(null);
+  const [copiedToken, setCopiedToken] = useState(false);
 
   // ---------- Load Data ----------
   const loadData = useCallback(async (showLoader = false) => {
@@ -524,18 +531,30 @@ export default function RegistrationManagementPage({
 
                         {/* Manager Action Options */}
                         <td className="px-4 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                          {/* QR Ticket Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedRegForQr(reg);
+                              setCopiedToken(false);
+                            }}
+                            className="inline-flex items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 h-7 w-7 text-indigo-700 hover:bg-indigo-100 transition shadow-2xs cursor-pointer"
+                            title="View Competitor QR Ticket"
+                          >
+                            <QrCode className="h-3.5 w-3.5" />
+                          </button>
+
                           {reg.statusCode === 'PENDING' && (
                             <>
                               <button
                                 onClick={() => handleApprove(reg.registrationId)}
-                                className="inline-flex items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 h-7 w-7 text-emerald-600 hover:bg-emerald-100 transition shadow-2xs"
+                                className="inline-flex items-center justify-center rounded-lg bg-emerald-50 border border-emerald-200 h-7 w-7 text-emerald-600 hover:bg-emerald-100 transition shadow-2xs cursor-pointer"
                                 title="Approve Registration"
                               >
                                 <Check className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 onClick={() => handleCancel(reg.registrationId)}
-                                className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs"
+                                className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs cursor-pointer"
                                 title="Reject/Cancel"
                               >
                                 <X className="h-3.5 w-3.5" />
@@ -547,14 +566,14 @@ export default function RegistrationManagementPage({
                             <>
                               <button
                                 onClick={() => handleCheckIn(reg.registrationId)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2 h-7 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition shadow-2xs"
+                                className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2 h-7 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition shadow-2xs cursor-pointer"
                                 title="Mark Checked-In"
                               >
                                 <UserCheck className="h-3.5 w-3.5" /> Check-In
                               </button>
                               <button
                                 onClick={() => handleCancel(reg.registrationId)}
-                                className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs"
+                                className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs cursor-pointer"
                                 title="Cancel Registration"
                               >
                                 <X className="h-3.5 w-3.5" />
@@ -565,14 +584,12 @@ export default function RegistrationManagementPage({
                           {reg.statusCode === 'CHECKED_IN' && (
                             <button
                               onClick={() => handleCancel(reg.registrationId)}
-                              className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs"
+                              className="inline-flex items-center justify-center rounded-lg bg-red-50 border border-red-200 h-7 w-7 text-red-600 hover:bg-red-100 transition shadow-2xs cursor-pointer"
                               title="Cancel Registration / Check-In"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
                           )}
-
-
                         </td>
                       </tr>
                     );
@@ -583,6 +600,116 @@ export default function RegistrationManagementPage({
           </div>
         </div>
       </div>
+
+      {/* Modal: Competitor QR Ticket Display */}
+      {selectedRegForQr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 space-y-4 text-slate-900 animate-in fade-in zoom-in duration-150">
+            <button
+              onClick={() => setSelectedRegForQr(null)}
+              className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 font-bold shrink-0">
+                <QrCode className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 leading-snug">Competitor QR Ticket</h3>
+                <p className="text-xs text-slate-500 font-medium truncate max-w-[260px]">{tournament.name}</p>
+              </div>
+            </div>
+
+            {/* Competitor Profile Details */}
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Competitor:</span>
+                <span className="font-extrabold text-slate-900">{selectedRegForQr.competitorName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">User Code:</span>
+                <span className="font-mono font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
+                  {selectedRegForQr.competitorUserCode || 'N/A'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Registration Status:</span>
+                <span className="font-bold uppercase text-slate-800">{selectedRegForQr.statusCode}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-medium">Check-In Status:</span>
+                <span className={`font-bold ${selectedRegForQr.checkedInAt || selectedRegForQr.statusCode === 'CHECKED_IN' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {selectedRegForQr.checkedInAt || selectedRegForQr.statusCode === 'CHECKED_IN' ? 'Checked-In' : 'Absent'}
+                </span>
+              </div>
+            </div>
+
+            {/* High-Resolution QR Display */}
+            <div className="flex flex-col items-center justify-center p-4 bg-white border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(selectedRegForQr.qrToken)}`}
+                alt={`QR Ticket for ${selectedRegForQr.competitorName}`}
+                className="w-48 h-48 object-contain rounded-lg"
+              />
+              <p className="text-[10px] font-mono font-medium text-slate-500 text-center break-all px-2 bg-slate-50 py-1 rounded border border-slate-100 max-w-full select-all">
+                {selectedRegForQr.qrToken}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  if (navigator?.clipboard) {
+                    navigator.clipboard.writeText(selectedRegForQr.qrToken);
+                    setCopiedToken(true);
+                    setTimeout(() => setCopiedToken(false), 2000);
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-2xs"
+              >
+                <Copy className="h-3.5 w-3.5" /> {copiedToken ? 'Copied!' : 'Copy Token'}
+              </button>
+              <button
+                onClick={() => {
+                  const printWin = window.open('', '_blank');
+                  if (printWin) {
+                    printWin.document.write(`
+                      <html>
+                        <head>
+                          <title>QR Ticket - ${selectedRegForQr.competitorName}</title>
+                          <style>
+                            body { font-family: sans-serif; text-align: center; padding: 40px; }
+                            h2 { margin-bottom: 4px; font-size: 24px; }
+                            p { color: #555; margin: 4px 0; font-size: 14px; }
+                            .qr { width: 260px; height: 260px; margin: 20px auto; }
+                            .code { font-family: monospace; font-size: 12px; word-break: break-all; color: #444; }
+                          </style>
+                        </head>
+                        <body>
+                          <h2>${selectedRegForQr.competitorName}</h2>
+                          <p>User Code: <strong>${selectedRegForQr.competitorUserCode}</strong></p>
+                          <p>Tournament: ${tournament.name}</p>
+                          <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(selectedRegForQr.qrToken)}" class="qr" />
+                          <p class="code">${selectedRegForQr.qrToken}</p>
+                          <script>window.print();</script>
+                        </body>
+                      </html>
+                    `);
+                    printWin.document.close();
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition cursor-pointer shadow-2xs"
+              >
+                <Printer className="h-3.5 w-3.5" /> Print Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

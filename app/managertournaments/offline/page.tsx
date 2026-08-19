@@ -247,8 +247,17 @@ export default function OfflineTournamentManagerPage() {
       {showCreateModal && !isAdmin && (
         <CreateTournamentModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
+          onCreated={(newTourney) => {
             setShowCreateModal(false);
+            if (newTourney?.id && typeof window !== 'undefined') {
+              const storedDraftsJson = localStorage.getItem('local_draft_tournaments');
+              const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
+              if (!storedDrafts.includes(newTourney.id)) {
+                localStorage.setItem('local_draft_tournaments', JSON.stringify([newTourney.id, ...storedDrafts]));
+              }
+              localStorage.setItem('newly_created_tournament_id', newTourney.id);
+              window.dispatchEvent(new CustomEvent('tournament-list-updated', { detail: newTourney }));
+            }
             fetchOfflineTournaments();
           }}
         />

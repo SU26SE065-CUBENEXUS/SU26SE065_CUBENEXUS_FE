@@ -18,32 +18,35 @@ import type { PuzzleTypeResponseDto } from '@/lib/api/types';
 import {
   approveScramble,
   generateScrambles,
+  getScrambleMode,
   getScrambles,
   getScrambleSummary,
   importScrambles,
   retireScramble,
+  setScrambleMode,
   type ScrambleMode,
   type ScramblePoolItem,
   type ScrambleSummary,
 } from '@/features/admin/api/adminScrambleApi';
 
 const MODES: { value: ScrambleMode; label: string; help: string }[] = [
-  { value: 'ONLINE_MATCH', label: 'Online Match', help: 'Một đề chung cho hai đối thủ.' },
-  { value: 'OFFLINE', label: 'Offline', help: 'Đề riêng theo group và solve.' },
-  { value: 'ONLINE_ASYNC', label: 'Online Async', help: 'Đề riêng khi competitor bắt đầu attempt.' },
+  { value: 'ONLINE_MATCH', label: 'Online Match', help: 'Shared scramble for both competitors.' },
+  { value: 'OFFLINE', label: 'Offline', help: 'Group and solve specific scrambles.' },
+  { value: 'ONLINE_ASYNC', label: 'Online Async', help: 'Unique scramble generated when competitor starts attempt.' },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; style: string }> = {
-  DRAFT: { label: 'Bản Nháp (DRAFT)', style: 'bg-amber-50 text-amber-700 border-amber-200' },
-  AVAILABLE: { label: 'Đã Duyệt · Sẵn Sàng (AVAILABLE)', style: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  RESERVED: { label: 'Đã Cấp Phát (RESERVED)', style: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  USED: { label: 'Đã Sử Dụng', style: 'bg-purple-50 text-purple-700 border-purple-200' },
-  RETIRED: { label: 'Đã Thu Hồi', style: 'bg-rose-50 text-rose-700 border-rose-200' },
-  INVALID: { label: 'Không Hợp Lệ (INVALID)', style: 'bg-red-50 text-red-700 border-red-200' },
+  DRAFT: { label: 'DRAFT (Pending Review)', style: 'bg-amber-50 text-amber-700 border-amber-200' },
+  AVAILABLE: { label: 'AVAILABLE (Approved)', style: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  RESERVED: { label: 'RESERVED (Allocated)', style: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  USED: { label: 'USED', style: 'bg-purple-50 text-purple-700 border-purple-200' },
+  RETIRED: { label: 'RETIRED', style: 'bg-rose-50 text-rose-700 border-rose-200' },
+  INVALID: { label: 'INVALID', style: 'bg-red-50 text-red-700 border-red-200' },
 };
 
 export default function ScrambleControlCenterPage() {
   const [mode, setMode] = useState<ScrambleMode>('ONLINE_MATCH');
+  const [generationMode, setGenerationMode] = useState<'MANUAL' | 'AUTO'>('MANUAL');
   const [puzzles, setPuzzles] = useState<PuzzleTypeResponseDto[]>([]);
   const [puzzleId, setPuzzleId] = useState('');
   const [listPuzzleId, setListPuzzleId] = useState('');
@@ -62,15 +65,17 @@ export default function ScrambleControlCenterPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [page, totals] = await Promise.all([
+      const [page, totals, modeRes] = await Promise.all([
         getScrambles({ mode, status, puzzleTypeId: listPuzzleId || undefined, pageSize: 100 }),
         getScrambleSummary(),
+        getScrambleMode().catch(() => ({ mode: 'MANUAL' as const })),
       ]);
       setItems(page.items);
       setTotalItems(page.total);
       setSummary(totals);
+      setGenerationMode(modeRes.mode);
     } catch (error: any) {
-      setMessage({ ok: false, text: error?.message || 'Không tải được kho đề.' });
+      setMessage({ ok: false, text: error?.message || 'Failed to load scramble pool.' });
     } finally {
       setLoading(false);
     }
@@ -99,44 +104,39 @@ export default function ScrambleControlCenterPage() {
     return Object.entries(totals).sort(([left], [right]) => left.localeCompare(right));
   }, [mode, summary]);
 
-  const statusOptions = useMemo(
-    () => [...new Set(summary.filter((item) => item.competitionMode === mode).map((item) => item.status))].sort(),
-    [mode, summary],
-  );
+  const draftItems = useMemo(() => items.filter((item) => item.status === 'DRAFT'), [items]);
+  const statusOptions = useMemo(() => ['DRAFT', 'AVAILABLE', 'RESERVED', 'USED', 'RETIRED', 'INVALID'], []);
 
-  const draftItems = useMemo(
-    () => items.filter((item) => item.status === 'DRAFT'),
-    [items]
-  );
-
-  async function mutate(action: () => Promise<unknown>, success: string) {
+  const mutate = async (action: () => Promise<unknown>, successText: string) => {
     setBusy(true);
     setMessage(null);
     try {
       await action();
-      setMessage({ ok: true, text: success });
+      setMessage({ ok: true, text: successText });
+      setImportText('');
+      setNotes('');
       await load();
     } catch (error: any) {
-      setMessage({ ok: false, text: error?.message || 'Thao tác thất bại.' });
+      setMessage({ ok: false, text: error?.message || 'Action failed.' });
     } finally {
       setBusy(false);
     }
-  }
+  };
 
-  async function handleApproveAll() {
-    if (!draftItems.length) return;
+  const handleApproveAll = async () => {
+    if (draftItems.length === 0) return;
     setBusy(true);
     setMessage(null);
     try {
       await Promise.all(draftItems.map((item) => approveScramble(item.id)));
-      setMessage({ ok: true, text: `Đã duyệt thành công tất cả ${draftItems.length} đề (DRAFT).` });
+      setMessage({ ok: true, text: `Successfully approved all ${draftItems.length} DRAFT scrambles.` });
       await load();
     } catch (error: any) {
-      setMessage({ ok: false, text: error?.message || 'Không thể duyệt tất cả đề.' });
+      setMessage({ ok: false, text: error?.message || 'Failed to approve all scrambles.' });
     } finally {
       setBusy(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-full bg-slate-50 p-6 text-left">
@@ -150,7 +150,7 @@ export default function ScrambleControlCenterPage() {
             <div>
               <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Scramble Control Center</h1>
               <p className="text-xs text-slate-500 mt-0.5 font-medium">
-                Kho quản lý đề xoay Rubik dùng chung, tách biệt theo từng chế độ thi đấu (Online Match, Offline, Async).
+                Centralized Rubik scramble pool management, isolated by competition mode (Online Match, Offline, Async).
               </p>
             </div>
           </div>
@@ -159,9 +159,78 @@ export default function ScrambleControlCenterPage() {
             disabled={loading || busy}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition shadow-2xs cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Làm mới
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         </header>
+
+        {/* Scramble Generation Mode Switcher Banner */}
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">Scramble Allocation & Generation Mode</h2>
+                <span
+                  className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${generationMode === 'AUTO'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}
+                >
+                  {generationMode === 'AUTO' ? 'AUTO' : 'MANUAL'}
+                </span>
+              </div>
+              <p className="mt-1.5 text-xs text-slate-500 font-medium max-w-3xl leading-relaxed">
+                {generationMode === 'AUTO'
+                  ? 'AUTO GENERATION MODE: When scrambles are depleted during a match, the system automatically generates valid move scrambles on-demand without interrupting the competition.'
+                  : 'MANUAL GENERATION MODE: When the scramble pool runs low, real-time SignalR notifications will alert Admins to generate or import scrambles.'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              <button
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const res = await setScrambleMode('MANUAL');
+                    setGenerationMode(res.mode);
+                    setMessage({ ok: true, text: 'Switched to MANUAL generation mode.' });
+                  } catch (e: any) {
+                    setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer ${generationMode === 'MANUAL'
+                  ? 'bg-amber-500 text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                MANUAL
+              </button>
+              <button
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const res = await setScrambleMode('AUTO');
+                    setGenerationMode(res.mode);
+                    setMessage({ ok: true, text: 'Switched to AUTO generation mode.' });
+                  } catch (e: any) {
+                    setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer ${generationMode === 'AUTO'
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+                  }`}
+              >
+                AUTO
+              </button>
+            </div>
+          </div>
+        </section>
 
         {/* Competition Modes */}
         <div className="grid gap-3.5 md:grid-cols-3">
@@ -175,11 +244,10 @@ export default function ScrambleControlCenterPage() {
                   setStatus('');
                   setListPuzzleId('');
                 }}
-                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${
-                  isActive
-                    ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-100 shadow-2xs'
-                    : 'bg-white border-slate-200 hover:border-slate-300'
-                }`}
+                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${isActive
+                  ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-100 shadow-2xs'
+                  : 'bg-white border-slate-200 hover:border-slate-300'
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <b className={`text-sm font-extrabold ${isActive ? 'text-indigo-950' : 'text-slate-800'}`}>
@@ -194,9 +262,8 @@ export default function ScrambleControlCenterPage() {
         </div>
 
         <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-xs leading-relaxed text-indigo-900">
-          <strong>Quy tắc cấp đề:</strong> giải đấu chỉ lấy đề <strong>AVAILABLE (đã duyệt)</strong> đúng chế độ và đúng loại Rubik.
-          Đề có thời điểm duyệt sớm nhất được cấp trước; nếu trùng thời điểm, hệ thống lần lượt xét thời điểm tạo rồi ID.
-          Các đề DRAFT, RETIRED, RESERVED, USED hoặc INVALID không được lấy lại.
+          <strong>Allocation Rules:</strong> Competitions only draw <strong>AVAILABLE (approved)</strong> scrambles matching the exact mode and puzzle type.
+          Scrambles with the earliest approval time are allocated first. Draft, retired, reserved, used, or invalid scrambles are never re-allocated.
         </div>
 
         {/* Status Summary Cards */}
@@ -217,18 +284,17 @@ export default function ScrambleControlCenterPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-5 text-xs text-slate-500 font-medium">
-            Chưa có dữ liệu trạng thái cho chế độ này. Hãy sinh hoặc nhập đề để bắt đầu.
+            No status data for this mode. Generate or import scrambles to get started.
           </div>
         )}
 
         {/* Alert Message Banner */}
         {message && (
           <div
-            className={`rounded-2xl border p-4 text-xs font-bold transition flex items-center justify-between ${
-              message.ok
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                : 'border-rose-200 bg-rose-50 text-rose-900'
-            }`}
+            className={`rounded-2xl border p-4 text-xs font-bold transition flex items-center justify-between ${message.ok
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+              : 'border-rose-200 bg-rose-50 text-rose-900'
+              }`}
           >
             <span>{message.text}</span>
             <button
@@ -246,16 +312,16 @@ export default function ScrambleControlCenterPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
             <div>
               <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-600" /> Sinh đề tự động
+                <Sparkles className="h-4 w-4 text-indigo-600" /> Auto Generate Scrambles
               </h2>
               <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">
-                Mỗi đề được sinh tự động gồm đúng 2 bước xoay để phù hợp luồng scan AI. Đề mới tạo mặc định ở trạng thái DRAFT cần duyệt trước khi cấp phát.
+                Generated scrambles consist of valid move sequences. Newly created scrambles default to DRAFT unless auto-approved.
               </p>
             </div>
 
             <div className="grid gap-3.5 sm:grid-cols-2">
               <label className="grid gap-1.5 text-xs font-bold text-slate-700">
-                Loại Rubik
+                Puzzle Type
                 <select
                   value={puzzleId}
                   onChange={(event) => setPuzzleId(event.target.value)}
@@ -269,9 +335,9 @@ export default function ScrambleControlCenterPage() {
                 </select>
               </label>
               <label className="grid gap-1.5 text-xs font-bold text-slate-700">
-                Số lượng đề muốn sinh
+                Quantity to Generate
                 <input
-                  aria-label="Số lượng đề muốn sinh"
+                  aria-label="Quantity to generate"
                   type="number"
                   min={1}
                   max={500}
@@ -283,11 +349,11 @@ export default function ScrambleControlCenterPage() {
             </div>
 
             <label className="grid gap-1.5 text-xs font-bold text-slate-700">
-              Ghi chú đợt đề <span className="font-medium text-slate-400">(không bắt buộc)</span>
+              Batch Notes <span className="font-medium text-slate-400">(optional)</span>
               <input
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Ví dụ: Đợt đề Online Match tuần 1"
+                placeholder="e.g. Online Match Scramble Batch #1"
                 className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-indigo-600 focus:bg-white transition"
               />
             </label>
@@ -299,7 +365,7 @@ export default function ScrambleControlCenterPage() {
                 onChange={(event) => setAutoApprove(event.target.checked)}
                 className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span>Duyệt và đưa vào kho sử dụng ngay (AVAILABLE)</span>
+              <span>Auto-approve & make available immediately (AVAILABLE)</span>
             </label>
 
             <button
@@ -307,12 +373,12 @@ export default function ScrambleControlCenterPage() {
               onClick={() =>
                 void mutate(
                   () => generateScrambles({ competitionMode: mode, puzzleTypeId: puzzleId, count, notes, autoApprove }),
-                  `Đã sinh thành công ${count} đề xoay (2 bước).`
+                  `Successfully generated ${count} scrambles.`
                 )
               }
               className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 shadow-2xs transition cursor-pointer disabled:opacity-50"
             >
-              <Plus className="h-4 w-4" /> Sinh {count} Đề Xoay
+              <Plus className="h-4 w-4" /> Generate {count} Scrambles
             </button>
           </section>
 
@@ -320,10 +386,10 @@ export default function ScrambleControlCenterPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
             <div>
               <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-emerald-600" /> Nhập đề thủ công
+                <FileText className="h-4 w-4 text-emerald-600" /> Manual Import Scrambles
               </h2>
               <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">
-                Mỗi dòng là một chuỗi xoay Rubik. Đề sau khi nhập sẽ ở trạng thái DRAFT để kiểm duyệt trước khi cấp phát.
+                Enter one Rubik scramble sequence per line. Imported scrambles start as DRAFT for review.
               </p>
             </div>
 
@@ -341,12 +407,12 @@ export default function ScrambleControlCenterPage() {
                 const sequences = importText.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
                 void mutate(
                   () => importScrambles({ competitionMode: mode, puzzleTypeId: puzzleId, sequences, notes }),
-                  `Đã nhập thành công ${sequences.length} đề vào kho.`
+                  `Successfully imported ${sequences.length} scrambles.`
                 );
               }}
               className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-indigo-600 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-extrabold text-xs py-3 transition cursor-pointer disabled:opacity-50"
             >
-              <FileText className="h-4 w-4" /> Nhập Vào Kho Đề
+              <FileText className="h-4 w-4" /> Import to Scramble Pool
             </button>
           </section>
         </div>
@@ -356,42 +422,42 @@ export default function ScrambleControlCenterPage() {
           {/* Table Header Controls */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5 bg-slate-50/50">
             <div>
-              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">Danh sách đề ({totalItems})</h2>
+              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">Scramble List ({totalItems})</h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
                 {totalItems === 0 ? (
-                  <span>Chưa có đề trong bộ lọc hiện tại.</span>
+                  <span>No scrambles found matching current filters.</span>
                 ) : draftItems.length > 0 ? (
-                  <span className="text-amber-700 font-extrabold">Có {draftItems.length} đề DRAFT chờ duyệt</span>
+                  <span className="text-amber-700 font-extrabold">{draftItems.length} DRAFT scrambles pending approval</span>
                 ) : (
                   <span className="text-emerald-700 font-extrabold">
-                    Có {items.filter((item) => item.status === 'AVAILABLE').length} đề đã duyệt và sẵn sàng cấp phát
+                    {items.filter((item) => item.status === 'AVAILABLE').length} AVAILABLE scrambles ready for allocation
                   </span>
                 )}
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Approve All Button (1 Click Duyệt Tất Cả DRAFT) */}
+              {/* Approve All Button */}
               {draftItems.length > 0 && (
                 <button
                   onClick={handleApproveAll}
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-2xs cursor-pointer disabled:opacity-50 animate-pulse"
-                  title="Duyệt tất cả các đề DRAFT cùng lúc"
+                  title="Approve all DRAFT scrambles at once"
                 >
-                  <CheckCheck className="h-4 w-4" /> Duyệt Tất Cả ({draftItems.length})
+                  <CheckCheck className="h-4 w-4" /> Approve All ({draftItems.length})
                 </button>
               )}
 
               <div className="flex items-center gap-2">
-                <label htmlFor="list-puzzle-filter" className="text-xs font-bold text-slate-500">Loại Rubik</label>
+                <label htmlFor="list-puzzle-filter" className="text-xs font-bold text-slate-500">Puzzle Type</label>
                 <select
                   id="list-puzzle-filter"
                   value={listPuzzleId}
                   onChange={(event) => setListPuzzleId(event.target.value)}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 transition cursor-pointer"
                 >
-                  <option value="">Tất cả loại Rubik</option>
+                  <option value="">All Puzzle Types</option>
                   {puzzles.map((item) => (
                     <option key={item.id} value={item.id}>{item.name} ({item.code})</option>
                   ))}
@@ -406,7 +472,7 @@ export default function ScrambleControlCenterPage() {
                   onChange={(event) => setStatus(event.target.value)}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 transition cursor-pointer"
                 >
-                  <option value="">Tất cả trạng thái</option>
+                  <option value="">All Statuses</option>
                   {statusOptions.map((item) => (
                     <option key={item} value={item}>
                       {STATUS_CONFIG[item]?.label || item}
@@ -428,12 +494,12 @@ export default function ScrambleControlCenterPage() {
                 <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <tr>
                     <th className="px-5 py-3.5">CUBE</th>
-                    <th className="px-5 py-3.5">SCRAMBLE (CHUỖI XOAY)</th>
-                    <th className="px-5 py-3.5">TRẠNG THÁI</th>
-                    <th className="px-5 py-3.5">KIỂM DUYỆT</th>
-                    <th className="px-5 py-3.5">THỨ TỰ CẤP</th>
-                    <th className="px-5 py-3.5">CẤP CHO</th>
-                    <th className="px-5 py-3.5 text-right">THAO TÁC</th>
+                    <th className="px-5 py-3.5">SCRAMBLE SEQUENCE</th>
+                    <th className="px-5 py-3.5">STATUS</th>
+                    <th className="px-5 py-3.5">APPROVAL</th>
+                    <th className="px-5 py-3.5">QUEUE POSITION</th>
+                    <th className="px-5 py-3.5">ASSIGNED TO</th>
+                    <th className="px-5 py-3.5 text-right">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -447,19 +513,14 @@ export default function ScrambleControlCenterPage() {
 
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/70 transition align-middle">
-                        {/* Cube Code */}
                         <td className="px-5 py-4 font-black text-slate-900 font-mono text-xs">
                           {item.puzzleCode}
                         </td>
-
-                        {/* Scramble Sequence */}
                         <td className="px-5 py-4 max-w-md font-mono text-xs font-extrabold text-slate-900 tracking-wider">
                           <span className="inline-block px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-indigo-900">
                             {item.sequence}
                           </span>
                         </td>
-
-                        {/* Status Badge */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${cfg.style}`}
@@ -467,18 +528,16 @@ export default function ScrambleControlCenterPage() {
                             {cfg.label}
                           </span>
                         </td>
-
                         <td className="px-5 py-4 whitespace-nowrap">
                           {item.approvedAt ? (
                             <div>
-                              <span className="font-extrabold text-emerald-700">Đã duyệt</span>
-                              <p className="mt-0.5 text-[10px] text-slate-400">{new Date(item.approvedAt).toLocaleString('vi-VN')}</p>
+                              <span className="font-extrabold text-emerald-700">Approved</span>
+                              <p className="mt-0.5 text-[10px] text-slate-400">{new Date(item.approvedAt).toLocaleString('en-US')}</p>
                             </div>
                           ) : (
-                            <span className="font-extrabold text-amber-700">Chưa duyệt</span>
+                            <span className="font-extrabold text-amber-700">Pending</span>
                           )}
                         </td>
-
                         <td className="px-5 py-4 whitespace-nowrap">
                           {item.queuePosition ? (
                             <span className="inline-flex rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 font-black text-indigo-700">
@@ -486,36 +545,29 @@ export default function ScrambleControlCenterPage() {
                             </span>
                           ) : '—'}
                         </td>
-
-                        {/* Assigned Target */}
                         <td className="px-5 py-4 text-xs font-semibold text-slate-500 whitespace-nowrap">
                           {item.assignedTargetType || '—'}
                         </td>
-
-                        {/* Actions */}
                         <td className="px-5 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
-                            {/* Approve Single Scramble */}
                             {isDraft && (
                               <button
                                 disabled={busy}
-                                onClick={() => void mutate(() => approveScramble(item.id), 'Đã duyệt đề.')}
+                                onClick={() => void mutate(() => approveScramble(item.id), 'Scramble approved.')}
                                 className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition cursor-pointer disabled:opacity-50"
-                                title="Duyệt đề xoay này"
+                                title="Approve scramble"
                               >
-                                <Check className="h-3.5 w-3.5" /> Duyệt
+                                <Check className="h-3.5 w-3.5" /> Approve
                               </button>
                             )}
-
-                            {/* Retire Scramble */}
                             {canRetire && (
                               <button
                                 disabled={busy}
-                                onClick={() => void mutate(() => retireScramble(item.id), 'Đã thu hồi đề.')}
+                                onClick={() => void mutate(() => retireScramble(item.id), 'Scramble retired.')}
                                 className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition cursor-pointer disabled:opacity-50"
-                                title="Thu hồi đề xoay này"
+                                title="Retire scramble"
                               >
-                                <RotateCcw className="h-3.5 w-3.5" /> Thu Hồi
+                                <RotateCcw className="h-3.5 w-3.5" /> Retire
                               </button>
                             )}
                           </div>

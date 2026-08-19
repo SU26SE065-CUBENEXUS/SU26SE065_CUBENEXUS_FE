@@ -24,3 +24,6 @@ export const importScrambles = (body: { competitionMode: ScrambleMode; puzzleTyp
   apiFetch<ScramblePoolItem[]>('/api/admin/scrambles/import', { method: 'POST', body: JSON.stringify(body) });
 export const approveScramble = (id: string) => apiFetch<ScramblePoolItem>(`/api/admin/scrambles/${id}/approve`, { method: 'POST' });
 export const retireScramble = (id: string) => apiFetch<ScramblePoolItem>(`/api/admin/scrambles/${id}/retire`, { method: 'POST' });
+export const getScrambleMode = () => apiFetch<{ mode: 'MANUAL' | 'AUTO' }>('/api/admin/scrambles/mode');
+export const setScrambleMode = (mode: 'MANUAL' | 'AUTO') => apiFetch<{ mode: 'MANUAL' | 'AUTO' }>('/api/admin/scrambles/mode', { method: 'POST', body: JSON.stringify({ mode }) });
+
