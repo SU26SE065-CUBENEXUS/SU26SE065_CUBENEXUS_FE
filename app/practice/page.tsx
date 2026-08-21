@@ -446,7 +446,7 @@ export default function PracticePage() {
     })
     .join(' ');
 
-  if (authLoading || isLoadingPuzzles || !mounted) {
+  if (authLoading || !mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <LoaderCircle className="h-8 w-8 animate-spin text-[#eab308]" />
@@ -489,14 +489,18 @@ export default function PracticePage() {
                     const pt = puzzleTypes.find(t => t.id === e.target.value);
                     if (pt) handlePuzzleTypeChange(pt);
                   }}
-                  disabled={!!activeSession}
+                  disabled={!!activeSession || isLoadingPuzzles}
                   className="bg-background text-foreground border border-border rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-[#eab308] transition disabled:opacity-50"
                 >
-                  {puzzleTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name} ({type.code})
-                    </option>
-                  ))}
+                  {puzzleTypes.length === 0 ? (
+                    <option value="">Loading puzzles...</option>
+                  ) : (
+                    puzzleTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name} ({type.code})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
@@ -871,7 +875,7 @@ export default function PracticePage() {
               onClick={() => setIsQrModalOpen(false)}
               className="w-full bg-[#eab308] hover:bg-[#ca8a04] text-black font-extrabold text-xs py-2.5 rounded-xl shadow-sm"
             >
-              Close Window
+              Close
             </Button>
           </Card>
         </div>
