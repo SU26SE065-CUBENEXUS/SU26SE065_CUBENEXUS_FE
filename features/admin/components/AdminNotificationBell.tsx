@@ -52,19 +52,29 @@ export default function AdminNotificationBell() {
   const loadAdminNotifications = useCallback(async () => {
     try {
       const serverItems = await apiFetch<AdminNotificationDto[]>('/api/admin/notifications?limit=50');
-      const mapped = serverItems.map((item) => ({
-        id: `admin-${item.id}`,
-        competitionMode: 'TOURNAMENT',
-        puzzleTypeId: '',
-        puzzleCode: 'STATUS',
-        puzzleName: item.title,
-        message: item.body || item.title,
-        timestamp: item.createdAt,
-        isRead: item.isRead,
-        source: 'tournament' as const,
-        typeCode: item.typeCode,
-        title: item.title,
-      }));
+      const mapped = serverItems
+        .filter((item) => item.typeCode === 'SCRAMBLE_POOL_EMPTY')
+        .map((item) => {
+          let payload: Partial<ScrambleDepletedNotification> = {};
+          try {
+            payload = item.payload ? JSON.parse(item.payload) : {};
+          } catch {
+            // Keep the notification visible even if an old payload is malformed.
+          }
+          return {
+            id: `admin-${item.id}`,
+            competitionMode: payload.competitionMode || 'ONLINE_MATCH',
+            puzzleTypeId: payload.puzzleTypeId || '',
+            puzzleCode: payload.puzzleCode || 'UNKNOWN',
+            puzzleName: payload.puzzleName || item.title,
+            message: item.body || item.title,
+            timestamp: item.createdAt,
+            isRead: item.isRead,
+            source: 'scramble' as const,
+            typeCode: item.typeCode,
+            title: item.title,
+          };
+        });
       setNotifications((previous) => [
         ...mapped,
         ...previous.filter((item) => !item.id.startsWith('admin-')),
@@ -224,16 +234,23 @@ export default function AdminNotificationBell() {
     });
 
     connection.on('AdminNotificationCreated', (data: AdminNotificationDto) => {
+      if (data.typeCode !== 'SCRAMBLE_POOL_EMPTY') return;
+      let payload: Partial<ScrambleDepletedNotification> = {};
+      try {
+        payload = data.payload ? JSON.parse(data.payload) : {};
+      } catch {
+        // Keep the notification visible even if the payload cannot be parsed.
+      }
       const notification = {
         id: `admin-${data.id}`,
-        competitionMode: 'TOURNAMENT',
-        puzzleTypeId: '',
-        puzzleCode: 'STATUS',
-        puzzleName: data.title,
+        competitionMode: payload.competitionMode || 'ONLINE_MATCH',
+        puzzleTypeId: payload.puzzleTypeId || '',
+        puzzleCode: payload.puzzleCode || 'UNKNOWN',
+        puzzleName: payload.puzzleName || data.title,
         message: data.body || data.title,
         timestamp: data.createdAt,
         isRead: false,
-        source: 'tournament' as const,
+        source: 'scramble' as const,
         typeCode: data.typeCode,
         title: data.title,
       };
@@ -305,15 +322,23 @@ export default function AdminNotificationBell() {
     void apiFetch('/api/admin/notifications/read-all', { method: 'POST' }).catch(() => undefined);
   };
 
+  const markNotificationAsRead = (notification: ScrambleDepletedNotification) => {
+    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)));
+    if (notification.id.startsWith('admin-')) {
+      void apiFetch(`/api/admin/notifications/${notification.id.slice('admin-'.length)}/read`, {
+        method: 'POST',
+      }).catch(() => undefined);
+    }
+  };
+
   const clearAll = () => {
     setNotifications([]);
   };
 
   const handleToggleBell = () => {
-    setIsOpen((prev) => {
-      const nextState = !prev;
-      return nextState;
-    });
+    const nextState = !isOpen;
+    setIsOpen(nextState);
+    if (nextState) markAllAsRead();
   };
 
   const formatNotifTime = (isoString: string) => {
@@ -416,6 +441,7 @@ export default function AdminNotificationBell() {
               notifications.map((n) => (
                 <div
                   key={n.id}
+                  onClick={() => markNotificationAsRead(n)}
                   className={`p-3.5 transition ${
                     n.isRead ? 'bg-white opacity-80' : 'bg-rose-50/50'
                   }`}
