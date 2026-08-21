@@ -13,6 +13,8 @@ export default function InspectionPage() {
   const matchId = params?.matchId as string;
   const hasRefetchedRef = useRef(false);
 
+  const skewRef = useRef<number | null>(null);
+
   const parseUtc = (dateStr: string | null | undefined): number => {
     if (!dateStr) return 0;
     const hasTimezone = dateStr.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateStr);
@@ -24,31 +26,25 @@ export default function InspectionPage() {
       return;
     }
 
-    const deadline = parseUtc(state.inspectionDeadlineAt);
-    const serverNow = parseUtc(state.serverNow);
-    const initialSeconds = Math.max(0, Math.ceil((deadline - serverNow) / 1000));
-    setSecondsLeft(initialSeconds);
-
-    if (initialSeconds <= 0 && !hasRefetchedRef.current) {
-      hasRefetchedRef.current = true;
-      refetch();
-      return;
+    if (skewRef.current === null) {
+      skewRef.current = Date.now() - parseUtc(state.serverNow);
     }
 
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          if (!hasRefetchedRef.current) {
-            hasRefetchedRef.current = true;
-            refetch();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const targetTime = parseUtc(state.inspectionDeadlineAt);
 
+    const updateTimer = () => {
+      const correctedNow = Date.now() - (skewRef.current ?? 0);
+      const diff = Math.max(0, Math.ceil((targetTime - correctedNow) / 1000));
+      setSecondsLeft(diff);
+
+      if (diff <= 0 && !hasRefetchedRef.current) {
+        hasRefetchedRef.current = true;
+        refetch();
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 200);
     return () => clearInterval(interval);
   }, [state?.inspectionDeadlineAt, refetch]);
 

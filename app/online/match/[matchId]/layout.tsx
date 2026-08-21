@@ -42,6 +42,14 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     onSolveTimeout: async () => { await refetch(); },
     onMatchStateChanged: async () => { await refetch(); },
     onChecklistUpdated: async () => { await refetch(); },
+    onTimerConnected: async () => {
+      console.log('[SignalR] Mobile timer connected! Instant refetch...');
+      await refetch();
+    },
+    onTimerDisconnected: async () => { await refetch(); },
+    onCameraReadyUpdated: async () => { await refetch(); },
+    onWebRtcConnectionUpdated: async () => { await refetch(); },
+    onVideoRecordingStarted: async () => { await refetch(); },
   });
 
   // ── WebRTC props derived from match state ─────────────────────────────────
