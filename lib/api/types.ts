@@ -461,3 +461,73 @@ export interface ShuffleTournamentJudgesDto {
   stationCount: number;
   judgesPerStation: number;
 }
+
+// ---------- Practice ----------
+
+export interface StartPracticeSessionDto {
+  puzzleTypeId: string;
+}
+
+export interface PracticeSessionResponseDto {
+  id: string;
+  userId: string;
+  puzzleTypeId: string;
+  puzzleTypeName: string;
+  puzzleTypeCode: string;
+  startedAt: string;
+  endedAt?: string | null;
+  totalSolves: number;
+}
+
+export interface PracticeAttemptResponseDto {
+  id: string;
+  sessionId: string;
+  state: 'Scrambled' | 'HoldingHands' | 'Ready' | 'Solving' | 'Stopped' | 'Completed' | 'Aborted' | string;
+  scrambleSequence: string;
+  handsOnAt?: string | null;
+  readyAt?: string | null;
+  startedAt?: string | null;
+  stoppedAt?: string | null;
+  allowedActions: string[];
+  solveId?: string | null;
+  timeMs?: number | null;
+  penaltyCode?: string | null;
+  displayTimeMs?: number | null;
+  currentAo5Ms?: number | null;
+  abortReason?: string | null;
+}
+
+export interface PracticeSessionSummaryDto {
+  sessionId: string;
+  puzzleTypeCode: string;
+  startedAt: string;
+  endedAt: string;
+  totalSolves: number;
+  dnfCount: number;
+  meanMs?: number | null;
+  bestMs?: number | null;
+  bestAo5Ms?: number | null;
+  solves: PracticeSolveResponseDto[];
+}
+
+export interface PracticeSolveResponseDto {
+  id: string;
+  sessionId: string;
+  attemptId?: string | null;
+  scrambleSequence: string;
+  timeMs: number;
+  penaltyCode?: string | null;
+  displayTimeMs: number;
+  solvedAt: string;
+  currentAo5Ms?: number | null;
+}
+
+export interface FinalizeAttemptDto {
+  timeMs: number;
+  penalty?: 'OK' | 'PLUS_2' | 'DNF' | string;
+}
+
+export interface AbortAttemptDto {
+  reason?: string | null;
+}
+
