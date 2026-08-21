@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Bell, BellRing, Sparkles, Plus, CheckCheck, Trash2, X } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
-import { API_BASE_URL } from '@/lib/api/config';
+import { API_BASE_URL, apiFetch } from '@/lib/api/config';
 import { setScrambleMode, generateScrambles, getScrambleSummary, getScrambleMode } from '@/features/admin/api/adminScrambleApi';
 
 export interface ScrambleDepletedNotification {
@@ -15,6 +15,19 @@ export interface ScrambleDepletedNotification {
   message: string;
   timestamp: string;
   isRead: boolean;
+  source?: 'scramble' | 'tournament';
+  typeCode?: string;
+  title?: string;
+}
+
+interface AdminNotificationDto {
+  id: string;
+  typeCode: string;
+  title: string;
+  body?: string | null;
+  payload?: string | null;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export default function AdminNotificationBell() {
@@ -35,6 +48,31 @@ export default function AdminNotificationBell() {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const loadAdminNotifications = useCallback(async () => {
+    try {
+      const serverItems = await apiFetch<AdminNotificationDto[]>('/api/admin/notifications?limit=50');
+      const mapped = serverItems.map((item) => ({
+        id: `admin-${item.id}`,
+        competitionMode: 'TOURNAMENT',
+        puzzleTypeId: '',
+        puzzleCode: 'STATUS',
+        puzzleName: item.title,
+        message: item.body || item.title,
+        timestamp: item.createdAt,
+        isRead: item.isRead,
+        source: 'tournament' as const,
+        typeCode: item.typeCode,
+        title: item.title,
+      }));
+      setNotifications((previous) => [
+        ...mapped,
+        ...previous.filter((item) => !item.id.startsWith('admin-')),
+      ].slice(0, 100));
+    } catch {
+      // Keep scramble notifications available when the notification table is not migrated yet.
+    }
+  }, []);
 
   // Persist notifications to localStorage
   useEffect(() => {
@@ -118,6 +156,7 @@ export default function AdminNotificationBell() {
   useEffect(() => {
     // 1. Initial API sync to catch notifications that occurred while Admin was offline
     void syncPoolStatus();
+    void loadAdminNotifications();
     const intervalId = setInterval(() => void syncPoolStatus(), 30000);
 
     // 2. Build SignalR Hub Connection only if token exists
@@ -161,6 +200,7 @@ export default function AdminNotificationBell() {
           message: data.message || data.Message || `Scramble pool for ${mode} (${puzzleCode}) is empty!`,
           timestamp: data.timestamp || data.Timestamp || new Date().toISOString(),
           isRead: false,
+          source: 'scramble',
         };
         return [newNotif, ...prev];
       });
@@ -183,6 +223,25 @@ export default function AdminNotificationBell() {
       }
     });
 
+    connection.on('AdminNotificationCreated', (data: AdminNotificationDto) => {
+      const notification = {
+        id: `admin-${data.id}`,
+        competitionMode: 'TOURNAMENT',
+        puzzleTypeId: '',
+        puzzleCode: 'STATUS',
+        puzzleName: data.title,
+        message: data.body || data.title,
+        timestamp: data.createdAt,
+        isRead: false,
+        source: 'tournament' as const,
+        typeCode: data.typeCode,
+        title: data.title,
+      };
+      setNotifications((previous) => previous.some((item) => item.id === notification.id)
+        ? previous
+        : [notification, ...previous].slice(0, 100));
+    });
+
     connection
       .start()
       .then(() => console.log('[SignalR Admin Bell] Connected to TournamentHub successfully.'))
@@ -198,7 +257,7 @@ export default function AdminNotificationBell() {
       clearInterval(intervalId);
       connection.stop().catch(() => {});
     };
-  }, [syncPoolStatus]);
+  }, [loadAdminNotifications, syncPoolStatus]);
 
   const handleToggleAutoMode = useCallback(async (notifId: string) => {
     setBusyId(notifId);
@@ -243,6 +302,7 @@ export default function AdminNotificationBell() {
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    void apiFetch('/api/admin/notifications/read-all', { method: 'POST' }).catch(() => undefined);
   };
 
   const clearAll = () => {
@@ -252,25 +312,27 @@ export default function AdminNotificationBell() {
   const handleToggleBell = () => {
     setIsOpen((prev) => {
       const nextState = !prev;
-      // Auto-clear unread badge count when opening the notification popover
-      if (nextState) {
-        setNotifications((list) => list.map((n) => ({ ...n, isRead: true })));
-      }
       return nextState;
     });
   };
 
   const formatNotifTime = (isoString: string) => {
     try {
-      const date = new Date(isoString);
+      const normalized = isoString && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(isoString)
+        ? `${isoString}Z`
+        : isoString;
+      const date = new Date(normalized);
       if (isNaN(date.getTime())) return 'Vừa xong';
       const now = new Date();
       const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+      if (diffSec < 0) return 'Vừa xong';
       if (diffSec < 15) return 'Vừa xong';
       if (diffSec < 60) return `${diffSec} giây trước`;
       if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
       if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
-      return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleString('vi-VN', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+      });
     } catch {
       return 'Vừa xong';
     }
@@ -282,7 +344,7 @@ export default function AdminNotificationBell() {
       <button
         onClick={handleToggleBell}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs text-slate-700 cursor-pointer"
-        title="Scramble Pool & System Notifications"
+        title="System Notifications"
       >
         {unreadCount > 0 ? (
           <BellRing className="h-4 w-4 text-rose-600 animate-bounce" />
@@ -303,7 +365,7 @@ export default function AdminNotificationBell() {
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-indigo-600" />
-              <span className="text-xs font-black text-slate-900">Scramble Depletion Warnings</span>
+              <span className="text-xs font-black text-slate-900">System Notifications</span>
               {unreadCount > 0 && (
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-extrabold text-rose-700">
                   {unreadCount} new
@@ -360,11 +422,11 @@ export default function AdminNotificationBell() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="rounded-md bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white uppercase">
-                        DEPLETED
+                      <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black text-white uppercase ${n.source === 'tournament' ? 'bg-indigo-600' : 'bg-rose-600'}`}>
+                        {n.source === 'tournament' ? 'TOURNAMENT' : 'DEPLETED'}
                       </span>
                       <span className="font-mono text-[11px] font-black text-slate-900">
-                        {n.puzzleCode}
+                        {n.source === 'tournament' ? (n.title || 'Status update') : n.puzzleCode}
                       </span>
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold text-slate-600">
                         {n.competitionMode}
@@ -380,7 +442,7 @@ export default function AdminNotificationBell() {
                   </p>
 
                   {/* Quick Action Buttons */}
-                  <div className="mt-2.5 flex items-center gap-2">
+                  {n.source !== 'tournament' && <div className="mt-2.5 flex items-center gap-2">
                     <button
                       disabled={busyId === n.id}
                       onClick={() => void handleToggleAutoMode(n.id)}
@@ -397,13 +459,13 @@ export default function AdminNotificationBell() {
                         <Plus className="h-3 w-3" /> Generate 20 Now
                       </button>
                     )}
-                  </div>
+                  </div>}
                 </div>
               ))
             ) : (
               <div className="p-8 text-center text-slate-400">
                 <Bell className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                <p className="text-xs font-semibold">No scramble pool warnings.</p>
+                <p className="text-xs font-semibold">No new notifications.</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   SignalR alerts broadcast automatically when MANUAL mode runs low on scrambles.
                 </p>

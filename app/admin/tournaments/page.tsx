@@ -124,6 +124,8 @@ export default function AdminTournamentsPage() {
         return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-700 border border-emerald-200">Đang Mở Đăng Ký</span>;
       case 'REGISTRATION_CLOSED':
         return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-700 border border-amber-200">Đóng Đăng Ký</span>;
+      case 'CHECKING_IN':
+        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-cyan-100 text-cyan-700 border border-cyan-200">Đang Check-in</span>;
       case 'ONGOING':
         return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-100 text-purple-700 border border-purple-200">Đang Diễn Ra</span>;
       case 'COMPLETED':
@@ -210,6 +212,7 @@ export default function AdminTournamentsPage() {
           <option value="PUBLISHED">Đã Công Bố</option>
           <option value="REGISTRATION_OPEN">Đang Mở Đăng Ký</option>
           <option value="REGISTRATION_CLOSED">Đóng Đăng Ký</option>
+          <option value="CHECKING_IN">Đang Check-in</option>
           <option value="ONGOING">Đang Diễn Ra</option>
           <option value="COMPLETED">Hoàn Thành</option>
           <option value="DISABLED">Đang Vô Hiệu Hóa</option>

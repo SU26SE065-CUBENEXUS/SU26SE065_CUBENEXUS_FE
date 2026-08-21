@@ -116,8 +116,36 @@ export default function MatchmakingPage() {
         setAutoRequeuedNotice(true);
         startQueueRef.current?.();
       } else {
-        setStatus('COOLDOWN');
-        setErrorMsg('Bạn không xác nhận trận đấu đúng thời gian (60s) và tạm thời bị Cooldown.');
+        const serverNow = payload.serverNow ? parseUtc(payload.serverNow) : Date.now();
+        let myCooldownUntil: string | null = null;
+        
+        if (matchmakingInfo?.meUserId && payload.player1UserId && payload.player2UserId) {
+          myCooldownUntil = matchmakingInfo.meUserId === payload.player1UserId
+            ? payload.player1CooldownUntil
+            : payload.player2CooldownUntil;
+        } else {
+          myCooldownUntil = payload.cooldownUntil || payload.player1CooldownUntil || payload.player2CooldownUntil || null;
+        }
+
+        if (myCooldownUntil) {
+          const until = parseUtc(myCooldownUntil);
+          const diff = Math.max(0, Math.floor((until - serverNow) / 1000));
+          if (diff > 0) {
+            setStatus('COOLDOWN');
+            setMatchmakingInfo(prev => ({
+              ...(prev || { status: 'COOLDOWN' }),
+              status: 'COOLDOWN',
+              remainingSeconds: diff,
+            }));
+            setErrorMsg('Bạn không xác nhận trận đấu đúng thời gian (60s) và tạm thời bị Cooldown.');
+            return;
+          }
+        }
+
+        // If cooldown already expired or diff is 0, return to IDLE so user can re-queue directly
+        setStatus('IDLE');
+        setMatchmakingInfo(null);
+        setErrorMsg('Trận đấu đã hết hạn xác nhận. Vui lòng bấm ghép trận lại.');
       }
     },
     onMatchConfirmationCancelled: (payload) => {
@@ -138,7 +166,8 @@ export default function MatchmakingPage() {
       setStatus('COOLDOWN');
       if (payload.cooldownUntil) {
         const until = parseUtc(payload.cooldownUntil);
-        const diff = Math.max(0, Math.floor((until - Date.now()) / 1000));
+        const serverNow = payload.serverNow ? parseUtc(payload.serverNow) : Date.now();
+        const diff = Math.max(0, Math.floor((until - serverNow) / 1000));
         setMatchmakingInfo(prev => ({
           ...(prev || { status: 'COOLDOWN' }),
           status: 'COOLDOWN',
@@ -194,7 +223,7 @@ export default function MatchmakingPage() {
     };
   }, [isConnected]);
 
-  // Handle countdown timer
+  // Handle confirmation countdown timer
   useEffect(() => {
     if (status === 'MATCH_FOUND' || status === 'MATCH_CONFIRMING') {
       countdownIntervalRef.current = setInterval(() => {
@@ -213,6 +242,21 @@ export default function MatchmakingPage() {
         clearInterval(countdownIntervalRef.current);
       }
     };
+  }, [status]);
+
+  // Handle live cooldown countdown timer
+  useEffect(() => {
+    if (status === 'COOLDOWN') {
+      const interval = setInterval(() => {
+        setMatchmakingInfo(prev => {
+          if (!prev || prev.remainingSeconds === undefined) return prev;
+          const nextRemaining = Math.max(0, prev.remainingSeconds - 1);
+          return { ...prev, remainingSeconds: nextRemaining };
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
   }, [status]);
 
   // Cancel matchmaking
@@ -431,20 +475,34 @@ export default function MatchmakingPage() {
                 You have been temporarily suspended from the matchmaking queue for failing to confirm a match.
               </p>
             </div>
-            {matchmakingInfo?.remainingSeconds !== undefined && (
+            {matchmakingInfo?.remainingSeconds !== undefined && matchmakingInfo.remainingSeconds > 0 ? (
               <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex items-center justify-between">
                 <span className="text-muted-foreground text-xs">Remaining Cooldown</span>
                 <span className="text-lg font-black font-mono text-rose-500">
                   {matchmakingInfo.remainingSeconds}s
                 </span>
               </div>
+            ) : (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-xs font-bold text-emerald-500">
+                Cooldown period ended! You can search for a match again.
+              </div>
             )}
-            <button
-              onClick={() => router.push('/online')}
-              className="w-full bg-muted hover:bg-muted/80 text-foreground text-xs font-bold py-3.5 px-4 rounded-xl border border-border transition-all uppercase tracking-widest cursor-pointer"
-            >
-              Return to Lobby
-            </button>
+            <div className="space-y-2">
+              {(matchmakingInfo?.remainingSeconds === 0 || matchmakingInfo?.remainingSeconds === undefined) && (
+                <button
+                  onClick={startQueue}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-lg transition-all uppercase tracking-widest cursor-pointer"
+                >
+                  Find Match Again
+                </button>
+              )}
+              <button
+                onClick={() => router.push('/online')}
+                className="w-full bg-card hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-bold py-3.5 px-4 rounded-xl border border-border transition-all uppercase tracking-widest cursor-pointer"
+              >
+                Return to Lobby
+              </button>
+            </div>
           </div>
         )}
 

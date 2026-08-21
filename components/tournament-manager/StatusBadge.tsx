@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
   ongoing: 'In Progress',
   completed: 'Completed',
   cancelled: 'Cancelled',
+  disabled: 'Disabled',
   // Registration
   pending: 'Pending',
   approved: 'Approved',
@@ -53,6 +54,7 @@ const VARIANT_STYLES: Record<string, string> = {
   ongoing: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   completed: 'bg-slate-100 text-slate-600 border-slate-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
+  disabled: 'bg-rose-100 text-rose-700 border-rose-200',
   // Registration (BE codes)
   pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   approved: 'bg-emerald-100 text-emerald-700 border-emerald-200',

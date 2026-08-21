@@ -15,7 +15,9 @@ import {
   Radio,
   ArrowRight,
   AlertTriangle,
+  Power,
 } from 'lucide-react';
+import { updateAdminTournamentStatus } from '@/features/admin/api/adminTournamentApi';
 
 export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
   if (t.isOnlineAsync) return false;
@@ -42,6 +44,7 @@ export default function OfflineTournamentManagerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const fetchOfflineTournaments = useCallback(async () => {
     setIsLoading(true);
@@ -80,6 +83,24 @@ export default function OfflineTournamentManagerPage() {
   useEffect(() => {
     fetchOfflineTournaments();
   }, [fetchOfflineTournaments]);
+
+  const handleDisable = async (tourney: TournamentDetailDto) => {
+    const status = (tourney.statusCode || '').toUpperCase();
+    const canDisable = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'REGISTRATION_CLOSED'].includes(status);
+    if (!canDisable) return;
+    if (!window.confirm(`Disable offline tournament "${tourney.name}"?`)) return;
+
+    setActionLoadingId(tourney.id);
+    setError(null);
+    try {
+      await updateAdminTournamentStatus(tourney.id, 'DISABLED');
+      await fetchOfflineTournaments();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to disable offline tournament.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 text-left">
@@ -176,6 +197,8 @@ export default function OfflineTournamentManagerPage() {
               const statusUpper = (tourney.statusCode || '').toUpperCase();
               const isOngoing = statusUpper === 'ONGOING';
               const isRegOpen = statusUpper === 'REGISTRATION_OPEN';
+              const canDisable = ['DRAFT', 'PUBLISHED', 'REGISTRATION_OPEN', 'REGISTRATION_CLOSED'].includes(statusUpper);
+              const isActionLoading = actionLoadingId === tourney.id;
 
               return (
                 <div
@@ -235,6 +258,17 @@ export default function OfflineTournamentManagerPage() {
                     >
                       Details <ArrowRight className="h-3.5 w-3.5" />
                     </button>
+                    {canDisable && (
+                      <button
+                        onClick={() => void handleDisable(tourney)}
+                        disabled={isActionLoading}
+                        className="inline-flex items-center justify-center gap-1 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 px-3 py-2.5 text-xs font-extrabold transition cursor-pointer disabled:opacity-50"
+                        title="Disable offline tournament"
+                      >
+                        <Power className={`h-3.5 w-3.5 ${isActionLoading ? 'animate-pulse' : ''}`} />
+                        Disable
+                      </button>
+                    )}
                   </div>
                 </div>
               );

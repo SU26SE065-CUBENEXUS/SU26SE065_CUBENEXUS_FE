@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@/lib/toast';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import { StatusBadge } from './StatusBadge';
-import { Play, Lock, Video, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus, Send } from 'lucide-react';
+import { Play, Lock, Video, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus, Send, Power } from 'lucide-react';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
@@ -33,6 +33,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
   const [targetTourToStart, setTargetTourToStart] = useState<TournamentDetailDto | null>(null);
   const [targetTourToComplete, setTargetTourToComplete] = useState<TournamentDetailDto | null>(null);
   const [targetTourToCheckIn, setTargetTourToCheckIn] = useState<TournamentDetailDto | null>(null);
+  const [targetTourToDisable, setTargetTourToDisable] = useState<TournamentDetailDto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -163,6 +164,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
   // Execute Force Start Tournament with fallback & exact error reporting
   const executeForceStart = async () => {
     if (!targetTourToStart) return;
+    if (!targetTourToStart.isOnlineAsync) {
+      setErrorMessage('Force Start is available only for Online Async tournaments.');
+      setTargetTourToStart(null);
+      return;
+    }
     setIsProcessing(true);
     setErrorMessage(null);
     try {
@@ -194,6 +200,28 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
       setErrorMessage(`Backend Error: ${lastErr?.message || 'Failed to force start tournament.'}`);
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to force start tournament.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const executeDisableTournament = async () => {
+    if (!targetTourToDisable) return;
+    if (targetTourToDisable.isOnlineAsync) {
+      setErrorMessage('Only Offline tournaments can be disabled from this workflow.');
+      setTargetTourToDisable(null);
+      return;
+    }
+    setIsProcessing(true);
+    setErrorMessage(null);
+    try {
+      const { updateAdminTournamentStatus } = await import('@/features/admin/api/adminTournamentApi');
+      await updateAdminTournamentStatus(targetTourToDisable.id, 'DISABLED');
+      setTargetTourToDisable(null);
+      if (onRefresh) onRefresh();
+      else window.location.reload();
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to disable tournament.');
     } finally {
       setIsProcessing(false);
     }
@@ -298,10 +326,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 // Check-in (Offline tournaments only when registration closed)
                 const canOpenCheckIn = !t.isOnlineAsync && st === 'REGISTRATION_CLOSED';
 
-                // Force Start:
-                const canForceStart = t.isOnlineAsync
-                  ? (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT')
-                  : (st === 'CHECKING_IN');
+                // Force Start belongs exclusively to the Online Async workflow.
+                const canForceStart = t.isOnlineAsync &&
+                  (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT');
+                const canDisable = !t.isOnlineAsync &&
+                  (st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED');
 
                 const canComplete = isOngoing || (!t.isOnlineAsync && st === 'CHECKING_IN');
 
@@ -449,6 +478,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           </button>
                         )}
 
+                        {canDisable && (
+                          <button
+                            onClick={() => {
+                              setErrorMessage(null);
+                              setTargetTourToDisable(t);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs transition cursor-pointer"
+                            title="Disable offline tournament"
+                          >
+                            <Power className="h-3.5 w-3.5" /> Disable
+                          </button>
+                        )}
+
                         {/* Open Check-in (Offline only) */}
                         {canOpenCheckIn && (
                           <button
@@ -528,10 +570,11 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
           // Check-in (Offline only)
           const canOpenCheckIn = !t.isOnlineAsync && st === 'REGISTRATION_CLOSED';
 
-          // Force Start:
-          const canForceStart = t.isOnlineAsync
-            ? (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT')
-            : (st === 'CHECKING_IN');
+          // Force Start belongs exclusively to the Online Async workflow.
+          const canForceStart = t.isOnlineAsync &&
+            (st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED' || st === 'PUBLISHED' || st === 'DRAFT');
+          const canDisable = !t.isOnlineAsync &&
+            (st === 'DRAFT' || st === 'PUBLISHED' || st === 'REGISTRATION_OPEN' || st === 'REGISTRATION_CLOSED');
 
           const canComplete = isOngoing || (!t.isOnlineAsync && st === 'CHECKING_IN');
 
@@ -662,6 +705,19 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                   </button>
                 )}
 
+                {canDisable && (
+                  <button
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setTargetTourToDisable(t);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-[10px] transition cursor-pointer"
+                    title="Disable offline tournament"
+                  >
+                    <Power className="h-3 w-3" /> Disable
+                  </button>
+                )}
+
                 {/* Open Check-in (Offline only) */}
                 {canOpenCheckIn && (
                   <button
@@ -740,6 +796,28 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
         onClose={() => {
           if (!isProcessing) {
             setTargetTourToPublish(null);
+            setErrorMessage(null);
+          }
+        }}
+      />
+
+      {/* Confirmation Modal for disabling an Offline tournament */}
+      <ConfirmModal
+        isOpen={Boolean(targetTourToDisable)}
+        title="Disable Offline Tournament"
+        description={
+          errorMessage
+            ? errorMessage
+            : `Are you sure you want to disable "${targetTourToDisable?.name}"? This action is available only before check-in starts.`
+        }
+        confirmText="Disable Tournament"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isProcessing}
+        onConfirm={executeDisableTournament}
+        onClose={() => {
+          if (!isProcessing) {
+            setTargetTourToDisable(null);
             setErrorMessage(null);
           }
         }}
