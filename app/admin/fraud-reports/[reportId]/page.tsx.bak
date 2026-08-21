@@ -1,6 +1,5 @@
 'use client';
 
-import { AiCheckTimelineAnalysis } from '@/components/admin/AiCheckTimelineAnalysis';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -33,7 +32,7 @@ import { SplitScreenReplayPlayer } from '@/features/online-arena/components/Spli
 export default function AdminFraudReportReviewDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const reportId = (params?.reportId || params?.id || '') as string;
+  const reportId = params?.reportId as string;
 
   const [detail, setDetail] = useState<FraudReportDetailDto | null>(null);
   const [playbackData, setPlaybackData] = useState<PlaybackResponseDto | null>(null);
@@ -44,43 +43,6 @@ export default function AdminFraudReportReviewDetailPage() {
   // Verdict action state
   const [selectedVerdict, setSelectedVerdict] = useState<'GUILTY' | 'INNOCENT' | 'INCONCLUSIVE'>('GUILTY');
   const [adminComment, setAdminComment] = useState<string>('');
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [attachedEvidences, setAttachedEvidences] = useState<{ title: string; time: string; snapshotUrl?: string; details: string }[]>([]);
-
-  const handleAttachEvidence = (v: any) => {
-    if (!attachedEvidences.some(e => e.time === `${v.start_time} - ${v.end_time}` && e.title === v.title)) {
-      setAttachedEvidences(prev => [...prev, {
-        title: v.title,
-        time: `${v.start_time} - ${v.end_time}`,
-        snapshotUrl: v.snapshot_url,
-        details: v.details
-      }]);
-
-      setAdminComment(prev => {
-        const entry = `[${v.start_time} - ${v.end_time}] ${v.title}: ${v.details}${v.snapshot_url ? ` (Ảnh: ${v.snapshot_url})` : ''}`;
-        if (prev.includes(v.title) && prev.includes(v.start_time)) return prev;
-        return prev ? `${prev}\n• ${entry}` : `• ${entry}`;
-      });
-    }
-  };
-
-  const handleAutoFillVerdict = (result: any, playerName: string) => {
-    if (result.has_violations) {
-      setSelectedVerdict('GUILTY');
-      const summaryLines = result.violations.map((v: any) => `• [${v.start_time} - ${v.end_time}] ${v.title}: ${v.details}${v.snapshot_url ? ` (Ảnh: ${v.snapshot_url})` : ''}`);
-      setAdminComment(`AI Phân tích phát hiện ${result.total_violations} lỗi vi phạm của ${playerName} (Độ tin cậy: ${result.confidence_score}%):\n${summaryLines.join('\n')}\n=> Kết luận: Trọng tài xác nhận vi phạm và áp dụng xử phạt theo quy chế.`);
-
-      setAttachedEvidences(result.violations.map((v: any) => ({
-        title: v.title,
-        time: `${v.start_time} - ${v.end_time}`,
-        snapshotUrl: v.snapshot_url,
-        details: v.details
-      })));
-    } else {
-      setSelectedVerdict('INNOCENT');
-      setAdminComment(`AI Phân tích không phát hiện hành vi gian lận nào của ${playerName} trong phạm vi kiểm tra. Video hợp lệ.\n=> Kết luận: Bác bỏ khiếu nại.`);
-    }
-  };
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [verdictSuccess, setVerdictSuccess] = useState<string | null>(null);
 
@@ -114,32 +76,6 @@ export default function AdminFraudReportReviewDetailPage() {
   useEffect(() => {
     fetchDetail();
   }, [reportId]);
-
-  // Hàm trích xuất toàn bộ link ảnh trong văn bản ghi chú để hiển thị gallery trực quan
-  const extractImageUrls = (text?: string): string[] => {
-    if (!text) return [];
-    const urlRegex = /(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|webp|gif))/gi;
-    const matches = text.match(urlRegex) || [];
-    return Array.from(new Set(matches));
-  };
-
-  const parseSmartSeconds = (text?: string, existingSec?: number): number => {
-    if (existingSec !== undefined && existingSec > 0) return existingSec;
-    if (!text || !text.trim()) return 0;
-    const raw = text.trim().toLowerCase();
-    if (raw.includes(':')) {
-      const parts = raw.split(':').map(p => parseInt(p.trim(), 10) || 0);
-      if (parts.length === 2) return parts[0] * 60 + parts[1];
-    }
-    const minMatch = raw.match(/(\d+)\s*(?:phút|phut|p|m|min)/);
-    const secMatch = raw.match(/(\d+)\s*(?:giây|giay|s|sec)/);
-    let total = 0;
-    if (minMatch) total += parseInt(minMatch[1], 10) * 60;
-    if (secMatch) total += parseInt(secMatch[1], 10);
-    if (minMatch || secMatch) return total;
-    const num = parseInt(raw.replace(/\D/g, ''), 10);
-    return isNaN(num) ? 0 : num;
-  };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,12 +157,13 @@ export default function AdminFraudReportReviewDetailPage() {
         {/* Report Status Badge */}
         <div className="flex items-center gap-3">
           <div
-            className={`px-4 py-2 rounded-xl border text-xs font-extrabold uppercase tracking-wider ${isResolved
-              ? report.verdictCode === 'GUILTY'
-                ? 'bg-rose-50 text-rose-700 border-rose-200'
-                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-amber-50 text-amber-700 border-amber-200'
-              }`}
+            className={`px-4 py-2 rounded-xl border text-xs font-extrabold uppercase tracking-wider ${
+              isResolved
+                ? report.verdictCode === 'GUILTY'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200'
+            }`}
           >
             Trạng thái: {report.statusCode} {report.verdictCode ? `(${report.verdictCode})` : ''}
           </div>
@@ -291,32 +228,14 @@ export default function AdminFraudReportReviewDetailPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 space-y-1.5 shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">Người báo cáo (Reporter)</span>
-                  <span className="px-2 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-bold">
-                    {report.reporterUserId === match.player1Id ? 'PLAYER 1' : report.reporterUserId === match.player2Id ? 'PLAYER 2' : 'USER'}
-                  </span>
-                </div>
-                <p className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                  <span>{report.reporterUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reporterUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Người chơi'}</span>
-                </p>
-                <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reporterUserId}>ID: {report.reporterUserId}</p>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Người báo cáo (Reporter)</span>
+                <p className="font-mono font-bold text-emerald-700">{report.reporterUserId}</p>
               </div>
-
-              <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200 space-y-1.5 shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wider">Người bị tố cáo (Reported)</span>
-                  <span className="px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold animate-pulse">
-                    {report.reportedUserId === match.player1Id ? 'PLAYER 1' : report.reportedUserId === match.player2Id ? 'PLAYER 2' : 'USER'}
-                  </span>
-                </div>
-                <p className="text-xs font-bold text-rose-900 flex items-center gap-1">
-                  <span>{report.reportedUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reportedUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Người chơi'}</span>
-                  <span className="text-[10px] text-rose-600 font-semibold">(Bị tố cáo)</span>
-                </p>
-                <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reportedUserId}>ID: {report.reportedUserId}</p>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Người bị báo cáo (Reported)</span>
+                <p className="font-mono font-bold text-rose-700">{report.reportedUserId}</p>
               </div>
             </div>
 
@@ -356,42 +275,73 @@ export default function AdminFraudReportReviewDetailPage() {
         {/* Right Column (5 cols): AI Checks, Audit Trail & Verdict Actions */}
         <div className="lg:col-span-5 flex flex-col space-y-6">
           {/* AI Check Timeline Card */}
-          <AiCheckTimelineAnalysis
-            reportId={report.id}
-            videoUrl={
-              report.reportedUserId === match.player1Id
-                ? (p1Record?.playbackUrl || '')
-                : (p2Record?.playbackUrl || '')
-            }
-            targetPlayerName={
-              report.reportedUserId === match.player1Id
-                ? `${match.player1Name || 'Player 1'} (Người bị tố cáo)`
-                : `${match.player2Name || 'Player 2'} (Người bị tố cáo)`
-            }
-            player1VideoUrl={p1Record?.playbackUrl || ''}
-            player2VideoUrl={p2Record?.playbackUrl || ''}
-            player1Name={match.player1Name || 'Player 1'}
-            player2Name={match.player2Name || 'Player 2'}
-            defaultTarget={report.reportedUserId === match.player1Id ? 'player1' : 'player2'}
-            timestampSeconds={parseSmartSeconds(report.timestampText, report.timestampSeconds) || 75}
-            timestampText={report.timestampText || '01:15'}
-            onSeekVideo={(sec) => {
-              const videoTags = document.querySelectorAll('video');
-              videoTags.forEach(v => {
-                v.currentTime = sec;
-                v.play().catch(() => { });
-              });
-            }}
-            onAttachEvidence={handleAttachEvidence}
-            onAutoFillVerdict={handleAutoFillVerdict}
-          />
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-2xs">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-700 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-amber-600" /> AI Check Timeline Analysis
+            </h3>
+            {aiChecks && aiChecks.length > 0 ? (
+              <div className="space-y-2">
+                {aiChecks.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-slate-900 uppercase">{item.checkType}</span>
+                      <span className="text-[10px] text-slate-500 block">Model: {item.modelVersion || 'yolov8'}</span>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`font-mono font-bold uppercase text-[10px] px-2 py-0.5 rounded-md ${
+                          item.status === 'PASSED'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                      {item.confidence && (
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          {Math.round(item.confidence * 100)}% Conf
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 font-medium">Chưa có bản ghi AI Check cho trận đấu này.</p>
+            )}
+          </div>
 
           {/* Audit Logs Timeline Card */}
-                    {/* Card 2: Phán Quyết Của Trọng Tài */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xs">
-            <div className="border-b border-slate-100 pb-3 space-y-1">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2 font-mono">
-                <ShieldAlert className="h-4 w-4 text-indigo-600" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 shadow-2xs max-h-60 overflow-y-auto">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-indigo-600" /> System Audit Logs
+            </h3>
+            {auditLogs && auditLogs.length > 0 ? (
+              <div className="space-y-2 divide-y divide-slate-100 text-xs font-mono">
+                {auditLogs.map((log, idx) => (
+                  <div key={idx} className="pt-2 flex items-start justify-between text-[11px]">
+                    <div>
+                      <span className="font-bold text-indigo-600">{log.eventType}</span>
+                      <span className="text-slate-400 block text-[10px]">
+                        {new Date(log.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Chưa có audit log.</p>
+            )}
+          </div>
+
+          {/* Admin Verdict Panel */}
+          <div className="bg-white border border-indigo-200 rounded-2xl p-6 space-y-5 shadow-sm">
+            <div className="space-y-1">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <ShieldAlert className="h-5 w-5 text-indigo-600" />
                 <span>Phán Quyết Trọng Tài (Admin Verdict)</span>
               </h3>
               <p className="text-xs text-slate-500">
@@ -399,53 +349,7 @@ export default function AdminFraudReportReviewDetailPage() {
               </p>
             </div>
 
-            {isResolved ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phán quyết đã chốt:</span>
-                    <span className={`px-3 py-1 rounded-lg font-black text-xs uppercase font-mono tracking-wider ${
-                      report.verdictCode === 'GUILTY'
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
-                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs'
-                    }`}>
-                      {report.verdictCode || 'RESOLVED'}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Ghi chú của Trọng tài:</span>
-                    <p className="text-xs text-slate-800 leading-relaxed font-medium bg-white p-3 rounded-lg border border-slate-200 whitespace-pre-wrap">
-                      {report.adminNote || 'Không có ghi chú thêm.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tự động nhận diện và hiển thị ảnh bằng chứng trực quan cho người xem */}
-                {extractImageUrls(report.adminNote).length > 0 && (
-                  <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
-                    <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-                      📸 Ảnh Bằng Chứng Được Đính Kèm ({extractImageUrls(report.adminNote).length})
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {extractImageUrls(report.adminNote).map((imgUrl, i) => (
-                        <div
-                          key={i}
-                          onClick={() => setPreviewImage(imgUrl)}
-                          className="group relative h-20 bg-black rounded-lg overflow-hidden border border-slate-200 shadow-2xs cursor-pointer"
-                          title="Nhấp để xem ảnh lớn"
-                        >
-                          <img src={imgUrl} alt="Evidence" className="w-full h-full object-cover group-hover:scale-105 transition" />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1">
-                            <Eye className="h-3.5 w-3.5" /> Xem Ảnh
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : verdictSuccess ? (
+            {verdictSuccess ? (
               <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
                 <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto" />
                 <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">{verdictSuccess}</p>
@@ -503,56 +407,10 @@ export default function AdminFraudReportReviewDetailPage() {
                   </button>
                 </div>
 
-                {/* Bằng chứng AI đã đính kèm vào Phán quyết */}
-                {attachedEvidences.length > 0 && (
-                  <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-                        📸 Bằng Chứng AI Đã Đính Kèm ({attachedEvidences.length})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setAttachedEvidences([])}
-                        className="text-[10px] text-slate-400 hover:text-rose-600 font-bold transition cursor-pointer"
-                      >
-                        Xóa tất cả
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {attachedEvidences.map((att, idx) => (
-                        <div key={idx} className="relative group bg-white border border-slate-200 rounded-lg p-1.5 shadow-2xs space-y-1">
-                          {att.snapshotUrl ? (
-                            <a href={att.snapshotUrl} target="_blank" rel="noreferrer" className="block relative h-16 rounded overflow-hidden bg-black">
-                              <img src={att.snapshotUrl} alt="Evidence" className="w-full h-full object-cover group-hover:scale-105 transition" />
-                              <span className="absolute bottom-0.5 left-0.5 px-1 py-0.2 bg-black/70 text-[9px] font-mono text-white rounded">
-                                {att.time}
-                              </span>
-                            </a>
-                          ) : (
-                            <div className="h-16 rounded bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-mono">
-                              {att.time}
-                            </div>
-                          )}
-                          <p className="text-[10px] font-bold text-slate-800 truncate" title={att.title}>{att.title}</p>
-                          <button
-                            type="button"
-                            onClick={() => setAttachedEvidences(prev => prev.filter((_, i) => i !== idx))}
-                            className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow hover:bg-rose-600 transition cursor-pointer"
-                            title="Gỡ ảnh này"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Admin Comment Textarea */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Ghi chú Admin (Admin Comment)
+                    Ghi chú Trọng tài (Admin Comment)
                   </label>
                   <textarea
                     rows={3}
@@ -584,49 +442,6 @@ export default function AdminFraudReportReviewDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* MODAL PHÓNG TO ẢNH BẰNG CHỨNG CHO NGƯỜI XEM */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div
-            className="relative max-w-2xl w-full bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 font-mono flex items-center gap-1.5">
-                <span>📸</span> Ảnh Bằng Chứng Vi Phạm (AI Evidence)
-              </h4>
-              <div className="flex items-center gap-3">
-                <a
-                  href={previewImage}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở ảnh gốc
-                </a>
-                <button
-                  onClick={() => setPreviewImage(null)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center p-1">
-              <img
-                src={previewImage}
-                alt="Evidence Full"
-                className="w-full max-h-[70vh] object-contain mx-auto rounded-lg"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

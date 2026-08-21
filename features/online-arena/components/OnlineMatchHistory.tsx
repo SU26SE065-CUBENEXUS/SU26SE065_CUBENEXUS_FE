@@ -20,7 +20,7 @@ import {
   ShieldAlert,
   ArrowLeft,
 } from 'lucide-react';
-import { getMyMatchHistory, OnlineMatchHistoryItemDto } from '../api/onlineArenaApi';
+import { getMyMatchHistory, getMyProfiles, OnlineMatchHistoryItemDto } from '../api/onlineArenaApi';
 import { MatchDetailModal } from './MatchDetailModal';
 
 export function OnlineMatchHistory() {
@@ -34,13 +34,24 @@ export function OnlineMatchHistory() {
   const [filterResult, setFilterResult] = useState<'ALL' | 'VICTORY' | 'DEFEAT'>('ALL');
   const [selectedMatch, setSelectedMatch] = useState<OnlineMatchHistoryItemDto | null>(null);
 
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
+
   const fetchHistory = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await getMyMatchHistory(undefined, page, 15);
-      setMatches(res.matches || []);
-      setTotalCount(res.totalCount || 0);
+      const [historyRes, profilesRes] = await Promise.allSettled([
+        getMyMatchHistory(undefined, page, 15),
+        getMyProfiles(),
+      ]);
+
+      if (historyRes.status === 'fulfilled') {
+        setMatches(historyRes.value.matches || []);
+        setTotalCount(historyRes.value.totalCount || 0);
+      }
+      if (profilesRes.status === 'fulfilled' && Array.isArray(profilesRes.value) && profilesRes.value.length > 0) {
+        setCurrentProfile(profilesRes.value[0]);
+      }
     } catch (err: any) {
       console.error('[MatchHistory] Fetch failed:', err);
       setError(err?.message || 'Failed to load match history.');
@@ -60,10 +71,13 @@ export function OnlineMatchHistory() {
     return true;
   });
 
-  // Calculate summary stats
-  const totalWins = matches.filter((m) => m.isWinner).length;
-  const winRate = matches.length > 0 ? Math.round((totalWins / matches.length) * 100) : 0;
-  const latestElo = matches[0]?.meEloAfter ?? matches[0]?.meEloBefore ?? 1000;
+  // Calculate summary stats with Real Live Profile from DB
+  const currentElo = currentProfile?.elo ?? matches[0]?.meEloAfter ?? matches[0]?.meEloBefore ?? 1000;
+  const totalWins = currentProfile?.totalWins ?? matches.filter((m) => m.isWinner).length;
+  const totalGames = (currentProfile?.totalWins !== undefined && currentProfile?.totalLosses !== undefined)
+    ? (currentProfile.totalWins + currentProfile.totalLosses + (currentProfile.totalDraws || 0))
+    : totalCount || matches.length;
+  const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : (matches.length > 0 ? Math.round((matches.filter(m => m.isWinner).length / matches.length) * 100) : 0);
 
   const formatSolveTime = (ms?: number, isDnf?: boolean) => {
     if (isDnf) return 'DNF';
@@ -120,7 +134,7 @@ export function OnlineMatchHistory() {
             <div className="px-4 py-2 text-center">
               <span className="text-[10px] font-bold text-muted-foreground uppercase block">Current ELO</span>
               <span className="text-xl font-black text-amber-500 font-mono flex items-center justify-center gap-1">
-                <Zap className="h-4 w-4 fill-amber-500 text-amber-500" /> {latestElo}
+                <Zap className="h-4 w-4 fill-amber-500 text-amber-500" /> {currentElo}
               </span>
             </div>
           </div>

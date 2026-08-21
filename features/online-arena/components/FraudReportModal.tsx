@@ -37,14 +37,58 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
 
   if (!isOpen || !mounted) return null;
 
-  const parseTimestampSeconds = (text: string): number => {
-    const parts = text.split(':');
-    if (parts.length === 2) {
-      const min = parseInt(parts[0], 10) || 0;
-      const sec = parseInt(parts[1], 10) || 0;
-      return min * 60 + sec;
+    const parseTimestampSeconds = (text: string): { seconds: number; formatted: string } => {
+    if (!text || !text.trim()) return { seconds: 0, formatted: '00:00' };
+    const raw = text.trim().toLowerCase();
+
+    // 1. Dạng MM:SS hoặc HH:MM:SS (01:15, 1:15, 0:45)
+    if (raw.includes(':')) {
+      const parts = raw.split(':').map((p) => parseInt(p.trim(), 10) || 0);
+      if (parts.length === 2) {
+        const sec = parts[0] * 60 + parts[1];
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return { seconds: sec, formatted: `${m}:${s}` };
+      }
+      if (parts.length === 3) {
+        const sec = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return { seconds: sec, formatted: `${m}:${s}` };
+      }
     }
-    return parseInt(text, 10) || 0;
+
+    // 2. Dạng tự nhiên (1 phút 15 giây, 1p 15s, 1m15s, 75 giây, 75s)
+    const minMatch = raw.match(/(\d+)\s*(?:phút|phut|p|m|min)/);
+    const secMatch = raw.match(/(\d+)\s*(?:giây|giay|s|sec)/);
+
+    let totalSec = 0;
+    let hasMatch = false;
+
+    if (minMatch) {
+      totalSec += parseInt(minMatch[1], 10) * 60;
+      hasMatch = true;
+    }
+    if (secMatch) {
+      totalSec += parseInt(secMatch[1], 10);
+      hasMatch = true;
+    }
+
+    if (hasMatch) {
+      const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+      const s = (totalSec % 60).toString().padStart(2, '0');
+      return { seconds: totalSec, formatted: `${m}:${s}` };
+    }
+
+    // 3. Chỉ nhập số đơn thuần (ví dụ: 75 hoặc 90)
+    const num = parseInt(raw.replace(/\D/g, ''), 10);
+    if (!isNaN(num) && num > 0) {
+      const m = Math.floor(num / 60).toString().padStart(2, '0');
+      const s = (num % 60).toString().padStart(2, '0');
+      return { seconds: num, formatted: `${m}:${s}` };
+    }
+
+    return { seconds: 0, formatted: '00:00' };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,11 +101,11 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
     setIsSubmitting(true);
     setError(null);
 
-    const seconds = parseTimestampSeconds(timestampText);
+    const parsed = parseTimestampSeconds(timestampText);
     const payload: CreateFraudReportPayload = {
       fraudType,
-      timestampText,
-      timestampSeconds: seconds,
+      timestampText: parsed.formatted,
+      timestampSeconds: parsed.seconds,
       description: description.trim(),
     };
 
@@ -150,12 +194,20 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 <Clock className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="01:15"
+                  placeholder="01:15 hoặc 1 phút 15 giây"
                   value={timestampText}
                   onChange={(e) => setTimestampText(e.target.value)}
                   className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                 />
               </div>
+              {timestampText.trim() && (
+                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono pt-0.5">
+                  <span>⏱️ Quy đổi chuẩn:</span>
+                  <span className="font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                    {parseTimestampSeconds(timestampText).formatted} ({parseTimestampSeconds(timestampText).seconds} giây)
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 3. Description */}
