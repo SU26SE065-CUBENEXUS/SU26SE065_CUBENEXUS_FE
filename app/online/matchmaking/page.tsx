@@ -21,6 +21,7 @@ export default function MatchmakingPage() {
   const [hasConfirmed, setHasConfirmed] = useState(false);
   const hasConfirmedRef = useRef(false);
   const [myElo, setMyElo] = useState<number | null>(null);
+  const [myDisplayName, setMyDisplayName] = useState<string>('');
   const [autoRequeuedNotice, setAutoRequeuedNotice] = useState<boolean>(false);
 
   useEffect(() => {
@@ -45,8 +46,10 @@ export default function MatchmakingPage() {
           if (!profiles || profiles.length === 0) {
             const newProfile = await initProfile(DEFAULT_PUZZLE_TYPE_ID);
             setMyElo(newProfile.elo);
+            setMyDisplayName(newProfile.displayName || '');
           } else {
             setMyElo(profiles[0].elo);
+            setMyDisplayName(profiles[0].displayName || '');
           }
         }
       } catch (err) {
@@ -329,13 +332,15 @@ export default function MatchmakingPage() {
               {/* Background gradient hints */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 pointer-events-none" />
 
-              {/* Player 1 (You) */}
+              {/* Player 1 (Me) */}
               <div className="flex-1 flex flex-col items-center text-center space-y-2.5 relative">
                 <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-md">
                   <User className="h-6 w-6" />
                 </div>
                 <div>
-                  <span className="block text-xs font-black text-foreground uppercase tracking-wider">You</span>
+                  <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
+                    {myDisplayName || 'You'}
+                  </span>
                   <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
                     {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1,500 ELO'}
                   </span>
@@ -364,15 +369,20 @@ export default function MatchmakingPage() {
                     {matchmakingInfo.opponent?.displayName || 'Opponent'}
                   </span>
                   <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
-                    {matchmakingInfo.opponent?.rating || '1,500'} ELO
+                    {matchmakingInfo.opponent?.rating != null
+                      ? `${Number(matchmakingInfo.opponent.rating).toLocaleString()} ELO`
+                      : '— ELO'}
                   </span>
                 </div>
-                {matchmakingInfo.player2Confirmed && (
+                {/* Backend always sets Player1=opponent (was QUEUED), Player2=current user.
+                    So opponent's confirmed state = player1Confirmed. */}
+                {matchmakingInfo.player1Confirmed && (
                   <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
                     <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
                   </div>
                 )}
               </div>
+
             </div>
 
             {/* Countdown bar */}

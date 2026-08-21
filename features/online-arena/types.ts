@@ -142,6 +142,9 @@ export interface OpponentDto {
 
 export interface MatchmakingStatusDto {
   status: 'IDLE' | 'QUEUED' | 'MATCH_FOUND' | 'MATCH_CONFIRMING' | 'MATCHED' | 'COOLDOWN' | 'IN_ACTIVE_MATCH';
+  /** The current user's ID — tells the frontend which player slot (player1 or player2) they occupy */
+  meUserId?: string;
+  queueId?: string;
   confirmationId?: string;
   opponent?: OpponentDto;
   confirmDeadlineAt?: string;
@@ -150,4 +153,10 @@ export interface MatchmakingStatusDto {
   remainingSeconds?: number;
   serverNow?: string;
   matchId?: string;
+  matchStatus?: string;
+  roomToken?: string;
+  qrSessionCode?: string;
+  opponentUserId?: string;
+  setupDeadlineAt?: string;
+  cooldownUntil?: string;
 }

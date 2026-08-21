@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,6 +25,8 @@ import {
   Video,
   Database,
 } from 'lucide-react';
+
+import AdminNotificationBell from '@/features/admin/components/AdminNotificationBell';
 
 export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
   if (t.isOnlineAsync || (t as any).tournamentType === 'ONLINE_ASYNC') return false;
@@ -371,12 +373,14 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
         )}
       </div>
 
-      {/* Right: Profile */}
-      <div
-        className="relative"
-        onMouseEnter={() => setIsDropdownOpen(true)}
-        onMouseLeave={() => setIsDropdownOpen(false)}
-      >
+      {/* Right: Actions & Profile */}
+      <div className="flex items-center gap-3">
+        {user?.role?.toUpperCase() === 'ADMIN' && <AdminNotificationBell />}
+        <div
+          className="relative"
+          onMouseEnter={() => setIsDropdownOpen(true)}
+          onMouseLeave={() => setIsDropdownOpen(false)}
+        >
         <button
           className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-2xs cursor-pointer"
         >
@@ -445,6 +449,7 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
             </div>
           </div>
         )}
+        </div>
       </div>
     </header>
   );
@@ -469,57 +474,84 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   }, [isLoading, isAuthenticated, router]);
 
   // Fetch real tournaments list for switcher (Offline Only, No Mock Data)
-  useEffect(() => {
-    if (isAuthenticated) {
-      (async () => {
-        try {
-          const publicList = await getPublicTournaments().catch(() => []);
+  const fetchTournamentsList = useCallback(async (preferredId?: string | null) => {
+    if (!isAuthenticated) return;
+    try {
+      const publicList = await getPublicTournaments().catch(() => []);
 
-          // Load local draft tournaments created by Manager in this session
-          const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
-          const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
-          const localDrafts: TournamentDetailDto[] = [];
+      // Load local draft tournaments created by Manager in this session
+      const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
+      const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
+      const localDrafts: TournamentDetailDto[] = [];
 
-          for (const id of storedDrafts) {
-            if (!publicList.some((t) => t.id === id)) {
-              try {
-                const draft = await getTournamentById(id);
-                if (isOfflineManagerTournament(draft)) {
-                  localDrafts.push(draft);
-                }
-              } catch {
-                // Ignore if draft deleted
-              }
+      for (const id of storedDrafts) {
+        if (!publicList.some((t) => t.id === id)) {
+          try {
+            const draft = await getTournamentById(id);
+            if (isOfflineManagerTournament(draft)) {
+              localDrafts.push(draft);
             }
+          } catch {
+            // Ignore if draft deleted
           }
+        }
+      }
 
-          const combined = [...localDrafts, ...publicList].filter(isOfflineManagerTournament);
-          setTournamentsList(combined);
+      const combined = [...localDrafts, ...publicList].filter(isOfflineManagerTournament);
+      setTournamentsList(combined);
 
-          const match = pathname.match(/^\/managertournaments\/([^/]+)/);
-          const activeId = match && match[1] !== 'layout' && match[1] !== 'page' && match[1] !== 'async' && match[1] !== 'offline' ? match[1] : null;
+      const targetId = preferredId || (typeof window !== 'undefined' ? localStorage.getItem('newly_created_tournament_id') : null);
+      if (typeof window !== 'undefined' && targetId) {
+        localStorage.removeItem('newly_created_tournament_id');
+      }
 
-          if (activeId && combined.some((t) => t.id === activeId)) {
-            setSelectedId(activeId);
-            localStorage.setItem('last_managed_tournament_id', activeId);
-          } else {
-            const stored = localStorage.getItem('last_managed_tournament_id');
-            if (stored && combined.some((t) => t.id === stored)) {
-              setSelectedId(stored);
-            } else if (combined.length > 0) {
-              setSelectedId(combined[0].id);
-              localStorage.setItem('last_managed_tournament_id', combined[0].id);
-            } else {
-              setSelectedId(null);
-            }
-          }
-        } catch {
-          setTournamentsList([]);
+      const match = pathname.match(/^\/managertournaments\/([^/]+)/);
+      const urlActiveId = match && match[1] !== 'layout' && match[1] !== 'page' && match[1] !== 'async' && match[1] !== 'offline' ? match[1] : null;
+
+      const activeId = targetId || urlActiveId;
+
+      if (activeId && combined.some((t) => t.id === activeId)) {
+        setSelectedId(activeId);
+        localStorage.setItem('last_managed_tournament_id', activeId);
+      } else {
+        const stored = localStorage.getItem('last_managed_tournament_id');
+        if (stored && combined.some((t) => t.id === stored)) {
+          setSelectedId(stored);
+        } else if (combined.length > 0) {
+          setSelectedId(combined[0].id);
+          localStorage.setItem('last_managed_tournament_id', combined[0].id);
+        } else {
           setSelectedId(null);
         }
-      })();
+      }
+    } catch {
+      setTournamentsList([]);
+      setSelectedId(null);
     }
   }, [isAuthenticated, pathname]);
+
+  useEffect(() => {
+    void fetchTournamentsList();
+
+    const handleCustomUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const newId = detail?.id || detail;
+      void fetchTournamentsList(typeof newId === 'string' ? newId : null);
+    };
+
+    const handleFocus = () => void fetchTournamentsList();
+    const handleStorage = () => void fetchTournamentsList();
+
+    window.addEventListener('tournament-list-updated', handleCustomUpdate);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('tournament-list-updated', handleCustomUpdate);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [fetchTournamentsList]);
 
   if (isLoading) {
     return (

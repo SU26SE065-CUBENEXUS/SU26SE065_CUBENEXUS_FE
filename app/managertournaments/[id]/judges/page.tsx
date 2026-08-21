@@ -540,64 +540,181 @@ export default function JudgeManagementPage({
         <>
           {/* Clean Modern Light Table (Desktop) */}
           <div className="hidden xl:block rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3.5 px-5 w-16 text-center">No.</th>
-                  <th className="py-3.5 px-5">Judge Name</th>
-                  <th className="py-3.5 px-5">Role & Station</th>
-                  <th className="py-3.5 px-5">Status</th>
-                  <th className="py-3.5 px-5">Username</th>
-                  <th className="py-3.5 px-5">Initial Password</th>
-                  <th className="py-3.5 px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredJudges.map((j, idx) => (
-                  <tr key={j.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-5 text-center font-mono font-bold text-slate-400 text-xs">
-                      {idx + 1}
-                    </td>
-                    <td className="py-3.5 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">
-                          {j.displayName.charAt(0).toUpperCase()}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th className="py-3.5 px-5 w-16 text-center">No.</th>
+                    <th className="py-3.5 px-5">Judge Name</th>
+                    <th className="py-3.5 px-5">Role & Station</th>
+                    <th className="py-3.5 px-5">Status</th>
+                    <th className="py-3.5 px-5">Username</th>
+                    <th className="py-3.5 px-5">Initial Password</th>
+                    <th className="py-3.5 px-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredJudges.map((j, idx) => (
+                    <tr key={j.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3.5 px-5 text-center font-mono font-bold text-slate-400 text-xs">
+                        {idx + 1}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">
+                            {j.displayName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 text-sm">{j.displayName}</p>
+                            <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-slate-900 text-sm">{j.displayName}</p>
-                          <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        {renderRoleBadge(j)}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        {j.isActive ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5">
+                        <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded text-xs">
+                          {j.username}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-5">
+                        {j.rawPassword ? (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                              {visiblePasswords[j.id] ? j.rawPassword : '••••••••'}
+                            </span>
+                            <button
+                              onClick={() => togglePasswordVisibility(j.id)}
+                              className="text-slate-400 hover:text-slate-700 p-1 transition-colors"
+                              title="Show/Hide Password"
+                            >
+                              {visiblePasswords[j.id] ? (
+                                <EyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <Eye className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Encrypted (Hash)</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleToggleJudgeStatus(j)}
+                            title={j.isActive ? 'Deactivate judge account' : 'Activate judge account'}
+                            className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${j.isActive
+                              ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
+                              : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
+                              }`}
+                          >
+                            {j.isActive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedJudge(j);
+                              setShowResetPasswordModal(true);
+                            }}
+                            title="Reset password"
+                            className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
+                          >
+                            <Key className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedJudge(j);
+                              setEditName(j.displayName);
+                              setEditRoleCode(j.roleCode || 'STATION_JUDGE');
+                              setEditStationNumber(j.assignedStationNumber?.toString() || '');
+                              setShowEditModal(true);
+                            }}
+                            title="Edit judge information"
+                            className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setJudgeToDelete(j)}
+                            title="Delete judge"
+                            className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-5">
-                      {renderRoleBadge(j)}
-                    </td>
-                    <td className="py-3.5 px-5">
-                      {j.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-5">
-                      <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded text-xs">
-                        {j.username}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card List View (Tablets / Mobiles) */}
+          <div className="xl:hidden space-y-4">
+            {filteredJudges.map((j, idx) => (
+              <div key={j.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
+                {/* Header: Avatar, Name, User Code, and Status */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center shrink-0">
+                      {j.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
+                        {idx + 1}. {j.displayName}
+                      </h3>
+                      <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    {j.isActive ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                        Active
                       </span>
-                    </td>
-                    <td className="py-3.5 px-5">
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                        Inactive
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details: Role, Username, Initial Password */}
+                <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Role:</span>
+                    <div>{renderRoleBadge(j)}</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Username:</span>
+                    <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px]">
+                      {j.username}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Password:</span>
+                    <div>
                       {j.rawPassword ? (
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                          <span className="font-mono text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
                             {visiblePasswords[j.id] ? j.rawPassword : '••••••••'}
                           </span>
                           <button
                             onClick={() => togglePasswordVisibility(j.id)}
-                            className="text-slate-400 hover:text-slate-700 p-1 transition-colors"
+                            className="text-slate-400 hover:text-slate-700 p-1 transition-colors border-none bg-transparent cursor-pointer"
                             title="Show/Hide Password"
                           >
                             {visiblePasswords[j.id] ? (
@@ -608,184 +725,67 @@ export default function JudgeManagementPage({
                           </button>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 italic">Encrypted (Hash)</span>
+                        <span className="text-[11px] text-slate-400 italic">Encrypted (Hash)</span>
                       )}
-                    </td>
-                    <td className="py-3.5 px-5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleToggleJudgeStatus(j)}
-                          title={j.isActive ? 'Deactivate judge account' : 'Activate judge account'}
-                          className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${j.isActive
-                              ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
-                              : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
-                            }`}
-                        >
-                          {j.isActive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedJudge(j);
-                            setShowResetPasswordModal(true);
-                          }}
-                          title="Reset password"
-                          className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
-                        >
-                          <Key className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedJudge(j);
-                            setEditName(j.displayName);
-                            setEditRoleCode(j.roleCode || 'STATION_JUDGE');
-                            setEditStationNumber(j.assignedStationNumber?.toString() || '');
-                            setShowEditModal(true);
-                          }}
-                          title="Edit judge information"
-                          className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setJudgeToDelete(j)}
-                          title="Delete judge"
-                          className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Mobile Card List View (Tablets / Mobiles) */}
-        <div className="xl:hidden space-y-4">
-          {filteredJudges.map((j, idx) => (
-            <div key={j.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
-              {/* Header: Avatar, Name, User Code, and Status */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center shrink-0">
-                    {j.displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm leading-snug">
-                      {idx + 1}. {j.displayName}
-                    </h3>
-                    <span className="text-[10px] text-slate-400 font-mono">{j.userCode}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="shrink-0">
-                  {j.isActive ? (
-                    <span className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                      Inactive
-                    </span>
-                  )}
-                </div>
-              </div>
 
-              {/* Details: Role, Username, Initial Password */}
-              <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-medium">Role:</span>
-                  <div>{renderRoleBadge(j)}</div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-medium">Username:</span>
-                  <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px]">
-                    {j.username}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-medium">Password:</span>
-                  <div>
-                    {j.rawPassword ? (
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                          {visiblePasswords[j.id] ? j.rawPassword : '••••••••'}
-                        </span>
-                        <button
-                          onClick={() => togglePasswordVisibility(j.id)}
-                          className="text-slate-400 hover:text-slate-700 p-1 transition-colors border-none bg-transparent cursor-pointer"
-                          title="Show/Hide Password"
-                        >
-                          {visiblePasswords[j.id] ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-slate-400 italic">Encrypted (Hash)</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions Grid */}
-              <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
-                {/* Toggle Active Status */}
-                <button
-                  onClick={() => handleToggleJudgeStatus(j)}
-                  title={j.isActive ? 'Deactivate judge account' : 'Activate judge account'}
-                  className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${j.isActive
+                {/* Actions Grid */}
+                <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-2 justify-end">
+                  {/* Toggle Active Status */}
+                  <button
+                    onClick={() => handleToggleJudgeStatus(j)}
+                    title={j.isActive ? 'Deactivate judge account' : 'Activate judge account'}
+                    className={`p-1.5 rounded-lg border transition-all shadow-2xs cursor-pointer ${j.isActive
                       ? 'bg-white hover:bg-amber-50 border-slate-200 text-amber-600'
                       : 'bg-white hover:bg-emerald-50 border-slate-200 text-emerald-600'
-                    }`}
-                >
-                  {j.isActive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                </button>
+                      }`}
+                  >
+                    {j.isActive ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                  </button>
 
-                {/* Reset Password */}
-                <button
-                  onClick={() => {
-                    setSelectedJudge(j);
-                    setShowResetPasswordModal(true);
-                  }}
-                  title="Reset password"
-                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
-                >
-                  <Key className="h-3.5 w-3.5" />
-                </button>
+                  {/* Reset Password */}
+                  <button
+                    onClick={() => {
+                      setSelectedJudge(j);
+                      setShowResetPasswordModal(true);
+                    }}
+                    title="Reset password"
+                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
+                  >
+                    <Key className="h-3.5 w-3.5" />
+                  </button>
 
-                {/* Edit */}
-                <button
-                  onClick={() => {
-                    setSelectedJudge(j);
-                    setEditName(j.displayName);
-                    setEditRoleCode(j.roleCode || 'STATION_JUDGE');
-                    setEditStationNumber(j.assignedStationNumber?.toString() || '');
-                    setShowEditModal(true);
-                  }}
-                  title="Edit judge information"
-                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
+                  {/* Edit */}
+                  <button
+                    onClick={() => {
+                      setSelectedJudge(j);
+                      setEditName(j.displayName);
+                      setEditRoleCode(j.roleCode || 'STATION_JUDGE');
+                      setEditStationNumber(j.assignedStationNumber?.toString() || '');
+                      setShowEditModal(true);
+                    }}
+                    title="Edit judge information"
+                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 p-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
 
-                {/* Delete */}
-                <button
-                  onClick={() => setJudgeToDelete(j)}
-                  title="Delete judge"
-                  className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                  {/* Delete */}
+                  <button
+                    onClick={() => setJudgeToDelete(j)}
+                    title="Delete judge"
+                    className="bg-white hover:bg-red-50 border border-slate-200 text-red-600 p-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </>
-    )}
+            ))}
+          </div>
+        </>
+      )}
 
       {/* ============================================================ */}
       {/* MODAL 1: ADVANCED BATCH CREATE */}

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from '@/lib/toast';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import { StatusBadge } from './StatusBadge';
-import { Play, Lock, Video, Radio, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus, Send } from 'lucide-react';
+import { Play, Lock, Video, CheckCircle, Globe, AlertTriangle, UserCheck, Unlock, UserPlus, Send } from 'lucide-react';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
@@ -23,6 +25,7 @@ function formatDateRange(start: string, end: string): string {
 }
 
 export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps) {
+  const router = useRouter();
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const [targetTourToPublish, setTargetTourToPublish] = useState<TournamentDetailDto | null>(null);
   const [targetTourToOpenReg, setTargetTourToOpenReg] = useState<TournamentDetailDto | null>(null);
@@ -32,6 +35,29 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
   const [targetTourToCheckIn, setTargetTourToCheckIn] = useState<TournamentDetailDto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Validate Judge existence before opening Check-in
+  const handleOpenCheckInClick = async (t: TournamentDetailDto) => {
+    setErrorMessage(null);
+    setIsProcessing(true);
+    try {
+      const { getTournamentJudges } = await import('@/lib/api/tournaments');
+      const judges = await getTournamentJudges(t.id).catch(() => []);
+      if (!judges || judges.length === 0) {
+        toast.error(
+          'No Judges Found',
+          'You must create judge accounts for this tournament before opening Check-in. Redirecting to judge management...'
+        );
+        router.push(`/managertournaments/${t.id}/judges`);
+        return;
+      }
+      setTargetTourToCheckIn(t);
+    } catch (err: any) {
+      toast.error('Validation Error', err?.message || 'Failed to verify tournament judges.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Execute Publish Tournament (DRAFT -> PUBLISHED)
   const executePublishTournament = async () => {
@@ -426,11 +452,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                         {/* Open Check-in (Offline only) */}
                         {canOpenCheckIn && (
                           <button
-                            onClick={() => {
-                              setErrorMessage(null);
-                              setTargetTourToCheckIn(t);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer"
+                            onClick={() => handleOpenCheckInClick(t)}
+                            disabled={isProcessing}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer disabled:opacity-50"
                             title="Open offline check-in desk"
                           >
                             <UserCheck className="h-3.5 w-3.5" /> Open Check-in
@@ -451,22 +475,14 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           </button>
                         )}
 
-                        {/* Review A01 (for Async) or Live Ops (for Offline) */}
-                        {t.isOnlineAsync ? (
+                        {/* Review A01 (for Async) */}
+                        {t.isOnlineAsync && (
                           <Link
                             href={`/managertournaments/${t.id}/review`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 font-extrabold text-xs transition shadow-2xs"
                             title="Review video attempt A01"
                           >
                             <Video className="h-3.5 w-3.5" /> Review A01
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/managertournaments/${t.id}/live`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-xs transition shadow-2xs"
-                            title="Open Live Ops Control Room"
-                          >
-                            <Radio className="h-3.5 w-3.5 text-red-400" /> Live Ops
                           </Link>
                         )}
 
@@ -649,11 +665,9 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                 {/* Open Check-in (Offline only) */}
                 {canOpenCheckIn && (
                   <button
-                    onClick={() => {
-                      setErrorMessage(null);
-                      setTargetTourToCheckIn(t);
-                    }}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none"
+                    onClick={() => handleOpenCheckInClick(t)}
+                    disabled={isProcessing}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition cursor-pointer border-none disabled:opacity-50"
                   >
                     <UserCheck className="h-3 w-3" /> Open Check-in
                   </button>
@@ -672,20 +686,13 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                   </button>
                 )}
 
-                {/* Review or Live Ops */}
-                {t.isOnlineAsync ? (
+                {/* Review A01 (for Async) */}
+                {t.isOnlineAsync && (
                   <Link
                     href={`/managertournaments/${t.id}/review`}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 font-extrabold text-[10px] transition"
                   >
                     <Video className="h-3 w-3" /> Review A01
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/managertournaments/${t.id}/live`}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-950 hover:bg-slate-800 text-white font-extrabold text-[10px] transition"
-                  >
-                    <Radio className="h-3 w-3 text-red-400" /> Live Ops
                   </Link>
                 )}
 
