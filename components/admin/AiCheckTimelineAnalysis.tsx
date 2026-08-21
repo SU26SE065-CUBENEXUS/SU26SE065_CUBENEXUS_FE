@@ -2,25 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Bot, 
-  Sparkles, 
-  Clock, 
-  Eye, 
-  ExternalLink, 
-  X, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ShieldAlert,
-  Play,
-  Zap,
-  Info,
-  Users,
-  Box,
-  Hand,
-  PlusCircle,
-  FileCheck
-} from 'lucide-react';
 
 export interface ViolationItem {
   type: 'RUBIK_LOST' | 'MULTIPLE_PERSONS' | 'EXTRA_HANDS';
@@ -61,8 +42,6 @@ interface Props {
   timestampSeconds?: number;
   timestampText?: string;
   onSeekVideo?: (seconds: number) => void;
-  onAttachEvidence?: (violation: ViolationItem) => void;
-  onAutoFillVerdict?: (result: AiCheckResult, playerName: string) => void;
   apiUrl?: string;
 }
 
@@ -78,8 +57,6 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   timestampSeconds = 75,
   timestampText = '01:15',
   onSeekVideo,
-  onAttachEvidence,
-  onAutoFillVerdict,
   apiUrl = 'http://localhost:8000'
 }) => {
   const [mounted, setMounted] = useState(false);
@@ -90,12 +67,12 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   const [aiData, setAiData] = useState<AiCheckResult | null>(null);
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
   const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(null);
-  const [attachedIndices, setAttachedIndices] = useState<number[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Đóng modal khi nhấn phím ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -135,7 +112,6 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
 
     setLoading(true);
     setErrorMsg(null);
-    setAttachedIndices([]);
 
     try {
       const payload: any = {
@@ -170,369 +146,231 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
     }
   };
 
-  const handleAttachClick = (violation: ViolationItem, index: number) => {
-    if (onAttachEvidence) {
-      onAttachEvidence(violation);
-      setAttachedIndices(prev => prev.includes(index) ? prev : [...prev, index]);
-    }
-  };
-
   const getViolationBadge = (type: string) => {
     switch (type) {
       case 'RUBIK_LOST':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
-            <Box className="h-3 w-3 text-amber-600" />
-            <span>Mất Dấu Rubik</span>
-          </span>
-        );
+        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">MẤT RUBIK</span>;
       case 'MULTIPLE_PERSONS':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 shrink-0">
-            <Users className="h-3 w-3 text-rose-600" />
-            <span>≥2 Người Trong Phòng</span>
-          </span>
-        );
+        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">&ge;2 NGƯỜI</span>;
       case 'EXTRA_HANDS':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200 shrink-0">
-            <Hand className="h-3 w-3 text-purple-600" />
-            <span>Tay Lạ Can Thiệp</span>
-          </span>
-        );
+        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">TAY LẠ</span>;
       default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 shrink-0">
-            <AlertTriangle className="h-3 w-3 text-rose-600" />
-            <span>Nghi Vấn Gian Lận</span>
-          </span>
-        );
+        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-300">VI PHẠM</span>;
     }
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xs text-slate-900 font-sans">
-      {/* HEADER */}
-      <div className="space-y-3 border-b border-slate-100 pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-lg flex items-center justify-center">
-              <Bot className="h-4 w-4" />
-            </span>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-extrabold tracking-tight text-slate-900">
-                AI Check Timeline Analysis
-              </h3>
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl text-slate-100 font-sans">
+      {/* HEADER: COMPACT & CHỌN ĐỐI TƯỢNG + PHẠM VI QUÉT */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-2">
+          <span className="p-1.5 bg-indigo-500/20 text-indigo-400 rounded-lg text-sm font-bold">AI</span>
+          <div>
+            <h3 className="text-sm font-bold tracking-wide flex items-center gap-2">
+              AI Check Timeline Analysis
               {aiData && (
-                <span className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider border ${
-                  aiData.has_violations
-                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                }`}>
-                  {aiData.has_violations ? `🚨 ${aiData.total_violations} Vi Phạm` : '✨ Sạch'}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${aiData.has_violations
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse'
+                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  }`}>
+                  {aiData.has_violations ? `${aiData.total_violations} Vi Phạm` : 'Hợp Lệ'}
                 </span>
               )}
-            </div>
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Đối tượng quét: <strong className="text-amber-300">{currentTargetLabel}</strong>
+            </p>
           </div>
+        </div>
 
+        {/* NÚT CHỌN ĐỐI TƯỢNG VÀ NÚT KÍCH HOẠT */}
+        <div className="flex flex-wrap items-center gap-2">
           {(player1VideoUrl || player2VideoUrl) && (
-            <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
+            <div className="flex bg-slate-800 p-0.5 rounded-lg text-[11px]">
               <button
                 type="button"
                 onClick={() => { setSelectedTarget('player1'); setAiData(null); }}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedTarget === 'player1'
-                    ? 'bg-white text-indigo-700 font-bold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                className={`px-2.5 py-1 rounded-md transition ${selectedTarget === 'player1' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
               >
                 {player1Name}
               </button>
               <button
                 type="button"
                 onClick={() => { setSelectedTarget('player2'); setAiData(null); }}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedTarget === 'player2'
-                    ? 'bg-white text-indigo-700 font-bold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                className={`px-2.5 py-1 rounded-md transition ${selectedTarget === 'player2' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
               >
                 {player2Name}
               </button>
             </div>
           )}
-        </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <p className="text-xs text-slate-500">
-            Mục tiêu: <strong className="text-slate-800 font-bold">{currentTargetLabel}</strong>
-          </p>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => { setScanScope('WINDOW'); setAiData(null); }}
-                className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
-                  scanScope === 'WINDOW'
-                    ? 'bg-amber-500 text-white font-bold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-                title="Chỉ quét 15s trước và 15s sau mốc báo cáo"
-              >
-                <Zap className="h-3 w-3" />
-                <span>Mốc ±15s ({formatSec(windowStart)} - {formatSec(windowEnd)})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setScanScope('FULL'); setAiData(null); }}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  scanScope === 'FULL'
-                    ? 'bg-slate-800 text-white font-bold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-                title="Quét toàn bộ video"
-              >
-                <span>Toàn bộ</span>
-              </button>
-            </div>
-
+          {/* CHỌN PHẠM VI QUÉT */}
+          <div className="flex bg-slate-800 p-0.5 rounded-lg text-[11px]">
             <button
               type="button"
-              onClick={handleRunAiCheck}
-              disabled={loading}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              onClick={() => { setScanScope('WINDOW'); setAiData(null); }}
+              className={`px-2.5 py-1 rounded-md transition flex items-center gap-1 ${scanScope === 'WINDOW' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+              title="Chỉ quét 15s trước và 15s sau mốc báo cáo (Cực nhanh: 1-2s)"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span>Đang Quét AI...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{aiData ? 'Quét Lại' : 'Kích Hoạt AI Check'}</span>
-                </>
-              )}
+              <span>Mốc ±15s ({formatSec(windowStart)} - {formatSec(windowEnd)})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setScanScope('FULL'); setAiData(null); }}
+              className={`px-2.5 py-1 rounded-md transition ${scanScope === 'FULL' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+              title="Quét toàn bộ video trận đấu"
+            >
+              <span>Toàn bộ</span>
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={handleRunAiCheck}
+            disabled={loading}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold transition shadow-md disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                <span>Đang Quét Vi Phạm...</span>
+              </>
+            ) : (
+              <span>{aiData ? 'Quét Lại' : 'Kích Hoạt AI Check'}</span>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* THÔNG BÁO LỖI */}
+      {/* ERROR MSG */}
       {errorMsg && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
-          <span>{errorMsg}</span>
+        <div className="mt-2.5 p-2 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-300 text-[11px] flex items-center gap-1.5">
+          <span>❌</span> {errorMsg}
         </div>
       )}
 
-      {/* TRẠNG THÁI CHƯA QUÉT */}
+      {/* CHƯA QUÉT */}
       {!aiData && !loading && !errorMsg && (
-        <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
-            <Info className="h-4 w-4" />
-          </div>
-          <div className="text-xs space-y-0.5">
-            <p className="text-slate-700">
-              Chế độ: <strong className="text-slate-900">{scanScope === 'WINDOW' ? `Quét nhanh mốc ${timestampText} (${formatSec(windowStart)} → ${formatSec(windowEnd)})` : 'Quét toàn bộ video'}</strong> cho <strong>{currentTargetLabel}</strong>.
-            </p>
-            <p className="text-[11px] text-slate-400">
-              Nhấn nút <strong className="text-indigo-600">"Kích Hoạt AI Check"</strong> ở góc phải để bắt đầu phát hiện gian lận tự động.
-            </p>
-          </div>
+        <div className="py-3 text-center text-slate-400 text-xs">
+          Chế độ: <strong className="text-amber-300">{scanScope === 'WINDOW' ? `Quét nhanh mốc nghi vấn ${timestampText} (${formatSec(windowStart)} -> ${formatSec(windowEnd)})` : 'Quét toàn bộ video'}</strong> cho <strong>{currentTargetLabel}</strong>. Nhấn <strong>"Kích Hoạt AI Check"</strong> để bắt đầu.
         </div>
       )}
 
-      {/* KẾT QUẢ PHÂN TÍCH */}
+      {/* KẾT QUẢ ĐÃ PHÂN TÍCH */}
       {aiData && (
-        <div className="space-y-4">
+        <div className="mt-3 space-y-2.5">
           {/* STATS BAR */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-            <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Phạm vi quét</span>
-              <p className="font-mono font-bold text-slate-800">{aiData.scanned_range || aiData.video_duration_formatted}</p>
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Thời gian AI xử lý</span>
-              <p className="font-mono font-bold text-indigo-600">{aiData.processing_time_seconds}s</p>
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Độ tin cậy</span>
-              <p className="font-mono font-bold text-emerald-600">{aiData.confidence_score}%</p>
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Đánh giá</span>
-              <p className={`font-bold ${aiData.has_violations ? 'text-rose-600' : 'text-emerald-600'}`}>
-                {aiData.has_violations ? `Phát hiện ${aiData.total_violations} Vi Phạm` : 'Hợp Lệ'}
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center justify-between bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-1.5 text-xs text-slate-300 font-mono gap-2">
+            <span>Phạm vi: <strong className="text-amber-300">{aiData.scanned_range || aiData.video_duration_formatted}</strong></span>
+            <span>Thời gian quét: <strong className="text-indigo-400">{aiData.processing_time_seconds}s</strong></span>
+            <span>Độ tin cậy: <strong className="text-emerald-400">{aiData.confidence_score}%</strong></span>
+            <span className={aiData.has_violations ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+              {aiData.has_violations ? `⚠️ ${aiData.total_violations} Vi Phạm` : '✅ Sạch'}
+            </span>
           </div>
-
-          {/* THANH THAO TÁC NHANH VỚI PHÁN QUYẾT */}
-          {aiData.has_violations && onAutoFillVerdict && (
-            <div className="flex items-center justify-between p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs">
-              <span className="text-indigo-900 font-medium flex items-center gap-1.5">
-                <FileCheck className="h-4 w-4 text-indigo-600" />
-                <span>AI đã tổng hợp {aiData.total_violations} bằng chứng vi phạm.</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => onAutoFillVerdict(aiData, currentTargetLabel)}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
-              >
-                <span>⚡ Chèn tất cả vào Phán Quyết</span>
-              </button>
-            </div>
-          )}
 
           {/* DANH SÁCH VI PHẠM */}
           {aiData.violations.length === 0 ? (
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Không phát hiện dấu hiệu vi phạm gian lận nào ở video của <strong>{currentTargetLabel}</strong> trong phạm vi kiểm tra!</span>
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-300 text-xs flex items-center gap-2">
+              <span></span>
+              <span>Không phát hiện dấu hiệu vi phạm nào ở video của <strong>{currentTargetLabel}</strong> trong phạm vi kiểm tra!</span>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
-              {aiData.violations.map((v, i) => {
-                const isAttached = attachedIndices.includes(i);
-                return (
-                  <div
-                    key={i}
-                    className="bg-slate-50/80 hover:bg-slate-100 border border-slate-200 rounded-xl p-3.5 space-y-2.5 transition-all shadow-2xs"
-                  >
-                    {/* HÀNG 1: MỐC THỜI GIAN + BADGE LOẠI VI PHẠM */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 bg-white border border-slate-300 rounded-md text-xs font-mono font-extrabold text-slate-900 shadow-2xs">
-                          ⏱️ {v.start_time} - {v.end_time}
-                        </span>
-                        <span className="text-xs font-mono text-slate-500 font-semibold">
-                          (Kéo dài {v.duration_sec}s)
-                        </span>
-                      </div>
-
-                      {getViolationBadge(v.type)}
-                    </div>
-
-                    {/* HÀNG 2: MÔ TẢ CHI TIẾT + CÁC NÚT HÀNH ĐỘNG */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
-                      <p className="text-xs text-slate-700 font-medium leading-relaxed flex-1">
-                        {v.details}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-2 shrink-0 self-end sm:self-auto">
-                        {/* Nút đính kèm vào phán quyết */}
-                        {v.snapshot_url && onAttachEvidence && (
-                          <button
-                            type="button"
-                            onClick={() => handleAttachClick(v, i)}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer ${
-                              isAttached
-                                ? 'bg-emerald-100 border border-emerald-300 text-emerald-800'
-                                : 'bg-white hover:bg-slate-50 border border-slate-200 text-indigo-600'
-                            }`}
-                            title="Đính kèm ảnh bằng chứng này vào form Phán quyết bên dưới"
-                          >
-                            {isAttached ? (
-                              <>
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                                <span>Đã đính kèm</span>
-                              </>
-                            ) : (
-                              <>
-                                <PlusCircle className="h-3.5 w-3.5 text-indigo-600" />
-                                <span>+ Đính kèm</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-
-                        {/* Nút xem ảnh */}
-                        {v.snapshot_url && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSnapshot(v.snapshot_url || null)}
-                            className="px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-slate-600" />
-                            <span>Ảnh</span>
-                          </button>
-                        )}
-
-                        {/* Nút tua video */}
-                        <button
-                          type="button"
-                          onClick={() => onSeekVideo && onSeekVideo(v.start_sec)}
-                          className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-lg text-xs font-extrabold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
-                        >
-                          <Play className="h-3 w-3 fill-indigo-600 text-indigo-600" />
-                          <span>Tua {v.start_time}</span>
-                        </button>
+            <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
+              {aiData.violations.map((v, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-2 p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg transition text-xs"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-[11px] font-mono text-amber-300 font-bold whitespace-nowrap">
+                      {v.start_time} - {v.end_time}
+                    </span>
+                    <div className="min-w-0 truncate">
+                      <div className="flex items-center gap-1.5">
+                        {getViolationBadge(v.type)}
+                        <span className="font-semibold text-slate-200 truncate">{v.title}</span>
+                        <span className="text-[10px] text-slate-400">({v.duration_sec}s)</span>
                       </div>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* NÚT TUA VIDEO & ẢNH CHỤP */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {v.snapshot_url && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSnapshot(v.snapshot_url || null)}
+                        className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-[11px] font-medium transition cursor-pointer"
+                        title="Xem ảnh chụp bằng chứng"
+                      >
+                        👁️ Ảnh
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => onSeekVideo && onSeekVideo(v.start_sec)}
+                      className="px-2.5 py-1 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 rounded text-[11px] font-semibold transition cursor-pointer"
+                    >
+                      ▶ Nhảy tới {v.start_time}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* FOOTER NÚT BẬT VIDEO BẰNG CHỨNG */}
-          <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
-            <span>Video bằng chứng đã được AI xuất sẵn Bounding Box & Cảnh báo đỏ.</span>
+          {/* NÚT BẬT POPUP XEM VIDEO BẰNG CHỨNG */}
+          <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+            <span>Video bằng chứng đã xuất sẵn Bounding Box & Cảnh báo đỏ.</span>
             <button
               type="button"
               onClick={() => setShowEvidenceModal(true)}
-              className="text-indigo-600 hover:text-indigo-800 font-extrabold transition-all flex items-center gap-1.5 cursor-pointer underline underline-offset-4"
+              className="text-indigo-400 hover:text-indigo-300 font-bold transition flex items-center gap-1 underline underline-offset-2 cursor-pointer"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span>Xem Video Bằng Chứng AI (Popup)</span>
+              🎬 Xem Video Bằng Chứng AI (Popup)
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL VIDEO BẰNG CHỨNG */}
+      {/* MODAL XEM VIDEO BẰNG CHỨNG (DÙNG REACT PORTAL ĐẢM BẢO 100% CĂN CHÍNH GIỮA MÀN HÌNH) */}
       {mounted && showEvidenceModal && aiData && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setShowEvidenceModal(false)}
         >
           <div
-            className="relative max-w-2xl w-full bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150"
+            className="relative max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg">
-                  <Bot className="h-4 w-4" />
-                </span>
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 font-mono">
-                  Video Bằng Chứng AI: <span className="text-indigo-600">{currentTargetLabel}</span>
-                </h4>
-              </div>
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+              <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <span>🎬</span> Video Bằng Chứng AI: <span className="text-amber-300">{currentTargetLabel}</span>
+              </h4>
               <div className="flex items-center gap-3">
                 <a
                   href={aiData.evidence_video_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-indigo-400 hover:underline font-semibold"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở Tab Mới
+                  🔗 Mở Tab Mới
                 </a>
                 <button
                   onClick={() => setShowEvidenceModal(false)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                  className="text-slate-400 hover:text-white text-lg font-bold px-2.5 py-0.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
                 >
-                  <X className="h-4 w-4" />
+                  ✕
                 </button>
               </div>
             </div>
 
-            <div className="rounded-xl overflow-hidden bg-black border border-slate-200">
+            <div className="rounded-xl overflow-hidden bg-black border border-slate-800">
               <video
                 key={aiData.evidence_video_url}
                 src={aiData.evidence_video_url}
@@ -549,44 +387,39 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
         document.body
       )}
 
-      {/* MODAL ẢNH SNAPSHOT */}
+      {/* MODAL XEM ẢNH SNAPSHOT (DÙNG REACT PORTAL ĐẢM BẢO 100% CĂN CHÍNH GIỮA MÀN HÌNH) */}
       {mounted && selectedSnapshot && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setSelectedSnapshot(null)}
         >
           <div
-            className="relative max-w-2xl w-full bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 space-y-3"
+            className="relative max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg">
-                  <ShieldAlert className="h-4 w-4" />
-                </span>
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 font-mono">
-                  Ảnh Chụp Bằng Chứng Vi Phạm (AI Snapshot)
-                </h4>
-              </div>
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <span>📸</span> Ảnh Chụp Bằng Chứng Vi Phạm (AI Snapshot)
+              </h4>
               <div className="flex items-center gap-3">
                 <a
                   href={selectedSnapshot}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-indigo-400 hover:underline font-semibold"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở ảnh gốc
+                  🔗 Mở ảnh gốc
                 </a>
                 <button
                   onClick={() => setSelectedSnapshot(null)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                  className="text-slate-400 hover:text-white text-lg font-bold px-2.5 py-0.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
                 >
-                  <X className="h-4 w-4" />
+                  ✕
                 </button>
               </div>
             </div>
 
-            <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center p-1">
+            <div className="rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
               <img
                 src={selectedSnapshot}
                 alt="AI Snapshot Evidence"
