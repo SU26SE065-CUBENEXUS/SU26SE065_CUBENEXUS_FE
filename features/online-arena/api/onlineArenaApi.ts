@@ -343,6 +343,8 @@ export interface FraudReportDto {
   adminNote?: string;
   createdAt: string;
   reviewedAt?: string;
+  canReReview?: boolean;
+  hoursLeftToReReview?: number;
 }
 
 export interface FraudReportDetailDto {
@@ -388,8 +390,14 @@ export async function getMatchFraudReport(matchId: string): Promise<MatchFraudRe
 }
 
 /** GET /api/admin/fraud-reports */
+export async function getFraudReports(status?: string): Promise<FraudReportDto[]> {
+  const query = status ? `?status=${status}` : '';
+  return apiFetch<FraudReportDto[]>(`/api/admin/fraud-reports${query}`);
+}
+
+/** GET /api/admin/fraud-reports (alias for backward compatibility) */
 export async function getPendingFraudReports(): Promise<FraudReportDto[]> {
-  return apiFetch<FraudReportDto[]>('/api/admin/fraud-reports');
+  return getFraudReports();
 }
 
 /** GET /api/admin/fraud-reports/{reportId} */
