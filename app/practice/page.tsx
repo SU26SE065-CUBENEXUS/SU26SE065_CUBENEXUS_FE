@@ -84,19 +84,37 @@ export default function PracticePage() {
   // frozenTimeMs: stores the last known live time when Mobile stopped, shown until new solve starts
   const [frozenTimeMs, setFrozenTimeMs] = useState<number | null>(null);
   const liveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const liveTimeMsRef = useRef<number | null>(null); // tracks exact liveTimeMs for freeze capture
+  const liveStartTimeRef = useRef<number | null>(null);
+  const currentAttemptRef = useRef<PracticeAttemptResponseDto | null>(null);
   const mobileConnectedToastedRef = useRef(false);
 
-  const stopLiveTimer = useCallback((freeze: boolean = false) => {
+  const startLiveTimer = useCallback((serverStartedAt?: string) => {
+    if (liveTimerRef.current) return;
+    setFrozenTimeMs(null);
+
+    // Compute baseline: match local client time with server's startedAt
+    const startTime = serverStartedAt ? new Date(serverStartedAt).getTime() : Date.now();
+    // In case of clock skew where server timestamp is in future vs local time, fallback to Date.now()
+    liveStartTimeRef.current = (startTime > Date.now() || Date.now() - startTime > 3600000) ? Date.now() : startTime;
+
+    liveTimerRef.current = setInterval(() => {
+      if (liveStartTimeRef.current) {
+        const elapsed = Math.max(0, Date.now() - liveStartTimeRef.current);
+        setLiveTimeMs(elapsed);
+      }
+    }, 30);
+  }, []);
+
+  const stopLiveTimer = useCallback((exactFinalMs?: number | null) => {
     if (liveTimerRef.current) {
       clearInterval(liveTimerRef.current);
       liveTimerRef.current = null;
     }
-    if (freeze && liveTimeMsRef.current !== null) {
-      setFrozenTimeMs(liveTimeMsRef.current);
-    }
-    liveTimeMsRef.current = null;
+    liveStartTimeRef.current = null;
     setLiveTimeMs(null);
+    if (exactFinalMs !== undefined && exactFinalMs !== null && exactFinalMs > 0) {
+      setFrozenTimeMs(exactFinalMs);
+    }
   }, []);
 
   const syncHistory = useCallback(async (sessionId: string) => {
@@ -120,50 +138,47 @@ export default function PracticePage() {
         toast.success('📱 Mobile connected successfully!');
       }
     },
+    onPracticeMobileDisconnected: () => {
+      console.log('[Practice SignalR] Mobile disconnected');
+      setMobileConnected(false);
+      mobileConnectedToastedRef.current = false;
+      toast.info('📱 Mobile timer disconnected');
+    },
+    onPracticeSessionEnded: () => {
+      console.log('[Practice SignalR] Practice Session Ended');
+      setMobileConnected(false);
+      mobileConnectedToastedRef.current = false;
+    },
     onPracticeAttemptUpdated: async (attempt: PracticeAttemptResponseDto) => {
       console.log('[Practice SignalR] Attempt updated:', attempt);
-      setMobileConnected(true);
-      setIsQrModalOpen(false);
-      if (!mobileConnectedToastedRef.current) {
-        mobileConnectedToastedRef.current = true;
-        toast.success('📱 Mobile connected successfully!');
-      }
-      setCurrentAttempt(attempt);
-
+      
       const stateName = attempt.state;
-      if (stateName === 'Solving' && attempt.startedAt) {
-        setFrozenTimeMs(null);
-        if (!liveTimerRef.current) {
-          const startedAtMs = new Date(attempt.startedAt).getTime();
-          liveTimerRef.current = setInterval(() => {
-            const elapsed = Math.max(0, Date.now() - startedAtMs);
-            setLiveTimeMs(elapsed);
-            liveTimeMsRef.current = elapsed;
-          }, 16);
+      const activeTouchStates = ['HoldingHands', 'Ready', 'Solving'];
+      if (activeTouchStates.includes(stateName)) {
+        setMobileConnected(true);
+        setIsQrModalOpen(false);
+        if (!mobileConnectedToastedRef.current) {
+          mobileConnectedToastedRef.current = true;
+          toast.success('📱 Mobile connected successfully!');
         }
-      } else {
-        if (liveTimerRef.current) {
-          clearInterval(liveTimerRef.current);
-          liveTimerRef.current = null;
-        }
+      }
 
-        if (stateName === 'Stopped') {
-          // Immediately freeze the clock at current running time to prevent glitch / jumping
-          if (liveTimeMsRef.current !== null) {
-            setFrozenTimeMs(liveTimeMsRef.current);
-          }
-        } else if (stateName === 'Completed' || stateName === 'Finalized') {
-          const finalMs = attempt.displayTimeMs ?? attempt.timeMs ?? liveTimeMsRef.current ?? 0;
-          if (finalMs > 0) setFrozenTimeMs(finalMs);
+      setCurrentAttempt(attempt);
+      currentAttemptRef.current = attempt;
+
+      if (stateName === 'Solving') {
+        startLiveTimer(attempt.startedAt || undefined);
+      } else {
+        const exactTimeMs = attempt.displayTimeMs ?? attempt.timeMs ?? (attempt.stoppedAt && attempt.startedAt ? new Date(attempt.stoppedAt).getTime() - new Date(attempt.startedAt).getTime() : null);
+        stopLiveTimer(exactTimeMs);
+
+        if (stateName === 'Completed' || stateName === 'Finalized') {
           if (activeSession?.id) {
             await syncHistory(activeSession.id);
           }
         } else if (stateName === 'Scrambled' || stateName === 'HoldingHands' || stateName === 'Ready') {
           setFrozenTimeMs(null);
         }
-
-        liveTimeMsRef.current = null;
-        setLiveTimeMs(null);
       }
     },
   });
@@ -174,43 +189,28 @@ export default function PracticePage() {
       setMobileConnected(false);
       mobileConnectedToastedRef.current = false;
       stopLiveTimer();
-      setLiveTimeMs(null);
-      setFrozenTimeMs(null);
-      liveTimeMsRef.current = null;
       return;
     }
-
-    // Ref-based tracking to avoid stale closure issues
-    const lastAttemptIdRef = { current: null as string | null };
 
     const interval = setInterval(async () => {
       let attempt: any = null;
       try {
         attempt = await getCurrentPracticeAttempt(activeSession.id);
       } catch (_) {
-        stopLiveTimer(false);
-        await syncHistory(activeSession.id);
         return;
       }
 
       if (!attempt) {
-        // No active attempt running (currently in stopped/completed state waiting for next tap)
-        stopLiveTimer(false);
-        await syncHistory(activeSession.id);
         return;
       }
 
       const currentState: string = attempt.state;
 
-      if (lastAttemptIdRef.current !== null && attempt.id !== lastAttemptIdRef.current) {
-        await syncHistory(activeSession.id);
-        if (currentState === 'Scrambled' || currentState === 'HoldingHands' || currentState === 'Ready') {
-          setFrozenTimeMs(null);
-        }
+      // Update attempt state if changed
+      if (!currentAttemptRef.current || currentAttemptRef.current.id !== attempt.id || currentAttemptRef.current.state !== currentState) {
+        setCurrentAttempt(attempt);
+        currentAttemptRef.current = attempt;
       }
-      lastAttemptIdRef.current = attempt.id;
-
-      setCurrentAttempt(attempt);
 
       const activeStates = ['HoldingHands', 'Ready', 'Solving'];
       if (activeStates.includes(currentState)) {
@@ -222,36 +222,20 @@ export default function PracticePage() {
         }
       }
 
-      if (currentState === 'Solving' && attempt.startedAt) {
+      if (currentState === 'Solving') {
         if (!liveTimerRef.current) {
-          setFrozenTimeMs(null);
-          const startedAtMs = new Date(attempt.startedAt).getTime();
-          liveTimerRef.current = setInterval(() => {
-            const elapsed = Math.max(0, Date.now() - startedAtMs);
-            setLiveTimeMs(elapsed);
-            liveTimeMsRef.current = elapsed;
-          }, 16);
+          startLiveTimer(attempt.startedAt || undefined);
         }
-      } else if (currentState === 'Stopped') {
+      } else {
         if (liveTimerRef.current) {
-          clearInterval(liveTimerRef.current);
-          liveTimerRef.current = null;
+          const exactTimeMs = attempt.displayTimeMs ?? attempt.timeMs ?? null;
+          stopLiveTimer(exactTimeMs);
         }
-        if (liveTimeMsRef.current !== null) {
-          setFrozenTimeMs(liveTimeMsRef.current);
-        }
-        liveTimeMsRef.current = null;
-        setLiveTimeMs(null);
-      } else if (currentState !== 'Solving') {
-        stopLiveTimer(false);
-        if (currentState === 'Scrambled' || currentState === 'HoldingHands' || currentState === 'Ready') {
+        if (currentState === 'Completed' || currentState === 'Finalized') {
+          await syncHistory(activeSession.id);
+        } else if (currentState === 'Scrambled' || currentState === 'HoldingHands' || currentState === 'Ready') {
           setFrozenTimeMs(null);
         }
-      }
-
-      const terminalStates = ['Finalized', 'Completed', 'Aborted'];
-      if (terminalStates.includes(currentState)) {
-        await syncHistory(activeSession.id);
       }
     }, 2000);
 
@@ -262,7 +246,7 @@ export default function PracticePage() {
         liveTimerRef.current = null;
       }
     };
-  }, [activeSession?.id, stopLiveTimer, syncHistory]);
+  }, [activeSession?.id, startLiveTimer, stopLiveTimer, syncHistory]);
 
   // Fetch puzzle types and look for active session
   useEffect(() => {
@@ -341,6 +325,8 @@ export default function PracticePage() {
     if (!selectedPuzzleType) return;
     try {
       setIsLoadingSession(true);
+      setMobileConnected(false);
+      mobileConnectedToastedRef.current = false;
       const session = await startPracticeSession({ puzzleTypeId: selectedPuzzleType.id });
       setActiveSession(session);
       const details = await getPracticeSessionDetail(session.id);
@@ -362,6 +348,9 @@ export default function PracticePage() {
     if (!activeSession) return;
     try {
       setIsLoadingSession(true);
+      setMobileConnected(false);
+      mobileConnectedToastedRef.current = false;
+      stopLiveTimer();
       if (currentAttempt && currentAttempt.state !== 'Completed' && currentAttempt.state !== 'Aborted') {
         await abortPracticeAttempt(currentAttempt.id, { reason: 'SESSION_END' });
       }
@@ -389,8 +378,9 @@ export default function PracticePage() {
 
   const formatTime = (ms: number) => {
     if (ms === -1) return 'DNF';
-    const totalSeconds = ms / 1000;
-    return totalSeconds.toFixed(2) + 's';
+    const seconds = Math.floor(ms / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return `${seconds}.${centiseconds.toString().padStart(2, '0')}s`;
   };
 
   // Dynamically compute session statistics from solve history
@@ -695,14 +685,15 @@ export default function PracticePage() {
                   {solvesList.length > 0 ? (
                     <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                       {[...solvesList]
-                        .sort((a, b) => new Date(a.solvedAt || 0).getTime() - new Date(b.solvedAt || 0).getTime())
-                        .map((solve, idx) => (
+                        .map((solve, idx) => ({ ...solve, solveNumber: idx + 1 }))
+                        .reverse()
+                        .map((solve) => (
                           <div
-                            key={solve.id || idx}
+                            key={solve.id || solve.solveNumber}
                             className="flex justify-between items-center rounded-xl bg-muted/30 border border-border/50 p-2.5 hover:border-[#eab308]/30 transition-all duration-200"
                           >
                             <div className="flex flex-col min-w-0">
-                              <span className="text-[9px] font-bold text-muted-foreground">#{idx + 1}</span>
+                              <span className="text-[9px] font-bold text-muted-foreground">#{solve.solveNumber}</span>
                               <span className="text-[10px] text-muted-foreground truncate max-w-[130px] font-mono" title={solve.scrambleSequence}>
                                 {solve.scrambleSequence}
                               </span>
