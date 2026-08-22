@@ -271,7 +271,20 @@ export default function RegistrationManagementPage({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium">
-              <span>Location: {tournament.location || 'Offline'}</span>
+              {tournament.location ? (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tournament.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:underline transition font-medium"
+                  title="Xem địa điểm trên Google Maps (Mở tab mới)"
+                >
+                  <MapPin className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                  <span>{tournament.location}</span>
+                </a>
+              ) : (
+                <span>Location: Offline</span>
+              )}
               <span>• Dates: {new Date(tournament.startDate).toLocaleDateString('en-US')} – {new Date(tournament.endDate).toLocaleDateString('en-US')}</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
