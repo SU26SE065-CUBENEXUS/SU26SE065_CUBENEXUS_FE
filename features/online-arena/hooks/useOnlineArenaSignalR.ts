@@ -31,6 +31,8 @@ interface SignalRCallbacks {
   onChecklistUpdated?: (payload: any) => void;
   onPracticeAttemptUpdated?: (payload: any) => void;
   onPracticeMobileConnected?: (payload: any) => void;
+  onPracticeMobileDisconnected?: (payload: any) => void;
+  onPracticeSessionEnded?: (payload: any) => void;
   onTimerConnected?: (payload: any) => void;
   onTimerDisconnected?: (payload: any) => void;
   onCameraReadyUpdated?: (payload: any) => void;
@@ -101,6 +103,8 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     register('ChecklistUpdated', 'onChecklistUpdated');
     register('PracticeAttemptUpdated', 'onPracticeAttemptUpdated');
     register('PracticeMobileConnected', 'onPracticeMobileConnected');
+    register('PracticeMobileDisconnected', 'onPracticeMobileDisconnected');
+    register('PracticeSessionEnded', 'onPracticeSessionEnded');
     register('TimerConnected', 'onTimerConnected');
     register('TimerDisconnected', 'onTimerDisconnected');
     register('CameraReadyUpdated', 'onCameraReadyUpdated');
