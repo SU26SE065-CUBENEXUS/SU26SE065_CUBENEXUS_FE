@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
+import { useMatchLocalRecorder } from '@/features/online-arena/hooks/useMatchLocalRecorder';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
 import { CheckCircle2, User, Loader2, Sparkles, Swords, Activity, HelpCircle } from 'lucide-react';
 
 export default function WaitingOpponentPage() {
   const { state } = useMatchContext();
+  const { stopRecordingWithBuffer } = useMatchLocalRecorder();
+
+  useEffect(() => {
+    console.log('[REC] In WaitingOpponentPage: ensuring camera recording is stopped and uploaded...');
+    void stopRecordingWithBuffer(1000);
+  }, [stopRecordingWithBuffer]);
 
   const userId = useMemo(() => {
     const token = getAccessToken();

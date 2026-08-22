@@ -93,6 +93,7 @@ export default function MatchmakingPage() {
         ...prev,
         player1Confirmed: payload.player1Confirmed,
         player2Confirmed: payload.player2Confirmed,
+        opponent: prev.opponent || (payload as any).opponent,
       } : null);
       if (payload.confirmDeadlineAt) {
         const deadline = parseUtc(payload.confirmDeadlineAt);
@@ -418,9 +419,13 @@ export default function MatchmakingPage() {
                       : '— ELO'}
                   </span>
                 </div>
-                {/* Backend always sets Player1=opponent (was QUEUED), Player2=current user.
-                    So opponent's confirmed state = player1Confirmed. */}
-                {matchmakingInfo.player1Confirmed && (
+                {/* Hiển thị CONFIRMED nếu đối thủ đã bấm chấp nhận */}
+                {Boolean(
+                  (matchmakingInfo.meUserId === matchmakingInfo.player1UserId
+                    ? matchmakingInfo.player2Confirmed
+                    : matchmakingInfo.player1Confirmed) ||
+                  (!hasConfirmed && (matchmakingInfo.player1Confirmed || matchmakingInfo.player2Confirmed))
+                ) && (
                   <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
                     <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
                   </div>

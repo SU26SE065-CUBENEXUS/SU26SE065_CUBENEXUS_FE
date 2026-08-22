@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
-import { useMatchLocalRecorder } from '@/features/online-arena/hooks/useMatchLocalRecorder';
+
 import { submitMobileTimerTime, mockFinishPass } from '@/features/online-arena/api/onlineArenaApi';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
 import { Timer, ArrowRight, Loader2, Sparkles, AlertCircle, Cpu, Clock, Wifi, WifiOff } from 'lucide-react';
@@ -47,7 +47,6 @@ function useCountdown(deadlineIso: string | null, serverNowIso: string): string 
 
 export default function SolvingPage() {
   const { matchId, state, refetch } = useMatchContext();
-  const { stopRecordingWithBuffer, uploadTask } = useMatchLocalRecorder();
   const [isSimulating, setIsSimulating] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
   const [isDev, setIsDev] = useState(false);
@@ -73,31 +72,11 @@ export default function SolvingPage() {
     return state.player1.userId === userId ? state.player1 : state.player2;
   }, [state, userId]);
 
-  const resultStatusRef = useRef(myState?.resultStatus);
-  useEffect(() => {
-    resultStatusRef.current = myState?.resultStatus;
-  }, [myState?.resultStatus]);
 
-  // When my solve status transitions away from PENDING, hold 3s buffer and stop recording
-  useEffect(() => {
-    if (myState && myState.resultStatus !== 'PENDING') {
-      console.log(`[REC] Solve finished for current player (status=${myState.resultStatus}). Holding 3s reaction buffer...`);
-      void stopRecordingWithBuffer(3000);
-    }
-  }, [myState?.resultStatus, stopRecordingWithBuffer]);
-
-  // Safety net: when SolvingPage unmounts, ONLY trigger stop if the solve was actually finished!
-  useEffect(() => {
-    return () => {
-      if (resultStatusRef.current && resultStatusRef.current !== 'PENDING') {
-        console.log('[REC] SolvingPage unmounted after solve completion — ensuring recording finalized.');
-        void stopRecordingWithBuffer(1000);
-      } else {
-        console.log('[REC] SolvingPage unmounted while solve still PENDING — recording continues unaffected.');
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // NOTE: Recording is intentionally NOT stopped here after solve submission.
+  // The player still needs to scan the solved cube (Finish Check) before recording stops.
+  // Recording will stop in finish/page.tsx after the Finish Check scan passes,
+  // OR in waiting/page.tsx as a safety net if the player skips somehow.
 
   const countdownStr = useCountdown(
     state?.solveDeadlineAt ?? null,

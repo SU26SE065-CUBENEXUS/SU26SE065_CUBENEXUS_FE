@@ -4,11 +4,13 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { OnlineMatchScanner } from '@/features/online-arena/components/OnlineMatchScanner';
 import { mockFinishPass } from '@/features/online-arena/api/onlineArenaApi';
+import { useMatchLocalRecorder } from '@/features/online-arena/hooks/useMatchLocalRecorder';
 import { useRouter } from 'next/navigation';
 import { Radio, Cpu, Loader2, AlertCircle } from 'lucide-react';
 
 export default function FinishCheckPage() {
   const { matchId, refetch } = useMatchContext();
+  const { stopRecordingWithBuffer } = useMatchLocalRecorder();
   const router = useRouter();
 
   const [isDev, setIsDev] = useState(false);
@@ -38,14 +40,15 @@ export default function FinishCheckPage() {
       return;
     }
 
-    // Scan thành công → điều hướng bình thường
+    // Scan thành công → Dừng ghi hình ngay và điều hướng bình thường
     setRetryWarning(null);
-    console.log('Finish Scan completed successfully!', res);
+    console.log('[REC] Finish Scan completed successfully! Finalizing camera recording for this player...');
+    void stopRecordingWithBuffer(1000);
     await refetch();
     
     // Explicit safety routing back to the main root match page (the parent page switcher handles the sub-views)
     router.replace(`/online/match/${matchId}`);
-  }, [matchId, refetch, router]);
+  }, [matchId, refetch, router, stopRecordingWithBuffer]);
 
   const handleMockFinish = async () => {
     if (isMocking) return;
@@ -53,6 +56,8 @@ export default function FinishCheckPage() {
     setMockError(null);
     try {
       await mockFinishPass(matchId);
+      console.log('[REC] Mock Finish Check passed! Finalizing camera recording...');
+      void stopRecordingWithBuffer(1000);
       await refetch();
       router.replace(`/online/match/${matchId}`);
     } catch (err: any) {
