@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
+import { useAuth } from '@/contexts/auth-context';
 import { useOnlineArenaSignalR } from '@/features/online-arena/hooks/useOnlineArenaSignalR';
 import { findMatch, confirmMatch, cancelMatchmaking, getMyProfiles, initProfile } from '@/features/online-arena/api/onlineArenaApi';
 import type { MatchmakingStatusDto } from '@/features/online-arena/types';
@@ -12,6 +13,7 @@ const DEFAULT_PUZZLE_TYPE_ID = 'f4ddb522-426f-4dd0-a98d-20f21b192470'; // 3x3x3 
 
 export default function MatchmakingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [status, setStatus] = useState<MatchmakingStatusDto['status'] | 'CONFIRMING' | 'COOLDOWN'>('IDLE');
   const [matchmakingInfo, setMatchmakingInfo] = useState<MatchmakingStatusDto | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -384,7 +386,7 @@ export default function MatchmakingPage() {
                 </div>
                 <div>
                   <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
-                    {myDisplayName || 'You'}
+                    {myDisplayName || user?.displayName || 'User'}
                   </span>
                   <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
                     {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1,500 ELO'}
