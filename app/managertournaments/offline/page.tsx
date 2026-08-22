@@ -235,7 +235,16 @@ export default function OfflineTournamentManagerPage() {
                     <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-2xl border border-slate-100 font-medium">
                       <div className="flex items-center gap-1.5">
                         <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                        <span className="truncate">{tourney.location}</span>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tourney.location || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate hover:text-indigo-600 hover:underline transition"
+                          title="Xem trên Google Maps (Mở tab mới)"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {tourney.location}
+                        </a>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-indigo-600 shrink-0" />

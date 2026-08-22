@@ -29,6 +29,15 @@ interface SignalRCallbacks {
   onWebRtcAnswerReceived?: (payload: any) => void;
   onIceCandidateReceived?: (payload: any) => void;
   onChecklistUpdated?: (payload: any) => void;
+  onPracticeAttemptUpdated?: (payload: any) => void;
+  onPracticeMobileConnected?: (payload: any) => void;
+  onPracticeMobileDisconnected?: (payload: any) => void;
+  onPracticeSessionEnded?: (payload: any) => void;
+  onTimerConnected?: (payload: any) => void;
+  onTimerDisconnected?: (payload: any) => void;
+  onCameraReadyUpdated?: (payload: any) => void;
+  onWebRtcConnectionUpdated?: (payload: any) => void;
+  onVideoRecordingStarted?: (payload: any) => void;
 }
 
 export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallbacks) {
@@ -92,6 +101,15 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     register('SolveTimeout', 'onSolveTimeout');
     register('MatchStateChanged', 'onMatchStateChanged');
     register('ChecklistUpdated', 'onChecklistUpdated');
+    register('PracticeAttemptUpdated', 'onPracticeAttemptUpdated');
+    register('PracticeMobileConnected', 'onPracticeMobileConnected');
+    register('PracticeMobileDisconnected', 'onPracticeMobileDisconnected');
+    register('PracticeSessionEnded', 'onPracticeSessionEnded');
+    register('TimerConnected', 'onTimerConnected');
+    register('TimerDisconnected', 'onTimerDisconnected');
+    register('CameraReadyUpdated', 'onCameraReadyUpdated');
+    register('WebRtcConnectionUpdated', 'onWebRtcConnectionUpdated');
+    register('VideoRecordingStarted', 'onVideoRecordingStarted');
 
     // WebRTC signaling
     register('WebRtcOfferReceived', 'onWebRtcOfferReceived');

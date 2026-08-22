@@ -230,9 +230,16 @@ export default function TournamentDetailDashboardPage({
                   {formatDateRange(tournament.startDate, tournament.endDate)}
                 </span>
                 {tournament.location && (
-                  <span>
-                    • {tournament.location}
-                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tournament.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:underline transition font-medium"
+                    title="Xem địa điểm trên Google Maps (Mở tab mới)"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                    <span>{tournament.location}</span>
+                  </a>
                 )}
                 <span>
                   • Created by: {tournament.createdByUserName || 'Manager'}
