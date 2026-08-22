@@ -244,7 +244,20 @@ export default function PublicLiveTournamentsPage() {
                       <div className="space-y-2 pt-2 border-t border-border text-xs text-muted-foreground font-medium">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4.5 w-4.5 text-orange-500 shrink-0" />
-                          <span className="truncate">{t.location || 'Offline Location'}</span>
+                          {t.location ? (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="truncate hover:text-orange-600 hover:underline transition"
+                              title="Xem địa điểm trên Google Maps"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {t.location}
+                            </a>
+                          ) : (
+                            <span className="truncate">Offline Location</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4.5 w-4.5 text-orange-500 shrink-0" />

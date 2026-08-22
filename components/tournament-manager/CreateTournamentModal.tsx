@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createTournament, getPuzzleTypes } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, PuzzleTypeResponseDto } from '@/lib/api/types';
+import { LocationPicker } from './LocationPicker';
 import {
   X,
   Plus,
@@ -457,21 +458,21 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Location / Venue <span className="text-red-500 font-bold">*</span>
-                </label>
-                <input
-                  type="text"
+                <LocationPicker
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g., FPT University, Ho Chi Minh City"
-                  className={`w-full rounded-lg border ${errors.location ? 'border-red-500' : 'border-slate-200 focus:border-indigo-600'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white transition`}
+                  onChange={(val) => {
+                    setLocation(val);
+                    if (errors.location) {
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.location;
+                        return next;
+                      });
+                    }
+                  }}
+                  error={errors.location}
+                  required
                 />
-                {errors.location && (
-                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="h-3 w-3" /> {errors.location}
-                  </p>
-                )}
               </div>
 
               <div className="md:col-span-2">
