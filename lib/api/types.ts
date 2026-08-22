@@ -123,6 +123,11 @@ export interface TournamentDetailDto {
   updatedAt: string;
   events: EventDetailDto[];
   isOnlineAsync?: boolean;
+  tournamentType?: string;
+  puzzleTypeId?: string;
+  puzzleTypeName?: string;
+  puzzleTypeCode?: string;
+  attemptTimeLimitMs?: number;
 }
 
 export interface EventDetailDto {

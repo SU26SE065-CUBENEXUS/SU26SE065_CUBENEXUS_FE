@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
         tournaments={tournaments}
         userRole="ADMIN"
         initialWorkflow="online_async"
-        onNavigateToAsync={() => router.push('/managertournaments/async')}
+        onNavigateToAsync={() => router.push('/admin/tournaments/async')}
         onNavigateToOffline={() => router.push('/managertournaments/offline')}
         onNavigateToReview={() => router.push('/admin/a01-video-review')}
       />
@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Async Tournaments */}
           <div
-            onClick={() => router.push('/managertournaments/async')}
+            onClick={() => router.push('/admin/tournaments/async')}
             className="group bg-white rounded-3xl p-5 border border-slate-200 shadow-xs hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer space-y-3 flex flex-col justify-between"
           >
             <div className="space-y-2.5">

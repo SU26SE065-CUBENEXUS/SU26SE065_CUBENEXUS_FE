@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/lib/toast';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import { StatusBadge } from './StatusBadge';
@@ -26,6 +27,10 @@ function formatDateRange(start: string, end: string): string {
 
 export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toUpperCase() === 'ADMIN' || pathname.startsWith('/admin');
+
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const [targetTourToPublish, setTargetTourToPublish] = useState<TournamentDetailDto | null>(null);
   const [targetTourToOpenReg, setTargetTourToOpenReg] = useState<TournamentDetailDto | null>(null);
@@ -517,12 +522,12 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           </button>
                         )}
 
-                        {/* Review A01 (for Async) */}
+                        {/* Review A01 (for Async - Admin only) */}
                         {t.isOnlineAsync && (
                           <Link
-                            href={`/managertournaments/${t.id}/review`}
+                            href={`/admin/tournaments/${t.id}/review`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 font-extrabold text-xs transition shadow-2xs"
-                            title="Review video attempt A01"
+                            title="Kiểm duyệt video attempt A01 (Admin)"
                           >
                             <Video className="h-3.5 w-3.5" /> Review A01
                           </Link>
@@ -530,9 +535,21 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
 
                         {/* Details Link */}
                         <Link
-                          href={t.isOnlineAsync ? `/tournaments/${t.id}` : `/managertournaments/${t.id}`}
+                          href={
+                            isAdmin
+                              ? `/admin/tournaments/${t.id}`
+                              : !t.isOnlineAsync
+                                ? `/managertournaments/${t.id}`
+                                : `/tournaments/${t.id}`
+                          }
                           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 hover:text-slate-900 hover:bg-slate-50 transition font-extrabold text-xs cursor-pointer shadow-2xs"
-                          title={t.isOnlineAsync ? 'View Async Leaderboard' : 'Manage Tournament Settings'}
+                          title={
+                            isAdmin
+                              ? 'Quản trị chi tiết giải đấu (Admin)'
+                              : !t.isOnlineAsync
+                                ? 'Bảng điều hành giải đấu (Manager)'
+                                : 'Xem thông tin sự kiện & Leaderboard'
+                          }
                         >
                           Details
                         </Link>

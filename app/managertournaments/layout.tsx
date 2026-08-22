@@ -219,8 +219,24 @@ function Sidebar({
 
               <li>
                 <Link
-                  href="/managertournaments/async"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/managertournaments/async')
+                  href="/admin/tournaments"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname === '/admin/tournaments' || (pathname.startsWith('/admin/tournaments/') && !pathname.startsWith('/admin/tournaments/async'))
+                      ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
+                    } ${collapsed ? 'justify-center px-2' : ''}`}
+                  title={collapsed ? 'Tất cả giải đấu' : undefined}
+                >
+                  <Trophy className="h-4 w-4 shrink-0 text-amber-500" />
+                  {!collapsed && (
+                    <span className="flex-1 truncate">Tất cả giải đấu</span>
+                  )}
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/admin/tournaments/async"
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/tournaments/async')
                       ? 'text-indigo-600 bg-indigo-50 border border-indigo-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
