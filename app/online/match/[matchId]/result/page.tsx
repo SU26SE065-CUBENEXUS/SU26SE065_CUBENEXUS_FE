@@ -239,7 +239,7 @@ export default function ResultPage() {
         )}
 
         {/* Watch Replay Button & Player Integration */}
-        <ReplaySection matchId={matchId} state={state} uploadTask={uploadTask} />
+        <ReplaySection matchId={matchId} state={state} uploadTask={uploadTask} viewerUserId={userId} />
       </div>
 
       {/* Play Again actions */}
@@ -270,10 +270,12 @@ function ReplaySection({
   matchId,
   state,
   uploadTask,
+  viewerUserId,
 }: {
   matchId: string;
   state: any;
   uploadTask?: MatchUploadTask;
+  viewerUserId?: string;
 }) {
   const hasRecordingStarted = Boolean(
     (state?.player1?.recordingStarted || state?.player2?.recordingStarted) &&
@@ -358,8 +360,13 @@ function ReplaySection({
     }
   };
 
-  const p1Record = playbackData?.recordings?.find((r) => r.playerId === state?.player1?.userId);
-  const p2Record = playbackData?.recordings?.find((r) => r.playerId === state?.player2?.userId);
+  // Determine me vs opponent from viewer perspective
+  const isViewerP1 = viewerUserId && state?.player1?.userId === viewerUserId;
+  const meStateReplay = isViewerP1 ? state?.player1 : state?.player2;
+  const oppStateReplay = isViewerP1 ? state?.player2 : state?.player1;
+
+  const myRecord = playbackData?.recordings?.find((r: any) => r.playerId === meStateReplay?.userId);
+  const oppRecord = playbackData?.recordings?.find((r: any) => r.playerId === oppStateReplay?.userId);
 
   const winnerUsername = state?.winnerId === state?.player1?.userId
     ? (state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
@@ -407,18 +414,18 @@ function ReplaySection({
           <SplitScreenReplayPlayer
             matchId={matchId}
             playerA={{
-              username: state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'),
-              videoUrl: p1Record?.playbackUrl || '',
-              solveTimeSeconds: ((state?.player1?.timeMs || 10000) / 1000),
-              videoDurationSeconds: p1Record?.durationSeconds,
-              isWinner: Boolean(state?.winnerId && state?.winnerId === state?.player1?.userId),
+              username: meStateReplay?.username || (meStateReplay?.userId ? `Player_${meStateReplay?.userId?.slice(0, 6)}` : 'You'),
+              videoUrl: myRecord?.playbackUrl || '',
+              solveTimeSeconds: ((meStateReplay?.timeMs || 10000) / 1000),
+              videoDurationSeconds: myRecord?.durationSeconds,
+              isWinner: Boolean(state?.winnerId && state?.winnerId === meStateReplay?.userId),
             }}
             playerB={{
-              username: state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'),
-              videoUrl: p2Record?.playbackUrl || '',
-              solveTimeSeconds: ((state?.player2?.timeMs || 10000) / 1000),
-              videoDurationSeconds: p2Record?.durationSeconds,
-              isWinner: Boolean(state?.winnerId && state?.winnerId === state?.player2?.userId),
+              username: oppStateReplay?.username || (oppStateReplay?.userId ? `Player_${oppStateReplay?.userId?.slice(0, 6)}` : 'Opponent'),
+              videoUrl: oppRecord?.playbackUrl || '',
+              solveTimeSeconds: ((oppStateReplay?.timeMs || 10000) / 1000),
+              videoDurationSeconds: oppRecord?.durationSeconds,
+              isWinner: Boolean(state?.winnerId && state?.winnerId === oppStateReplay?.userId),
             }}
             officialWinnerName={winnerUsername}
             officialWinnerText={state?.outcome}

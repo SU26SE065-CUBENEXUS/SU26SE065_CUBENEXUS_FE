@@ -66,7 +66,7 @@ export default function AdminFraudReportReviewDetailPage() {
       }]);
 
       setAdminComment(prev => {
-        const entry = `[${v.start_time} - ${v.end_time}] ${v.title}: ${v.details}${v.snapshot_url ? ` (Ảnh: ${v.snapshot_url})` : ''}`;
+        const entry = `[${v.start_time} - ${v.end_time}] ${v.title}: ${v.details}`;
         if (prev.includes(v.title) && prev.includes(v.start_time)) return prev;
         return prev ? `${prev}\n• ${entry}` : `• ${entry}`;
       });
@@ -77,18 +77,11 @@ export default function AdminFraudReportReviewDetailPage() {
     setIsEditing(true);
     if (result.has_violations) {
       setSelectedVerdict('GUILTY');
-      const summaryLines = result.violations.map((v: any) => `• [${v.start_time} - ${v.end_time}] ${v.title}: ${v.details}${v.snapshot_url ? ` (Ảnh: ${v.snapshot_url})` : ''}`);
-      setAdminComment(`AI Phân tích phát hiện ${result.total_violations} lỗi vi phạm của ${playerName} (Độ tin cậy: ${result.confidence_score}%):\n${summaryLines.join('\n')}\n=> Kết luận: Trọng tài xác nhận vi phạm và áp dụng xử phạt theo quy chế.`);
-
-      setAttachedEvidences(result.violations.map((v: any) => ({
-        title: v.title,
-        time: `${v.start_time} - ${v.end_time}`,
-        snapshotUrl: v.snapshot_url,
-        details: v.details
-      })));
+      const rangeText = result.scanned_range ? ` (${result.scanned_range})` : '';
+      setAdminComment(`Có gian lận trong khoảng${rangeText}. Trọng tài xác nhận vi phạm và áp dụng xử phạt theo quy chế.`);
     } else {
       setSelectedVerdict('INNOCENT');
-      setAdminComment(`AI Phân tích không phát hiện hành vi gian lận nào của ${playerName} trong phạm vi kiểm tra. Video hợp lệ.\n=> Kết luận: Bác bỏ khiếu nại.`);
+      setAdminComment(`Không phát hiện gian lận trong video của ${playerName}. Video hợp lệ.\n=> Kết luận: Bác bỏ khiếu nại.`);
     }
   };
 
@@ -492,30 +485,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   </div>
                 </div>
 
-                {/* Tự động nhận diện và hiển thị ảnh bằng chứng trực quan cho người xem */}
-                {extractImageUrls(report.adminNote).length > 0 && (
-                  <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
-                    <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-                      📸 Ảnh Bằng Chứng Được Đính Kèm ({extractImageUrls(report.adminNote).length})
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {extractImageUrls(report.adminNote).map((imgUrl, i) => (
-                        <div
-                          key={i}
-                          onClick={() => setPreviewImage(imgUrl)}
-                          className="group relative h-20 bg-black rounded-lg overflow-hidden border border-slate-200 shadow-2xs cursor-pointer"
-                          title="Nhấp để xem ảnh lớn"
-                        >
-                          <img src={imgUrl} alt="Evidence" className="w-full h-full object-cover group-hover:scale-105 transition" />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1">
-                            <Eye className="h-3.5 w-3.5" /> Xem Ảnh
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
             ) : (
               <form onSubmit={handleReviewSubmit} className="space-y-4">
                 {isEditing && (
@@ -579,51 +549,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   </button>
                 </div>
 
-                {/* Bằng chứng AI đã đính kèm vào Phán quyết */}
-                {attachedEvidences.length > 0 && (
-                  <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-                        📸 Bằng Chứng AI Đã Đính Kèm ({attachedEvidences.length})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setAttachedEvidences([])}
-                        className="text-[10px] text-slate-400 hover:text-rose-600 font-bold transition cursor-pointer"
-                      >
-                        Xóa tất cả
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {attachedEvidences.map((att, idx) => (
-                        <div key={idx} className="relative group bg-white border border-slate-200 rounded-lg p-1.5 shadow-2xs space-y-1">
-                          {att.snapshotUrl ? (
-                            <a href={att.snapshotUrl} target="_blank" rel="noreferrer" className="block relative h-16 rounded overflow-hidden bg-black">
-                              <img src={att.snapshotUrl} alt="Evidence" className="w-full h-full object-cover group-hover:scale-105 transition" />
-                              <span className="absolute bottom-0.5 left-0.5 px-1 py-0.2 bg-black/70 text-[9px] font-mono text-white rounded">
-                                {att.time}
-                              </span>
-                            </a>
-                          ) : (
-                            <div className="h-16 rounded bg-slate-100 flex items-center justify-center text-[10px] text-slate-400 font-mono">
-                              {att.time}
-                            </div>
-                          )}
-                          <p className="text-[10px] font-bold text-slate-800 truncate" title={att.title}>{att.title}</p>
-                          <button
-                            type="button"
-                            onClick={() => setAttachedEvidences(prev => prev.filter((_, i) => i !== idx))}
-                            className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow hover:bg-rose-600 transition cursor-pointer"
-                            title="Gỡ ảnh này"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Admin Comment Textarea */}
 
                 {/* Admin Comment Textarea */}
                 <div className="space-y-1.5">
