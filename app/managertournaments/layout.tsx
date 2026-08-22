@@ -598,6 +598,8 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   // Admin có toàn quyền truy cập cả Admin portal và Manager portal
   // Manager có quyền truy cập Manager portal
   const isAccessDenied = !isAdmin && !isManager;
+  const isAdminRoute = pathname?.startsWith('/admin');
+  const isManagerRoute = pathname?.startsWith('/managertournaments');
 
   if (isAccessDenied) {
     let reasonText = 'You do not have permission to access this page.';
