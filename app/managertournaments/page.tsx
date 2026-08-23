@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import { TournamentTable } from '@/components/tournament-manager/TournamentTable';
 import { CreateTournamentModal } from '@/components/tournament-manager/CreateTournamentModal';
-import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
+import { getManagerTournaments } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, TournamentStatusCode } from '@/lib/api/types';
 import {
   Search,
@@ -33,6 +35,8 @@ export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
 }
 
 export default function TournamentManagerOverviewPage() {
+  const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [tournaments, setTournaments] = useState<TournamentDetailDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,28 +48,8 @@ export default function TournamentManagerOverviewPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const publicList = await getPublicTournaments().catch(() => []);
-      
-      // Load local draft tournaments created by Manager in this session
-      const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
-      const storedDrafts: string[] = storedDraftsJson ? JSON.parse(storedDraftsJson) : [];
-      const drafts: TournamentDetailDto[] = [];
-      
-      for (const id of storedDrafts) {
-        if (!publicList.some((t) => t.id === id)) {
-           try {
-              const draft = await getTournamentById(id);
-              if (isOfflineManagerTournament(draft)) {
-                drafts.push(draft);
-              }
-           } catch {
-              // Ignore if draft deleted
-           }
-        }
-      }
-      
-      const combined = [...drafts, ...publicList].filter(isOfflineManagerTournament);
-      setTournaments(combined);
+      const managerList = await getManagerTournaments();
+      setTournaments(managerList.filter(isOfflineManagerTournament));
     } catch (err: any) {
       setError(err?.message || 'Failed to connect to backend server.');
       setTournaments([]);
@@ -75,8 +59,21 @@ export default function TournamentManagerOverviewPage() {
   }, []);
 
   useEffect(() => {
-    fetchTournaments();
-  }, [fetchTournaments]);
+    if (isAuthLoading) return;
+
+    const role = user?.role?.toUpperCase();
+    if (role === 'ADMIN') {
+      router.replace('/admin/tournaments');
+      return;
+    }
+    if (role === 'MANAGER') {
+      fetchTournaments();
+      return;
+    }
+
+    setIsLoading(false);
+    setTournaments([]);
+  }, [fetchTournaments, isAuthLoading, router, user?.role]);
 
   // Stats from fetched data
   const stats = useMemo(() => {

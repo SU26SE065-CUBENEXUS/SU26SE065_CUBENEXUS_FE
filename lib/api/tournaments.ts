@@ -34,6 +34,11 @@ export async function getPublicTournaments(): Promise<TournamentDetailDto[]> {
   return apiFetch<TournamentDetailDto[]>('/api/tournaments');
 }
 
+/** GET /api/tournament-management/tournaments/my — Manager-owned/assigned tournaments */
+export async function getManagerTournaments(): Promise<TournamentDetailDto[]> {
+  return apiFetch<TournamentDetailDto[]>('/api/tournament-management/tournaments/my');
+}
+
 /** GET /api/tournaments/{id} — Chi tiết một giải đấu */
 export async function getTournamentById(id: string): Promise<TournamentDetailDto> {
   return apiFetch<TournamentDetailDto>(`/api/tournaments/${id}`);
