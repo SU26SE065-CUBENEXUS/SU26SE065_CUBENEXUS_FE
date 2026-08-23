@@ -125,6 +125,16 @@ export async function getTournamentRegistrations(tournamentId: string): Promise<
   return apiFetch<TournamentRegistrationDetailDto[]>(`/api/tournament-management/tournaments/${tournamentId}/registrations`);
 }
 
+/** POST /api/tournament-management/tournaments/{id}/demo-participants */
+export async function generateDemoParticipants(
+  tournamentId: string,
+  count = 20
+): Promise<{ tournamentId: string; requestedCount: number; newRegistrations: number; existingRegistrations: number; participantCodes: string[] }> {
+  return apiFetch(`/api/tournament-management/tournaments/${tournamentId}/demo-participants?count=${count}`, {
+    method: 'POST',
+  });
+}
+
 /** PATCH /api/tournament-management/registrations/{id}/status — Duyệt/hủy đăng ký */
 export async function updateRegistrationStatus(registrationId: string, status: string): Promise<RegistrationResultDto> {
   return apiFetch<RegistrationResultDto>(`/api/tournament-management/registrations/${registrationId}/status`, {

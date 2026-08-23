@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
-import { getTournamentById, getTournamentRegistrations, updateRegistrationStatus, checkInRegistration } from '@/lib/api/tournaments';
+import { getTournamentById, getTournamentRegistrations, generateDemoParticipants, updateRegistrationStatus, checkInRegistration } from '@/lib/api/tournaments';
 import type { TournamentDetailDto, TournamentRegistrationDetailDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
@@ -29,7 +29,8 @@ import {
   AlertTriangle,
   QrCode,
   Copy,
-  Printer
+  Printer,
+  Sparkles
 } from 'lucide-react';
 
 function msToDisplay(ms?: number | null): string {
@@ -76,6 +77,7 @@ export default function RegistrationManagementPage({
   // Action feedback
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
 
   // QR Modal State
   const [selectedRegForQr, setSelectedRegForQr] = useState<TournamentRegistrationDetailDto | null>(null);
@@ -137,6 +139,23 @@ export default function RegistrationManagementPage({
       loadData();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to check in competitor');
+    }
+  };
+
+  const handleGenerateDemoParticipants = async () => {
+    setActionError(null);
+    setActionSuccess(null);
+    setIsGeneratingDemo(true);
+    try {
+      const result = await generateDemoParticipants(tournamentId, 20);
+      setActionSuccess(
+        `Generated ${result.newRegistrations} demo participants (${result.existingRegistrations} already existed).`
+      );
+      await loadData();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to generate demo participants');
+    } finally {
+      setIsGeneratingDemo(false);
     }
   };
 
@@ -296,6 +315,16 @@ export default function RegistrationManagementPage({
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={tournament.statusCode} />
+            <button
+              type="button"
+              onClick={handleGenerateDemoParticipants}
+              disabled={isGeneratingDemo || tournament.statusCode !== 'registration_open'}
+              title={tournament.statusCode !== 'registration_open' ? 'Open registration before generating demo participants' : 'Create 20 demo registrations'}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isGeneratingDemo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {isGeneratingDemo ? 'Generating...' : 'Generate 20 Demo Participants'}
+            </button>
           </div>
         </div>
       </div>
