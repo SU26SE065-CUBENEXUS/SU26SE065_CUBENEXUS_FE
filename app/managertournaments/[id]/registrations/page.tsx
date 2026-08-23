@@ -78,6 +78,7 @@ export default function RegistrationManagementPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
+  const isRegistrationOpen = String(tournament?.statusCode ?? '').toUpperCase() === 'REGISTRATION_OPEN';
 
   // QR Modal State
   const [selectedRegForQr, setSelectedRegForQr] = useState<TournamentRegistrationDetailDto | null>(null);
@@ -318,8 +319,8 @@ export default function RegistrationManagementPage({
             <button
               type="button"
               onClick={handleGenerateDemoParticipants}
-              disabled={isGeneratingDemo || tournament.statusCode !== 'registration_open'}
-              title={tournament.statusCode !== 'registration_open' ? 'Open registration before generating demo participants' : 'Create 20 demo registrations'}
+              disabled={isGeneratingDemo || !isRegistrationOpen}
+              title={!isRegistrationOpen ? 'Open registration before generating demo participants' : 'Create 20 demo registrations'}
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isGeneratingDemo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
