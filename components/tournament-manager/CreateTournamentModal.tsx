@@ -827,7 +827,7 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                     {ev.totalRounds > 1 && (
                       <div className="mt-3 flex items-center justify-between p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl text-xs">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-indigo-900 text-xs font-mono">🎯 Advancement Target:</span>
+                          <span className="font-bold text-indigo-900 text-xs font-mono">Advancement Target:</span>
                           <span className="text-indigo-700 font-medium">Advance to next round: Top</span>
                           <input
                             type="number"

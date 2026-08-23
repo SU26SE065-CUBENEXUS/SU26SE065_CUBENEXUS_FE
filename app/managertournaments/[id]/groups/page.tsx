@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, use } from 'react';
 import Link from 'next/link';
-import { getTournamentById, getTournamentJudges, generateGroups, generateScrambles } from '@/lib/api/tournaments';
+import { getTournamentById, getTournamentJudges, getTournamentRegistrations, generateGroups, generateScrambles } from '@/lib/api/tournaments';
 import {
   startRound,
   lockRoundResults,
@@ -55,10 +55,12 @@ function EventGroupPanel({
   event,
   tournamentId,
   defaultStationCount = 4,
+  eligibleCompetitorCount = 0,
 }: {
   event: EventDetailDto;
   tournamentId: string;
   defaultStationCount?: number;
+  eligibleCompetitorCount?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'groups' | 'scrambles' | 'control'>('groups');
@@ -434,12 +436,18 @@ function EventGroupPanel({
                     <span className="text-xs text-slate-500 font-bold font-mono">
                       Groups Structure Board ({groupsCount} groups)
                     </span>
-                    <button
-                      onClick={() => setIsGenerateGroupsOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-2xs cursor-pointer"
-                    >
-                      <Shuffle className="h-3 w-3 text-indigo-600" /> Re-generate Groups
-                    </button>
+                    {Number(roundNumber) === 1 ? (
+                      <button
+                        onClick={() => setIsGenerateGroupsOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-2xs cursor-pointer"
+                      >
+                        <Shuffle className="h-3 w-3 text-indigo-600" /> Re-generate Groups
+                      </button>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg">
+                        Use Advance Round from the previous round
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -575,13 +583,21 @@ function EventGroupPanel({
 
           {/* GENERATE GROUPS MODAL */}
           {isGenerateGroupsOpen && (() => {
-            const totalEligibleCount = liveBoard?.competitors?.length || 0;
-            const gSize = Number(groupSize) || 0;
+            const totalEligibleCount = liveBoard?.competitors?.length
+              || (Number(roundNumber) === 1 ? eligibleCompetitorCount : 0);
             const sCount = defaultStationCount || 0;
+            const gSize = totalEligibleCount > 0 && sCount > 0
+              ? Math.ceil(totalEligibleCount / sCount)
+              : 0;
             const isGroupExceeded = totalEligibleCount > 0 && gSize > totalEligibleCount;
             const isGroupLessThanStations = sCount > 0 && gSize > 0 && gSize < sCount;
             const isNoStationsAssigned = sCount === 0;
             const isInvalid = isGroupExceeded || isGroupLessThanStations || isNoStationsAssigned || gSize <= 0;
+            const basePerStation = sCount > 0 ? Math.floor(gSize / sCount) : 0;
+            const remainder = sCount > 0 ? gSize % sCount : 0;
+            const stationDistribution = sCount > 0 && gSize > 0
+              ? Array.from({ length: sCount }, (_, index) => basePerStation + (index < remainder ? 1 : 0))
+              : [];
 
             return (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -623,23 +639,29 @@ function EventGroupPanel({
                           </span>
                         )}
                       </div>
-                      <input
-                        type="number"
-                        min="1"
-                        max={totalEligibleCount || undefined}
-                        value={groupSize}
-                        onChange={(e) => setGroupSize(e.target.value)}
-                        className={`w-full rounded-lg border ${isGroupExceeded || isGroupLessThanStations ? 'border-red-500 bg-red-50/50' : 'border-slate-200 bg-slate-50'} px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition`}
-                        placeholder="e.g. 8 competitors / group"
-                      />
+                      <div className="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800 font-bold font-mono">
+                        {gSize > 0 ? `${gSize} competitor${gSize === 1 ? '' : 's'} per group` : 'Waiting for competitors and stations...'}
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        Automatically calculated as ceil(total eligible competitors ÷ available stations).
+                      </p>
                     </div>
 
-                    {!isNoStationsAssigned && (
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs flex items-center justify-between">
-                        <span className="text-slate-600 font-medium">Available Stations:</span>
-                        <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
-                          {sCount} Stations (Judges Assigned)
-                        </span>
+                  {!isNoStationsAssigned && (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 font-medium">Available Stations:</span>
+                          <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
+                            {sCount} Stations (Judges Assigned)
+                          </span>
+                        </div>
+                        {stationDistribution.length > 0 && !isGroupLessThanStations && (
+                          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-emerald-800">
+                            <span className="font-semibold">Balanced allocation per group:</span>{' '}
+                            {stationDistribution.join(' / ')} competitors per station
+                            <span className="block mt-0.5 text-[10px] text-emerald-700">The difference between stations will never exceed 1 competitor; station labels may rotate for fairness.</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -695,6 +717,10 @@ function EventGroupPanel({
           {isAdvanceOpen && (() => {
             const sCount = defaultStationCount || 0;
             const isNoStationsAssigned = sCount === 0;
+            const advancingCount = advancingCompetitors.length || Number(advanceCount) || 0;
+            const nextGroupSize = sCount > 0 && advancingCount > 0
+              ? Math.ceil(advancingCount / sCount)
+              : 0;
 
             return (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -732,15 +758,15 @@ function EventGroupPanel({
                     </div>
                   )}
 
-                  {/* Group size input only */}
+                  {/* Group size is calculated from qualifiers and stations */}
                   <div className="w-48">
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">New Group Size</label>
-                    <input
-                      type="number"
-                      value={groupSize}
-                      onChange={(e) => setGroupSize(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 font-semibold outline-none focus:bg-white focus:border-indigo-600 transition"
-                    />
+                    <div className="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800 font-bold font-mono">
+                      {nextGroupSize > 0 ? `${nextGroupSize} competitors per group` : 'Select qualifying competitors...'}
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-500">
+                      Automatically calculated as ceil(selected competitors ÷ stations).
+                    </p>
                   </div>
 
                 {/* Advance Ranking Preview */}
@@ -803,7 +829,7 @@ function EventGroupPanel({
                         () => advanceRound(event.id, Number(roundNumber), {
                           nextRoundNumber: Number(roundNumber) + 1,
                           topN: Number(advanceCount),
-                          competitorsPerGroup: Number(groupSize),
+                          competitorsPerGroup: nextGroupSize,
                           stationCount: sCount
                         }),
                         `Successfully advanced Top ${advanceCount} competitors to Round ${Number(roundNumber) + 1}!`
@@ -878,18 +904,21 @@ export default function GroupHeatManagementPage({
   const { id } = use(params);
   const [tournament, setTournament] = useState<TournamentDetailDto | null>(null);
   const [judges, setJudges] = useState<TournamentJudgeDto[]>([]);
+  const [registrations, setRegistrations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [tData, jData] = await Promise.all([
+        const [tData, jData, rData] = await Promise.all([
           getTournamentById(id),
           getTournamentJudges(id).catch(() => []),
+          getTournamentRegistrations(id).catch(() => []),
         ]);
         setTournament(tData);
         setJudges(jData);
+        setRegistrations(rData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load tournament');
       } finally {
@@ -902,6 +931,12 @@ export default function GroupHeatManagementPage({
     .map((j) => j.assignedStationNumber)
     .filter((s): s is number => typeof s === 'number' && s > 0);
   const detectedStations = assignedStations.length > 0 ? Math.max(...assignedStations) : 0;
+  const eligibleCountByEvent = (eventId: string) => registrations.filter((registration) => {
+    if (registration.statusCode?.toUpperCase() === 'CANCELLED') return false;
+    return registration.registeredEvents?.some((registeredEvent: any) =>
+      registeredEvent.eventId === eventId && registeredEvent.statusCode?.toUpperCase() !== 'WITHDRAWN'
+    );
+  }).length;
 
   if (isLoading) {
     return (
@@ -954,7 +989,13 @@ export default function GroupHeatManagementPage({
           {tournament.events
             .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
             .map((event) => (
-              <EventGroupPanel key={event.id} event={event} tournamentId={id} defaultStationCount={detectedStations} />
+              <EventGroupPanel
+                key={event.id}
+                event={event}
+                tournamentId={id}
+                defaultStationCount={detectedStations}
+                eligibleCompetitorCount={eligibleCountByEvent(event.id)}
+              />
             ))}
         </div>
       )}

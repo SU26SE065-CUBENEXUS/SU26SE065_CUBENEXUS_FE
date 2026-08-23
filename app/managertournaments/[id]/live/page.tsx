@@ -4,7 +4,7 @@ import { useEffect, useState, use, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL } from '@/lib/api/config';
-import { getTournamentById, getTournamentJudges, generateGroups, generateScrambles } from '@/lib/api/tournaments';
+import { getTournamentById, getTournamentJudges, getTournamentRegistrations, generateGroups, generateScrambles } from '@/lib/api/tournaments';
 import {
   checkIn,
   submitTraditionalResult,
@@ -13,6 +13,7 @@ import {
   getLiveBoardState,
   getGroupScrambles,
   getPenaltyTypes,
+  generateDemoScores,
   startRound,
   lockRoundResults,
   completeRound,
@@ -72,10 +73,12 @@ function EventRoundControlPanel({
   event,
   tournamentId,
   defaultStationCount = 4,
+  eligibleCompetitorCount = 0,
 }: {
   event: EventDetailDto;
   tournamentId: string;
   defaultStationCount?: number;
+  eligibleCompetitorCount?: number;
 }) {
   const [expanded, setExpanded] = useState(true);
   const [roundNumber, setRoundNumber] = useState('1');
@@ -169,7 +172,7 @@ function EventRoundControlPanel({
           try {
             const list = await getGroupScrambles(g.groupId);
             newScrambles[g.groupId] = list;
-          } catch {}
+          } catch { }
         })
       );
       setGroupScrambles(newScrambles);
@@ -178,14 +181,17 @@ function EventRoundControlPanel({
   }, [liveBoard?.groups]);
 
   // Helper action executor
-  const doAction = async (actionFn: () => Promise<unknown>, successMsg: string) => {
+  const doAction = async (actionFn: () => Promise<unknown>, successMsg: string, refreshRound?: number) => {
     setIsLoading(true);
     setMessage(null);
     setError(null);
     try {
       await actionFn();
+      if (refreshRound !== undefined) {
+        setRoundNumber(String(refreshRound));
+      }
       setMessage(successMsg);
-      await fetchLiveBoard(Number(roundNumber));
+      await fetchLiveBoard(refreshRound ?? Number(roundNumber));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Action failed');
     } finally {
@@ -291,12 +297,11 @@ function EventRoundControlPanel({
               </div>
 
               {/* Status Badge */}
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                  : roundStatus === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
-                    : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                      : 'text-slate-500 bg-slate-100 border-slate-200'
-              }`}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${roundStatus === 'ONGOING' ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                : roundStatus === 'LOCKED' ? 'text-amber-700 bg-amber-50 border-amber-200'
+                  : roundStatus === 'COMPLETED' ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                    : 'text-slate-500 bg-slate-100 border-slate-200'
+                }`}>
                 {roundStatus}
               </span>
             </div>
@@ -400,12 +405,13 @@ function EventRoundControlPanel({
                   </div>
                 </div>
                 <button
-                  disabled={isLoading}
+                  disabled={isLoading || Number(roundNumber) !== 1}
                   onClick={() => setIsGenerateGroupsOpen(true)}
                   className="sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition shadow-2xs cursor-pointer"
+                  title={Number(roundNumber) !== 1 ? 'Round 2+ groups must be created through Advance Round.' : 'Generate Round 1 groups'}
                 >
                   <Shuffle className="h-3.5 w-3.5" />
-                  {groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
+                  {Number(roundNumber) !== 1 ? 'Use Advance Round' : groupsExist ? 'Regenerate Groups' : 'Configure & Generate'}
                 </button>
               </div>
 
@@ -527,11 +533,10 @@ function EventRoundControlPanel({
                 <button
                   disabled={isFinalRound || isLoading || stepStatus.advance !== 'Ready'}
                   onClick={() => setIsAdvanceOpen(true)}
-                  className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${
-                    isFinalRound
-                      ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 cursor-pointer'
-                  }`}
+                  className={`sm:self-center inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${isFinalRound
+                    ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 cursor-pointer'
+                    }`}
                   title={isFinalRound ? 'Cannot advance: This is the final round.' : 'Advance qualifying competitors to next round'}
                 >
                   <Zap className="h-3.5 w-3.5" /> Advance Round
@@ -542,13 +547,21 @@ function EventRoundControlPanel({
 
           {/* GENERATE GROUPS MODAL */}
           {isGenerateGroupsOpen && (() => {
-            const totalEligibleCount = liveBoard?.competitors?.length || 0;
-            const gSize = Number(groupSize) || 0;
+            const totalEligibleCount = liveBoard?.competitors?.length
+              || (Number(roundNumber) === 1 ? eligibleCompetitorCount : 0);
             const sCount = defaultStationCount || 0;
+            const gSize = totalEligibleCount > 0 && sCount > 0
+              ? Math.ceil(totalEligibleCount / sCount)
+              : 0;
             const isGroupExceeded = totalEligibleCount > 0 && gSize > totalEligibleCount;
             const isGroupLessThanStations = sCount > 0 && gSize > 0 && gSize < sCount;
             const isNoStationsAssigned = sCount === 0;
             const isInvalid = isGroupExceeded || isGroupLessThanStations || isNoStationsAssigned || gSize <= 0;
+            const basePerStation = sCount > 0 ? Math.floor(gSize / sCount) : 0;
+            const remainder = sCount > 0 ? gSize % sCount : 0;
+            const stationDistribution = sCount > 0 && gSize > 0
+              ? Array.from({ length: sCount }, (_, index) => basePerStation + (index < remainder ? 1 : 0))
+              : [];
 
             return (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -586,15 +599,32 @@ function EventRoundControlPanel({
                           </span>
                         )}
                       </div>
-                      <input type="number" min="1" max={totalEligibleCount || undefined} value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className={`w-full rounded-lg border ${isGroupExceeded || isGroupLessThanStations ? 'border-red-500 bg-red-50/50' : 'border-slate-200 bg-slate-50'} px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600`} />
+                      <div className="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800 font-bold font-mono">
+                        {gSize > 0 ? `${gSize} competitor${gSize === 1 ? '' : 's'} per group` : 'Waiting for competitors and stations...'}
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        Automatically calculated as ceil(total eligible competitors ÷ available stations).
+                      </p>
                     </div>
 
                     {!isNoStationsAssigned && (
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs flex items-center justify-between">
-                        <span className="text-slate-600 font-medium">Available Stations:</span>
-                        <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
-                          {sCount} Stations (Judges Assigned)
-                        </span>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 font-medium">Available Stations:</span>
+                          <span className="font-bold text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-200 font-mono">
+                            {sCount} Stations (Judges Assigned)
+                          </span>
+                        </div>
+                        {stationDistribution.length > 0 && !isGroupLessThanStations && (
+                          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-emerald-800">
+                            <span className="font-semibold">Station allocation for a full group:</span>{' '}
+                            {stationDistribution.join(' / ')} competitors per station
+
+                            <span className="block mt-0.5 text-[10px] text-emerald-700">
+                              Competitors are randomly assigned while keeping station sizes balanced.
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -662,6 +692,13 @@ function EventRoundControlPanel({
 
             const sCount = defaultStationCount || 0;
             const isNoStationsAssigned = sCount === 0;
+            const requiredAdvanceCount = Number.isInteger(topNVal) && topNVal > 0 ? topNVal : 0;
+            const hasExactAdvanceSelection = requiredAdvanceCount > 0
+              && selectedCompEventIds.length === requiredAdvanceCount;
+            const advancingCount = selectedCompEventIds.length || Number(advanceCount) || 0;
+            const nextGroupSize = sCount > 0 && advancingCount > 0
+              ? Math.ceil(advancingCount / sCount)
+              : 0;
 
             return (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -696,13 +733,26 @@ function EventRoundControlPanel({
                     </div>
                   )}
 
-                  {/* Group size input only */}
+                  {/* Group size is calculated from selected qualifiers and stations */}
                   <div className="w-48">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">
-                      New Group Size
-                    </label>
-                    <input type="number" min="1" value={groupSize} onChange={(e) => setGroupSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 outline-none focus:bg-white focus:border-indigo-600" />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono">New Group Size</label>
+                    <div className="w-full rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-800 font-bold font-mono">
+                      {nextGroupSize > 0 ? `${nextGroupSize} competitors per group` : 'Select qualifying competitors...'}
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-500">
+                      Automatically calculated as ceil(selected competitors ÷ stations).
+                    </p>
                   </div>
+
+                  {!hasExactAdvanceSelection && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                      <span>
+                        You must select exactly <strong>{requiredAdvanceCount}</strong> competitors to advance.
+                        Currently selected: <strong>{selectedCompEventIds.length}</strong>.
+                      </span>
+                    </div>
+                  )}
 
                   {/* Tie-Break Warning Badge */}
                   {hasTieBreakBoundary && (
@@ -782,18 +832,23 @@ function EventRoundControlPanel({
                       Cancel
                     </button>
                     <button
-                      disabled={isLoading || selectedCompEventIds.length === 0 || isNoStationsAssigned}
+                      disabled={isLoading || !hasExactAdvanceSelection || isNoStationsAssigned}
                       onClick={() => {
+                        if (!hasExactAdvanceSelection) {
+                          setError(`Please select exactly ${requiredAdvanceCount} competitors before advancing.`);
+                          return;
+                        }
                         setIsAdvanceOpen(false);
                         doAction(
                           () => advanceRound(event.id, Number(roundNumber), {
                             nextRoundNumber: Number(roundNumber) + 1,
                             topN: selectedCompEventIds.length || Number(advanceCount),
-                            competitorsPerGroup: Number(groupSize),
+                            competitorsPerGroup: nextGroupSize,
                             stationCount: sCount,
                             selectedRegistrationEventIds: selectedCompEventIds.length > 0 ? selectedCompEventIds : undefined
                           }),
-                          `Successfully advanced ${selectedCompEventIds.length} competitors to Round ${Number(roundNumber) + 1}!`
+                          `Successfully advanced ${selectedCompEventIds.length} competitors to Round ${Number(roundNumber) + 1}!`,
+                          Number(roundNumber) + 1
                         );
                       }}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50 cursor-pointer"
@@ -860,6 +915,8 @@ export default function LiveOperationsPage({
   const [roundNumber, setRoundNumber] = useState('1');
   const [liveState, setLiveState] = useState<any>(null);
   const [isLoadingLiveState, setIsLoadingLiveState] = useState(false);
+  const [isGeneratingDemoScores, setIsGeneratingDemoScores] = useState(false);
+  const [showDemoScoreConfirm, setShowDemoScoreConfirm] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [groupScrambles, setGroupScrambles] = useState<any[]>([]);
   const [isLoadingScrambles, setIsLoadingScrambles] = useState(false);
@@ -964,6 +1021,7 @@ export default function LiveOperationsPage({
   }, [editingResult, penaltyTypes]);
 
   const [judges, setJudges] = useState<any[]>([]);
+  const [registrations, setRegistrations] = useState<any[]>([]);
 
   const assignedStations = judges
     .map((j) => j.assignedStationNumber)
@@ -976,7 +1034,7 @@ export default function LiveOperationsPage({
       setIsLoadingMain(true);
       setErrorMain(null);
       try {
-        const [tournData, penalties, jData] = await Promise.all([
+        const [tournData, penalties, jData, rData] = await Promise.all([
           getTournamentById(id),
           getPenaltyTypes().catch(() => [
             { id: 'ok-uuid', code: 'OK', label: 'OK', timeAdditionMs: 0 },
@@ -984,10 +1042,12 @@ export default function LiveOperationsPage({
             { id: 'dnf-uuid', code: 'DNF', label: 'DNF', timeAdditionMs: 0 },
           ]),
           getTournamentJudges(id).catch(() => []),
+          getTournamentRegistrations(id).catch(() => []),
         ]);
         setTournament(tournData);
         setPenaltyTypes(penalties);
         setJudges(jData);
+        setRegistrations(rData);
         if (tournData.events.length > 0) {
           setSelectedEventId(tournData.events[0].id);
           const medEvents = tournData.events.filter((e) => e.eventFormatCode === 'MEDLEY');
@@ -1003,6 +1063,13 @@ export default function LiveOperationsPage({
     }
     loadData();
   }, [id]);
+
+  const eligibleCountByEvent = (eventId: string) => registrations.filter((registration) => {
+    if (registration.statusCode?.toUpperCase() === 'CANCELLED') return false;
+    return registration.registeredEvents?.some((registeredEvent: any) =>
+      registeredEvent.eventId === eventId && registeredEvent.statusCode?.toUpperCase() !== 'WITHDRAWN'
+    );
+  }).length;
 
   // ─── Auto Detect Active Stations for Hub Event & Round ──
   useEffect(() => {
@@ -1513,6 +1580,30 @@ export default function LiveOperationsPage({
 
   const traditionalEvents = tournament.events.filter((e) => e.eventFormatCode === 'TRADITIONAL');
   const currentEvent = tournament.events.find((e) => e.id === selectedEventId);
+
+  const handleGenerateDemoScores = async () => {
+    if (!selectedEventId || !currentEvent || currentEvent.eventFormatCode !== 'TRADITIONAL') return;
+    if (!liveState?.competitors?.length) return;
+
+    setShowDemoScoreConfirm(false);
+    setIsGeneratingDemoScores(true);
+    try {
+      const result = await generateDemoScores(selectedEventId, Number(roundNumber));
+      const refreshed = await getLiveBoardState(selectedEventId, Number(roundNumber));
+      setLiveState(refreshed);
+      setRoundActionResult({
+        ok: true,
+        message: `Generated ${result.solvesGenerated} demo solves. Preserved ${result.solvesSkipped} existing solves in Round ${roundNumber}.`,
+      });
+    } catch (err) {
+      setRoundActionResult({
+        ok: false,
+        message: err instanceof Error ? err.message : 'Demo score generation failed.',
+      });
+    } finally {
+      setIsGeneratingDemoScores(false);
+    }
+  };
   const medleyEvents = tournament.events.filter((e) => e.eventFormatCode === 'MEDLEY');
   const filteredTradCompetitors = liveState?.competitors.filter((c: any) => c.groupId === selectedGroupId) || [];
   const filteredMedleyCompetitors = medleyLiveState?.competitors.filter((c: any) => c.groupId === medleyGroupId) || [];
@@ -1525,6 +1616,42 @@ export default function LiveOperationsPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      {showDemoScoreConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-indigo-100 p-2 text-indigo-700">
+                <Zap className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Generate demo scores?</h3>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                  This will fill only missing solves for <strong>{formatEventLabel(currentEvent!)}</strong>, Round <strong>{roundNumber}</strong>.
+                  Existing Judge scores will be preserved and other rounds will not be changed.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowDemoScoreConfirm(false)}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateDemoScores}
+                disabled={isGeneratingDemoScores}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {isGeneratingDemoScores && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Confirm Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
         <Link href="/managertournaments" className="hover:text-slate-900 transition-colors">Tournaments</Link>
@@ -1658,6 +1785,18 @@ export default function LiveOperationsPage({
                 >
                   <RefreshCw className="h-4 w-4" />
                 </button>
+                {currentEvent?.eventFormatCode === 'TRADITIONAL' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDemoScoreConfirm(true)}
+                    disabled={isGeneratingDemoScores || !liveState?.competitors?.length}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Fill missing scores only for this event and round"
+                  >
+                    {isGeneratingDemoScores ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                    {isGeneratingDemoScores ? 'Generating...' : 'Generate Missing Demo Scores'}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1787,14 +1926,14 @@ export default function LiveOperationsPage({
                                       }
                                     }}
                                     className={`px-2 py-1 rounded transition font-semibold flex items-center justify-center gap-1 mx-auto ${!attempt
-                                        ? 'text-slate-300 cursor-default'
-                                        : isOverTimeLimit
-                                          ? 'bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200 font-bold'
-                                          : isOverCutoff
-                                            ? 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 font-bold'
-                                            : isDnf
-                                              ? 'bg-red-50 text-red-700 border border-red-200'
-                                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                      ? 'text-slate-300 cursor-default'
+                                      : isOverTimeLimit
+                                        ? 'bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200 font-bold'
+                                        : isOverCutoff
+                                          ? 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 font-bold'
+                                          : isDnf
+                                            ? 'bg-red-50 text-red-700 border border-red-200'
+                                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                                       }`}
                                     title={
                                       attempt
@@ -2381,6 +2520,7 @@ export default function LiveOperationsPage({
                     event={event}
                     tournamentId={id}
                     defaultStationCount={detectedStations}
+                    eligibleCompetitorCount={eligibleCountByEvent(event.id)}
                   />
                 ))}
             </div>

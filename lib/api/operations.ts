@@ -89,6 +89,19 @@ export async function submitTraditionalResult(dto: SubmitTraditionalResultDto): 
   });
 }
 
+/** POST /api/tournament-operation/events/{eventId}/rounds/{roundNumber}/demo-scores */
+export async function generateDemoScores(eventId: string, roundNumber: number): Promise<{
+  eventId: string;
+  roundNumber: number;
+  competitorsProcessed: number;
+  solvesGenerated: number;
+  solvesSkipped: number;
+}> {
+  return apiFetch(`/api/tournament-operation/events/${eventId}/rounds/${roundNumber}/demo-scores`, {
+    method: 'POST',
+  });
+}
+
 /** POST /api/tournament-operation/results/medley — Lưu kết quả Medley */
 export async function submitMedleyResult(dto: SubmitMedleyResultDto): Promise<SubmitResultResponseDto> {
   return apiFetch<SubmitResultResponseDto>('/api/tournament-operation/results/medley', {

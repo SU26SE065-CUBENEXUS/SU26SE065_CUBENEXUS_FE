@@ -78,6 +78,7 @@ export default function RegistrationManagementPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
+  const [demoCount, setDemoCount] = useState('1');
   const isRegistrationOpen = String(tournament?.statusCode ?? '').toUpperCase() === 'REGISTRATION_OPEN';
 
   // QR Modal State
@@ -105,6 +106,18 @@ export default function RegistrationManagementPage({
   useEffect(() => {
     loadData(true);
   }, [loadData]);
+
+  const activeRegisteredCount = registrations.filter(r => r.statusCode !== 'CANCELLED').length;
+  const maxParticipants = tournament?.maxParticipants ?? 0;
+  const tournamentStatus = String(tournament?.statusCode ?? '').toUpperCase();
+  const canCheckIn = tournamentStatus === 'CHECKING_IN' || tournamentStatus === 'ONGOING';
+  const remainingCapacity = maxParticipants > 0
+    ? Math.max(0, maxParticipants - activeRegisteredCount)
+    : 20;
+
+  useEffect(() => {
+    setDemoCount(String(remainingCapacity > 0 ? remainingCapacity : 1));
+  }, [remainingCapacity]);
 
   // ---------- Actions ----------
   const handleApprove = async (regId: string) => {
@@ -146,9 +159,19 @@ export default function RegistrationManagementPage({
   const handleGenerateDemoParticipants = async () => {
     setActionError(null);
     setActionSuccess(null);
+    const requestedCount = Number.parseInt(demoCount, 10);
+    if (!Number.isInteger(requestedCount) || requestedCount < 1) {
+      setActionError('Demo participant count must be at least 1.');
+      return;
+    }
+    if (maxParticipants > 0 && requestedCount > remainingCapacity) {
+      setActionError(`Only ${remainingCapacity} registration slot(s) remain in this tournament.`);
+      return;
+    }
+
     setIsGeneratingDemo(true);
     try {
-      const result = await generateDemoParticipants(tournamentId, 20);
+      const result = await generateDemoParticipants(tournamentId, requestedCount);
       setActionSuccess(
         `Generated ${result.newRegistrations} demo participants (${result.existingRegistrations} already existed).`
       );
@@ -314,17 +337,33 @@ export default function RegistrationManagementPage({
               Registration Window: <span className="font-semibold text-slate-700">{formatDate(tournament.registrationOpenAt)}</span> to <span className="font-semibold text-slate-700">{formatDate(tournament.registrationCloseAt)}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
             <StatusBadge status={tournament.statusCode} />
+            <div className="flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1.5 sm:justify-start" title="Number of demo competitors to create">
+              <input
+                type="number"
+                min="1"
+                max={maxParticipants > 0 ? remainingCapacity : undefined}
+                value={demoCount}
+                onChange={(e) => setDemoCount(e.target.value)}
+                disabled={isGeneratingDemo || !isRegistrationOpen || remainingCapacity === 0}
+                className="w-12 bg-transparent text-center text-xs font-bold text-indigo-800 outline-none disabled:opacity-50"
+                aria-label="Number of demo participants"
+              />
+            </div>
             <button
               type="button"
               onClick={handleGenerateDemoParticipants}
-              disabled={isGeneratingDemo || !isRegistrationOpen}
-              title={!isRegistrationOpen ? 'Open registration before generating demo participants' : 'Create 20 demo registrations'}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isGeneratingDemo || !isRegistrationOpen || remainingCapacity === 0}
+              title={!isRegistrationOpen
+                ? 'Open registration before generating demo participants'
+                : remainingCapacity === 0
+                  ? 'Tournament registration is full'
+                  : `Create ${demoCount} demo registrations`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {isGeneratingDemo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              {isGeneratingDemo ? 'Generating...' : 'Generate 20 Demo Participants'}
+              {isGeneratingDemo ? 'Generating...' : `Generate ${demoCount} Demo Participants`}
             </button>
           </div>
         </div>
@@ -609,8 +648,13 @@ export default function RegistrationManagementPage({
                             <>
                               <button
                                 onClick={() => handleCheckIn(reg.registrationId)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2 h-7 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition shadow-2xs cursor-pointer"
-                                title="Mark Checked-In"
+                                disabled={!canCheckIn}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-[10px] font-bold transition shadow-2xs ${
+                                  canCheckIn
+                                    ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
+                                    : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
+                                }`}
+                                title={canCheckIn ? 'Mark Checked-In' : 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'}
                               >
                                 <UserCheck className="h-3.5 w-3.5" /> Check-In
                               </button>
