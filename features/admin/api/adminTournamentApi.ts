@@ -49,12 +49,14 @@ export async function getAdminTournaments(params: {
   pageSize?: number;
   search?: string;
   status?: string;
+  tournamentType?: 'ONLINE_ASYNC' | 'OFFLINE';
 }): Promise<AdminTournamentPagedResultDto> {
   const query = new URLSearchParams();
   if (params.page) query.append('page', params.page.toString());
   if (params.pageSize) query.append('pageSize', params.pageSize.toString());
   if (params.search) query.append('search', params.search);
   if (params.status) query.append('status', params.status);
+  if (params.tournamentType) query.append('tournamentType', params.tournamentType);
 
   return apiFetch<AdminTournamentPagedResultDto>(`/api/admin/tournaments?${query.toString()}`);
 }

@@ -527,7 +527,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           <Link
                             href={`/admin/tournaments/${t.id}/review`}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 font-extrabold text-xs transition shadow-2xs"
-                            title="Kiểm duyệt video attempt A01 (Admin)"
+                            title="Review A01 attempt video (Admin)"
                           >
                             <Video className="h-3.5 w-3.5" /> Review A01
                           </Link>
@@ -545,10 +545,10 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 hover:text-slate-900 hover:bg-slate-50 transition font-extrabold text-xs cursor-pointer shadow-2xs"
                           title={
                             isAdmin
-                              ? 'Quản trị chi tiết giải đấu (Admin)'
+                              ? 'Manage tournament details (Admin)'
                               : !t.isOnlineAsync
-                                ? 'Bảng điều hành giải đấu (Manager)'
-                                : 'Xem thông tin sự kiện & Leaderboard'
+                                ? 'Tournament operations dashboard (Manager)'
+                                : 'View event details and leaderboard'
                           }
                         >
                           Details

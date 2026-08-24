@@ -63,7 +63,7 @@ export default function TournamentManagerOverviewPage() {
 
     const role = user?.role?.toUpperCase();
     if (role === 'ADMIN') {
-      router.replace('/admin/tournaments');
+      router.replace('/admin/tournaments/async');
       return;
     }
     if (role === 'MANAGER') {

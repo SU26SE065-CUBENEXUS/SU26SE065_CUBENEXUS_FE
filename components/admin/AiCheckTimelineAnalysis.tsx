@@ -64,7 +64,7 @@ interface Props {
 export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   reportId,
   videoUrl,
-  targetPlayerName = 'Người chơi bị báo cáo',
+  targetPlayerName = 'Reported player',
   player1VideoUrl,
   player2VideoUrl,
   player1Name = 'Player 1',
@@ -139,7 +139,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
 
   const handleRunAiCheck = async () => {
     if (!activeVideoUrl) {
-      alert(`Không tìm thấy video trận đấu của ${currentTargetLabel} để phân tích!`);
+      alert(`No match video was found for ${currentTargetLabel}.`);
       return;
     }
 
@@ -167,7 +167,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`AI Microservice phản hồi lỗi: ${response.statusText}`);
+        throw new Error(`AI microservice error: ${response.statusText}`);
       }
 
       const data: AiCheckResult = await response.json();
@@ -176,7 +176,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       console.error('AI Check Error:', err);
       setErrorMsg(
         err.message ||
-          'Không thể kết nối đến AI Service (Hãy đảm bảo python ai_service.py đang chạy tại localhost:8000).'
+          'Unable to connect to the AI service. Ensure ai_service.py is running at localhost:8000.'
       );
     } finally {
       setLoading(false);
@@ -207,19 +207,19 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       case 'RUBIK_LOST':
         return (
           <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-md shrink-0 border border-rose-200">
-            Mất Rubik
+            Cube Missing
           </span>
         );
       case 'MULTIPLE_PERSONS':
         return (
           <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md shrink-0 border border-amber-200">
-            ≥ 2 Người
+            Multiple People
           </span>
         );
       case 'EXTRA_HANDS':
         return (
           <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded-md shrink-0 border border-purple-200">
-            Tay Thứ 3
+            Third-Party Hand
           </span>
         );
       default:
@@ -246,7 +246,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
               </span>
             </h3>
             <p className="text-xs text-slate-500">
-              Quét khung hình phát hiện gian lận (Mất Rubik, Tay lạ, Nhiều người trong phòng).
+              Scan video frames for a missing cube, an unknown hand, or multiple people in the room.
             </p>
           </div>
         </div>
@@ -282,7 +282,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-slate-700">Chế độ quét:</span>
+            <span className="font-bold text-slate-700">Scan Mode:</span>
             <button
               type="button"
               onClick={() => setScanScope('WINDOW')}
@@ -292,7 +292,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              Mốc ±15s ({formatSec(windowStart)} - {formatSec(windowEnd)})
+              ±15s Window ({formatSec(windowStart)} - {formatSec(windowEnd)})
             </button>
             <button
               type="button"
@@ -303,7 +303,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              Toàn bộ Video
+              Full Video
             </button>
           </div>
 
@@ -316,12 +316,12 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
             {loading ? (
               <>
                 <Zap className="h-3.5 w-3.5 animate-spin" />
-                <span>Đang quét AI...</span>
+                <span>Running AI scan...</span>
               </>
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>Kích Hoạt AI Check</span>
+                <span>Run AI Check</span>
               </>
             )}
           </button>
@@ -342,7 +342,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
           <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs">
             <div className="flex items-center gap-3">
               <div>
-                <span className="text-slate-500 font-medium">Phán quyết AI: </span>
+                <span className="text-slate-500 font-medium">AI Verdict: </span>
                 <span
                   className={`font-black uppercase px-2 py-0.5 rounded-md ${
                     aiData.verdict === 'SUSPICIOUS'
@@ -350,14 +350,14 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                       : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                   }`}
                 >
-                  {aiData.verdict === 'SUSPICIOUS' ? 'NGHI VẤN GIAN LẬN' : 'SẠCH / HỢP LỆ'}
+                  {aiData.verdict === 'SUSPICIOUS' ? 'SUSPICIOUS ACTIVITY' : 'CLEAN / VALID'}
                 </span>
               </div>
               <div className="text-slate-600 font-medium">
-                Độ tin cậy: <strong className="text-slate-900 font-bold">{aiData.confidence_score}%</strong>
+                Confidence: <strong className="text-slate-900 font-bold">{aiData.confidence_score}%</strong>
               </div>
               <div className="text-slate-600 font-medium">
-                Lỗi vi phạm: <strong className="text-rose-600 font-bold">{aiData.total_violations}</strong>
+                Violations: <strong className="text-rose-600 font-bold">{aiData.total_violations}</strong>
               </div>
             </div>
 
@@ -375,12 +375,12 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                   {autoFilledSuccess ? (
                     <>
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>Đã Điền Phán Quyết</span>
+                      <span>Verdict Applied</span>
                     </>
                   ) : (
                     <>
                       <Zap className="h-3.5 w-3.5" />
-                      <span>Tự Động Điền Phán Quyết</span>
+                      <span>Apply AI Verdict</span>
                     </>
                   )}
                 </button>
@@ -392,7 +392,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm border-none"
               >
                 <Video className="h-3.5 w-3.5" />
-                <span>Xem Video Phân Tích AI</span>
+                <span>View AI Analysis Video</span>
                 <ExternalLink className="h-3 w-3 opacity-80" />
               </button>
             </div>
@@ -400,7 +400,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
         </div>
       )}
 
-      {/* MODAL XEM VIDEO BẰNG CHỨNG AI (PHÂN TÍCH MƯỢT MÀ) */}
+      {/* AI evidence video modal */}
       {mounted && showEvidenceModal && aiData && createPortal(
         <div
           className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
@@ -414,10 +414,10 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
               <div className="space-y-0.5">
                 <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Video className="h-4 w-4 text-indigo-600" />
-                  <span>Video Phân Tích AI (Có Bounding Box &amp; Chú Thích): <strong>{currentTargetLabel}</strong></span>
+                  <span>AI Analysis Video (Bounding Boxes &amp; Annotations): <strong>{currentTargetLabel}</strong></span>
                 </h4>
                 <p className="text-xs text-slate-500">
-                  Video đã được AI quét và vẽ khung nhận diện đối tượng trực tiếp.
+                  The AI-scanned video includes object-detection overlays.
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -427,7 +427,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                   rel="noreferrer"
                   className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở tab mới
+                  <ExternalLink className="h-3.5 w-3.5" /> Open in New Tab
                 </a>
                 <button
                   onClick={() => setShowEvidenceModal(false)}

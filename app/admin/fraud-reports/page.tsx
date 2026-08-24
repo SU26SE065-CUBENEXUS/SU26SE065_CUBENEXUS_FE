@@ -38,7 +38,7 @@ export default function AdminFraudReportsQueuePage() {
       setReports(data || []);
     } catch (err: any) {
       console.error('Failed to fetch fraud reports:', err);
-      setError(err?.message || 'Không thể tải danh sách báo cáo gian lận.');
+      setError(err?.message || 'Unable to load fraud reports.');
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-bold text-xs">
           <Clock3 className="h-3.5 w-3.5" />
-          Chờ Xử Lý
+          Pending Review
         </span>
       );
     }
@@ -79,7 +79,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs">
           <XCircle className="h-3.5 w-3.5" />
-          Đã Xử Lý: GUILTY (Gian Lận)
+          Resolved: GUILTY
         </span>
       );
     }
@@ -88,7 +88,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Đã Xử Lý: INNOCENT (Vô Tội)
+          Resolved: INNOCENT
         </span>
       );
     }
@@ -96,7 +96,7 @@ export default function AdminFraudReportsQueuePage() {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs">
         <HelpCircle className="h-3.5 w-3.5" />
-        Đã Xử Lý: INCONCLUSIVE
+        Resolved: INCONCLUSIVE
       </span>
     );
   };
@@ -108,7 +108,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-medium text-xs">
           <Edit3 className="h-3 w-3" />
-          Có thể sửa ({report.hoursLeftToReReview != null ? `${report.hoursLeftToReReview}h` : '<24h'})
+          Editable ({report.hoursLeftToReReview != null ? `${report.hoursLeftToReReview}h` : '<24h'})
         </span>
       );
     }
@@ -116,7 +116,7 @@ export default function AdminFraudReportsQueuePage() {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-medium text-xs">
         <Lock className="h-3 w-3" />
-        Đã khóa ({'>'}24h)
+        Locked ({'>'}24h)
       </span>
     );
   };
@@ -132,10 +132,10 @@ export default function AdminFraudReportsQueuePage() {
             </span>
           </div>
           <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 truncate">
-            Danh Sách Báo Cáo Gian Lận Trận Đấu
+            Match Fraud Reports
           </h1>
           <p className="text-sm text-slate-500">
-            Quản lý báo cáo gian lận, xem video replay, nhật ký AI và đưa ra/điều chỉnh phán quyết trong vòng 24 giờ.
+            Review fraud reports, replay videos, inspect AI logs, and revise verdicts within 24 hours.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function AdminFraudReportsQueuePage() {
             className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-2xs"
           >
             <LayoutDashboard className="h-4 w-4 text-slate-600" />
-            <span>Về Dashboard</span>
+            <span>Back to Dashboard</span>
           </Link>
           <button
             onClick={fetchReports}
@@ -153,7 +153,7 @@ export default function AdminFraudReportsQueuePage() {
             className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-2xs"
           >
             <RefreshCw className={`h-4 w-4 text-indigo-600 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Tải Lại</span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function AdminFraudReportsQueuePage() {
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
-          <span>Tất Cả ({reports.length})</span>
+          <span>All ({reports.length})</span>
         </button>
 
         <button
@@ -181,7 +181,7 @@ export default function AdminFraudReportsQueuePage() {
           }`}
         >
           <Clock3 className="h-3.5 w-3.5" />
-          <span>Chờ Xử Lý ({pendingCount})</span>
+          <span>Pending ({pendingCount})</span>
         </button>
 
         <button
@@ -193,7 +193,7 @@ export default function AdminFraudReportsQueuePage() {
           }`}
         >
           <CheckCircle className="h-3.5 w-3.5" />
-          <span>Đã Xử Lý ({resolvedCount})</span>
+          <span>Resolved ({resolvedCount})</span>
         </button>
       </div>
 
@@ -202,7 +202,7 @@ export default function AdminFraudReportsQueuePage() {
         <div className="py-20 text-center space-y-4 bg-white border border-slate-200 rounded-2xl shadow-2xs w-full">
           <RefreshCw className="h-8 w-8 text-indigo-600 animate-spin mx-auto" />
           <p className="text-sm font-semibold text-slate-500">
-            Đang tải danh sách báo cáo...
+            Loading fraud reports...
           </p>
         </div>
       ) : error ? (
@@ -213,7 +213,7 @@ export default function AdminFraudReportsQueuePage() {
             onClick={fetchReports}
             className="px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-2xs cursor-pointer"
           >
-            Thử Lại
+            Try Again
           </button>
         </div>
       ) : filteredReports.length === 0 ? (
@@ -221,15 +221,15 @@ export default function AdminFraudReportsQueuePage() {
           <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-800">
             {activeTab === 'PENDING'
-              ? 'Không có báo cáo nào đang chờ xử lý'
+              ? 'No reports are awaiting review'
               : activeTab === 'RESOLVED'
-              ? 'Chưa có báo cáo nào đã xử lý'
-              : 'Không có báo cáo nào'}
+              ? 'No reports have been resolved'
+              : 'No fraud reports found'}
           </h3>
           <p className="text-sm text-slate-500 max-w-sm mx-auto">
             {activeTab === 'PENDING'
-              ? 'Tất cả các báo cáo gian lận đã được xử lý hoàn tất hoặc chưa có khiếu nại mới.'
-              : 'Danh sách báo cáo trống.'}
+              ? 'All fraud reports have been resolved, or no new reports have been submitted.'
+              : 'The report list is empty.'}
           </p>
         </div>
       ) : (
@@ -239,14 +239,14 @@ export default function AdminFraudReportsQueuePage() {
             <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-bold text-slate-600 whitespace-nowrap">
-                  <th className="px-5 py-4">Trận Đấu (Match ID)</th>
-                  <th className="px-5 py-4">Người Báo Cáo</th>
-                  <th className="px-5 py-4">Người Bị Báo Cáo</th>
-                  <th className="px-5 py-4">Loại Gian Lận</th>
-                  <th className="px-5 py-4">Thời Điểm</th>
-                  <th className="px-5 py-4">Thời Gian Gửi</th>
-                  <th className="px-5 py-4">Trạng Thái &amp; Phán Quyết</th>
-                  <th className="px-5 py-4 text-right">Thao Tác</th>
+                  <th className="px-5 py-4">Match ID</th>
+                  <th className="px-5 py-4">Reporter</th>
+                  <th className="px-5 py-4">Reported Player</th>
+                  <th className="px-5 py-4">Fraud Type</th>
+                  <th className="px-5 py-4">Incident Time</th>
+                  <th className="px-5 py-4">Submitted At</th>
+                  <th className="px-5 py-4">Status &amp; Verdict</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-normal">
@@ -276,7 +276,7 @@ export default function AdminFraudReportsQueuePage() {
                       </td>
                       <td className="px-5 py-4">
                         <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 font-bold text-xs text-amber-700 inline-block">
-                          {report.fraudType || report.reasonCode || 'Khác'}
+                          {report.fraudType || report.reasonCode || 'Other'}
                         </span>
                       </td>
                       <td className="px-5 py-4 font-semibold text-indigo-600">
@@ -286,7 +286,7 @@ export default function AdminFraudReportsQueuePage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-slate-500 text-xs">
-                        {new Date(report.createdAt).toLocaleString('vi-VN')}
+                        {new Date(report.createdAt).toLocaleString('en-US')}
                       </td>
                       <td className="px-5 py-4">
                         <div className="space-y-1.5">
@@ -308,17 +308,17 @@ export default function AdminFraudReportsQueuePage() {
                           {isPending ? (
                             <>
                               <Eye className="h-3.5 w-3.5" />
-                              <span>Kiểm Duyệt</span>
+                              <span>Review</span>
                             </>
                           ) : canEdit ? (
                             <>
                               <Edit3 className="h-3.5 w-3.5" />
-                              <span>Xem / Sửa</span>
+                              <span>View / Edit</span>
                             </>
                           ) : (
                             <>
                               <Eye className="h-3.5 w-3.5" />
-                              <span>Chi Tiết</span>
+                              <span>Details</span>
                             </>
                           )}
                           <ChevronRight className="h-3.5 w-3.5" />
@@ -344,18 +344,18 @@ export default function AdminFraudReportsQueuePage() {
                 <div key={report.id} className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-slate-900">
-                      Trận: {report.matchId.slice(0, 8)}...
+                      Match: {report.matchId.slice(0, 8)}...
                     </span>
                     <div>{getVerdictBadge(report)}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                     <div>
-                      <span className="text-[11px] text-slate-400 block font-medium">Người Báo Cáo</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Reporter</span>
                       <span className="font-semibold text-slate-900">{report.reporterUserId.slice(0, 8)}</span>
                     </div>
                     <div>
-                      <span className="text-[11px] text-slate-400 block font-medium">Người Bị Báo Cáo</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Reported Player</span>
                       <span className="font-semibold text-rose-600">{report.reportedUserId.slice(0, 8)}</span>
                     </div>
                   </div>
@@ -364,7 +364,7 @@ export default function AdminFraudReportsQueuePage() {
 
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
                     <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 font-bold">
-                      {report.fraudType || 'Khác'} ({report.timestampText || '00:00'})
+                      {report.fraudType || 'Other'} ({report.timestampText || '00:00'})
                     </span>
                     <Link
                       href={`/admin/fraud-reports/${report.id}`}
@@ -379,17 +379,17 @@ export default function AdminFraudReportsQueuePage() {
                       {isPending ? (
                         <>
                           <Eye className="h-3.5 w-3.5" />
-                          <span>Kiểm Duyệt</span>
+                          <span>Review</span>
                         </>
                       ) : canEdit ? (
                         <>
                           <Edit3 className="h-3.5 w-3.5" />
-                          <span>Xem / Sửa</span>
+                          <span>View / Edit</span>
                         </>
                       ) : (
                         <>
                           <Eye className="h-3.5 w-3.5" />
-                          <span>Chi Tiết</span>
+                          <span>Details</span>
                         </>
                       )}
                     </Link>

@@ -82,7 +82,7 @@ export default function AdminEloManagementPage() {
       setPlacementCount(data.placementMatchCount);
       setDefaultElo(data.defaultElo);
     } catch (err: any) {
-      setConfigError(err?.message || 'Không thể tải cấu hình ELO.');
+      setConfigError(err?.message || 'Unable to load ELO configuration.');
     } finally {
       setIsLoadingConfig(false);
     }
@@ -114,9 +114,9 @@ export default function AdminEloManagementPage() {
         defaultElo,
       });
       setConfig(updated);
-      setConfigSuccess('Cập nhật cấu hình ELO hệ thống thành công!');
+      setConfigSuccess('System ELO configuration updated successfully.');
     } catch (err: any) {
-      setConfigError(err?.message || 'Cập nhật thất bại.');
+      setConfigError(err?.message || 'Update failed.');
     } finally {
       setIsSavingConfig(false);
     }
@@ -142,7 +142,7 @@ export default function AdminEloManagementPage() {
       });
 
       setAdjustSuccess(
-        `Đã điều chỉnh ELO cho ${res.username}: ${res.eloBefore} ➔ ${res.eloAfter} (${res.delta > 0 ? '+' : ''}${res.delta} ELO)`
+        `Adjusted ELO for ${res.username}: ${res.eloBefore} ➔ ${res.eloAfter} (${res.delta > 0 ? '+' : ''}${res.delta} ELO)`
       );
       setTimeout(() => {
         setSelectedPlayer(null);
@@ -150,7 +150,7 @@ export default function AdminEloManagementPage() {
         fetchPlayers(searchQuery);
       }, 1800);
     } catch (err: any) {
-      setAdjustError(err?.message || 'Điều chỉnh ELO thất bại.');
+      setAdjustError(err?.message || 'Unable to adjust ELO.');
     } finally {
       setIsSubmittingAdjust(false);
     }
@@ -180,10 +180,10 @@ export default function AdminEloManagementPage() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-2">
-            Quản Lý &amp; Cấu Hình ELO Hệ Thống
+            System ELO Management &amp; Configuration
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Cấu hình công thức ELO chuẩn quốc tế (K-Factor) và hỗ trợ Admin cộng/trừ ELO trực tiếp cho người chơi.
+            Configure the standard ELO formula and allow administrators to adjust player ratings directly.
           </p>
         </div>
 
@@ -215,7 +215,7 @@ export default function AdminEloManagementPage() {
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
-          <Sliders className="h-4 w-4" /> Cấu Hình Tham Số ELO
+          <Sliders className="h-4 w-4" /> ELO Parameters
         </button>
         <button
           onClick={() => setActiveTab('players')}
@@ -224,29 +224,29 @@ export default function AdminEloManagementPage() {
             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
         >
-          <Users className="h-4 w-4" /> Bảng ELO Người Chơi
+          <Users className="h-4 w-4" /> Player Ratings
         </button>
       </div>
 
-      {/* Tab 1: Cấu Hình Tham Số ELO */}
+      {/* Tab 1: ELO parameters */}
       {activeTab === 'config' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Form Cấu Hình chính */}
+          {/* Main configuration form */}
           <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="space-y-0.5">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-orange-500" /> Thiết Lập Chỉ Số ELO
+                  <Settings className="h-5 w-5 text-orange-500" /> ELO Rating Settings
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Điều chỉnh hệ số K-Factor và tham số khởi tạo xếp hạng cho hệ thống Online Arena.
+                  Configure K-Factors and initial rating parameters for Online Arena.
                 </p>
               </div>
               <button
                 onClick={fetchConfig}
                 disabled={isLoadingConfig}
                 className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl transition-all cursor-pointer"
-                title="Tải lại"
+                title="Refresh"
               >
                 <RefreshCw className={`h-4 w-4 ${isLoadingConfig ? 'animate-spin' : ''}`} />
               </button>
@@ -267,14 +267,14 @@ export default function AdminEloManagementPage() {
             )}
 
             {isLoadingConfig ? (
-              <div className="py-12 text-center text-slate-400 text-sm font-medium">Đang tải cấu hình ELO...</div>
+              <div className="py-12 text-center text-slate-400 text-sm font-medium">Loading ELO configuration...</div>
             ) : (
               <form onSubmit={handleSaveConfig} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* K-Factor Standard */}
                   <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
                     <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                      Hệ Số K-Factor (Chuẩn)
+                      Standard K-Factor
                     </label>
                     <input
                       type="number"
@@ -286,14 +286,14 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Mức độ biến động ELO tối đa cho trận đấu chính thức (Mặc định: <strong>20</strong>).
+                      Maximum ELO movement in standard matches (default: <strong>20</strong>).
                     </p>
                   </div>
 
                   {/* K-Factor Placement */}
                   <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
                     <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                      Hệ Số K-Factor (Phân Hạng)
+                      Placement K-Factor
                     </label>
                     <input
                       type="number"
@@ -305,14 +305,14 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Mức biến động ELO cực nhanh ở giai đoạn đấu phân hạng (Mặc định: <strong>100</strong>).
+                      Accelerated ELO movement during placement matches (default: <strong>100</strong>).
                     </p>
                   </div>
 
                   {/* Placement Match Count */}
                   <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
                     <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                      Số Trận Đấu Phân Hạng
+                      Placement Match Count
                     </label>
                     <input
                       type="number"
@@ -324,14 +324,14 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Số trận đầu tiên tài khoản mới cần thi đấu để xác định rank (Mặc định: <strong>5 trận</strong>).
+                      Initial matches required to determine a new player's rank (default: <strong>5 matches</strong>).
                     </p>
                   </div>
 
                   {/* Default ELO */}
                   <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
                     <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                      ELO Khởi Điểm Nền
+                      Initial ELO Rating
                     </label>
                     <input
                       type="number"
@@ -343,7 +343,7 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Điểm ELO cấp cho tài khoản khi bắt đầu đấu PvP (Mặc định: <strong>1000 ELO</strong>).
+                      Rating assigned when an account starts PvP (default: <strong>1000 ELO</strong>).
                     </p>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function AdminEloManagementPage() {
                     className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
                   >
                     <Save className="h-4 w-4" />
-                    {isSavingConfig ? 'Đang Lưu...' : 'Cập Nhật Cấu Hình ELO'}
+                    {isSavingConfig ? 'Saving...' : 'Update ELO Configuration'}
                   </button>
                 </div>
               </form>
@@ -367,20 +367,20 @@ export default function AdminEloManagementPage() {
             {/* Explanation Card */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3.5 shadow-2xs">
               <div className="flex items-center gap-2 text-indigo-700 font-extrabold text-xs uppercase tracking-wider">
-                <HelpCircle className="h-4 w-4 text-indigo-600" /> Công Thức ELO
+                <HelpCircle className="h-4 w-4 text-indigo-600" /> ELO Formula
               </div>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Trong hệ thống ELO chuẩn quốc tế, số điểm ELO tăng/giảm sau mỗi trận đấu <strong>không cố định</strong> (như +10 hay -10) mà được tính dựa trên <strong>tỷ lệ chênh lệch trình độ giữa 2 người chơi</strong> và hệ số <strong>K-Factor</strong>.
+                In the standard ELO system, rating changes are <strong>not fixed</strong>. They are calculated from the players' rating difference and the configured <strong>K-Factor</strong>.
               </p>
 
               <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-2 text-xs">
                 <div className="font-extrabold text-indigo-900 font-mono text-[11px]">
-                  Công thức: ELO_mới = ELO_cũ + K × (Kết_Quả - Kỳ_Vọng)
+                  Formula: New_ELO = Current_ELO + K × (Actual_Result - Expected_Result)
                 </div>
                 <ul className="list-disc pl-4 text-[11px] text-indigo-950 space-y-1 font-medium">
-                  <li><strong>K-Factor càng cao:</strong> Số điểm cộng/trừ sau mỗi trận càng lớn (thay đổi nhanh).</li>
-                  <li><strong>Thắng đối thủ mạnh hơn:</strong> Được cộng <strong>rất nhiều ELO</strong>.</li>
-                  <li><strong>Thắng đối thủ yếu hơn nhiều:</strong> Chỉ được cộng <strong>rất ít ELO</strong>.</li>
+                  <li><strong>Higher K-Factor:</strong> Produces larger rating changes after each match.</li>
+                  <li><strong>Defeating a stronger opponent:</strong> Awards <strong>more ELO</strong>.</li>
+                  <li><strong>Defeating a much weaker opponent:</strong> Awards <strong>less ELO</strong>.</li>
                 </ul>
               </div>
             </div>
@@ -389,7 +389,7 @@ export default function AdminEloManagementPage() {
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-2xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-orange-600 font-extrabold text-xs uppercase tracking-wider">
-                  <Calculator className="h-4 w-4 text-orange-500" /> Mô Phỏng Điểm Cộng/Trừ Thực Tế
+                  <Calculator className="h-4 w-4 text-orange-500" /> ELO Change Simulator
                 </div>
                 <span className="text-[10px] font-extrabold uppercase bg-slate-100 px-2 py-0.5 rounded-md text-slate-600">
                   Live Calculator
@@ -399,7 +399,7 @@ export default function AdminEloManagementPage() {
               {/* Slider / Controls */}
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-700 block">ELO Người A</label>
+                  <label className="text-[11px] font-bold text-slate-700 block">Player A ELO</label>
                   <input
                     type="number"
                     value={simP1Elo}
@@ -408,7 +408,7 @@ export default function AdminEloManagementPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-700 block">ELO Người B</label>
+                  <label className="text-[11px] font-bold text-slate-700 block">Player B ELO</label>
                   <input
                     type="number"
                     value={simP2Elo}
@@ -420,53 +420,53 @@ export default function AdminEloManagementPage() {
 
               {/* Output Delta Display */}
               <div className="space-y-4 border-t border-slate-100 pt-3 text-xs">
-                {/* Kịch bản 1: Người A Thắng */}
+                {/* Scenario 1: Player A wins */}
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
-                    <span> NẾU NGƯỜI A THẮNG</span>
-                    <span className="text-[10px] text-slate-500 font-mono">Đúng dự đoán</span>
+                    <span> IF PLAYER A WINS</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Expected outcome</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center font-mono">
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
-                      <span className="text-[10px] text-emerald-700 block font-bold">Người A Thắng</span>
+                      <span className="text-[10px] text-emerald-700 block font-bold">Player A Wins</span>
                       <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
                         <ArrowUpRight className="h-4 w-4" /> +{p1WinGainStd} ELO
                       </span>
                     </div>
                     <div className="bg-rose-50 border border-rose-200 rounded-xl p-2">
-                      <span className="text-[10px] text-rose-700 block font-bold">Người B Thua</span>
+                      <span className="text-[10px] text-rose-700 block font-bold">Player B Loses</span>
                       <span className="text-sm font-black text-rose-600 flex items-center justify-center gap-0.5">
                         <ArrowDownRight className="h-4 w-4" /> -{p1WinGainStd} ELO
                       </span>
                     </div>
                   </div>
                   <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
-                    Nếu là trận Phân Hạng (K={kPlacement}): <strong>A: +{p1WinGainPlc} ELO</strong> | <strong>B: -{p1WinGainPlc} ELO</strong>
+                    Placement match (K={kPlacement}): <strong>A: +{p1WinGainPlc} ELO</strong> | <strong>B: -{p1WinGainPlc} ELO</strong>
                   </div>
                 </div>
 
-                {/* Kịch bản 2: Người B Thắng */}
+                {/* Scenario 2: Player B wins */}
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
-                    <span> NẾU NGƯỜI B THẮNG</span>
-                    <span className="text-[10px] text-amber-600 font-bold font-mono">Lội ngược dòng</span>
+                    <span> IF PLAYER B WINS</span>
+                    <span className="text-[10px] text-amber-600 font-bold font-mono">Upset</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center font-mono">
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
-                      <span className="text-[10px] text-emerald-700 block font-bold">Người B Thắng</span>
+                      <span className="text-[10px] text-emerald-700 block font-bold">Player B Wins</span>
                       <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
                         <ArrowUpRight className="h-4 w-4" /> +{p2WinGainStd} ELO
                       </span>
                     </div>
                     <div className="bg-rose-50 border border-rose-200 rounded-xl p-2">
-                      <span className="text-[10px] text-rose-700 block font-bold">Người A Thua</span>
+                      <span className="text-[10px] text-rose-700 block font-bold">Player A Loses</span>
                       <span className="text-sm font-black text-rose-600 flex items-center justify-center gap-0.5">
                         <ArrowDownRight className="h-4 w-4" /> -{p2WinGainStd} ELO
                       </span>
                     </div>
                   </div>
                   <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
-                    Nếu là trận Phân Hạng (K={kPlacement}): <strong>B: +{p2WinGainPlc} ELO</strong> | <strong>A: -{p2WinGainPlc} ELO</strong>
+                    Placement match (K={kPlacement}): <strong>B: +{p2WinGainPlc} ELO</strong> | <strong>A: -{p2WinGainPlc} ELO</strong>
                   </div>
                 </div>
               </div>
@@ -475,7 +475,7 @@ export default function AdminEloManagementPage() {
         </div>
       )}
 
-      {/* Tab 2: Bảng ELO Người Chơi */}
+      {/* Tab 2: Player ratings */}
       {activeTab === 'players' && (
         <div className="space-y-6">
           {/* Search & Refresh Toolbar */}
@@ -485,7 +485,7 @@ export default function AdminEloManagementPage() {
                 <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Tìm theo Tên hoặc User ID..."
+                  placeholder="Search by name or user ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 font-medium focus:outline-none focus:border-orange-500"
@@ -495,7 +495,7 @@ export default function AdminEloManagementPage() {
                 type="submit"
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                Tìm
+                Search
               </button>
             </form>
 
@@ -504,7 +504,7 @@ export default function AdminEloManagementPage() {
               disabled={isLoadingPlayers}
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingPlayers ? 'animate-spin' : ''}`} /> Tải Lại Danh Sách
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingPlayers ? 'animate-spin' : ''}`} /> Refresh Players
             </button>
           </div>
 
@@ -514,25 +514,25 @@ export default function AdminEloManagementPage() {
               <table className="w-full text-left text-xs text-slate-700">
                 <thead className="bg-slate-100 text-slate-700 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
                   <tr>
-                    <th className="px-5 py-3.5">Người Chơi</th>
-                    <th className="px-5 py-3.5">ELO Hiện Tại</th>
+                    <th className="px-5 py-3.5">Player</th>
+                    <th className="px-5 py-3.5">Current ELO</th>
                     <th className="px-5 py-3.5">Peak ELO</th>
-                    <th className="px-5 py-3.5 text-center">Thắng / Thua / Hòa</th>
-                    <th className="px-5 py-3.5">Trạng Thái</th>
-                    <th className="px-5 py-3.5 text-right">Hành Động</th>
+                    <th className="px-5 py-3.5 text-center">Wins / Losses / Draws</th>
+                    <th className="px-5 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {isLoadingPlayers ? (
                     <tr>
                       <td colSpan={6} className="px-5 py-8 text-center text-slate-400">
-                        Đang tải danh sách người chơi...
+                        Loading players...
                       </td>
                     </tr>
                   ) : players.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-5 py-8 text-center text-slate-400">
-                        Không tìm thấy người chơi nào.
+                        No players found.
                       </td>
                     </tr>
                   ) : (
@@ -586,7 +586,7 @@ export default function AdminEloManagementPage() {
                             }}
                             className="px-3.5 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-xl text-xs font-extrabold transition-all cursor-pointer shadow-2xs"
                           >
-                            Điều Chỉnh ELO
+                            Adjust ELO
                           </button>
                         </td>
                       </tr>
@@ -615,10 +615,10 @@ export default function AdminEloManagementPage() {
                 <Zap className="h-3.5 w-3.5 fill-orange-500 text-orange-500" /> Manual ELO Adjustment
               </div>
               <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                Thay Đổi ELO: {selectedPlayer.username}
+                Adjust ELO: {selectedPlayer.username}
               </h3>
               <p className="text-xs text-slate-500 font-mono">
-                ELO Hiện tại: <strong className="text-amber-600 font-extrabold">{selectedPlayer.eloStandard}</strong>
+                Current ELO: <strong className="text-amber-600 font-extrabold">{selectedPlayer.eloStandard}</strong>
               </p>
             </div>
 
@@ -640,7 +640,7 @@ export default function AdminEloManagementPage() {
               {/* ELO Delta Input */}
               <div className="space-y-2">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                  Giá Trị Điều Chỉnh ELO (+ hoặc -)
+                  ELO Adjustment Value (+ or -)
                 </label>
                 <div className="flex items-center gap-2">
                   <button
@@ -651,7 +651,7 @@ export default function AdminEloManagementPage() {
                       : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                   >
-                    Trừ (-)
+                    Subtract (-)
                   </button>
                   <button
                     type="button"
@@ -661,7 +661,7 @@ export default function AdminEloManagementPage() {
                       : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                   >
-                    Cộng (+)
+                    Add (+)
                   </button>
                   <input
                     type="number"
@@ -672,19 +672,19 @@ export default function AdminEloManagementPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  Ví dụ: <code className="text-emerald-700 font-bold">+50</code> hoặc <code className="text-rose-700 font-bold">-30</code>. ELO sau điều chỉnh: <strong className="text-slate-900">{Math.max(0, selectedPlayer.eloStandard + eloDelta)}</strong>
+                  Example: <code className="text-emerald-700 font-bold">+50</code> or <code className="text-rose-700 font-bold">-30</code>. ELO after adjustment: <strong className="text-slate-900">{Math.max(0, selectedPlayer.eloStandard + eloDelta)}</strong>
                 </p>
               </div>
 
               {/* Reason Note */}
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 block">
-                  Lý Do / Ghi Chú Admin
+                  Reason / Administrator Notes
                 </label>
                 <textarea
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
-                  placeholder="Nhập lý do (ví dụ: Xử lý khiếu nại trận đấu #1234, Thưởng giải đấu...)"
+                  placeholder="Enter a reason (for example, match appeal #1234 or tournament reward)..."
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 font-medium focus:outline-none focus:border-orange-500 min-h-[80px]"
                 />
               </div>
@@ -695,14 +695,14 @@ export default function AdminEloManagementPage() {
                   onClick={() => setSelectedPlayer(null)}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingAdjust}
                   className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-orange-500/20 cursor-pointer"
                 >
-                  {isSubmittingAdjust ? 'Đang Lưu...' : 'Xác Nhận Thay Đổi'}
+                  {isSubmittingAdjust ? 'Saving...' : 'Confirm Adjustment'}
                 </button>
               </div>
             </form>

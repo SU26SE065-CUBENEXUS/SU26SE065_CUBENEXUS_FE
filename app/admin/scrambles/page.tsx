@@ -68,7 +68,7 @@ export default function ScrambleControlCenterPage() {
       const [page, totals, modeRes] = await Promise.all([
         getScrambles({ mode, status, puzzleTypeId: listPuzzleId || undefined, pageSize: 100 }),
         getScrambleSummary(),
-        getScrambleMode().catch(() => ({ mode: 'MANUAL' as const })),
+        getScrambleMode(mode).catch(() => ({ competitionMode: mode, mode: 'MANUAL' as const })),
       ]);
       setItems(page.items);
       setTotalItems(page.total);
@@ -168,7 +168,9 @@ export default function ScrambleControlCenterPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">Scramble Allocation & Generation Mode</h2>
+                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                  Scramble Allocation & Generation Mode — {MODES.find((item) => item.value === mode)?.label}
+                </h2>
                 <span
                   className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${generationMode === 'AUTO'
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
@@ -180,8 +182,8 @@ export default function ScrambleControlCenterPage() {
               </div>
               <p className="mt-1.5 text-xs text-slate-500 font-medium max-w-3xl leading-relaxed">
                 {generationMode === 'AUTO'
-                  ? 'AUTO GENERATION MODE: When scrambles are depleted during a match, the system automatically generates valid move scrambles on-demand without interrupting the competition.'
-                  : 'MANUAL GENERATION MODE: When the scramble pool runs low, real-time SignalR notifications will alert Admins to generate or import scrambles.'}
+                  ? `AUTO GENERATION MODE: Applies to every Rubik type in ${MODES.find((item) => item.value === mode)?.label}. When its pool is depleted, the system generates a valid scramble on demand.`
+                  : `MANUAL GENERATION MODE: Applies to every Rubik type in ${MODES.find((item) => item.value === mode)?.label}. SignalR alerts Admins when a pool runs low.`}
               </p>
             </div>
 
@@ -191,9 +193,9 @@ export default function ScrambleControlCenterPage() {
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    const res = await setScrambleMode('MANUAL');
+                    const res = await setScrambleMode(mode, 'MANUAL');
                     setGenerationMode(res.mode);
-                    setMessage({ ok: true, text: 'Switched to MANUAL generation mode.' });
+                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to MANUAL. The setting was saved to the database.` });
                   } catch (e: any) {
                     setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
                   } finally {
@@ -212,9 +214,9 @@ export default function ScrambleControlCenterPage() {
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    const res = await setScrambleMode('AUTO');
+                    const res = await setScrambleMode(mode, 'AUTO');
                     setGenerationMode(res.mode);
-                    setMessage({ ok: true, text: 'Switched to AUTO generation mode.' });
+                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to AUTO for all Rubik types. The setting was saved to the database.` });
                   } catch (e: any) {
                     setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
                   } finally {
@@ -578,7 +580,7 @@ export default function ScrambleControlCenterPage() {
                   {!items.length && (
                     <tr>
                       <td colSpan={7} className="py-14 text-center text-slate-400 font-semibold text-xs">
-                        Chưa có đề xoay nào trong danh sách.
+                        No scrambles found.
                       </td>
                     </tr>
                   )}

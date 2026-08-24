@@ -70,9 +70,9 @@ export default function AdminDashboardPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900 tracking-tight">
-            Truy Cập Nhanh Phân Hệ Admin System
+            Admin System Quick Access
           </h2>
-          <span className="text-xs font-bold text-slate-400">Điều hành hệ thống</span>
+          <span className="text-xs font-bold text-slate-400">System Operations</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -92,15 +92,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition">
-                  Giải Online (A01)
+                  Online Tournaments (A01)
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Quản lý giải đấu Online A01, AI 5-Face Scan & Hand Timer 14s.
+                  Manage A01 tournaments, AI five-face scanning, and the 14-second hand timer.
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-indigo-600">
-              <span>Quản Lý Async</span>
+              <span>Manage Async</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
@@ -121,15 +121,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-emerald-600 transition">
-                  Kho Đề Scramble Center
+                  Scramble Control Center
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Sinh đề xoay tự động, duyệt 1-click & thu hồi đề Rubik.
+                  Generate, approve, and retire Rubik scrambles from a centralized pool.
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-emerald-600">
-              <span>Mở Kho Đề</span>
+              <span>Open Scramble Center</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
                   A01 Video Review
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Kiểm duyệt Video bằng chứng của thí sinh nộp bài Async.
+                  Review competitor video evidence submitted for Async attempts.
                 </p>
               </div>
             </div>
@@ -179,15 +179,15 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-black text-slate-900 group-hover:text-slate-800 transition">
-                  Quản Lý Người Dùng
+                  User Management
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                  Quản lý tài khoản, phân quyền Manager/Admin & hệ thống.
+                  Manage accounts, roles, and system permissions.
                 </p>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-slate-700">
-              <span>Quản Lý User</span>
+              <span>Manage Users</span>
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>

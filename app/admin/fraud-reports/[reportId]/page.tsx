@@ -78,10 +78,10 @@ export default function AdminFraudReportReviewDetailPage() {
     if (result.has_violations) {
       setSelectedVerdict('GUILTY');
       const rangeText = result.scanned_range ? ` (${result.scanned_range})` : '';
-      setAdminComment(`Có gian lận trong khoảng${rangeText}. Trọng tài xác nhận vi phạm và áp dụng xử phạt theo quy chế.`);
+      setAdminComment(`Fraud was detected${rangeText}. The administrator confirmed the violation and applied the appropriate penalty.`);
     } else {
       setSelectedVerdict('INNOCENT');
-      setAdminComment(`Không phát hiện gian lận trong video của ${playerName}. Video hợp lệ.\n=> Kết luận: Bác bỏ khiếu nại.`);
+      setAdminComment(`No fraud was detected in ${playerName}'s video. The video is valid.\nConclusion: Report dismissed.`);
     }
   };
 
@@ -116,7 +116,7 @@ export default function AdminFraudReportReviewDetailPage() {
       }
     } catch (err: any) {
       console.error('Failed to load fraud report detail:', err);
-      setError(err?.message || 'Không thể tải thông tin báo cáo gian lận.');
+      setError(err?.message || 'Unable to load the fraud report.');
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +126,7 @@ export default function AdminFraudReportReviewDetailPage() {
     fetchDetail();
   }, [reportId]);
 
-  // Hàm trích xuất toàn bộ link ảnh trong văn bản ghi chú để hiển thị gallery trực quan
+  // Extract image links from report notes for the evidence gallery.
   const extractImageUrls = (text?: string): string[] => {
     if (!text) return [];
     const urlRegex = /(https?:\/\/[^\s\)]+\.(?:jpg|jpeg|png|webp|gif))/gi;
@@ -155,7 +155,7 @@ export default function AdminFraudReportReviewDetailPage() {
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminComment.trim()) {
-      alert('Vui lòng nhập nhận xét/ghi chú của Trọng tài trước khi ra phán quyết.');
+      alert('Please enter administrator notes before submitting a verdict.');
       return;
     }
 
@@ -163,14 +163,14 @@ export default function AdminFraudReportReviewDetailPage() {
     setVerdictSuccess(null);
     try {
       await reviewFraudReport(reportId, selectedVerdict, adminComment.trim());
-      setVerdictSuccess(`Đã lưu phán quyết ${selectedVerdict} và cập nhật điểm Elo thành công!`);
+      setVerdictSuccess(`${selectedVerdict} verdict saved and ELO updated successfully.`);
       setIsEditing(false);
       // Reload fresh data from server
       const freshData = await getFraudReportDetail(reportId);
       setDetail(freshData);
     } catch (err: any) {
       console.error('Failed to submit verdict:', err);
-      alert(err?.message || 'Lỗi khi gửi phán quyết. Vui lòng thử lại.');
+      alert(err?.message || 'Unable to submit the verdict. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +181,7 @@ export default function AdminFraudReportReviewDetailPage() {
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-6 space-y-4">
         <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-          Đang tải hồ sơ kiểm duyệt trận đấu...
+          Loading match review record...
         </p>
       </div>
     );
@@ -191,12 +191,12 @@ export default function AdminFraudReportReviewDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 p-10 max-w-4xl mx-auto space-y-6">
         <Link href="/admin/fraud-reports" className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 font-bold">
-          <ArrowLeft className="h-4 w-4" /> Trở về danh sách báo cáo
+          <ArrowLeft className="h-4 w-4" /> Back to Fraud Reports
         </Link>
         <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl text-center space-y-3">
           <AlertTriangle className="h-10 w-10 text-rose-600 mx-auto" />
-          <h3 className="text-base font-bold uppercase text-rose-900">Không tìm thấy báo cáo</h3>
-          <p className="text-xs text-slate-600">{error || 'Báo cáo gian lận không tồn tại hoặc đã bị xóa.'}</p>
+          <h3 className="text-base font-bold uppercase text-rose-900">Report Not Found</h3>
+          <p className="text-xs text-slate-600">{error || 'The fraud report does not exist or was deleted.'}</p>
         </div>
       </div>
     );
@@ -217,7 +217,7 @@ export default function AdminFraudReportReviewDetailPage() {
             href="/admin/fraud-reports"
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 font-semibold transition-colors mb-1"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Trở về danh sách báo cáo
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Fraud Reports
           </Link>
           <div className="flex items-center gap-2">
             <span className="px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200 rounded-full">
@@ -226,7 +226,7 @@ export default function AdminFraudReportReviewDetailPage() {
             <span className="text-xs text-slate-500 font-medium">Report ID: {report.id.slice(0, 8)}</span>
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Kiểm Duyệt Trận Đấu (Match #{match.id?.slice(0, 8)})
+            Match Review (Match #{match.id?.slice(0, 8)})
           </h1>
         </div>
 
@@ -240,7 +240,7 @@ export default function AdminFraudReportReviewDetailPage() {
               : 'bg-amber-50 text-amber-700 border-amber-200'
               }`}
           >
-            Trạng thái: {report.statusCode} {report.verdictCode ? `(${report.verdictCode})` : ''}
+            Status: {report.statusCode} {report.verdictCode ? `(${report.verdictCode})` : ''}
           </div>
         </div>
       </div>
@@ -282,12 +282,12 @@ export default function AdminFraudReportReviewDetailPage() {
             ) : isLoadingVideo ? (
               <div className="p-12 bg-white border border-slate-200 rounded-2xl text-center space-y-3 shadow-2xs">
                 <Loader2 className="h-8 w-8 text-indigo-600 animate-spin mx-auto" />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Đang kết nối luồng Video Replay...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Connecting to Video Replay...</p>
               </div>
             ) : (
               <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center space-y-2 text-slate-500 shadow-2xs">
                 <AlertTriangle className="h-8 w-8 text-slate-400 mx-auto" />
-                <p className="text-xs font-semibold">Video Replay không khả dụng hoặc chưa tải xong.</p>
+                <p className="text-xs font-semibold">Video replay is unavailable or still loading.</p>
               </div>
             )}
           </div>
@@ -296,7 +296,7 @@ export default function AdminFraudReportReviewDetailPage() {
           <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-rose-600 flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Nội dung Báo cáo Gian lận
+                <FileText className="h-4 w-4" /> Fraud Report Details
               </h3>
               <span className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold uppercase rounded-md">
                 {report.fraudType || 'OTHER'}
@@ -306,27 +306,27 @@ export default function AdminFraudReportReviewDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200 space-y-1.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">Người báo cáo (Reporter)</span>
+                  <span className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-wider">Reporter</span>
                   <span className="px-2 py-0.5 bg-emerald-600 text-white rounded text-[10px] font-bold">
                     {report.reporterUserId === match.player1Id ? 'PLAYER 1' : report.reporterUserId === match.player2Id ? 'PLAYER 2' : 'USER'}
                   </span>
                 </div>
                 <p className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                  <span>{report.reporterUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reporterUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Người chơi'}</span>
+                  <span>{report.reporterUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reporterUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
                 </p>
                 <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reporterUserId}>ID: {report.reporterUserId}</p>
               </div>
 
               <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200 space-y-1.5 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wider">Người bị tố cáo (Reported)</span>
+                  <span className="text-[10px] font-extrabold text-rose-800 uppercase tracking-wider">Reported Player</span>
                   <span className="px-2 py-0.5 bg-rose-600 text-white rounded text-[10px] font-bold animate-pulse">
                     {report.reportedUserId === match.player1Id ? 'PLAYER 1' : report.reportedUserId === match.player2Id ? 'PLAYER 2' : 'USER'}
                   </span>
                 </div>
                 <p className="text-xs font-bold text-rose-900 flex items-center gap-1">
-                  <span>{report.reportedUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reportedUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Người chơi'}</span>
-                  <span className="text-[10px] text-rose-600 font-semibold">(Bị tố cáo)</span>
+                  <span>{report.reportedUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reportedUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
+                  <span className="text-[10px] text-rose-600 font-semibold">(Reported)</span>
                 </p>
                 <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reportedUserId}>ID: {report.reportedUserId}</p>
               </div>
@@ -334,15 +334,15 @@ export default function AdminFraudReportReviewDetailPage() {
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                <span>Mốc thời gian nghi vấn:</span>
+                <span>Reported Timestamp:</span>
                 <span className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
-                  {report.timestampText} ({report.timestampSeconds} giây)
+                  {report.timestampText} ({report.timestampSeconds} seconds)
                 </span>
               </div>
               <div className="pt-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Mô tả hành vi gian lận:</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Reported Behavior:</span>
                 <p className="text-xs text-slate-800 leading-relaxed font-medium bg-white p-3 rounded-lg border border-slate-200">
-                  {report.description || 'Không có mô tả chi tiết.'}
+                  {report.description || 'No detailed description was provided.'}
                 </p>
               </div>
             </div>
@@ -350,7 +350,7 @@ export default function AdminFraudReportReviewDetailPage() {
             {report.evidenceScreenshotUrl && (
               <div className="space-y-1.5 pt-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3 text-indigo-600" /> Ảnh minh chứng bổ sung:
+                  <ExternalLink className="h-3 w-3 text-indigo-600" /> Additional Evidence Images:
                 </span>
                 <a
                   href={report.evidenceScreenshotUrl}
@@ -377,8 +377,8 @@ export default function AdminFraudReportReviewDetailPage() {
             }
             targetPlayerName={
               report.reportedUserId === match.player1Id
-                ? `${match.player1Name || 'Player 1'} (Người bị tố cáo)`
-                : `${match.player2Name || 'Player 2'} (Người bị tố cáo)`
+                ? `${match.player1Name || 'Player 1'} (Reported Player)`
+                : `${match.player2Name || 'Player 2'} (Reported Player)`
             }
             player1VideoUrl={p1Record?.playbackUrl || ''}
             player2VideoUrl={p2Record?.playbackUrl || ''}
@@ -399,15 +399,15 @@ export default function AdminFraudReportReviewDetailPage() {
           />
 
           {/* Audit Logs Timeline Card */}
-          {/* Card 2: Phán Quyết Của Trọng Tài */}
+          {/* Card 2: Administrator verdict */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xs">
             <div className="border-b border-slate-100 pb-3 space-y-1">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-indigo-600" />
-                <span>Phán Quyết Trọng Tài (Admin Verdict)</span>
+                <span>Administrator Verdict</span>
               </h3>
               <p className="text-xs text-slate-500">
-                Chọn phán quyết và nhập ghi chú để hệ thống tự động xử lý kết quả &amp; điểm Elo.
+                Select a verdict and add notes. The system will automatically update the match result and ELO.
               </p>
             </div>
 
@@ -436,7 +436,7 @@ export default function AdminFraudReportReviewDetailPage() {
                     <div className="flex items-center gap-2 text-xs text-amber-800 font-medium">
                       <Clock className="h-4 w-4 text-amber-600 shrink-0" />
                       <span>
-                        Báo cáo này có thể thay đổi xử lý trong vòng 24 giờ (Còn khoảng{' '}
+                        This verdict can be revised within 24 hours (approximately{' '}
                         <strong>{report.hoursLeftToReReview != null ? `${report.hoursLeftToReReview}h` : '<24h'}</strong>).
                       </span>
                     </div>
@@ -446,19 +446,19 @@ export default function AdminFraudReportReviewDetailPage() {
                       className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs self-start sm:self-auto border-none"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
-                      <span>Thay Đổi Phán Quyết</span>
+                      <span>Revise Verdict</span>
                     </button>
                   </div>
                 ) : (
                   <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-600 font-medium">
                     <Lock className="h-4 w-4 text-slate-500 shrink-0" />
-                    <span>Phán quyết đã được chốt vĩnh viễn (Đã quá 24 giờ kể từ thời điểm xử lý).</span>
+                    <span>This verdict is permanently locked because more than 24 hours have passed.</span>
                   </div>
                 )}
 
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
                   <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phán quyết đã chốt:</span>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Final Verdict:</span>
                     <span className={`px-3 py-1 rounded-lg font-bold text-xs uppercase tracking-wider ${
                       report.verdictCode === 'GUILTY'
                         ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
@@ -473,14 +473,14 @@ export default function AdminFraudReportReviewDetailPage() {
                   {report.reviewedAt && (
                     <div className="text-xs text-slate-500 flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      <span>Thời điểm xử lý: {new Date(report.reviewedAt).toLocaleString('vi-VN')}</span>
+                      <span>Reviewed At: {new Date(report.reviewedAt).toLocaleString('en-US')}</span>
                     </div>
                   )}
 
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Ghi chú của Trọng tài:</span>
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Administrator Notes:</span>
                     <p className="text-xs text-slate-800 leading-relaxed font-medium bg-white p-3 rounded-lg border border-slate-200 whitespace-pre-wrap">
-                      {report.adminNote || 'Không có ghi chú thêm.'}
+                      {report.adminNote || 'No additional notes.'}
                     </p>
                   </div>
                 </div>
@@ -492,14 +492,14 @@ export default function AdminFraudReportReviewDetailPage() {
                   <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800 font-medium flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                       <Edit3 className="h-4 w-4 text-indigo-600 shrink-0" />
-                      <span>Đang điều chỉnh phán quyết. Điểm Elo và kết quả trận đấu sẽ được tính toán lại tự động.</span>
+                      <span>You are revising the verdict. ELO and the match result will be recalculated automatically.</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
                       className="text-xs text-indigo-600 hover:text-indigo-900 font-bold underline cursor-pointer shrink-0"
                     >
-                      Hủy bỏ
+                      Cancel
                     </button>
                   </div>
                 )}
@@ -517,7 +517,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   >
                     <XCircle className="h-4 w-4" />
                     <span>GUILTY</span>
-                    <span className="text-[9px] font-normal opacity-80">(Có gian lận)</span>
+                    <span className="text-[9px] font-normal opacity-80">(Fraud Confirmed)</span>
                   </button>
 
                   <button
@@ -531,7 +531,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     <span>INNOCENT</span>
-                    <span className="text-[9px] font-normal opacity-80">(Vô tội)</span>
+                    <span className="text-[9px] font-normal opacity-80">(No Fraud)</span>
                   </button>
 
                   <button
@@ -545,7 +545,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   >
                     <AlertTriangle className="h-4 w-4" />
                     <span>INCONCLUSIVE</span>
-                    <span className="text-[9px] font-normal opacity-80">(Không đủ BC)</span>
+                    <span className="text-[9px] font-normal opacity-80">(Insufficient Evidence)</span>
                   </button>
                 </div>
 
@@ -554,11 +554,11 @@ export default function AdminFraudReportReviewDetailPage() {
                 {/* Admin Comment Textarea */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Ghi chú Admin (Admin Comment)
+                    Administrator Notes
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Nhập lý do phán quyết và kết luận kiểm duyệt video..."
+                    placeholder="Enter the verdict rationale and video review conclusion..."
                     value={adminComment}
                     onChange={(e) => setAdminComment(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 transition-colors resize-none"
@@ -573,7 +573,7 @@ export default function AdminFraudReportReviewDetailPage() {
                       onClick={() => setIsEditing(false)}
                       className="w-1/3 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer border border-slate-200"
                     >
-                      Hủy Bỏ
+                      Cancel
                     </button>
                   )}
                   <button
@@ -587,15 +587,15 @@ export default function AdminFraudReportReviewDetailPage() {
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Đang lưu phán quyết...
+                        <Loader2 className="h-4 w-4 animate-spin" /> Saving Verdict...
                       </>
                     ) : isEditing ? (
                       <>
-                        <Edit3 className="h-4 w-4" /> Cập Nhật Lại Phán Quyết &amp; Elo
+                        <Edit3 className="h-4 w-4" /> Update Verdict &amp; ELO
                       </>
                     ) : (
                       <>
-                        <Send className="h-4 w-4" /> Chốt Phán Quyết &amp; Cập Nhật Elo
+                        <Send className="h-4 w-4" /> Finalize Verdict &amp; Update ELO
                       </>
                     )}
                   </button>
@@ -606,7 +606,7 @@ export default function AdminFraudReportReviewDetailPage() {
         </div>
       </div>
 
-      {/* MODAL PHÓNG TO ẢNH BẰNG CHỨNG CHO NGƯỜI XEM */}
+      {/* Enlarged evidence image modal */}
       {previewImage && (
         <div
           className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
@@ -618,7 +618,7 @@ export default function AdminFraudReportReviewDetailPage() {
           >
             <div className="flex justify-between items-center border-b border-slate-100 pb-2">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                <span>📸</span> Ảnh Bằng Chứng Vi Phạm (AI Evidence)
+                <span>📸</span> Violation Evidence Image
               </h4>
               <div className="flex items-center gap-3">
                 <a
@@ -627,7 +627,7 @@ export default function AdminFraudReportReviewDetailPage() {
                   rel="noreferrer"
                   className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> Mở ảnh gốc
+                  <ExternalLink className="h-3.5 w-3.5" /> Open Original Image
                 </a>
                 <button
                   onClick={() => setPreviewImage(null)}

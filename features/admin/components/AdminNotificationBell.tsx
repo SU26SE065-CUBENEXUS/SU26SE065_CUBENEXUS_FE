@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Bell, BellRing, Sparkles, Plus, CheckCheck, Trash2, X } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, apiFetch } from '@/lib/api/config';
-import { setScrambleMode, generateScrambles, getScrambleSummary, getScrambleMode } from '@/features/admin/api/adminScrambleApi';
+import { setScrambleMode, generateScrambles, getScrambleSummary, getScrambleMode, type ScrambleMode } from '@/features/admin/api/adminScrambleApi';
 
 export interface ScrambleDepletedNotification {
   id: string;
@@ -102,18 +102,21 @@ export default function AdminNotificationBell() {
     if (!token) return;
 
     try {
-      const [summaries, modeRes] = await Promise.all([
+      const modesToTrack = ['ONLINE_MATCH', 'OFFLINE', 'ONLINE_ASYNC'] as const;
+      const [summaries, ...modeResults] = await Promise.all([
         getScrambleSummary().catch(() => []),
-        getScrambleMode().catch(() => ({ mode: 'MANUAL' as const })),
+        ...modesToTrack.map((competitionMode) =>
+          getScrambleMode(competitionMode).catch(() => ({ competitionMode, mode: 'MANUAL' as const }))
+        ),
       ]);
+      const manualModes = new Set(modeResults.filter((result) => result.mode === 'MANUAL').map((result) => result.competitionMode));
 
-      if (modeRes.mode === 'MANUAL') {
+      if (manualModes.size > 0) {
         // Track modes for puzzle types actively used in tournaments or online matches
-        const modesToTrack = ['ONLINE_MATCH', 'OFFLINE', 'ONLINE_ASYNC'];
         const activeDepletedKeys = new Set<string>();
 
         summaries.forEach((s) => {
-          if (s.status === 'AVAILABLE' && s.count === 0 && modesToTrack.includes(s.competitionMode)) {
+          if (s.status === 'AVAILABLE' && s.count === 0 && manualModes.has(s.competitionMode)) {
             activeDepletedKeys.add(`${s.competitionMode}-${s.puzzleCode}`);
           }
         });
@@ -155,7 +158,7 @@ export default function AdminNotificationBell() {
           return updatedList;
         });
       } else {
-        // If mode is AUTO, all manual pool warnings are resolved! Clear API notifications.
+        // If every competition mode is AUTO, all manual pool warnings are resolved.
         setNotifications((prev) => prev.filter((n) => !n.id.startsWith('api-')));
       }
     } catch {
@@ -276,14 +279,14 @@ export default function AdminNotificationBell() {
     };
   }, [loadAdminNotifications, syncPoolStatus]);
 
-  const handleToggleAutoMode = useCallback(async (notifId: string) => {
-    setBusyId(notifId);
+  const handleToggleAutoMode = useCallback(async (notif: ScrambleDepletedNotification) => {
+    setBusyId(notif.id);
     setStatusMessage(null);
     try {
-      await setScrambleMode('AUTO');
-      setStatusMessage('Successfully switched to AUTO scramble generation mode!');
+      await setScrambleMode(notif.competitionMode as ScrambleMode, 'AUTO');
+      setStatusMessage(`Successfully enabled AUTO for every Rubik type in ${notif.competitionMode}!`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notifId ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.competitionMode === notif.competitionMode ? { ...n, isRead: true } : n))
       );
     } catch (err: any) {
       setStatusMessage(`Error: ${err?.message || 'Failed to switch generation mode'}`);
@@ -347,19 +350,19 @@ export default function AdminNotificationBell() {
         ? `${isoString}Z`
         : isoString;
       const date = new Date(normalized);
-      if (isNaN(date.getTime())) return 'Vừa xong';
+      if (isNaN(date.getTime())) return 'Just now';
       const now = new Date();
       const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
-      if (diffSec < 0) return 'Vừa xong';
-      if (diffSec < 15) return 'Vừa xong';
-      if (diffSec < 60) return `${diffSec} giây trước`;
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
-      return date.toLocaleString('vi-VN', {
+      if (diffSec < 0) return 'Just now';
+      if (diffSec < 15) return 'Just now';
+      if (diffSec < 60) return `${diffSec} seconds ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)} minutes ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} hours ago`;
+      return date.toLocaleString('en-US', {
         day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
       });
     } catch {
-      return 'Vừa xong';
+      return 'Just now';
     }
   };
 
@@ -471,7 +474,7 @@ export default function AdminNotificationBell() {
                   {n.source !== 'tournament' && <div className="mt-2.5 flex items-center gap-2">
                     <button
                       disabled={busyId === n.id}
-                      onClick={() => void handleToggleAutoMode(n.id)}
+                      onClick={() => void handleToggleAutoMode(n)}
                       className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs cursor-pointer disabled:opacity-50"
                     >
                       <Sparkles className="h-3 w-3" /> Enable AUTO Mode

@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
       setUsers(res.items);
       setTotalCount(res.totalCount);
     } catch (err: any) {
-      showToast('error', err?.message || 'Không thể tải danh sách người dùng.');
+      showToast('error', err?.message || 'Unable to load users.');
     } finally {
       setIsLoading(false);
     }
@@ -83,9 +83,9 @@ export default function AdminUsersPage() {
     try {
       const updated = await updateUserRole(userToChangeRole.id, newRole);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      showToast('success', `Đã cập nhật vai trò của ${updated.displayName} thành ${updated.userRole}.`);
+      showToast('success', `${updated.displayName}'s role was updated to ${updated.userRole}.`);
     } catch (err: any) {
-      showToast('error', err?.message || 'Không thể thay đổi vai trò.');
+      showToast('error', err?.message || 'Unable to change the user role.');
       throw err;
     }
   };
@@ -96,24 +96,24 @@ export default function AdminUsersPage() {
       const updated = await banUser(userToBan.id, banReason, durationDays);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       const untilText = updated.bannedUntil
-        ? `đến ${new Date(updated.bannedUntil).toLocaleDateString('vi-VN')}`
-        : 'vĩnh viễn';
-      showToast('success', `Đã cấm tài khoản ${updated.displayName} (${untilText}).`);
+        ? `until ${new Date(updated.bannedUntil).toLocaleDateString('en-US')}`
+        : 'permanently';
+      showToast('success', `${updated.displayName}'s account was banned ${untilText}.`);
     } catch (err: any) {
-      showToast('error', err?.message || 'Không thể cấm tài khoản.');
+      showToast('error', err?.message || 'Unable to ban the account.');
       throw err;
     }
   };
 
   const handleUnban = async (user: AdminUserDto) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn gỡ cấm cho tài khoản "${user.displayName}"?`)) return;
+    if (!window.confirm(`Are you sure you want to unban "${user.displayName}"?`)) return;
     setActionLoadingId(user.id);
     try {
       const updated = await unbanUser(user.id);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      showToast('success', `Đã gỡ cấm cho tài khoản ${updated.displayName}.`);
+      showToast('success', `${updated.displayName}'s account was unbanned.`);
     } catch (err: any) {
-      showToast('error', err?.message || 'Không thể gỡ cấm tài khoản.');
+      showToast('error', err?.message || 'Unable to unban the account.');
     } finally {
       setActionLoadingId(null);
     }
@@ -161,9 +161,9 @@ export default function AdminUsersPage() {
             <Users className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Quản Lý Người Dùng</h1>
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Nâng/hạ cấp vai trò, cấm tài khoản có giới hạn thời gian và quản lý danh sách tài khoản toàn hệ thống.
+              Manage system accounts, roles, and time-limited or permanent bans.
             </p>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-             Làm mới
+             Refresh
           </button>
         </div>
       </div>
@@ -187,7 +187,7 @@ export default function AdminUsersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Tìm theo Tên, Email, Mã User..."
+            placeholder="Search by name, email, or user code..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -207,7 +207,7 @@ export default function AdminUsersPage() {
             }}
             className="px-3 py-2 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer focus:border-indigo-600 focus:bg-white transition"
           >
-            <option value="ALL">Tất cả Role</option>
+            <option value="ALL">All Roles</option>
             <option value="ADMIN">Role ADMIN</option>
             <option value="MANAGER">Role MANAGER</option>
             <option value="JUDGE">Role JUDGE</option>
@@ -223,9 +223,9 @@ export default function AdminUsersPage() {
             }}
             className="px-3 py-2 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer focus:border-indigo-600 focus:bg-white transition"
           >
-            <option value="ALL">Tất cả Trạng Thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="banned">Đang bị Cấm (Banned)</option>
+            <option value="ALL">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="banned">Banned</option>
           </select>
         </div>
       </div>
@@ -236,12 +236,12 @@ export default function AdminUsersPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               <tr>
-                <th className="py-3.5 px-4">Người Dùng</th>
-                <th className="py-3.5 px-4">Liên Hệ</th>
-                <th className="py-3.5 px-4">Vai Trò (Role)</th>
-                <th className="py-3.5 px-4">Trạng Thái</th>
-                <th className="py-3.5 px-4">Ngày Tham Gia</th>
-                <th className="py-3.5 px-4 text-right">Thao Tác</th>
+                <th className="py-3.5 px-4">User</th>
+                <th className="py-3.5 px-4">Contact</th>
+                <th className="py-3.5 px-4">Role</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4">Joined On</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -249,14 +249,14 @@ export default function AdminUsersPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-600" />
-                    <span>Đang tải danh sách người dùng...</span>
+                    <span>Loading users...</span>
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     <UserX className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="font-semibold">Không tìm thấy người dùng nào phù hợp</p>
+                    <p className="font-semibold">No matching users found</p>
                   </td>
                 </tr>
               ) : (
@@ -285,7 +285,7 @@ export default function AdminUsersPage() {
                       {/* Contact */}
                       <td className="py-3.5 px-4">
                         <p className="font-semibold text-slate-800">{user.email}</p>
-                        <p className="text-[11px] text-slate-400">{user.phone || 'Chưa có SĐT'}</p>
+                        <p className="text-[11px] text-slate-400">{user.phone || 'No phone number'}</p>
                       </td>
 
                       {/* Role */}
@@ -296,24 +296,24 @@ export default function AdminUsersPage() {
                         {user.isBanned ? (
                           <div className="flex flex-col gap-0.5">
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full w-fit">
-                              <ShieldAlert className="h-3 w-3" /> Đang bị Cấm
+                              <ShieldAlert className="h-3 w-3" /> Banned
                             </span>
                             {user.bannedUntil && (
                               <span className="text-[10px] text-rose-500 font-medium">
-                                Đến: {new Date(user.bannedUntil).toLocaleDateString('vi-VN')}
+                                Until: {new Date(user.bannedUntil).toLocaleDateString('en-US')}
                               </span>
                             )}
                           </div>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full w-fit">
-                            <ShieldCheck className="h-3 w-3" /> Hoạt động
+                            <ShieldCheck className="h-3 w-3" /> Active
                           </span>
                         )}
                       </td>
 
                       {/* Joined Date */}
                       <td className="py-3.5 px-4 text-slate-500 font-medium">
-                        {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                        {new Date(user.createdAt).toLocaleDateString('en-US')}
                       </td>
 
                       {/* Actions */}
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
                           {/* View Detail */}
                           <button
                             onClick={() => setSelectedUserDetail(user)}
-                            title="Xem thông tin chi tiết"
+                            title="View user details"
                             className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
@@ -331,7 +331,7 @@ export default function AdminUsersPage() {
                           {/* Change Role */}
                           <button
                             onClick={() => setUserToChangeRole(user)}
-                            title="Nâng / Hạ cấp Role"
+                            title="Change user role"
                             className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 border border-transparent hover:border-purple-100 transition cursor-pointer"
                           >
                             <Shield className="h-4 w-4" />
@@ -342,7 +342,7 @@ export default function AdminUsersPage() {
                             <button
                               onClick={() => handleUnban(user)}
                               disabled={isActionLoading}
-                              title="Gỡ cấm tài khoản"
+                              title="Unban account"
                               className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition cursor-pointer disabled:opacity-50"
                             >
                               {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
@@ -350,7 +350,7 @@ export default function AdminUsersPage() {
                           ) : (
                             <button
                               onClick={() => setUserToBan(user)}
-                              title="Cấm tài khoản"
+                              title="Ban account"
                               className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition cursor-pointer"
                             >
                               <ShieldAlert className="h-4 w-4" />
@@ -369,8 +369,8 @@ export default function AdminUsersPage() {
         {/* Pagination Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50 text-xs">
           <p className="text-slate-500 font-medium">
-            Hiển thị <span className="font-bold text-slate-900">{users.length}</span> /{' '}
-            <span className="font-bold text-slate-900">{totalCount}</span> người dùng
+            Showing <span className="font-bold text-slate-900">{users.length}</span> of{' '}
+            <span className="font-bold text-slate-900">{totalCount}</span> users
           </p>
 
           <div className="flex items-center gap-2">

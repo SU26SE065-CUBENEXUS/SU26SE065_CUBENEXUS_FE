@@ -60,7 +60,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
       const list = await getAttemptsForReview(tournamentId);
       setAttempts(list);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải dữ liệu kiểm duyệt attempt.');
+      setError(err?.message || 'Unable to load attempt review data.');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
       setSelectedAttempt(null);
       fetchData();
     } catch (err: any) {
-      alert(err?.message || 'Không thể gửi kết quả kiểm duyệt.');
+      alert(err?.message || 'Unable to submit the review decision.');
     } finally {
       setIsSubmitting(false);
     }
@@ -114,15 +114,15 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
     return (
       <div className="mx-auto max-w-lg p-8 text-center mt-12 bg-white rounded-3xl border border-rose-200 shadow-sm space-y-4">
         <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-900">Quyền Truy Cập Bị Từ Chối</h2>
+        <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
         <p className="text-sm text-slate-500">
-          Chỉ có Quản trị viên hệ thống (Admin) mới có quyền kiểm duyệt Video Solve A01 và điều chỉnh điểm phạt.
+          Only system administrators can review A01 solve videos and adjust penalties.
         </p>
         <button
           onClick={() => router.push('/managertournaments')}
           className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
         >
-          Quay lại Manager Portal
+          Back to Manager Portal
         </button>
       </div>
     );
@@ -137,13 +137,13 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
             onClick={() => router.push('/admin/tournaments/async')}
             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition mb-1 cursor-pointer"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Quay lại Danh sách Giải Async
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Async Online (A01)
           </button>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Kiểm Duyệt Attempt - {tournament?.name || 'Online Async Tournament'}
+            Attempt Review - {tournament?.name || 'Online Async Tournament'}
           </h1>
           <p className="text-xs text-slate-500">
-            Kiểm tra video bằng chứng, xác thực trạng thái Scramble & Solved để Phê duyệt (Approve) hoặc Từ chối (Reject) kết quả.
+            Review video evidence and validate scramble and solved states before approving or rejecting the result.
           </p>
         </div>
 
@@ -167,23 +167,23 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
         {isLoading ? (
           <div className="p-12 text-center text-xs font-semibold text-slate-500">
             <RefreshCw className="h-6 w-6 animate-spin text-indigo-600 mx-auto mb-2" />
-            Đang tải dữ liệu attempt...
+            Loading attempt data...
           </div>
         ) : attempts.length === 0 ? (
           <div className="p-12 text-center text-xs font-semibold text-slate-500">
-            Chưa có thí sinh nào hoàn thành nộp attempt cho giải đấu này.
+            No competitors have submitted a completed attempt for this tournament.
           </div>
         ) : (
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-400 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-4">Thí sinh</th>
-                <th className="py-3.5 px-4 text-right">Thời gian giải (Raw)</th>
-                <th className="py-3.5 px-4 text-center">Phạt (Penalty)</th>
-                <th className="py-3.5 px-4 text-right">Kết quả hiển thị</th>
-                <th className="py-3.5 px-4 text-center">Trạng thái duyệt</th>
-                <th className="py-3.5 px-4 text-center">Video bằng chứng</th>
-                <th className="py-3.5 px-4 text-right">Thao tác Admin</th>
+                <th className="py-3.5 px-4">Competitor</th>
+                <th className="py-3.5 px-4 text-right">Raw Solve Time</th>
+                <th className="py-3.5 px-4 text-center">Penalty</th>
+                <th className="py-3.5 px-4 text-right">Displayed Result</th>
+                <th className="py-3.5 px-4 text-center">Review Status</th>
+                <th className="py-3.5 px-4 text-center">Video Evidence</th>
+                <th className="py-3.5 px-4 text-right">Admin Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -241,7 +241,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                       onClick={() => handleOpenReview(att)}
                       className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 transition cursor-pointer"
                     >
-                      Duyệt & Phán Quyết
+                      Review & Decide
                     </button>
                   </td>
                 </tr>
@@ -258,9 +258,9 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
-                  Kiểm Duyệt Attempt: {selectedAttempt.userFullName}
+                  Review Attempt: {selectedAttempt.userFullName}
                 </h3>
-                <p className="text-xs text-slate-500">Xem lại video và điều chỉnh mức phạt theo quy định.</p>
+                <p className="text-xs text-slate-500">Review the video and apply the appropriate penalty.</p>
               </div>
               <button
                 onClick={() => setSelectedAttempt(null)}
@@ -272,13 +272,13 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
 
             <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 grid grid-cols-2 gap-4 text-xs">
               <div>
-                <p className="text-slate-400 font-bold">Thời gian giải gốc (Raw)</p>
+                <p className="text-slate-400 font-bold">Raw Solve Time</p>
                 <p className="text-lg font-mono font-bold text-slate-900 mt-0.5">
                   {selectedAttempt.rawTimeMs ? `${(selectedAttempt.rawTimeMs / 1000).toFixed(2)}s` : '-'}
                 </p>
               </div>
               <div>
-                <p className="text-slate-400 font-bold">Kết quả hiển thị</p>
+                <p className="text-slate-400 font-bold">Displayed Result</p>
                 <p className="text-lg font-mono font-extrabold text-indigo-600 mt-0.5">
                   {selectedAttempt.displayResult}
                 </p>
@@ -295,14 +295,14 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                 />
               ) : (
                 <div className="p-4 bg-slate-100 rounded-xl text-xs text-slate-500 text-center">
-                  Video đã được lưu trữ an toàn trên Cloud Storage.
+                  The video is securely stored in Cloud Storage.
                 </div>
               )}
             </div>
 
             {/* Penalty adjustment */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">Điều Chỉnh Mức Phạt</label>
+              <label className="block text-xs font-bold text-slate-700">Penalty Adjustment</label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -313,7 +313,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                       : 'border-slate-200 bg-white text-slate-600'
                   }`}
                 >
-                  Không Phạt (+0s)
+                  No Penalty (+0s)
                 </button>
                 <button
                   type="button"
@@ -324,7 +324,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                       : 'border-slate-200 bg-white text-slate-600'
                   }`}
                 >
-                  +2 Giây (+2s)
+                  +2 Seconds (+2s)
                 </button>
                 <button
                   type="button"
@@ -335,16 +335,16 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                       : 'border-slate-200 bg-white text-slate-600'
                   }`}
                 >
-                  DNF (Hủy Kết Quả)
+                  DNF (Result Invalidated)
                 </button>
               </div>
             </div>
 
             {/* Note */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Ghi Chú Phán Quyết</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Decision Notes</label>
               <textarea
-                placeholder="Nhập lý do phán quyết hoặc lưu ý vi phạm..."
+                placeholder="Enter the decision reason or violation notes..."
                 value={reviewNote}
                 onChange={(e) => setReviewNote(e.target.value)}
                 rows={2}
@@ -360,7 +360,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                 disabled={isSubmitting}
                 className="px-4 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 font-bold hover:bg-red-100 transition cursor-pointer disabled:opacity-50 text-xs"
               >
-                Từ Chối (Reject)
+                Reject
               </button>
               <button
                 type="button"
@@ -368,7 +368,7 @@ export default function AdminTournamentAttemptReviewPage({ params }: Props) {
                 disabled={isSubmitting}
                 className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50 text-xs"
               >
-                Phê Duyệt (Approve)
+                Approve
               </button>
             </div>
           </div>

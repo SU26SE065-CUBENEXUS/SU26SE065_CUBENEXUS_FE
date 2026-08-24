@@ -16,25 +16,25 @@ const ROLES = [
     role: 'ADMIN',
     label: 'System Administrator (ADMIN)',
     color: 'bg-purple-50 text-purple-700 border-purple-200',
-    desc: 'Toàn quyền quản trị hệ thống, quản lý người dùng, Anti-Cheat, ELO và giải đấu.',
+    desc: 'Full system administration across users, Anti-Cheat, ELO, and tournaments.',
   },
   {
     role: 'MANAGER',
     label: 'Tournament Manager (MANAGER)',
     color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    desc: 'Quản lý tạo và vận hành giải đấu, kiểm soát đăng ký, nhóm đấu và trọng tài.',
+    desc: 'Creates and operates tournaments, registrations, groups, and judges.',
   },
   {
     role: 'JUDGE',
     label: 'Tournament Judge (JUDGE)',
     color: 'bg-amber-50 text-amber-700 border-amber-200',
-    desc: 'Nhập điểm, xác nhận kết quả lượt giải trực tiếp tại các thảm đấu.',
+    desc: 'Records times and confirms live competition results.',
   },
   {
     role: 'COMPETITOR',
     label: 'Competitor (COMPETITOR)',
     color: 'bg-slate-50 text-slate-700 border-slate-200',
-    desc: 'Thành viên/Thí sinh tham gia giải đấu và phòng đấu Online Arena.',
+    desc: 'Competitor who joins tournaments and Online Arena rooms.',
   },
 ];
 
@@ -65,7 +65,7 @@ export function ChangeRoleModal({ isOpen, user, onClose, onConfirm }: ChangeRole
       await onConfirm(selectedRole);
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Có lỗi xảy ra khi cập nhật vai trò người dùng.');
+      setError(err?.message || 'Unable to update the user role.');
     } finally {
       setIsLoading(false);
     }
@@ -81,8 +81,8 @@ export function ChangeRoleModal({ isOpen, user, onClose, onConfirm }: ChangeRole
               <Shield className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 leading-snug">Thay Đổi Vai Trò (Role)</h3>
-              <p className="text-xs text-slate-500">Nâng cấp hoặc hạ cấp quyền hạn người dùng</p>
+              <h3 className="text-base font-bold text-slate-900 leading-snug">Change User Role</h3>
+              <p className="text-xs text-slate-500">Update this user's system permissions</p>
             </div>
           </div>
           <button
@@ -109,7 +109,7 @@ export function ChangeRoleModal({ isOpen, user, onClose, onConfirm }: ChangeRole
             <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 bg-white text-slate-700 uppercase">
-            Hiện tại: {user.userRole}
+            Current Role: {user.userRole}
           </span>
         </div>
 
@@ -159,7 +159,7 @@ export function ChangeRoleModal({ isOpen, user, onClose, onConfirm }: ChangeRole
               disabled={isLoading}
               className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              Hủy Bỏ
+              Cancel
             </button>
             <button
               type="submit"
@@ -167,7 +167,7 @@ export function ChangeRoleModal({ isOpen, user, onClose, onConfirm }: ChangeRole
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-2xs disabled:opacity-50 cursor-pointer"
             >
               {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Lưu Thay Đổi
+              Save Changes
             </button>
           </div>
         </form>

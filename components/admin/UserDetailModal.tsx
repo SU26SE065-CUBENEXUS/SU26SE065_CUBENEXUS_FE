@@ -16,7 +16,7 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('vi-VN', {
+    return d.toLocaleDateString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -75,20 +75,20 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 space-y-1.5 text-rose-900">
             <div className="flex items-center gap-2 font-bold text-xs">
               <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-              <span>Tài khoản đang bị Cấm (Banned)</span>
+              <span>Account is currently banned</span>
             </div>
             <p className="text-xs text-rose-700">
-              <span className="font-semibold">Lý do:</span> {user.banReason || 'Không ghi rõ'}
+              <span className="font-semibold">Reason:</span> {user.banReason || 'Not specified'}
             </p>
             <div className="flex items-center gap-4 text-[11px] text-rose-600 font-medium pt-1">
-              <span>Bắt đầu: {formatDate(user.bannedAt)}</span>
-              <span>Thời hạn: {user.bannedUntil ? formatDate(user.bannedUntil) : 'Vĩnh viễn'}</span>
+              <span>Started: {formatDate(user.bannedAt)}</span>
+              <span>Expires: {user.bannedUntil ? formatDate(user.bannedUntil) : 'Permanent'}</span>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-800 font-semibold">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>Tài khoản đang hoạt động bình thường</span>
+            <span>Account is active</span>
           </div>
         )}
 
@@ -103,28 +103,28 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Phone className="h-3 w-3 text-slate-400" /> Số điện thoại
+              <Phone className="h-3 w-3 text-slate-400" /> Phone Number
             </p>
-            <p className="font-semibold text-slate-800">{user.phone || 'Chưa cập nhật'}</p>
+            <p className="font-semibold text-slate-800">{user.phone || 'Not provided'}</p>
           </div>
 
           <div className="sm:col-span-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-slate-400" /> Địa chỉ
+              <MapPin className="h-3 w-3 text-slate-400" /> Address
             </p>
-            <p className="font-semibold text-slate-800">{user.address || 'Chưa cập nhật'}</p>
+            <p className="font-semibold text-slate-800">{user.address || 'Not provided'}</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-slate-400" /> Ngày tham gia
+              <Calendar className="h-3 w-3 text-slate-400" /> Joined On
             </p>
             <p className="font-semibold text-slate-800">{formatDate(user.createdAt)}</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 space-y-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Clock className="h-3 w-3 text-slate-400" /> Cập nhật lần cuối
+              <Clock className="h-3 w-3 text-slate-400" /> Last Updated
             </p>
             <p className="font-semibold text-slate-800">{formatDate(user.updatedAt)}</p>
           </div>
@@ -136,7 +136,7 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
             onClick={onClose}
             className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
           >
-            Đóng
+            Close
           </button>
         </div>
       </div>

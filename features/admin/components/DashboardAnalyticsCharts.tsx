@@ -117,25 +117,25 @@ export function DashboardAnalyticsCharts({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Giải Online</span>
+            <span>Online Tournaments</span>
             <Zap className="h-4 w-4 text-indigo-600" />
           </div>
           <p className="text-3xl font-black text-slate-900 font-mono">{asyncTournaments.length}</p>
-          <p className="text-[11px] font-semibold text-indigo-600">Admin hệ thống khởi tạo</p>
+          <p className="text-[11px] font-semibold text-indigo-600">Created by system administrators</p>
         </div>
 
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Video Chờ Duyệt</span>
+            <span>Videos Awaiting Review</span>
             <Video className="h-4 w-4 text-amber-600" />
           </div>
           <p className="text-3xl font-black text-amber-600 font-mono">{pendingVideoCount}</p>
-          <p className="text-[11px] font-semibold text-amber-700">Cần Admin review evidence</p>
+          <p className="text-[11px] font-semibold text-amber-700">Requires administrator evidence review</p>
         </div>
 
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Tỷ Lệ Duyệt Hợp Lệ</span>
+            <span>Approval Rate</span>
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
           </div>
           <p className="text-3xl font-black text-emerald-600 font-mono">{approvalRate}%</p>
@@ -144,11 +144,11 @@ export function DashboardAnalyticsCharts({
 
         <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Lượt DNF (Phạm Quy)</span>
+            <span>DNF Attempts</span>
             <PieChart className="h-4 w-4 text-rose-600" />
           </div>
           <p className="text-3xl font-black text-rose-600 font-mono">{dnfCount}</p>
-          <p className="text-[11px] font-semibold text-rose-700">Attempt thất bại / DNF</p>
+          <p className="text-[11px] font-semibold text-rose-700">Failed or invalid attempts</p>
         </div>
       </div>
 
@@ -158,10 +158,10 @@ export function DashboardAnalyticsCharts({
           <div>
             <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-indigo-600" />
-              Thống Kê Giải Online Theo Tháng
+              Monthly Online Tournament Statistics
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Chạm hoặc di chuột vào các mốc tháng để xem số lượng giải đấu thực tế.
+              Hover over or tap a month to view the exact tournament count.
             </p>
           </div>
         </div>
@@ -260,7 +260,7 @@ export function DashboardAnalyticsCharts({
                 </span>
               </div>
               <p className="text-sm font-black font-mono">
-                {points[hoveredIdx].value} <span className="text-xs font-normal text-slate-400">giải đấu được tạo</span>
+                {points[hoveredIdx].value} <span className="text-xs font-normal text-slate-400">tournaments created</span>
               </p>
             </div>
           )}
@@ -269,9 +269,9 @@ export function DashboardAnalyticsCharts({
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500 font-semibold">
           <span className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-indigo-600" />
-            Số lượng giải do Admin tạo theo từng tháng
+            Tournaments created by administrators each month
           </span>
-          <span className="text-slate-400 font-mono">Tính toán thực tế 100%</span>
+          <span className="text-slate-400 font-mono">Calculated from live data</span>
         </div>
       </div>
     </div>

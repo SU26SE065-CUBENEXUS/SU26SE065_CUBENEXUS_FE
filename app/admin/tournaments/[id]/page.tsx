@@ -82,7 +82,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
 
       setTournament(data);
     } catch (err: any) {
-      setError(err?.message || 'Không thể tải thông tin giải đấu từ máy chủ.');
+      setError(err?.message || 'Unable to load tournament information from the server.');
     } finally {
       setIsLoading(false);
     }
@@ -100,15 +100,15 @@ export default function AdminTournamentDetailPage({ params }: Props) {
 
   const handleUpdateStatus = async (nextStatus: string, label: string) => {
     if (!tournament) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn chuyển trạng thái sang "${label}" cho giải đấu này?`)) return;
+    if (!window.confirm(`Are you sure you want to change this tournament to "${label}"?`)) return;
 
     setActionLoading(true);
     try {
       await updateAdminTournamentStatus(tournament.id, nextStatus);
-      showToast(`Đã chuyển trạng thái giải đấu sang: ${label}`);
+      showToast(`Tournament status changed to: ${label}`);
       await fetchDetails();
     } catch (err: any) {
-      alert(err?.message || 'Không thể cập nhật trạng thái giải đấu.');
+      alert(err?.message || 'Unable to update tournament status.');
     } finally {
       setActionLoading(false);
     }
@@ -116,15 +116,15 @@ export default function AdminTournamentDetailPage({ params }: Props) {
 
   const handleForceStart = async () => {
     if (!tournament) return;
-    if (!window.confirm(`Mở giải ngay lập tức (Force Start)? Giải sẽ chuyển sang ONGOING và đóng đăng ký.`)) return;
+    if (!window.confirm('Force start this tournament now? Its status will change to ONGOING and registration will close.')) return;
 
     setActionLoading(true);
     try {
       await forceStartOnlineAsyncTournament(tournament.id);
-      showToast('Đã Force Start giải đấu thành công!');
+      showToast('Tournament started successfully.');
       await fetchDetails();
     } catch (err: any) {
-      alert(err?.message || 'Lỗi khi mở giải đấu.');
+      alert(err?.message || 'Unable to start the tournament.');
     } finally {
       setActionLoading(false);
     }
@@ -132,15 +132,15 @@ export default function AdminTournamentDetailPage({ params }: Props) {
 
   const handleCloseReg = async () => {
     if (!tournament) return;
-    if (!window.confirm(`Đóng đăng ký ngay lập tức cho giải đấu này?`)) return;
+    if (!window.confirm('Close registration for this tournament now?')) return;
 
     setActionLoading(true);
     try {
       await closeOnlineAsyncRegistration(tournament.id);
-      showToast('Đã đóng đăng ký giải đấu!');
+      showToast('Tournament registration closed.');
       await fetchDetails();
     } catch (err: any) {
-      alert(err?.message || 'Lỗi khi đóng đăng ký.');
+      alert(err?.message || 'Unable to close registration.');
     } finally {
       setActionLoading(false);
     }
@@ -158,15 +158,15 @@ export default function AdminTournamentDetailPage({ params }: Props) {
     return (
       <div className="mx-auto max-w-lg p-8 text-center mt-12 bg-white rounded-3xl border border-rose-200 shadow-sm space-y-4">
         <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-900">Quyền Truy Cập Bị Từ Chối</h2>
+        <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
         <p className="text-sm text-slate-500">
-          Chỉ có Quản trị viên hệ thống (Admin) mới có quyền truy cập trang quản trị chi tiết này.
+          Only system administrators can access this tournament administration page.
         </p>
         <button
           onClick={() => router.push('/managertournaments')}
           className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
         >
-          Quay lại Manager Portal
+          Back to Manager Portal
         </button>
       </div>
     );
@@ -175,20 +175,20 @@ export default function AdminTournamentDetailPage({ params }: Props) {
   if (error || !tournament) {
     return (
       <div className="mx-auto max-w-2xl p-8 text-center mt-12 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <h2 className="text-lg font-bold text-slate-900">Lỗi Tải Thông Tin Giải Đấu</h2>
-        <p className="text-xs text-rose-600 font-semibold">{error || 'Không tìm thấy giải đấu'}</p>
+        <h2 className="text-lg font-bold text-slate-900">Unable to Load Tournament</h2>
+        <p className="text-xs text-rose-600 font-semibold">{error || 'Tournament not found'}</p>
         <div className="flex justify-center gap-3">
           <button
-            onClick={() => router.push('/admin/tournaments')}
+            onClick={() => router.push('/admin/tournaments/async')}
             className="px-4 py-2 bg-slate-100 text-slate-800 rounded-xl text-xs font-bold"
           >
-            Quay lại Danh sách Giải đấu
+            Back to Tournament List
           </button>
           <button
             onClick={fetchDetails}
             className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
           >
-            Thử lại
+            Try Again
           </button>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('vi-VN', {
+    return d.toLocaleDateString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -230,10 +230,10 @@ export default function AdminTournamentDetailPage({ params }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs">
         <div className="space-y-1">
           <button
-            onClick={() => router.push(isOnlineAsync ? '/admin/tournaments/async' : '/admin/tournaments')}
+            onClick={() => router.push('/admin/tournaments/async')}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition mb-1 cursor-pointer"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Quay lại {isOnlineAsync ? 'Giải Async A01' : 'Tất Cả Giải Đấu'}
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Async Online (A01)
           </button>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">{tournament.name}</h1>
@@ -242,7 +242,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
             </span>
           </div>
           <p className="text-xs text-slate-500 font-medium">
-            Mã định danh hệ thống: <span className="font-mono text-slate-700">{tournament.id}</span>
+            System ID: <span className="font-mono text-slate-700">{tournament.id}</span>
           </p>
         </div>
 
@@ -251,7 +251,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
             onClick={fetchDetails}
             disabled={actionLoading}
             className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
-            title="Làm mới thông tin"
+            title="Refresh information"
           >
             <RefreshCw className={`h-4 w-4 ${actionLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -261,7 +261,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
               href={`/admin/tournaments/${tournament.id}/review`}
               className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition shadow-md cursor-pointer"
             >
-              <Video className="h-4 w-4" /> Duyệt Video A01
+              <Video className="h-4 w-4" /> Review A01 Videos
             </Link>
           )}
 
@@ -270,9 +270,9 @@ export default function AdminTournamentDetailPage({ params }: Props) {
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition cursor-pointer"
-            title="Xem giao diện công khai mà người chơi nhìn thấy"
+            title="Open the public player-facing page"
           >
-            Xem Public Portal ↗
+            View Public Portal ↗
           </a>
         </div>
       </div>
@@ -284,48 +284,48 @@ export default function AdminTournamentDetailPage({ params }: Props) {
           {/* Overview Card */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-5">
             <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-indigo-600" /> Thông Tin & Cấu Hình Kỹ Thuật
+              <Trophy className="h-4 w-4 text-indigo-600" /> Tournament Information & Technical Configuration
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Loại Giải Đấu</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Tournament Type</span>
                 <p className="font-extrabold text-slate-900">
                   {isOnlineAsync ? 'Online Asynchronous (A01 Format)' : 'Offline WCA In-Person Tournament'}
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Trạng Thái Hiện Tại</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Current Status</span>
                 <p className="font-extrabold text-indigo-600 uppercase">{status}</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Thời Gian Bắt Đầu - Kết Thúc</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Start and End Time</span>
                 <p className="font-semibold text-slate-800">{formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Thời Gian Mở / Đóng Đăng Ký</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Registration Window</span>
                 <p className="font-semibold text-slate-800">
                   {formatDate(tournament.registrationOpenAt)} – {formatDate(tournament.registrationCloseAt)}
                 </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Địa Điểm Tổ Chức</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Location</span>
                 <p className="font-semibold text-slate-800">{tournament.location || 'Online Server Arena'}</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Người Tạo / Quản Lý</span>
+                <span className="text-slate-400 font-bold text-[10px] uppercase">Created By</span>
                 <p className="font-semibold text-slate-800">{tournament.createdByUserName || 'Admin System'}</p>
               </div>
             </div>
 
             {tournament.description && (
               <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mô Tả Giải Đấu</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tournament Description</span>
                 <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
                   {tournament.description}
                 </p>
@@ -336,7 +336,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
           {/* Events / Format Section */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
             <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Layers className="h-4 w-4 text-indigo-600" /> Hạng Mục Thi Đấu (Events & Puzzle Formats)
+              <Layers className="h-4 w-4 text-indigo-600" /> Events & Puzzle Formats
             </h2>
 
             {isOnlineAsync ? (
@@ -346,18 +346,18 @@ export default function AdminTournamentDetailPage({ params }: Props) {
                     {tournament.puzzleTypeName || '3x3x3 Cube'} (A01 Single Solve)
                   </span>
                   <span className="px-2.5 py-1 rounded-md bg-indigo-200/80 text-indigo-800 text-[10px] font-bold uppercase">
-                    Định Dạng A01
+                    A01 Format
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-indigo-950 font-medium">
                   <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Loại Puzzle</span>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Puzzle Type</span>
                     <span className="font-bold">{tournament.puzzleTypeName || 'Rubik'}</span>
                   </div>
                   <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Thời Gian Giới Hạn Lượt Giải</span>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Attempt Time Limit</span>
                     <span className="font-bold font-mono">
-                      {tournament.attemptTimeLimitMs ? `${tournament.attemptTimeLimitMs / 1000}s` : '300s (5 phút)'}
+                      {tournament.attemptTimeLimitMs ? `${tournament.attemptTimeLimitMs / 1000}s` : '300s (5 minutes)'}
                     </span>
                   </div>
                 </div>
@@ -367,13 +367,13 @@ export default function AdminTournamentDetailPage({ params }: Props) {
                 {tournament.events.map((ev: any) => (
                   <div key={ev.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900">{formatEventLabel(ev)}</span>
-                    <span className="text-[10px] font-semibold text-slate-500">{ev.rounds?.length || 1} Vòng</span>
+                    <span className="text-[10px] font-semibold text-slate-500">{ev.rounds?.length || 1} Round(s)</span>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="p-6 text-center text-xs text-slate-400 font-semibold bg-slate-50 rounded-2xl">
-                Chưa có hạng mục sự kiện nào được thiết lập.
+                No tournament events have been configured.
               </div>
             )}
           </div>
@@ -384,10 +384,10 @@ export default function AdminTournamentDetailPage({ params }: Props) {
           {/* Fast Action Panel */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
             <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Zap className="h-4 w-4 text-amber-500" /> Bảng Điều Khiển Admin
+              <Zap className="h-4 w-4 text-amber-500" /> Admin Controls
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Các tác vụ can thiệp trực tiếp vòng đời giải đấu cấp hệ thống.
+              System-level actions that directly control the tournament lifecycle.
             </p>
 
             <div className="space-y-2 pt-2">
@@ -397,16 +397,16 @@ export default function AdminTournamentDetailPage({ params }: Props) {
                 disabled={actionLoading || status === 'ONGOING' || status === 'COMPLETED'}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition shadow-md disabled:opacity-40 cursor-pointer"
               >
-                <Play className="h-3.5 w-3.5 fill-current" /> Force Start (Bắt đầu ngay)
+                <Play className="h-3.5 w-3.5 fill-current" /> Force Start
               </button>
 
               {/* Open Registration */}
               <button
-                onClick={() => handleUpdateStatus('REGISTRATION_OPEN', 'Mở đăng ký')}
+                onClick={() => handleUpdateStatus('REGISTRATION_OPEN', 'Registration Open')}
                 disabled={actionLoading || status === 'REGISTRATION_OPEN' || status === 'ONGOING' || status === 'COMPLETED'}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-2xs disabled:opacity-40 cursor-pointer"
               >
-                <Unlock className="h-3.5 w-3.5" /> Mở Đăng Ký
+                <Unlock className="h-3.5 w-3.5" /> Open Registration
               </button>
 
               {/* Close Registration */}
@@ -415,25 +415,25 @@ export default function AdminTournamentDetailPage({ params }: Props) {
                 disabled={actionLoading || status === 'REGISTRATION_CLOSED' || status === 'COMPLETED'}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs transition disabled:opacity-40 cursor-pointer"
               >
-                <Lock className="h-3.5 w-3.5 text-amber-700" /> Đóng Đăng Ký
+                <Lock className="h-3.5 w-3.5 text-amber-700" /> Close Registration
               </button>
 
               {/* Complete Tournament */}
               <button
-                onClick={() => handleUpdateStatus('COMPLETED', 'Hoàn thành giải')}
+                onClick={() => handleUpdateStatus('COMPLETED', 'Completed')}
                 disabled={actionLoading || status === 'COMPLETED'}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition disabled:opacity-40 cursor-pointer"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Đóng / Hoàn Thành Giải
+                <CheckCircle2 className="h-3.5 w-3.5" /> Complete Tournament
               </button>
 
               {/* Disable / Enable Toggle */}
               <button
-                onClick={() => handleUpdateStatus(status === 'DISABLED' ? 'PUBLISHED' : 'DISABLED', status === 'DISABLED' ? 'Kích hoạt lại' : 'Vô hiệu hóa')}
+                onClick={() => handleUpdateStatus(status === 'DISABLED' ? 'PUBLISHED' : 'DISABLED', status === 'DISABLED' ? 'Reactivated' : 'Disabled')}
                 disabled={actionLoading}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs transition cursor-pointer"
               >
-                <Power className="h-3.5 w-3.5" /> {status === 'DISABLED' ? 'Kích Hoạt Lại Giải' : 'Vô Hiệu Hóa Giải'}
+                <Power className="h-3.5 w-3.5" /> {status === 'DISABLED' ? 'Reactivate Tournament' : 'Disable Tournament'}
               </button>
             </div>
           </div>
