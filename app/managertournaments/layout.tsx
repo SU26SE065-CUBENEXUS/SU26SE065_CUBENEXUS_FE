@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
-import { getPublicTournaments, getTournamentById } from '@/lib/api/tournaments';
+import { getManagerTournaments, getTournamentById } from '@/lib/api/tournaments';
 import type { TournamentDetailDto } from '@/lib/api/types';
 import {
   Trophy,
@@ -473,11 +473,11 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Fetch real tournaments list for switcher (Offline Only, No Mock Data)
+  // Fetch real tournaments list for switcher (Offline Only, Manager's Tournaments)
   const fetchTournamentsList = useCallback(async (preferredId?: string | null) => {
     if (!isAuthenticated) return;
     try {
-      const publicList = await getPublicTournaments().catch(() => []);
+      const managerList = await getManagerTournaments().catch(() => []);
 
       // Load local draft tournaments created by Manager in this session
       const storedDraftsJson = typeof window !== 'undefined' ? localStorage.getItem('local_draft_tournaments') : null;
@@ -485,7 +485,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
       const localDrafts: TournamentDetailDto[] = [];
 
       for (const id of storedDrafts) {
-        if (!publicList.some((t) => t.id === id)) {
+        if (!managerList.some((t) => t.id === id)) {
           try {
             const draft = await getTournamentById(id);
             if (isOfflineManagerTournament(draft)) {
@@ -497,7 +497,7 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
         }
       }
 
-      const combined = [...localDrafts, ...publicList].filter(isOfflineManagerTournament);
+      const combined = [...localDrafts, ...managerList].filter(isOfflineManagerTournament);
       setTournamentsList(combined);
 
       const targetId = preferredId || (typeof window !== 'undefined' ? localStorage.getItem('newly_created_tournament_id') : null);

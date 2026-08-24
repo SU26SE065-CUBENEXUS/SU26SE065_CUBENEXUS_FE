@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { simulateScramble, COLOR_HEX_MAP, FACE_LABEL_VI, CubeFaceState } from '../utils/rubikSimulator';
+import { simulateScramble, COLOR_HEX_MAP, FACE_LABEL_EN, CubeFaceState } from '../utils/rubikSimulator';
 import { Eye, Layers, Info } from 'lucide-react';
 
 interface Props {
@@ -17,7 +17,7 @@ export function ExpectedScramble2DNetVisualizer({ scrambleSequence }: Props) {
 
   const renderMiniGrid = (faceKey: 'U' | 'D' | 'F' | 'B' | 'R' | 'L', size: 'sm' | 'md' = 'sm') => {
     const grid = expectedState[faceKey];
-    const info = FACE_LABEL_VI[faceKey];
+    const info = FACE_LABEL_EN[faceKey];
     const isSelected = selectedFace === faceKey;
 
     return (
@@ -61,16 +61,16 @@ export function ExpectedScramble2DNetVisualizer({ scrambleSequence }: Props) {
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-              Mẫu Rubik Chuẩn Sau Khi Xoay Scramble (2D Net)
+              Expected Rubik Pattern After Scramble (2D Net)
             </h3>
             <p className="text-[11px] text-slate-500">
-              So sánh khối Rubik trên tay bạn với mô hình 2D dưới đây trước khi bấm scan.
+              Compare your physical Rubik's cube with the 2D model below before scanning.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
-          <Info className="h-3.5 w-3.5 text-indigo-500" /> Bấm vào từng mặt để phóng to
+          <Info className="h-3.5 w-3.5 text-indigo-500" /> Click any face to zoom in
         </div>
       </div>
 
@@ -100,13 +100,13 @@ export function ExpectedScramble2DNetVisualizer({ scrambleSequence }: Props) {
         <div className="p-4 rounded-2xl bg-indigo-900 text-white space-y-3 shadow-lg border border-indigo-800">
           <div className="flex items-center justify-between text-xs font-bold">
             <span className="flex items-center gap-1.5 text-indigo-200">
-              <Eye className="h-4 w-4 text-amber-400" /> Chi tiết {FACE_LABEL_VI[selectedFace].label}
+              <Eye className="h-4 w-4 text-amber-400" /> Details of {FACE_LABEL_EN[selectedFace].label}
             </span>
             <button
               onClick={() => setSelectedFace('ALL')}
               className="text-[10px] bg-indigo-800 hover:bg-indigo-700 text-indigo-200 px-2.5 py-1 rounded-lg transition"
             >
-              Thu nhỏ về 2D Net
+              Zoom back to 2D Net
             </button>
           </div>
 

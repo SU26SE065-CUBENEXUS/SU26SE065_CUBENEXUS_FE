@@ -158,6 +158,13 @@ export default function JudgeManagementPage({
   // Handler: Shuffle / Randomize assignments
   const handleShuffle = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (calculatedTotal > judges.length) {
+      toast.error(
+        'Over Capacity',
+        `Total requested positions (${calculatedTotal}) cannot exceed the number of existing judges (${judges.length}). Please reduce inputs or create new judges.`
+      );
+      return;
+    }
     try {
       setIsShuffleSubmitting(true);
       const updatedJudges = await shuffleTournamentJudges(id, {
@@ -932,6 +939,27 @@ export default function JudgeManagementPage({
                 />
               </div>
 
+              {/* Interactive Calculation & Capacity Validation Preview Card */}
+              <div className={`rounded-lg p-3.5 text-xs space-y-1.5 border ${
+                calculatedTotal > judges.length
+                  ? 'bg-rose-50 border-rose-200 text-rose-800'
+                  : 'bg-slate-50 border-slate-200 text-slate-900'
+              }`}>
+                <div className="flex items-center justify-between font-bold">
+                  <span>SHUFFLE REQUIREMENT SUMMARY:</span>
+                  <span className="font-mono text-xs">{calculatedTotal} / {judges.length} Judges</span>
+                </div>
+                {calculatedTotal > judges.length ? (
+                  <p className="text-[11px] text-rose-600 font-semibold pt-1 border-t border-rose-200">
+                    ⚠️ Total requested slots ({calculatedTotal}) exceeds existing judges ({judges.length}). Please reduce inputs or create new judges via Batch Create.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+                    ✓ Valid configuration. {judges.length - calculatedTotal} reserve judge(s) will be unassigned.
+                  </p>
+                )}
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button" onClick={() => setShowShuffleModal(false)}
@@ -940,7 +968,7 @@ export default function JudgeManagementPage({
                   Cancel
                 </button>
                 <button
-                  type="submit" disabled={isShuffleSubmitting}
+                  type="submit" disabled={isShuffleSubmitting || calculatedTotal > judges.length}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 shadow-2xs transition disabled:opacity-50"
                 >
                   {isShuffleSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

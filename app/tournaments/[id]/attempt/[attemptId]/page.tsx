@@ -73,21 +73,21 @@ function ScrambleMovePills({ sequence }: { sequence: string }) {
 
 function ColorSchemeGuide() {
   const scheme = [
-    { code: 'U', dir: 'Up (Trên)', colorName: 'Trắng', bg: 'bg-white text-slate-900 border-slate-300' },
-    { code: 'D', dir: 'Down (Dưới)', colorName: 'Vàng', bg: 'bg-yellow-400 text-slate-950 border-yellow-300' },
-    { code: 'F', dir: 'Front (Trước)', colorName: 'Xanh lá', bg: 'bg-emerald-500 text-white border-emerald-400' },
-    { code: 'B', dir: 'Back (Sau)', colorName: 'Xanh dương', bg: 'bg-blue-600 text-white border-blue-400' },
-    { code: 'R', dir: 'Right (Phải)', colorName: 'Đỏ', bg: 'bg-red-600 text-white border-red-400' },
-    { code: 'L', dir: 'Left (Trái)', colorName: 'Cam', bg: 'bg-orange-500 text-white border-orange-400' },
+    { code: 'U', dir: 'Up (Top)', colorName: 'White', bg: 'bg-white text-slate-900 border-slate-300' },
+    { code: 'D', dir: 'Down (Bottom)', colorName: 'Yellow', bg: 'bg-yellow-400 text-slate-950 border-yellow-300' },
+    { code: 'F', dir: 'Front', colorName: 'Green', bg: 'bg-emerald-500 text-white border-emerald-400' },
+    { code: 'B', dir: 'Back', colorName: 'Blue', bg: 'bg-blue-600 text-white border-blue-400' },
+    { code: 'R', dir: 'Right', colorName: 'Red', bg: 'bg-red-600 text-white border-red-400' },
+    { code: 'L', dir: 'Left', colorName: 'Orange', bg: 'bg-orange-500 text-white border-orange-400' },
   ];
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-          Mặt & Màu xuất phát khi xoay Scramble (Solved State)
+          Starting Faces & Colors for Scramble (Solved State)
         </span>
-        <span className="text-[10px] font-bold text-slate-400">Chuẩn WCA / CubeNexus</span>
+        <span className="text-[10px] font-bold text-slate-400">WCA / CubeNexus Standard</span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
@@ -106,7 +106,7 @@ function ColorSchemeGuide() {
       </div>
 
       <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900 font-medium leading-relaxed">
-        <strong>💡 Hướng cầm khối Rubik khi bắt đầu xoay Scramble:</strong> Cầm khối Rubik sao cho mặt màu <strong>TRẮNG ở phía trên (U)</strong> và mặt màu <strong>XANH LÁ hướng về phía bạn (F)</strong>, sau đó xoay lần lượt các nước đi theo đúng chuỗi Scramble phía trên.
+        <strong>💡 Orientation when starting scramble:</strong> Hold the Rubik's cube with <strong>WHITE on top (U)</strong> and <strong>GREEN facing you (F)</strong>, then perform the scramble moves sequence above in order.
       </div>
     </div>
   );
@@ -384,7 +384,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       const result = await verifyAsyncScramble(attemptId, faces);
       if (!result.passed) {
         setError(
-          `Xác minh Scramble không khớp (${result.reason || 'Some faces do not match scramble'}). Hệ thống đã tự động Reset session scan. Vui lòng xoay lại Rubik đúng Solved State (Trắng ở U, Xanh lá ở F), sau đó bấm "Start Session" để quét lại 5 mặt.`
+          `Scramble verification mismatch (${result.reason || 'Some faces do not match scramble'}). System automatically reset the scan session. Please hold the Rubik's cube in solved state (White at U, Green at F), then click "Start Session" to scan 5 faces again.`
         );
         setScanFaces([]);
         setScanResetToken((prev) => prev + 1);

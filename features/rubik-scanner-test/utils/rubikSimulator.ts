@@ -11,13 +11,13 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   orange: '#fb923c',
 };
 
-export const FACE_LABEL_VI: Record<string, { label: string; center: string }> = {
-  U: { label: 'Mặt Trên (Up)', center: 'Trắng' },
-  D: { label: 'Mặt Dưới (Down)', center: 'Vàng' },
-  F: { label: 'Mặt Trước (Front)', center: 'Xanh lá' },
-  B: { label: 'Mặt Sau (Back)', center: 'Xanh dương' },
-  R: { label: 'Mặt Phải (Right)', center: 'Đỏ' },
-  L: { label: 'Mặt Trái (Left)', center: 'Cam' },
+export const FACE_LABEL_EN: Record<string, { label: string; center: string }> = {
+  U: { label: 'Top Face (Up)', center: 'White' },
+  D: { label: 'Bottom Face (Down)', center: 'Yellow' },
+  F: { label: 'Front Face (Front)', center: 'Green' },
+  B: { label: 'Back Face (Back)', center: 'Blue' },
+  R: { label: 'Right Face (Right)', center: 'Red' },
+  L: { label: 'Left Face (Left)', center: 'Orange' },
 };
 
 export function simulateScramble(scramble: string): CubeFaceState {

@@ -44,25 +44,25 @@ const COLOR_STYLE: Record<string, string> = {
   unknown: '#4b5563', // gray-600
 };
 
-const COLOR_NAME_VI: Record<string, string> = {
-  white: 'Trắng',
-  yellow: 'Vàng',
-  red: 'Đỏ',
-  orange: 'Cam',
-  blue: 'Xanh dương',
-  green: 'Xanh lá',
+const COLOR_NAME_EN: Record<string, string> = {
+  white: 'White',
+  yellow: 'Yellow',
+  red: 'Red',
+  orange: 'Orange',
+  blue: 'Blue',
+  green: 'Green',
 };
 
 const UI_MESSAGE: Record<string, string> = {
-  POSITION_FACE: 'Đưa trọn 1 mặt vào giữa khung scan.',
-  SCANNING: 'AI đang đọc mặt hiện tại. Giữ yên thêm một chút.',
-  STABLE: 'Đã thấy mặt cube rõ. Giữ nguyên để đủ độ ổn định.',
-  ACCEPTED: 'Mặt đã được nhận. Xoay sang mặt có tâm màu khác.',
-  DUPLICATE_FACE: 'Mặt này đã được nhận trước đó. Hãy đổi sang mặt khác.',
-  RETRY: 'Nhận diện chưa ổn định. Hãy điều chỉnh khối Rubik rồi bấm nút Scan lại mặt này.',
-  AI_BUSY: 'AI đang bận. Chờ một chút rồi bấm thử lại.',
-  AI_UNAVAILABLE: 'AI chưa sẵn sàng. Kiểm tra kết nối rồi bấm thử lại.',
-  CAMERA_ERROR: 'Camera chưa sẵn sàng. Hãy bấm bật lại camera.',
+  POSITION_FACE: 'Position 1 face in the center of the scan frame.',
+  SCANNING: 'AI is analyzing current face. Please hold still.',
+  STABLE: 'Cube face detected. Hold steady for stability check.',
+  ACCEPTED: 'Face accepted. Rotate to a face with a different center color.',
+  DUPLICATE_FACE: 'This face was already captured. Please switch to another face.',
+  RETRY: 'Detection unstable. Adjust the Rubik cube and click Retry Face.',
+  AI_BUSY: 'AI is busy. Please wait a moment and try again.',
+  AI_UNAVAILABLE: 'AI service unavailable. Check connection and try again.',
+  CAMERA_ERROR: 'Camera not ready. Please enable camera access.',
 };
 
 export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestPanel({
@@ -163,8 +163,8 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
       
       context.fillStyle = '#f8fafc';
       context.font = 'bold 11px sans-serif';
-      const colorVi = COLOR_NAME_VI[sticker.color] || sticker.color;
-      context.fillText(`${index + 1}. ${colorVi}`, x1 + 4, Math.max(12, y1 - 7));
+      const colorEn = COLOR_NAME_EN[sticker.color] || sticker.color;
+      context.fillText(`${index + 1}. ${colorEn}`, x1 + 4, Math.max(12, y1 - 7));
     });
   }, [camera.videoRef, observation, session]);
 
@@ -445,9 +445,9 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
 
         <div className="mt-3 space-y-2">
           <div className="flex items-center justify-between text-[11px] font-bold">
-            <span className="text-slate-500">Các tâm màu còn lại:</span>
+            <span className="text-slate-500">Remaining center colors:</span>
             <span className="text-indigo-600 font-extrabold">
-              {remainingCenters.length ? remainingCenters.map(c => COLOR_NAME_VI[c.toLowerCase()] || c).join(', ') : 'Đã quét xong đủ mặt'}
+              {remainingCenters.length ? remainingCenters.map(c => COLOR_NAME_EN[c.toLowerCase()] || c).join(', ') : 'All faces scanned'}
             </span>
           </div>
 
@@ -455,7 +455,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             {Array.from({ length: requiredFaceCount }).map((_, index) => {
               const face = faceSlots[index];
               const active = session?.requestedFaceIndex === index + 1;
-              const centerVi = face?.centerColor ? COLOR_NAME_VI[face.centerColor.toLowerCase()] || face.centerColor : null;
+              const centerEn = face?.centerColor ? COLOR_NAME_EN[face.centerColor.toLowerCase()] || face.centerColor : null;
               return (
                 <div
                   key={index}
@@ -474,10 +474,10 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                           className="w-2 h-2 rounded-full inline-block border border-black/20 shrink-0"
                           style={{ backgroundColor: COLOR_STYLE[face.centerColor.toLowerCase()] || COLOR_STYLE.unknown }}
                         />
-                        <span className="truncate">{centerVi}</span>
+                        <span className="truncate">{centerEn}</span>
                       </span>
                     ) : (
-                      `Mặt ${index + 1}`
+                      `Face ${index + 1}`
                     )}
                   </div>
 
@@ -496,7 +496,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                   </div>
 
                   <span className="text-[9px] font-black">
-                    {face ? '✓' : active ? 'Đang chờ' : 'Chờ'}
+                    {face ? '✓' : active ? 'Active' : 'Pending'}
                   </span>
                 </div>
               );
@@ -753,7 +753,7 @@ function FaceSlot({ index, face, active }: { index: number; face?: AiRubikScanne
       <header className="flex justify-between items-center text-[10px] font-bold text-zinc-500 font-mono">
         <span>F{index + 1}</span>
         <span className="uppercase text-white truncate max-w-[50px]">
-          {face?.centerColor ? COLOR_NAME_VI[face.centerColor] || face.centerColor : 'pending'}
+          {face?.centerColor ? COLOR_NAME_EN[face.centerColor.toLowerCase()] || face.centerColor : 'pending'}
         </span>
       </header>
       <div className="grid grid-cols-3 gap-0.5 max-w-[48px] w-full mx-auto aspect-square bg-zinc-900 p-0.5 rounded border border-zinc-800">

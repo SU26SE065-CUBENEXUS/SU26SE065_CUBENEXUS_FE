@@ -7,7 +7,7 @@ import type {
   SubmitSolveTimeResponseDto,
 } from '../types';
 
-const DIRECT_AI_SCANNER_BASE_URL = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://robena-nonapparitional-knox.ngrok-free.dev';
+const DIRECT_AI_SCANNER_BASE_URL = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://cubenexus-rubik-ai-production.up.railway.app';
 
 /** POST /api/online/matchmaking/find */
 export async function findMatch(puzzleTypeId: string): Promise<MatchmakingStatusDto> {

@@ -114,15 +114,28 @@ export default function AdminNotificationBell() {
       if (manualModes.size > 0) {
         // Track modes for puzzle types actively used in tournaments or online matches
         const activeDepletedKeys = new Set<string>();
+        const replenishedKeys = new Set<string>();
 
         summaries.forEach((s) => {
-          if (s.status === 'AVAILABLE' && s.count === 0 && manualModes.has(s.competitionMode)) {
-            activeDepletedKeys.add(`${s.competitionMode}-${s.puzzleCode}`);
+          const key = `${s.competitionMode}-${s.puzzleCode}`;
+          if (s.count === 0 && manualModes.has(s.competitionMode)) {
+            activeDepletedKeys.add(key);
+          } else {
+            replenishedKeys.add(key);
           }
         });
 
         setNotifications((prev) => {
-          const prevMap = new Map(prev.map((n) => [`${n.competitionMode}-${n.puzzleCode}`, n]));
+          // Auto-dismiss any notification whose scramble pool is no longer empty or mode is no longer MANUAL
+          const activePrev = prev.filter((n) => {
+            const key = `${n.competitionMode}-${n.puzzleCode}`;
+            if (replenishedKeys.has(key) || (n.competitionMode && !manualModes.has(n.competitionMode))) {
+              return false;
+            }
+            return true;
+          });
+
+          const prevMap = new Map(activePrev.map((n) => [`${n.competitionMode}-${n.puzzleCode}`, n]));
           const updatedList: ScrambleDepletedNotification[] = [];
 
           // Process each currently depleted pool for active competition modes
@@ -148,9 +161,9 @@ export default function AdminNotificationBell() {
             }
           });
 
-          // Keep non-API notifications (SignalR alerts) that haven't been resolved
-          prev.forEach((n) => {
-            if (!n.id.startsWith('api-') && !updatedList.some((item) => item.id === n.id)) {
+          // Keep remaining active notifications that were not matched
+          activePrev.forEach((n) => {
+            if (!updatedList.some((item) => item.id === n.id)) {
               updatedList.push(n);
             }
           });
@@ -158,8 +171,8 @@ export default function AdminNotificationBell() {
           return updatedList;
         });
       } else {
-        // If every competition mode is AUTO, all manual pool warnings are resolved.
-        setNotifications((prev) => prev.filter((n) => !n.id.startsWith('api-')));
+        // If every competition mode is AUTO, all scramble pool warnings are resolved automatically.
+        setNotifications([]);
       }
     } catch {
       // Ignore API errors when unauthenticated or offline

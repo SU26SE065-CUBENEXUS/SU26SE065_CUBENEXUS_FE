@@ -115,21 +115,21 @@ function ScrambleDisplay({ sequence }: { sequence: string }) {
 // ------------------------------------------------------------------
 function ColorSchemeGuide() {
   const scheme = [
-    { code: 'U', name: 'Up', colorName: 'Trắng', bg: 'bg-white text-zinc-950 border-zinc-300' },
-    { code: 'D', name: 'Down', colorName: 'Vàng', bg: 'bg-yellow-400 text-zinc-950 border-yellow-300' },
-    { code: 'F', name: 'Front', colorName: 'Xanh lá', bg: 'bg-emerald-500 text-white border-emerald-400' },
-    { code: 'B', name: 'Back', colorName: 'Xanh dương', bg: 'bg-blue-600 text-white border-blue-400' },
-    { code: 'R', name: 'Right', colorName: 'Đỏ', bg: 'bg-red-600 text-white border-red-400' },
-    { code: 'L', name: 'Left', colorName: 'Cam', bg: 'bg-orange-500 text-white border-orange-400' },
+    { code: 'U', name: 'Up', colorName: 'White', bg: 'bg-white text-zinc-950 border-zinc-300' },
+    { code: 'D', name: 'Down', colorName: 'Yellow', bg: 'bg-yellow-400 text-zinc-950 border-yellow-300' },
+    { code: 'F', name: 'Front', colorName: 'Green', bg: 'bg-emerald-500 text-white border-emerald-400' },
+    { code: 'B', name: 'Back', colorName: 'Blue', bg: 'bg-blue-600 text-white border-blue-400' },
+    { code: 'R', name: 'Right', colorName: 'Red', bg: 'bg-red-600 text-white border-red-400' },
+    { code: 'L', name: 'Left', colorName: 'Orange', bg: 'bg-orange-500 text-white border-orange-400' },
   ];
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground uppercase tracking-wider">
-          Quy ước mặt & màu xuất phát (Solved State)
+          Starting Faces & Colors Convention (Solved State)
         </span>
-        <span className="text-[10px] text-muted-foreground">Chuẩn CubeNexus</span>
+        <span className="text-[10px] text-muted-foreground">CubeNexus Standard</span>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">

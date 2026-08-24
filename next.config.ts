@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://perfectly-detail-gory.ngrok-free.dev';
-    const aiScannerUrl = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://robena-nonapparitional-knox.ngrok-free.dev';
+    const aiScannerUrl = process.env.NEXT_PUBLIC_AI_SCANNER_BASE_URL || 'https://cubenexus-rubik-ai-production.up.railway.app';
     return [
       {
         source: '/api/ai-service/:path*',
