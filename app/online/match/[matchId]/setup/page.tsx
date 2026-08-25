@@ -392,7 +392,7 @@ export default function RoomSetupPage() {
   const [overrideStep, setOverrideStep] = useState<'timer' | 'webrtc' | null>(null);
 
   const pairingCode = useMemo(() => {
-    const sessionCode = state?.qrSessionCode || matchId.slice(0, 8).toUpperCase();
+    const sessionCode = state?.qrSessionCode || (typeof matchId === 'string' && matchId ? matchId.slice(0, 8).toUpperCase() : 'ARENA');
     return `${sessionCode}:${isP1 ? 'P1' : 'P2'}`;
   }, [state?.qrSessionCode, matchId, isP1]);
 
@@ -419,13 +419,23 @@ export default function RoomSetupPage() {
   const currentStep = overrideStep || autoStep;
 
   const handleWebRtcConnected = useCallback(async () => {
+    if (!matchId) return;
     await markWebRtcConnected(matchId);
     await refetch();
   }, [matchId, refetch]);
 
-  if (!state || !myState) return null;
+  if (!state || !myState) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[400px]">
+        <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
+        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          Initializing Battle Station...
+        </span>
+      </div>
+    );
+  }
 
-  const allDone = myState.checklistPassed;
+  const allDone = Boolean(myState.checklistPassed);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl mx-auto w-full">

@@ -33,35 +33,35 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
     );
   }
 
-  const isP1 = state.player1.userId === userId;
-  const oppState = isP1 ? state.player2 : state.player1;
-  const oppElo = (isP1 ? state.player2EloBefore : state.player1EloBefore) ?? (oppState as any)?.eloBefore ?? 1000;
+  const isP1 = state?.player1?.userId === userId;
+  const oppState = isP1 ? state?.player2 : state?.player1;
+  const oppElo = (isP1 ? state?.player2EloBefore : state?.player1EloBefore) ?? (oppState as any)?.eloBefore ?? 1000;
 
   // Determine opponent display status
   let statusText = 'SETUP ROOM';
   let statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
 
-  if (oppState.resultStatus === 'PENDING') {
-    if (state.phase === 'INSPECTION') {
+  if (oppState?.resultStatus === 'PENDING') {
+    if (state?.phase === 'INSPECTION') {
       statusText = 'INSPECTING';
       statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-    } else if (state.phase === 'SOLVING') {
+    } else if (state?.phase === 'SOLVING') {
       statusText = 'SOLVING';
       statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
     } else {
       statusText = 'SETUP ROOM';
       statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     }
-  } else if (oppState.resultStatus === 'VALID') {
+  } else if (oppState?.resultStatus === 'VALID') {
     statusText = 'FINISHED';
     statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-  } else if (oppState.resultStatus === 'DNF') {
+  } else if (oppState?.resultStatus === 'DNF') {
     statusText = 'DNF';
     statusColor = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
   }
 
   const oppTimeFormatted =
-    oppState.timeMs && oppState.timeMs > 0
+    oppState?.timeMs && oppState.timeMs > 0
       ? (() => {
           const ms = oppState.timeMs;
           const seconds = Math.floor(ms / 1000);
@@ -70,7 +70,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
         })()
       : null;
 
-  const isSetupPhase = ['ROOM_SETUP', 'WEBRTC_CONNECTING', 'MOBILE_TIMER_PAIRING', 'SCRAMBLE_CHECKING'].includes(state.phase);
+  const isSetupPhase = ['ROOM_SETUP', 'WEBRTC_CONNECTING', 'MOBILE_TIMER_PAIRING', 'SCRAMBLE_CHECKING'].includes(state?.phase || '');
 
   return (
     <div className="w-80 bg-card border-l border-border p-5 flex flex-col justify-between shrink-0 shadow-md relative">
@@ -93,7 +93,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
           </div>
           <div className="min-w-0">
             <h4 className="text-sm font-bold text-foreground truncate">
-              {oppState.displayName || `Player_${oppState.userId.slice(0, 6)}`}
+              {oppState?.displayName || (oppState?.userId ? `Player_${oppState.userId.slice(0, 6)}` : 'Opponent')}
             </h4>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
               <Award className="h-3.5 w-3.5 text-orange-500" />
