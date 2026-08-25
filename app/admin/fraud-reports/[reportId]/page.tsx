@@ -204,8 +204,9 @@ export default function AdminFraudReportReviewDetailPage() {
 
   const { report, match, aiChecks, auditLogs } = detail;
   const isResolved = report.statusCode === 'RESOLVED';
-  const p1Record = playbackData?.recordings?.[0];
-  const p2Record = playbackData?.recordings?.[1];
+  // Map by seat playerId — recordings[] order from API is not guaranteed
+  const p1Record = playbackData?.recordings?.find((r) => r.playerId === match.player1Id);
+  const p2Record = playbackData?.recordings?.find((r) => r.playerId === match.player2Id);
 
   return (
     <div className="w-full max-w-full p-4 sm:p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen transition-all duration-300 animate-fade-in font-sans">
