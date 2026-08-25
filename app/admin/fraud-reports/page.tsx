@@ -26,9 +26,8 @@ type TabType = 'ALL' | 'PENDING' | 'RESOLVED';
 
 function formatCompetitorLabel(userCode?: string | null, displayName?: string | null, fallbackUserId?: string) {
   const code = userCode?.trim();
-  const name = displayName?.trim();
-  if (code && name) return `${code} của người chơi ${name}`;
   if (code) return code;
+  const name = displayName?.trim();
   if (name) return name;
   return fallbackUserId ? `${fallbackUserId.slice(0, 8)}…` : 'Unknown';
 }
