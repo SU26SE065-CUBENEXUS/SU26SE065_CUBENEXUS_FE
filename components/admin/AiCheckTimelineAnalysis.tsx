@@ -44,6 +44,38 @@ export interface AiCheckResult {
   violations: ViolationItem[];
 }
 
+export function resolveEvidenceVideoUrl(rawUrl: string | undefined, apiBaseUrl: string): string {
+  if (!rawUrl) return '';
+  const cleanBase = apiBaseUrl.replace(/\/+$/, '');
+
+  // 1. If it's a local file path on the server (e.g. C:\... or evidence_outputs\xxx.mp4)
+  if (rawUrl.includes('\\') || (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://') && !rawUrl.startsWith('/'))) {
+    const filename = rawUrl.split(/[/\\]/).pop();
+    if (filename) {
+      return `${cleanBase}/evidence/${filename}`;
+    }
+  }
+
+  // 2. If it points to localhost or 127.0.0.1 (because python server hardcoded localhost:8000)
+  if (rawUrl.startsWith('http://localhost') || rawUrl.startsWith('http://127.0.0.1')) {
+    try {
+      const parsed = new URL(rawUrl);
+      return `${cleanBase}${parsed.pathname}${parsed.search}`;
+    } catch {
+      const pathOnly = rawUrl.replace(/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, '');
+      return `${cleanBase}${pathOnly}`;
+    }
+  }
+
+  // 3. If it's a relative path like /evidence/... or /evidence_outputs/...
+  if (rawUrl.startsWith('/')) {
+    return `${cleanBase}${rawUrl}`;
+  }
+
+  // 4. If already an absolute URL
+  return rawUrl;
+}
+
 interface Props {
   reportId: string;
   videoUrl: string;
@@ -401,61 +433,75 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       )}
 
       {/* AI evidence video modal */}
-      {mounted && showEvidenceModal && aiData && createPortal(
-        <div
-          className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setShowEvidenceModal(false)}
-        >
+      {mounted && showEvidenceModal && aiData && (() => {
+        const resolvedUrl = resolveEvidenceVideoUrl(aiData.evidence_video_url, apiUrl);
+        return createPortal(
           <div
-            className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl p-5 shadow-2xl space-y-4"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+            onClick={() => setShowEvidenceModal(false)}
           >
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <div className="space-y-0.5">
-                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Video className="h-4 w-4 text-indigo-600" />
-                  <span>AI Analysis Video (Bounding Boxes &amp; Annotations): <strong>{currentTargetLabel}</strong></span>
-                </h4>
-                <p className="text-xs text-slate-500">
-                  The AI-scanned video includes object-detection overlays.
-                </p>
+            <div
+              className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl p-5 shadow-2xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div className="space-y-0.5">
+                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Video className="h-4 w-4 text-indigo-600" />
+                    <span>AI Analysis Video (Bounding Boxes &amp; Annotations): <strong>{currentTargetLabel}</strong></span>
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    The AI-scanned video includes object-detection overlays and timestamps.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={resolvedUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Open in New Tab
+                  </a>
+                  <button
+                    onClick={() => setShowEvidenceModal(false)}
+                    className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <a
-                  href={aiData.evidence_video_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> Open in New Tab
-                </a>
-                <button
-                  onClick={() => setShowEvidenceModal(false)}
-                  className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
 
-            {/* VIDEO PLAYER CONTAINING ANNOTATED VIDEO */}
-            <div className="rounded-2xl overflow-hidden bg-black border border-slate-200 shadow-inner relative group">
-              <video
-                ref={evidenceVideoRef}
-                key={aiData.evidence_video_url}
-                src={aiData.evidence_video_url}
-                controls
-                autoPlay
-                playsInline
-                className="w-full max-h-[480px] object-contain mx-auto"
-              >
-                <source src={aiData.evidence_video_url} type="video/mp4" />
-              </video>
+              {/* VIDEO PLAYER CONTAINING ANNOTATED VIDEO */}
+              <div className="rounded-2xl overflow-hidden bg-black border border-slate-200 shadow-inner relative group">
+                <video
+                  ref={evidenceVideoRef}
+                  key={resolvedUrl}
+                  src={resolvedUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full max-h-[480px] object-contain mx-auto"
+                >
+                  <source src={resolvedUrl} type="video/mp4" />
+                </video>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="truncate max-w-lg">Stream: {resolvedUrl}</span>
+                <a
+                  href={resolvedUrl}
+                  download="ai-evidence.mp4"
+                  className="font-bold text-indigo-600 hover:underline shrink-0"
+                >
+                  Download Video
+                </a>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        );
+      })()}
     </div>
   );
 };
