@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Bell, BellRing, Sparkles, Plus, CheckCheck, Trash2, X } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, BellRing, Sparkles, Plus, CheckCheck, Trash2, X, ShieldAlert, ExternalLink } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, apiFetch } from '@/lib/api/config';
 import { setScrambleMode, generateScrambles, getScrambleSummary, getScrambleMode, type ScrambleMode } from '@/features/admin/api/adminScrambleApi';
@@ -15,9 +16,10 @@ export interface ScrambleDepletedNotification {
   message: string;
   timestamp: string;
   isRead: boolean;
-  source?: 'scramble' | 'tournament';
+  source?: 'scramble' | 'tournament' | 'fraud';
   typeCode?: string;
   title?: string;
+  reportId?: string;
 }
 
 interface AdminNotificationDto {
@@ -28,6 +30,55 @@ interface AdminNotificationDto {
   payload?: string | null;
   isRead: boolean;
   createdAt: string;
+}
+
+const SUPPORTED_ADMIN_TYPES = new Set(['SCRAMBLE_POOL_EMPTY', 'FRAUD_REPORT_CREATED']);
+
+function mapAdminNotification(item: AdminNotificationDto): ScrambleDepletedNotification | null {
+  if (!SUPPORTED_ADMIN_TYPES.has(item.typeCode)) return null;
+
+  let payload: Record<string, unknown> = {};
+  try {
+    payload = item.payload ? JSON.parse(item.payload) : {};
+  } catch {
+    // Keep the notification visible even if an old payload is malformed.
+  }
+
+  if (item.typeCode === 'FRAUD_REPORT_CREATED') {
+    const reportId = String(payload.reportId || '');
+    return {
+      id: `admin-${item.id}`,
+      competitionMode: 'ONLINE_MATCH',
+      puzzleTypeId: '',
+      puzzleCode: String(payload.fraudType || 'FRAUD'),
+      puzzleName: item.title,
+      message: item.body || item.title,
+      timestamp: item.createdAt,
+      isRead: item.isRead,
+      source: 'fraud',
+      typeCode: item.typeCode,
+      title: item.title,
+      reportId: reportId || undefined,
+    };
+  }
+
+  return {
+    id: `admin-${item.id}`,
+    competitionMode: String(payload.competitionMode || 'ONLINE_MATCH'),
+    puzzleTypeId: String(payload.puzzleTypeId || ''),
+    puzzleCode: String(payload.puzzleCode || 'UNKNOWN'),
+    puzzleName: String(payload.puzzleName || item.title),
+    message: item.body || item.title,
+    timestamp: item.createdAt,
+    isRead: item.isRead,
+    source: 'scramble',
+    typeCode: item.typeCode,
+    title: item.title,
+  };
+}
+
+function isScrambleSource(n: ScrambleDepletedNotification) {
+  return n.source !== 'fraud' && n.source !== 'tournament' && n.typeCode !== 'FRAUD_REPORT_CREATED';
 }
 
 export default function AdminNotificationBell() {
@@ -53,28 +104,8 @@ export default function AdminNotificationBell() {
     try {
       const serverItems = await apiFetch<AdminNotificationDto[]>('/api/admin/notifications?limit=50');
       const mapped = serverItems
-        .filter((item) => item.typeCode === 'SCRAMBLE_POOL_EMPTY')
-        .map((item) => {
-          let payload: Partial<ScrambleDepletedNotification> = {};
-          try {
-            payload = item.payload ? JSON.parse(item.payload) : {};
-          } catch {
-            // Keep the notification visible even if an old payload is malformed.
-          }
-          return {
-            id: `admin-${item.id}`,
-            competitionMode: payload.competitionMode || 'ONLINE_MATCH',
-            puzzleTypeId: payload.puzzleTypeId || '',
-            puzzleCode: payload.puzzleCode || 'UNKNOWN',
-            puzzleName: payload.puzzleName || item.title,
-            message: item.body || item.title,
-            timestamp: item.createdAt,
-            isRead: item.isRead,
-            source: 'scramble' as const,
-            typeCode: item.typeCode,
-            title: item.title,
-          };
-        });
+        .map(mapAdminNotification)
+        .filter((item): item is ScrambleDepletedNotification => item != null);
       setNotifications((previous) => [
         ...mapped,
         ...previous.filter((item) => !item.id.startsWith('admin-')),
@@ -111,8 +142,15 @@ export default function AdminNotificationBell() {
       ]);
       const manualModes = new Set(modeResults.filter((result) => result.mode === 'MANUAL').map((result) => result.competitionMode));
 
-      if (manualModes.size > 0) {
-        // Track modes for puzzle types actively used in tournaments or online matches
+      setNotifications((prev) => {
+        const nonScramble = prev.filter((n) => !isScrambleSource(n));
+        const scramblePrev = prev.filter((n) => isScrambleSource(n));
+
+        if (manualModes.size === 0) {
+          // All modes AUTO → drop scramble warnings only; keep fraud/tournament
+          return nonScramble;
+        }
+
         const activeDepletedKeys = new Set<string>();
         const replenishedKeys = new Set<string>();
 
@@ -125,67 +163,56 @@ export default function AdminNotificationBell() {
           }
         });
 
-        setNotifications((prev) => {
-          // Auto-dismiss any notification whose scramble pool is no longer empty or mode is no longer MANUAL
-          const activePrev = prev.filter((n) => {
-            const key = `${n.competitionMode}-${n.puzzleCode}`;
-            if (replenishedKeys.has(key) || (n.competitionMode && !manualModes.has(n.competitionMode))) {
-              return false;
-            }
-            return true;
-          });
-
-          const prevMap = new Map(activePrev.map((n) => [`${n.competitionMode}-${n.puzzleCode}`, n]));
-          const updatedList: ScrambleDepletedNotification[] = [];
-
-          // Process each currently depleted pool for active competition modes
-          activeDepletedKeys.forEach((key) => {
-            const [mode, puzzleCode] = key.split('-');
-            const summaryItem = summaries.find((s) => s.competitionMode === mode && s.puzzleCode === puzzleCode);
-
-            if (prevMap.has(key)) {
-              // Preserve existing notification with its ORIGINAL timestamp and ORIGINAL isRead status!
-              updatedList.push(prevMap.get(key)!);
-            } else {
-              // Brand new notification: set initial timestamp and mark as unread
-              updatedList.push({
-                id: `api-${mode}-${puzzleCode}`,
-                competitionMode: mode,
-                puzzleTypeId: summaryItem?.puzzleTypeId || '',
-                puzzleCode: puzzleCode,
-                puzzleName: `Rubik ${puzzleCode}`,
-                message: `Scramble pool for ${mode} (${puzzleCode}) is empty! Please generate scrambles or enable AUTO mode.`,
-                timestamp: new Date().toISOString(),
-                isRead: false,
-              });
-            }
-          });
-
-          // Keep remaining active notifications that were not matched
-          activePrev.forEach((n) => {
-            if (!updatedList.some((item) => item.id === n.id)) {
-              updatedList.push(n);
-            }
-          });
-
-          return updatedList;
+        const activePrev = scramblePrev.filter((n) => {
+          const key = `${n.competitionMode}-${n.puzzleCode}`;
+          if (replenishedKeys.has(key) || (n.competitionMode && !manualModes.has(n.competitionMode))) {
+            return false;
+          }
+          return true;
         });
-      } else {
-        // If every competition mode is AUTO, all scramble pool warnings are resolved automatically.
-        setNotifications([]);
-      }
+
+        const prevMap = new Map(activePrev.map((n) => [`${n.competitionMode}-${n.puzzleCode}`, n]));
+        const updatedScramble: ScrambleDepletedNotification[] = [];
+
+        activeDepletedKeys.forEach((key) => {
+          const [mode, puzzleCode] = key.split('-');
+          const summaryItem = summaries.find((s) => s.competitionMode === mode && s.puzzleCode === puzzleCode);
+
+          if (prevMap.has(key)) {
+            updatedScramble.push(prevMap.get(key)!);
+          } else {
+            updatedScramble.push({
+              id: `api-${mode}-${puzzleCode}`,
+              competitionMode: mode,
+              puzzleTypeId: summaryItem?.puzzleTypeId || '',
+              puzzleCode: puzzleCode,
+              puzzleName: `Rubik ${puzzleCode}`,
+              message: `Scramble pool for ${mode} (${puzzleCode}) is empty! Please generate scrambles or enable AUTO mode.`,
+              timestamp: new Date().toISOString(),
+              isRead: false,
+              source: 'scramble',
+            });
+          }
+        });
+
+        activePrev.forEach((n) => {
+          if (!updatedScramble.some((item) => item.id === n.id)) {
+            updatedScramble.push(n);
+          }
+        });
+
+        return [...nonScramble, ...updatedScramble];
+      });
     } catch {
       // Ignore API errors when unauthenticated or offline
     }
   }, []);
 
   useEffect(() => {
-    // 1. Initial API sync to catch notifications that occurred while Admin was offline
     void syncPoolStatus();
     void loadAdminNotifications();
     const intervalId = setInterval(() => void syncPoolStatus(), 30000);
 
-    // 2. Build SignalR Hub Connection only if token exists
     const token = typeof window !== 'undefined' ? (localStorage.getItem('access_token') || localStorage.getItem('mobile_access_token')) : '';
     if (!token) {
       return () => clearInterval(intervalId);
@@ -212,9 +239,8 @@ export default function AdminNotificationBell() {
       const key = `${mode}-${puzzleCode}`;
 
       setNotifications((prev) => {
-        const existing = prev.find((n) => `${n.competitionMode}-${n.puzzleCode}` === key);
+        const existing = prev.find((n) => isScrambleSource(n) && `${n.competitionMode}-${n.puzzleCode}` === key);
         if (existing) {
-          // If notification already exists for this pool, do NOT overwrite its timestamp or isRead status
           return prev;
         }
         const newNotif: ScrambleDepletedNotification = {
@@ -231,13 +257,12 @@ export default function AdminNotificationBell() {
         return [newNotif, ...prev];
       });
 
-      // Play subtle audio alert if possible
       try {
         const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
         osc.connect(gain);
@@ -250,36 +275,27 @@ export default function AdminNotificationBell() {
     });
 
     connection.on('AdminNotificationCreated', (data: AdminNotificationDto) => {
-      if (data.typeCode !== 'SCRAMBLE_POOL_EMPTY') return;
-      let payload: Partial<ScrambleDepletedNotification> = {};
-      try {
-        payload = data.payload ? JSON.parse(data.payload) : {};
-      } catch {
-        // Keep the notification visible even if the payload cannot be parsed.
+      if (!SUPPORTED_ADMIN_TYPES.has(data.typeCode)) return;
+
+      // Reload from API so each admin gets their own notification row id for mark-as-read.
+      if (data.typeCode === 'FRAUD_REPORT_CREATED') {
+        void loadAdminNotifications();
+        return;
       }
-      const notification = {
-        id: `admin-${data.id}`,
-        competitionMode: payload.competitionMode || 'ONLINE_MATCH',
-        puzzleTypeId: payload.puzzleTypeId || '',
-        puzzleCode: payload.puzzleCode || 'UNKNOWN',
-        puzzleName: payload.puzzleName || data.title,
-        message: data.body || data.title,
-        timestamp: data.createdAt,
-        isRead: false,
-        source: 'scramble' as const,
-        typeCode: data.typeCode,
-        title: data.title,
-      };
-      setNotifications((previous) => previous.some((item) => item.id === notification.id)
-        ? previous
-        : [notification, ...previous].slice(0, 100));
+
+      const notification = mapAdminNotification({ ...data, isRead: false });
+      if (!notification) return;
+      setNotifications((previous) =>
+        previous.some((item) => item.id === notification.id)
+          ? previous
+          : [notification, ...previous].slice(0, 100)
+      );
     });
 
     connection
       .start()
       .then(() => console.log('[SignalR Admin Bell] Connected to TournamentHub successfully.'))
       .catch((err) => {
-        // Gracefully handle negotiation stop errors when unauthenticated or during logout
         if (err?.message?.includes('stopped during negotiation')) return;
         console.warn('[SignalR Admin Bell] Connection notice:', err?.message || err);
       });
@@ -352,9 +368,7 @@ export default function AdminNotificationBell() {
   };
 
   const handleToggleBell = () => {
-    const nextState = !isOpen;
-    setIsOpen(nextState);
-    if (nextState) markAllAsRead();
+    setIsOpen((open) => !open);
   };
 
   const formatNotifTime = (isoString: string) => {
@@ -379,9 +393,20 @@ export default function AdminNotificationBell() {
     }
   };
 
+  const badgeLabel = (n: ScrambleDepletedNotification) => {
+    if (n.source === 'fraud' || n.typeCode === 'FRAUD_REPORT_CREATED') return 'FRAUD';
+    if (n.source === 'tournament') return 'TOURNAMENT';
+    return 'DEPLETED';
+  };
+
+  const badgeClass = (n: ScrambleDepletedNotification) => {
+    if (n.source === 'fraud' || n.typeCode === 'FRAUD_REPORT_CREATED') return 'bg-amber-600';
+    if (n.source === 'tournament') return 'bg-indigo-600';
+    return 'bg-rose-600';
+  };
+
   return (
     <div className="relative">
-      {/* Bell Button */}
       <button
         onClick={handleToggleBell}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition shadow-2xs text-slate-700 cursor-pointer"
@@ -399,10 +424,8 @@ export default function AdminNotificationBell() {
         )}
       </button>
 
-      {/* Popover Menu */}
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-96 rounded-2xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden text-left animate-in fade-in zoom-in-95">
-          {/* Popover Header */}
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-indigo-600" />
@@ -418,10 +441,11 @@ export default function AdminNotificationBell() {
                 <>
                   <button
                     onClick={markAllAsRead}
-                    className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-extrabold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
                     title="Mark all as read"
                   >
                     <CheckCheck className="h-3.5 w-3.5" />
+                    Mark all as read
                   </button>
                   <button
                     onClick={clearAll}
@@ -441,7 +465,6 @@ export default function AdminNotificationBell() {
             </div>
           </div>
 
-          {/* Toast/Status Feedback */}
           {statusMessage && (
             <div className="bg-indigo-50 px-4 py-2 border-b border-indigo-100 text-[11px] font-bold text-indigo-900 flex justify-between items-center">
               <span>{statusMessage}</span>
@@ -451,7 +474,6 @@ export default function AdminNotificationBell() {
             </div>
           )}
 
-          {/* List of Notifications */}
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
             {notifications.length > 0 ? (
               notifications.map((n) => (
@@ -463,18 +485,24 @@ export default function AdminNotificationBell() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black text-white uppercase ${n.source === 'tournament' ? 'bg-indigo-600' : 'bg-rose-600'}`}>
-                        {n.source === 'tournament' ? 'TOURNAMENT' : 'DEPLETED'}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black text-white uppercase ${badgeClass(n)}`}>
+                        {badgeLabel(n)}
                       </span>
                       <span className="font-mono text-[11px] font-black text-slate-900">
-                        {n.source === 'tournament' ? (n.title || 'Status update') : n.puzzleCode}
+                        {n.source === 'fraud'
+                          ? (n.title || 'Fraud report')
+                          : n.source === 'tournament'
+                            ? (n.title || 'Status update')
+                            : n.puzzleCode}
                       </span>
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold text-slate-600">
-                        {n.competitionMode}
-                      </span>
+                      {n.source !== 'fraud' && (
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold text-slate-600">
+                          {n.competitionMode}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[9px] font-bold text-slate-400 font-mono">
+                    <span className="text-[9px] font-bold text-slate-400 font-mono shrink-0">
                       {formatNotifTime(n.timestamp)}
                     </span>
                   </div>
@@ -483,25 +511,49 @@ export default function AdminNotificationBell() {
                     {n.message}
                   </p>
 
-                  {/* Quick Action Buttons */}
-                  {n.source !== 'tournament' && <div className="mt-2.5 flex items-center gap-2">
-                    <button
-                      disabled={busyId === n.id}
-                      onClick={() => void handleToggleAutoMode(n)}
-                      className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs cursor-pointer disabled:opacity-50"
-                    >
-                      <Sparkles className="h-3 w-3" /> Enable AUTO Mode
-                    </button>
-                    {n.puzzleTypeId && (
+                  {n.source === 'fraud' && n.reportId && (
+                    <div className="mt-2.5">
+                      <Link
+                        href={`/admin/fraud-reports/${n.reportId}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markNotificationAsRead(n);
+                          setIsOpen(false);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs"
+                      >
+                        <ShieldAlert className="h-3 w-3" /> Review report
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  )}
+
+                  {isScrambleSource(n) && (
+                    <div className="mt-2.5 flex items-center gap-2">
                       <button
                         disabled={busyId === n.id}
-                        onClick={() => void handleGenerateScramblesEmergency(n)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs cursor-pointer disabled:opacity-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleToggleAutoMode(n);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs cursor-pointer disabled:opacity-50"
                       >
-                        <Plus className="h-3 w-3" /> Generate 20 Now
+                        <Sparkles className="h-3 w-3" /> Enable AUTO Mode
                       </button>
-                    )}
-                  </div>}
+                      {n.puzzleTypeId && (
+                        <button
+                          disabled={busyId === n.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void handleGenerateScramblesEmergency(n);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] px-2.5 py-1.5 transition shadow-2xs cursor-pointer disabled:opacity-50"
+                        >
+                          <Plus className="h-3 w-3" /> Generate 20 Now
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -509,7 +561,7 @@ export default function AdminNotificationBell() {
                 <Bell className="mx-auto h-8 w-8 text-slate-300 mb-2" />
                 <p className="text-xs font-semibold">No new notifications.</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  SignalR alerts broadcast automatically when MANUAL mode runs low on scrambles.
+                  Alerts appear for scramble pool shortages and new online PvP fraud reports.
                 </p>
               </div>
             )}
