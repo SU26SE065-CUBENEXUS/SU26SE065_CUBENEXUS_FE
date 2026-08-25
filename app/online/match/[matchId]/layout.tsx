@@ -13,6 +13,7 @@ import { Header } from '@/components/header';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { parseJwt, getAccessToken } from '@/lib/api/config';
 import { markWebRtcConnected } from '@/features/online-arena/api/onlineArenaApi';
+import { ArenaErrorBoundary } from '@/features/online-arena/components/ArenaErrorBoundary';
 
 export default function MatchLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -166,11 +167,15 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
                 <div className="flex-1 overflow-y-auto p-6 sm:p-8 relative">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.5_0.15_40_/_0.03),transparent_50%)]" />
                   <div className="max-w-4xl mx-auto h-full flex flex-col justify-center relative z-10">
-                    {children}
+                    <ArenaErrorBoundary fallbackTitle="Phase View Error" onReset={refetch}>
+                      {children}
+                    </ArenaErrorBoundary>
                   </div>
                 </div>
                 {state?.me?.nextUiState !== 'SCRAMBLE_CHECK' && state?.me?.nextUiState !== 'FINISH_SCANNING' && (
-                  <OpponentSidebar state={state} userId={userId} />
+                  <ArenaErrorBoundary fallbackTitle="Opponent Board" onReset={refetch}>
+                    <OpponentSidebar state={state} userId={userId} />
+                  </ArenaErrorBoundary>
                 )}
               </div>
             </main>
