@@ -483,27 +483,9 @@ export default function RoomSetupPage() {
                   />
                 </div>
 
-                <div className="w-full max-w-xs space-y-2 text-center">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
-                    Session Pairing Token
-                  </span>
-                  <div className="flex items-center justify-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2">
-                    <span className="font-sans font-bold text-xs text-foreground tracking-wide select-all">
-                      {pairingCode}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyToken}
-                      className="p-1 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition cursor-pointer"
-                      title="Copy pairing code"
-                    >
-                      {copiedToken ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Open Mobile App &gt; <strong>Timer</strong> &gt; <strong>Pair Room</strong> &gt; Scan QR or paste token.
-                  </p>
-                </div>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Open Mobile App &gt; <strong>Timer</strong> &gt; <strong>Scan QR</strong> to pair your device.
+                </p>
               </div>
             </div>
           )}

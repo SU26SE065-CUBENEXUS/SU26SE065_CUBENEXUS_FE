@@ -35,7 +35,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
   const isP1 = state.player1.userId === userId;
   const oppState = isP1 ? state.player2 : state.player1;
-  const oppElo = isP1 ? state.player2EloBefore : state.player1EloBefore;
+  const oppElo = (isP1 ? state.player2EloBefore : state.player1EloBefore) ?? (oppState as any)?.eloBefore ?? 1000;
 
   // Determine opponent display status
   let statusText = 'SETUP ROOM';
@@ -43,39 +43,25 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
   if (oppState.resultStatus === 'PENDING') {
     if (state.phase === 'INSPECTION') {
-      statusText = 'INSPECTION';
-      statusColor = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
+      statusText = 'INSPECTING';
+      statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     } else if (state.phase === 'SOLVING') {
       statusText = 'SOLVING';
-      statusColor = 'text-green-400 bg-green-500/10 border-green-500/20';
-    } else if (oppState.checklistPassed || oppState.isReady) {
-      statusText = 'READY';
       statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-    } else if (oppState.scrambleCheckStatus === 'PASSED') {
-      statusText = 'SCRAMBLED';
-      statusColor = 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+    } else {
+      statusText = 'SETUP ROOM';
+      statusColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     }
+  } else if (oppState.resultStatus === 'VALID') {
+    statusText = 'FINISHED';
+    statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
   } else if (oppState.resultStatus === 'DNF') {
     statusText = 'DNF';
     statusColor = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-  } else if (oppState.resultStatus === 'VALID') {
-    if (oppState.finishCheckStatus === 'PASSED') {
-      statusText = 'VERIFIED';
-      statusColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-    } else if (oppState.finishCheckStatus === 'FAILED') {
-      statusText = 'REVIEW REQ';
-      statusColor = 'text-red-400 bg-red-500/10 border-red-500/20';
-    } else {
-      statusText = 'SCANNING FINISH';
-      statusColor = 'text-orange-400 bg-orange-500/10 border-orange-500/20';
-    }
   }
 
-  // Format result time if available
-  const resultTime =
-    oppState.resultStatus === 'DNF'
-      ? 'DNF'
-      : oppState.timeMs !== null
+  const oppTimeFormatted =
+    oppState.timeMs && oppState.timeMs > 0
       ? (() => {
           const ms = oppState.timeMs;
           const seconds = Math.floor(ms / 1000);
@@ -111,7 +97,7 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
             </h4>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
               <Award className="h-3.5 w-3.5 text-orange-500" />
-              <span>{oppElo !== null && oppElo !== undefined ? `${oppElo} ELO` : '1500 ELO'}</span>
+              <span>{oppElo} ELO</span>
             </div>
           </div>
         </div>
