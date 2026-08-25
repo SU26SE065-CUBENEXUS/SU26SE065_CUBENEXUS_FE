@@ -18,6 +18,8 @@ import {
   AlertCircle,
   Clock,
   Wifi,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 // ------------------------------------------------------------------
@@ -385,12 +387,36 @@ export default function RoomSetupPage() {
   const myState = isP1 ? state?.player1 : state?.player2;
   const opponentState = isP1 ? state?.player2 : state?.player1;
 
-  const currentStep = useMemo(() => {
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [qrProvider, setQrProvider] = useState<'qrserver' | 'quickchart'>('qrserver');
+  const [overrideStep, setOverrideStep] = useState<'timer' | 'webrtc' | null>(null);
+
+  const pairingCode = useMemo(() => {
+    const sessionCode = state?.qrSessionCode || matchId.slice(0, 8).toUpperCase();
+    return `${sessionCode}:${isP1 ? 'P1' : 'P2'}`;
+  }, [state?.qrSessionCode, matchId, isP1]);
+
+  const qrImageUrl = useMemo(() => {
+    if (qrProvider === 'qrserver') {
+      return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pairingCode)}`;
+    }
+    return `https://quickchart.io/qr?text=${encodeURIComponent(pairingCode)}&size=200`;
+  }, [pairingCode, qrProvider]);
+
+  const handleCopyToken = () => {
+    navigator.clipboard.writeText(pairingCode);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
+  };
+
+  const autoStep = useMemo(() => {
     if (!myState) return 'timer';
     if (!myState.timerReady) return 'timer';
     if (!myState.webRtcConnected) return 'webrtc';
     return 'completed';
   }, [myState]);
+
+  const currentStep = overrideStep || autoStep;
 
   const handleWebRtcConnected = useCallback(async () => {
     await markWebRtcConnected(matchId);
@@ -424,45 +450,85 @@ export default function RoomSetupPage() {
 
           {currentStep === 'timer' && (
             <div className="bg-card/60 border border-border/80 rounded-3xl p-5 shadow-md space-y-4">
-              <div className="flex items-center gap-2">
-                <QrCode className="h-5 w-5 text-orange-500" />
-                <span className="text-sm font-bold text-foreground uppercase tracking-wider">Step 3: Pair Mobile Timer</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5 text-orange-500" />
+                  <span className="text-sm font-bold text-foreground uppercase tracking-wider">Step 3: Pair Mobile Timer</span>
+                </div>
+                {myState.timerReady && (
+                  <button
+                    type="button"
+                    onClick={() => setOverrideStep('webrtc')}
+                    className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition cursor-pointer"
+                  >
+                    Go to Camera Setup &rarr;
+                  </button>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Scan the QR code below using your mobile device to pair it as a Stackmat-compatible solve timer.
+                Scan the QR code below using your CubeNexus Mobile App to pair it as a Stackmat-compatible solve timer.
               </p>
 
-              {state.qrSessionCode ? (
-                <div className="flex flex-col items-center justify-center p-6 bg-background border border-border/60 rounded-2xl gap-4">
-                  <div className="bg-white p-3 rounded-2xl border border-border shadow-inner">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${state.qrSessionCode}:${isP1 ? 'P1' : 'P2'}`)}`}
-                      alt="Session Pairing QR"
-                      className="h-36 w-36 object-contain"
-                    />
-                  </div>
-                  <div className="text-center space-y-1">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">Session Token</span>
-                    <span className="font-mono text-xs font-bold text-foreground">{state.qrSessionCode}</span>
-                  </div>
+              <div className="flex flex-col items-center justify-center p-6 bg-background border border-border/60 rounded-2xl gap-4">
+                <div className="bg-white p-3 rounded-2xl border border-border shadow-inner relative flex items-center justify-center min-h-[160px] min-w-[160px]">
+                  <img
+                    src={qrImageUrl}
+                    alt="Session Pairing QR"
+                    className="h-36 w-36 object-contain"
+                    onError={() => {
+                      if (qrProvider === 'qrserver') {
+                        setQrProvider('quickchart');
+                      }
+                    }}
+                  />
                 </div>
-              ) : (
-                <div className="flex items-center justify-center p-8 bg-background border border-border/60 rounded-2xl">
-                  <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
+
+                <div className="w-full max-w-xs space-y-2 text-center">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">
+                    Session Pairing Token
+                  </span>
+                  <div className="flex items-center justify-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2">
+                    <span className="font-sans font-bold text-xs text-foreground tracking-wide select-all">
+                      {pairingCode}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyToken}
+                      className="p-1 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition cursor-pointer"
+                      title="Copy pairing code"
+                    >
+                      {copiedToken ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Open Mobile App &gt; <strong>Timer</strong> &gt; <strong>Pair Room</strong> &gt; Scan QR or paste token.
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
           {currentStep === 'webrtc' && (
-            <WebRtcConnectStep
-              matchId={matchId}
-              isP1={isP1}
-              opponentUserId={opponentState?.userId ?? null}
-              connection={connection ?? null}
-              alreadyConnected={myState?.webRtcConnected ?? false}
-              onConnected={handleWebRtcConnected}
-            />
+            <div className="space-y-3">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setOverrideStep('timer')}
+                  className="px-3 py-1 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <QrCode className="h-3.5 w-3.5 text-orange-500" />
+                  <span>View / Re-pair Mobile Timer</span>
+                </button>
+              </div>
+              <WebRtcConnectStep
+                matchId={matchId}
+                isP1={isP1}
+                opponentUserId={opponentState?.userId ?? null}
+                connection={connection ?? null}
+                alreadyConnected={myState?.webRtcConnected ?? false}
+                onConnected={handleWebRtcConnected}
+              />
+            </div>
           )}
 
           {currentStep === 'completed' && (
@@ -492,25 +558,37 @@ export default function RoomSetupPage() {
             status={myState.scrambleCheckStatus === 'PASSED' ? 'ok' : 'pending'}
           />
 
-          <ChecklistRow
-            icon={<QrCode className="h-4 w-4" />}
-            label="Mobile Timer"
-            sublabel="Device pairing active"
-            done={myState.timerReady}
-            status={myState.timerReady ? 'ok' : currentStep === 'timer' ? 'loading' : 'pending'}
-          />
+          <div
+            onClick={() => setOverrideStep('timer')}
+            className="cursor-pointer transition hover:opacity-90"
+            title="Click to view Timer QR code"
+          >
+            <ChecklistRow
+              icon={<QrCode className="h-4 w-4" />}
+              label="Mobile Timer"
+              sublabel={myState.timerReady ? "Connected (Click to re-view QR)" : "Device pairing active"}
+              done={myState.timerReady}
+              status={myState.timerReady ? 'ok' : currentStep === 'timer' ? 'loading' : 'pending'}
+            />
+          </div>
 
-          <ChecklistRow
-            icon={<Wifi className="h-4 w-4" />}
-            label="P2P Connection"
-            sublabel="Opponent video feed link"
-            done={myState.webRtcConnected}
-            status={
-              myState.webRtcConnected ? 'ok'
-                : currentStep === 'webrtc' ? 'loading'
-                  : 'pending'
-            }
-          />
+          <div
+            onClick={() => setOverrideStep('webrtc')}
+            className="cursor-pointer transition hover:opacity-90"
+            title="Click to view Camera WebRTC setup"
+          >
+            <ChecklistRow
+              icon={<Wifi className="h-4 w-4" />}
+              label="P2P Connection"
+              sublabel="Opponent video feed link"
+              done={myState.webRtcConnected}
+              status={
+                myState.webRtcConnected ? 'ok'
+                  : currentStep === 'webrtc' ? 'loading'
+                    : 'pending'
+              }
+            />
+          </div>
 
           {opponentState && (
             <div className="mt-4 pt-4 border-t border-border/80 space-y-2">
