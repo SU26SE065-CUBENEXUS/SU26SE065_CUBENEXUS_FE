@@ -60,8 +60,10 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
     statusColor = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
   }
 
-  const oppTimeFormatted =
-    oppState?.timeMs && oppState.timeMs > 0
+  const resultTime =
+    oppState?.resultStatus === 'DNF'
+      ? 'DNF'
+      : oppState?.timeMs && oppState.timeMs > 0
       ? (() => {
           const ms = oppState.timeMs;
           const seconds = Math.floor(ms / 1000);
@@ -128,15 +130,8 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
 
           {/* Overlay: LIVE FEED badge + connection status */}
           <div className="absolute inset-0 bg-black/5 flex flex-col justify-between p-3.5 z-10 pointer-events-none">
-            <span className={`flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-0.5 rounded-full w-fit border ${
-              remoteStream
-                ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
-                : status === 'connected'
-                ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 animate-pulse'
-                : 'text-muted-foreground/60 bg-muted/50 border-border/50'
-            }`}>
-              <Wifi className="h-3.5 w-3.5" />
-              {remoteStream ? 'LIVE FEED' : status === 'connected' ? 'BUFFERING...' : 'WAITING...'}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-orange-500 text-white w-fit shadow-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> LIVE FEED
             </span>
             {(remoteStream || status === 'connected') && (
               <div className="flex items-center gap-2">
@@ -155,18 +150,18 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
             <div className="bg-muted/60 border border-border/60 p-3 rounded-xl">
               <span className="block text-[9px] text-muted-foreground uppercase font-black tracking-wider">Scramble</span>
               <span className={`text-xs font-bold ${
-                oppState.scrambleCheckStatus === 'PASSED' ? 'text-indigo-600' : 'text-muted-foreground'
+                oppState?.scrambleCheckStatus === 'PASSED' ? 'text-indigo-600' : 'text-muted-foreground'
               }`}>
-                {oppState.scrambleCheckStatus === 'PASSED' ? 'PASSED' : 'PENDING'}
+                {oppState?.scrambleCheckStatus === 'PASSED' ? 'PASSED' : 'PENDING'}
               </span>
             </div>
 
             <div className="bg-muted/60 border border-border/60 p-3 rounded-xl">
               <span className="block text-[9px] text-muted-foreground uppercase font-black tracking-wider">Ready State</span>
               <span className={`text-xs font-bold ${
-                oppState.checklistPassed || oppState.isReady ? 'text-emerald-600' : 'text-muted-foreground'
+                oppState?.checklistPassed || oppState?.isReady ? 'text-emerald-600' : 'text-muted-foreground'
               }`}>
-                {oppState.checklistPassed || oppState.isReady ? 'READY' : 'SETTING UP'}
+                {oppState?.checklistPassed || oppState?.isReady ? 'READY' : 'SETTING UP'}
               </span>
             </div>
           </div>
@@ -181,33 +176,33 @@ export function OpponentSidebar({ state, userId }: OpponentSidebarProps) {
           </span>
           {resultTime ? (
             <div className="flex items-baseline gap-2">
-              <span className={`text-3xl font-black font-mono tracking-tight ${
-                oppState.resultStatus === 'DNF' ? 'text-rose-500' : 'text-foreground'
+              <span className={`text-3xl font-black font-sans tracking-tight ${
+                oppState?.resultStatus === 'DNF' ? 'text-rose-500' : 'text-foreground'
               }`}>
                 {resultTime}
               </span>
               <span className="text-[10px] font-bold text-muted-foreground uppercase">SUBMITTED</span>
             </div>
           ) : (
-            <span className="text-lg font-black text-muted-foreground/60 font-mono tracking-wider animate-pulse">
+            <span className="text-lg font-black text-muted-foreground/60 font-sans tracking-wider animate-pulse">
               SOLVING...
             </span>
           )}
         </div>
 
-        {oppState.resultStatus === 'VALID' && (
+        {oppState?.resultStatus === 'VALID' && (
           <div className="bg-muted/50 border border-border/50 p-3.5 rounded-2xl flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Finish Check</span>
             <span className={`text-xs font-bold ${
-              oppState.finishCheckStatus === 'PASSED'
+              oppState?.finishCheckStatus === 'PASSED'
                 ? 'text-emerald-600'
-                : oppState.finishCheckStatus === 'FAILED'
+                : oppState?.finishCheckStatus === 'FAILED'
                 ? 'text-rose-600'
                 : 'text-orange-500 animate-pulse'
             }`}>
-              {oppState.finishCheckStatus === 'PASSED'
+              {oppState?.finishCheckStatus === 'PASSED'
                 ? 'PASSED'
-                : oppState.finishCheckStatus === 'FAILED'
+                : oppState?.finishCheckStatus === 'FAILED'
                 ? 'FAILED'
                 : 'SCANNING...'}
             </span>
