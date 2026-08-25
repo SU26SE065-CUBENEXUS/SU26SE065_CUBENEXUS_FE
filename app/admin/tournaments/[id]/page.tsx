@@ -242,7 +242,7 @@ export default function AdminTournamentDetailPage({ params }: Props) {
             </span>
           </div>
           <p className="text-xs text-slate-500 font-medium">
-            System ID: <span className="font-mono text-slate-700">{tournament.id}</span>
+            System ID: <span className="font-sans font-medium text-slate-700">{tournament.id}</span>
           </p>
         </div>
 

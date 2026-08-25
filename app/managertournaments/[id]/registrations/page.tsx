@@ -520,6 +520,17 @@ export default function RegistrationManagementPage({
                 ) : (
                   filteredRegistrations.map((reg, index) => {
                     const isCheckedIn = reg.checkedInAt || reg.statusCode === 'CHECKED_IN';
+
+                    // Collect all round→station pairs across all events (deduplicated by round)
+                    const roundStationMap = new Map<number, number>();
+                    reg.registeredEvents?.forEach(ev => {
+                      (ev.assignments || []).forEach(a => {
+                        if (typeof a.stationNumber === 'number' && a.stationNumber > 0) {
+                          roundStationMap.set(a.roundNumber, a.stationNumber);
+                        }
+                      });
+                    });
+                    const roundStationEntries = Array.from(roundStationMap.entries()).sort(([a], [b]) => a - b);
                     
                     return (
                       <tr key={reg.registrationId} className="hover:bg-slate-50 transition border-b border-slate-100">
@@ -539,9 +550,27 @@ export default function RegistrationManagementPage({
                             </div>
                             <div>
                               <span className="text-xs font-bold text-slate-900 block">{reg.competitorName}</span>
-                              <span className="text-[10px] text-slate-500 font-mono tracking-tight block">
+                              <span className="text-[10px] text-slate-500 font-sans font-medium tracking-tight block">
                                 {reg.competitorUserCode || 'No Code'}
                               </span>
+                              {roundStationEntries.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                  {roundStationEntries.map(([round, station]) => (
+                                    <span
+                                      key={round}
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80"
+                                    >
+                                      <MapPin className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                                      R{round}·#{station}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200/60">
+                                  <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                                  Unassigned
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -571,9 +600,9 @@ export default function RegistrationManagementPage({
                               const isDisqualified = ev.statusCode === 'DISQUALIFIED';
 
                               return (
-                                <div 
-                                  key={ev.registrationEventId} 
-                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1.5 text-xs transition ${
+                                <div
+                                  key={ev.registrationEventId}
+                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1 text-xs transition ${
                                     isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
                                     isDisqualified ? 'bg-rose-50 border-rose-200 text-rose-700 font-medium' :
                                     'bg-slate-50 border-slate-200 text-slate-800 shadow-2xs font-medium'
@@ -607,7 +636,7 @@ export default function RegistrationManagementPage({
                         </td>
 
                         {/* Registered At */}
-                        <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-mono font-medium">
+                        <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-sans font-medium">
                           {formatDate(reg.registeredAt)}
                         </td>
 

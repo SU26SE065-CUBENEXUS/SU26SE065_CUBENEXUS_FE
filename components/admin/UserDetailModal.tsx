@@ -55,7 +55,7 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
             <div>
               <h3 className="text-lg font-extrabold text-slate-900 leading-snug">{user.displayName}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-slate-500 font-mono">ID: {user.userCode || user.id.slice(0, 8)}</span>
+                <span className="text-xs text-slate-500 font-sans font-medium">ID: {user.userCode || user.id.slice(0, 8)}</span>
                 <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase ${getRoleBadgeStyle(user.userRole)}`}>
                   {user.userRole}
                 </span>

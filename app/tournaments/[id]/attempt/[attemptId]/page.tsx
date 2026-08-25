@@ -968,30 +968,30 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               {!finalResult.isDnf && recordedVideoUrl ? (
                 <SingleVideoReplayPlayer
                   videoUrl={recordedVideoUrl}
-                  title="Xem Lại Video Thi Đấu Hợp Lệ"
+                  title="View Valid Competition Video Recording"
                   downloadFilename={`attempt-${attemptId}.webm`}
                 />
               ) : finalResult.isDnf ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-left space-y-2">
                   <div className="flex items-center gap-2 text-rose-800 font-extrabold text-sm">
                     <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0" />
-                    Lượt Thi Đấu Đạt Kết Quả DNF (Did Not Finish)
+                    Attempt Result: DNF (Did Not Finish)
                   </div>
                   <p className="text-xs text-rose-700 leading-relaxed font-medium">
-                    Theo quy định WCA & Online Arena, các lượt thi đấu bị đánh <strong>DNF</strong> (do quá giờ khởi động 14s, quá 5 phút giải hoặc không hoàn tất scan) sẽ <strong>tự động bị hủy video recording</strong> và không phát hành video công khai.
+                    Under WCA &amp; Online Arena rules, attempts marked <strong>DNF</strong> (due to 14s inspection timeout, exceeding 5 minutes, or incomplete scan) will <strong>have their video recording automatically deleted</strong> and will not be publicly released.
                   </p>
                 </div>
               ) : null}
 
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 font-medium">
-                Thí sinh <strong>không cần bấm Submit</strong>. Kết quả đã được tự động ghi nhận an toàn trên hệ thống.
+                Competitors do <strong>not need to click Submit</strong>. Your result has been automatically and securely recorded on the system.
               </div>
 
               <button
                 onClick={() => router.push(`/tournaments/${tournamentId}`)}
                 className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm py-4 px-6 rounded-2xl shadow-lg transition cursor-pointer"
               >
-                Trở Về Màn Hình Giải Đấu <ArrowRight className="h-4 w-4" />
+                Return to Tournament <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           )}

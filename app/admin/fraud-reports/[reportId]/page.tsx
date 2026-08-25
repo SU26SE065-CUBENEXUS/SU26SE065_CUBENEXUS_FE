@@ -314,7 +314,7 @@ export default function AdminFraudReportReviewDetailPage() {
                 <p className="text-xs font-bold text-slate-900 flex items-center gap-1">
                   <span>{report.reporterUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reporterUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
                 </p>
-                <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reporterUserId}>ID: {report.reporterUserId}</p>
+                <p className="font-sans font-medium text-[10px] text-slate-500 truncate" title={report.reporterUserId}>ID: {report.reporterUserId}</p>
               </div>
 
               <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200 space-y-1.5 shadow-2xs">
@@ -328,14 +328,14 @@ export default function AdminFraudReportReviewDetailPage() {
                   <span>{report.reportedUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reportedUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
                   <span className="text-[10px] text-rose-600 font-semibold">(Reported)</span>
                 </p>
-                <p className="font-mono text-[10px] text-slate-500 truncate" title={report.reportedUserId}>ID: {report.reportedUserId}</p>
+                <p className="font-sans font-medium text-[10px] text-slate-500 truncate" title={report.reportedUserId}>ID: {report.reportedUserId}</p>
               </div>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                 <span>Reported Timestamp:</span>
-                <span className="font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                <span className="font-sans font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
                   {report.timestampText} ({report.timestampSeconds} seconds)
                 </span>
               </div>

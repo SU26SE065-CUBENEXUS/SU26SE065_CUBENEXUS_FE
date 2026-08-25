@@ -19,8 +19,8 @@ export function ConfirmModal({
   isOpen,
   title,
   description,
-  confirmText = 'Xác Nhận',
-  cancelText = 'Hủy Bỏ',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
   variant = 'warning',
   isLoading = false,
   onConfirm,
@@ -54,7 +54,7 @@ export function ConfirmModal({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900 leading-snug">{title}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Yêu cầu xác nhận hành động</p>
+            <p className="text-xs text-slate-500 mt-0.5">Confirmation required</p>
           </div>
           <button
             onClick={onClose}

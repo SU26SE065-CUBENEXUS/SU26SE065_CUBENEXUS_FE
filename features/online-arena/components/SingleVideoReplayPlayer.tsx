@@ -235,7 +235,7 @@ export function SingleVideoReplayPlayer({
               download={downloadFilename}
               className="inline-flex items-center gap-1 text-[11px] text-indigo-400 font-bold hover:underline hover:text-indigo-300 transition ml-1"
             >
-              <Download className="h-3.5 w-3.5" /> Tải về
+              <Download className="h-3.5 w-3.5" /> Download
             </a>
           )}
         </div>
@@ -308,7 +308,7 @@ export function SingleVideoReplayPlayer({
             <button
               onClick={handleRestart}
               className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition border border-slate-700 cursor-pointer"
-              title="Phát lại từ đầu"
+              title="Restart from beginning"
             >
               <RotateCcw className="h-4 w-4" />
             </button>
@@ -324,7 +324,7 @@ export function SingleVideoReplayPlayer({
 
           {/* Speed Selector Buttons (0.5x, 1x, 1.5x, 2x, 3x) */}
           <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400 px-1.5 hidden sm:inline">Tốc độ:</span>
+            <span className="text-[10px] font-extrabold uppercase text-slate-400 px-1.5 hidden sm:inline">Speed:</span>
             {[0.5, 1.0, 1.5, 2.0, 3.0].map((speed) => (
               <button
                 key={speed}

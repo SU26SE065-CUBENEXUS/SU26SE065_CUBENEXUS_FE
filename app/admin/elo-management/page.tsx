@@ -280,7 +280,7 @@ export default function AdminEloManagementPage() {
                       type="number"
                       value={kStandard}
                       onChange={(e) => setKStandard(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-sans text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
                       min={1}
                       max={200}
                       required
@@ -299,7 +299,7 @@ export default function AdminEloManagementPage() {
                       type="number"
                       value={kPlacement}
                       onChange={(e) => setKPlacement(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-sans text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
                       min={1}
                       max={300}
                       required
@@ -318,7 +318,7 @@ export default function AdminEloManagementPage() {
                       type="number"
                       value={placementCount}
                       onChange={(e) => setPlacementCount(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-sans text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
                       min={0}
                       max={20}
                       required
@@ -337,7 +337,7 @@ export default function AdminEloManagementPage() {
                       type="number"
                       value={defaultElo}
                       onChange={(e) => setDefaultElo(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-mono text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-sans text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
                       min={100}
                       max={3000}
                       required
@@ -374,7 +374,7 @@ export default function AdminEloManagementPage() {
               </p>
 
               <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-2 text-xs">
-                <div className="font-extrabold text-indigo-900 font-mono text-[11px]">
+                <div className="font-extrabold text-indigo-900 font-sans text-[11px]">
                   Formula: New_ELO = Current_ELO + K × (Actual_Result - Expected_Result)
                 </div>
                 <ul className="list-disc pl-4 text-[11px] text-indigo-950 space-y-1 font-medium">
@@ -404,7 +404,7 @@ export default function AdminEloManagementPage() {
                     type="number"
                     value={simP1Elo}
                     onChange={(e) => setSimP1Elo(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-bold text-slate-900"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-sans font-bold text-slate-900"
                   />
                 </div>
                 <div className="space-y-1">
@@ -413,7 +413,7 @@ export default function AdminEloManagementPage() {
                     type="number"
                     value={simP2Elo}
                     onChange={(e) => setSimP2Elo(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono font-bold text-slate-900"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-sans font-bold text-slate-900"
                   />
                 </div>
               </div>
@@ -424,9 +424,9 @@ export default function AdminEloManagementPage() {
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
                     <span> IF PLAYER A WINS</span>
-                    <span className="text-[10px] text-slate-500 font-mono">Expected outcome</span>
+                    <span className="text-[10px] text-slate-500 font-sans font-medium">Expected outcome</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-center font-mono">
+                  <div className="grid grid-cols-2 gap-2 text-center font-sans">
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
                       <span className="text-[10px] text-emerald-700 block font-bold">Player A Wins</span>
                       <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
@@ -440,7 +440,7 @@ export default function AdminEloManagementPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
+                  <div className="text-[10px] text-slate-500 text-center font-sans pt-1">
                     Placement match (K={kPlacement}): <strong>A: +{p1WinGainPlc} ELO</strong> | <strong>B: -{p1WinGainPlc} ELO</strong>
                   </div>
                 </div>
@@ -449,9 +449,9 @@ export default function AdminEloManagementPage() {
                 <div className="space-y-2 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
                   <div className="text-[11px] font-extrabold text-slate-700 uppercase flex items-center justify-between">
                     <span> IF PLAYER B WINS</span>
-                    <span className="text-[10px] text-amber-600 font-bold font-mono">Upset</span>
+                    <span className="text-[10px] text-amber-600 font-bold font-sans">Upset</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-center font-mono">
+                  <div className="grid grid-cols-2 gap-2 text-center font-sans">
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2">
                       <span className="text-[10px] text-emerald-700 block font-bold">Player B Wins</span>
                       <span className="text-sm font-black text-emerald-600 flex items-center justify-center gap-0.5">
@@ -465,7 +465,7 @@ export default function AdminEloManagementPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-500 text-center font-mono pt-1">
+                  <div className="text-[10px] text-slate-500 text-center font-sans pt-1">
                     Placement match (K={kPlacement}): <strong>B: +{p2WinGainPlc} ELO</strong> | <strong>A: -{p2WinGainPlc} ELO</strong>
                   </div>
                 </div>
@@ -548,18 +548,18 @@ export default function AdminEloManagementPage() {
                           </div>
                           <div>
                             <span className="block font-bold text-slate-900">{p.username}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{p.userId}</span>
+                            <span className="text-[10px] text-slate-400 font-sans font-medium">{p.userId}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 font-mono font-black text-amber-600 text-sm">
+                        <td className="px-5 py-3.5 font-sans font-black text-amber-600 text-sm">
                           <span className="flex items-center gap-1">
                             <Zap className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {p.eloStandard}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-500">
+                        <td className="px-5 py-3.5 font-sans font-bold text-slate-500">
                           {p.peakEloStandard}
                         </td>
-                        <td className="px-5 py-3.5 text-center font-mono font-bold">
+                        <td className="px-5 py-3.5 text-center font-sans font-bold">
                           <span className="text-emerald-600">{p.totalWinsStandard}</span> /{' '}
                           <span className="text-rose-600">{p.totalLossesStandard}</span> /{' '}
                           <span className="text-slate-400">{p.totalDrawsStandard}</span>
@@ -617,7 +617,7 @@ export default function AdminEloManagementPage() {
               <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
                 Adjust ELO: {selectedPlayer.username}
               </h3>
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs text-slate-500 font-sans font-medium">
                 Current ELO: <strong className="text-amber-600 font-extrabold">{selectedPlayer.eloStandard}</strong>
               </p>
             </div>
@@ -667,7 +667,7 @@ export default function AdminEloManagementPage() {
                     type="number"
                     value={eloDelta}
                     onChange={(e) => setEloDelta(Number(e.target.value))}
-                    className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
+                    className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-sans text-sm font-bold focus:outline-none focus:border-orange-500 shadow-2xs"
                     required
                   />
                 </div>

@@ -41,8 +41,8 @@ interface PlaceSuggestion {
 
 const STORAGE_KEY = 'cubenexus_recent_tournament_locations';
 const DEFAULT_RECENT_VENUES = [
-  'Đại học FPT TP.HCM, Đường D1, Khu CNC, TP. Thủ Đức',
-  'Nhà thi đấu Thể dục Thể thao Phú Thọ, Số 1 Lữ Gia, Quận 11, TP.HCM',
+  'FPT University HCMC, D1 Street, High-Tech Park, Thu Duc City',
+  'Phu Tho Indoor Stadium, 1 Lu Gia, District 11, HCMC',
 ];
 
 export function LocationPicker({
@@ -50,7 +50,7 @@ export function LocationPicker({
   onChange,
   error,
   required = false,
-  placeholder = 'Nhập tên địa điểm hoặc địa chỉ tổ chức giải đấu...',
+  placeholder = 'Enter venue name or tournament address...',
 }: LocationPickerProps) {
   const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
@@ -69,32 +69,23 @@ export function LocationPicker({
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setRecentLocations(parsed.slice(0, 3));
-          return;
         }
+      } else {
+        setRecentLocations(DEFAULT_RECENT_VENUES);
       }
-    } catch (_) {}
-    setRecentLocations(DEFAULT_RECENT_VENUES.slice(0, 2));
+    } catch {
+      setRecentLocations(DEFAULT_RECENT_VENUES);
+    }
   }, []);
 
-  const saveToRecent = (loc: string) => {
-    if (!loc || loc.trim().length < 3) return;
-    const clean = loc.trim();
-    setRecentLocations((prev) => {
-      const filtered = prev.filter((item) => item.toLowerCase() !== clean.toLowerCase());
-      const next = [clean, ...filtered].slice(0, 3);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch (_) {}
-      return next;
-    });
-  };
-
-  // Sync internal query when external value changes
+  // Sync external value prop
   useEffect(() => {
-    setQuery(value || '');
+    if (value !== undefined && value !== query) {
+      setQuery(value);
+    }
   }, [value]);
 
-  // Click outside to close dropdown
+  // Click outside to close suggestion dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -105,91 +96,88 @@ export function LocationPicker({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Search places via Nominatim OpenStreetMap (Free, No API Key)
-  const handleInputChange = (text: string) => {
-    setQuery(text);
-    onChange(text);
+  const saveToRecentHistory = (newLocation: string) => {
+    if (!newLocation.trim()) return;
+    try {
+      const updated = [newLocation, ...recentLocations.filter(loc => loc !== newLocation)].slice(0, 3);
+      setRecentLocations(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
+
+  // Perform OpenStreetMap search with debounce
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    onChange(val);
 
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (!text || text.trim().length < 2) {
+    if (val.trim().length >= 3) {
+      setIsSearching(true);
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Query Nominatim API with priority in Vietnam
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              val
+            )}&countrycodes=vn&addressdetails=1&limit=5`,
+            {
+              headers: {
+                'Accept-Language': 'en,vi',
+              },
+            }
+          );
+          if (res.ok) {
+            const data: PlaceSuggestion[] = await res.json();
+            setSuggestions(data || []);
+            setShowDropdown(data && data.length > 0);
+          }
+        } catch {
+          setSuggestions([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 400);
+    } else {
       setSuggestions([]);
       setShowDropdown(false);
-      return;
+      setIsSearching(false);
     }
-
-    setIsSearching(true);
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            text.trim()
-          )}&countrycodes=vn&limit=5&addressdetails=1`,
-          {
-            headers: {
-              'Accept-Language': 'vi,en;q=0.9',
-            },
-          }
-        );
-        if (response.ok) {
-          const data: PlaceSuggestion[] = await response.json();
-          setSuggestions(data);
-          setShowDropdown(data.length > 0);
-        }
-      } catch (err) {
-        console.error('Failed to search locations:', err);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 450);
   };
 
-  const handleSelectSuggestion = (item: PlaceSuggestion) => {
-    const cleanAddress = item.display_name;
-    setQuery(cleanAddress);
-    onChange(cleanAddress);
+  const handleSelectSuggestion = (place: PlaceSuggestion) => {
+    const selectedAddress = place.display_name;
+    setQuery(selectedAddress);
+    onChange(selectedAddress);
     setShowDropdown(false);
-    saveToRecent(cleanAddress);
+    saveToRecentHistory(selectedAddress);
   };
 
-  const handleSelectRecent = (address: string) => {
-    setQuery(address);
-    onChange(address);
+  const handleSelectRecent = (loc: string) => {
+    setQuery(loc);
+    onChange(loc);
     setShowDropdown(false);
-    saveToRecent(address);
+    saveToRecentHistory(loc);
   };
 
-  const encodedMapQuery = encodeURIComponent(query || value || 'Vietnam');
-  const googleMapEmbedUrl = `https://maps.google.com/maps?q=${encodedMapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-  const googleMapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodedMapQuery}`;
+  const handleClear = () => {
+    setQuery('');
+    onChange('');
+    setSuggestions([]);
+    setShowDropdown(false);
+  };
+
+  const encodedQuery = encodeURIComponent(query.trim() || 'Ho Chi Minh City, Vietnam');
+  const googleMapEmbedUrl = `https://maps.google.com/maps?q=${encodedQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  const googleMapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
 
   return (
-    <div className="space-y-2.5 text-left" ref={dropdownRef}>
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-semibold text-slate-700">
-          Location / Venue {required && <span className="text-red-500 font-bold">*</span>}
-        </label>
-        {query && (
-          <button
-            type="button"
-            onClick={() => setShowMapPreview(!showMapPreview)}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
-          >
-            {showMapPreview ? (
-              <>
-                <EyeOff className="h-3 w-3" /> Hide Map
-              </>
-            ) : (
-              <>
-                <Eye className="h-3 w-3" /> Show Map
-              </>
-            )}
-          </button>
-        )}
-      </div>
-
+    <div className="space-y-2 text-left" ref={dropdownRef}>
       {/* Input container */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -199,42 +187,47 @@ export function LocationPicker({
         <input
           type="text"
           value={query}
-          onChange={(e) => handleInputChange(e.target.value)}
+          onChange={handleInputChange}
           onFocus={() => {
             if (suggestions.length > 0) setShowDropdown(true);
           }}
           placeholder={placeholder}
-          className={`w-full rounded-lg border ${
-            error ? 'border-red-500 bg-red-50/20' : 'border-slate-200 focus:border-indigo-600'
-          } bg-slate-50 pl-9 pr-20 py-2 text-xs text-slate-900 outline-none focus:bg-white transition shadow-2xs`}
+          required={required}
+          className={`w-full pl-9 pr-16 py-2.5 rounded-xl border bg-white text-xs font-semibold text-slate-900 placeholder:text-slate-400 transition outline-none shadow-2xs ${
+            error
+              ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-100'
+              : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
+          }`}
         />
 
-        <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
-          {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />}
+        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1">
+          {isSearching && (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600 mr-1" />
+          )}
+
           {query && (
             <button
               type="button"
-              onClick={() => {
-                setQuery('');
-                onChange('');
-                setSuggestions([]);
-                setShowDropdown(false);
-              }}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded cursor-pointer transition"
-              title="Clear"
+              onClick={handleClear}
+              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              title="Clear input"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <a
-            href={googleMapSearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition cursor-pointer"
-            title="Open in Google Maps (New Tab)"
+
+          <button
+            type="button"
+            onClick={() => setShowMapPreview(!showMapPreview)}
+            className={`p-1.5 rounded-lg border text-xs font-semibold transition cursor-pointer ${
+              showMapPreview
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+            }`}
+            title={showMapPreview ? 'Hide map preview' : 'Show map preview'}
           >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+            <Compass className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         {/* Autocomplete suggestions dropdown */}
@@ -242,7 +235,7 @@ export function LocationPicker({
           <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden divide-y divide-slate-100 max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <Compass className="h-3 w-3 text-indigo-500" />
-              Gợi ý địa chỉ từ bản đồ
+              Address Suggestions
             </div>
             {suggestions.map((item) => (
               <button
@@ -265,17 +258,17 @@ export function LocationPicker({
       </div>
 
       {error && (
-        <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+        <p className="text-xs text-red-600 font-medium">
           {error}
         </p>
       )}
 
-      {/* Recent Search History Chips (Clean UI: only 1 - 3 items max) */}
+      {/* Recent Search History Chips */}
       {recentLocations.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
             <History className="h-3 w-3 text-slate-400" />
-            Lịch sử tìm kiếm gần đây:
+            Recent venues:
           </span>
           {recentLocations.map((loc, idx) => {
             const shortLabel = loc.split(',')[0] || loc;
@@ -305,7 +298,7 @@ export function LocationPicker({
           <div className="px-3.5 py-2 bg-white border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 truncate">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate">Vị trí bản đồ: {query}</span>
+              <span className="truncate">Venue location: {query}</span>
             </div>
             <a
               href={googleMapSearchUrl}
@@ -313,7 +306,7 @@ export function LocationPicker({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition shrink-0 ml-2"
             >
-              <Navigation className="h-3 w-3" /> Mở Google Maps
+              <Navigation className="h-3 w-3" /> Open in Google Maps
             </a>
           </div>
 

@@ -515,7 +515,7 @@ export default function ScrambleControlCenterPage() {
 
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/70 transition align-middle">
-                        <td className="px-5 py-4 font-black text-slate-900 font-mono text-xs">
+                        <td className="px-5 py-4 font-black text-slate-900 font-sans text-xs">
                           {item.puzzleCode}
                         </td>
                         <td className="px-5 py-4 max-w-md font-mono text-xs font-extrabold text-slate-900 tracking-wider">

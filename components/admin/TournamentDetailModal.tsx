@@ -69,7 +69,7 @@ export function TournamentDetailModal({
               <Trophy className="h-5 w-5 text-amber-400 shrink-0" />
               <h3 className="text-xl font-extrabold tracking-tight text-white">{tournament.name}</h3>
             </div>
-            <p className="text-xs text-slate-300 font-mono">ID: {tournament.id}</p>
+            <p className="text-xs text-slate-300 font-sans font-medium">ID: {tournament.id}</p>
           </div>
 
           <button
@@ -107,7 +107,7 @@ export function TournamentDetailModal({
               <p className="text-sm font-extrabold text-slate-900">{tournament.createdByName}</p>
               <p className="text-xs text-slate-600 font-medium">{tournament.createdByEmail}</p>
             </div>
-            <span className="text-xs font-mono text-indigo-700 bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-sans font-semibold text-indigo-700 bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg">
               Code: {tournament.createdByCode || 'N/A'}
             </span>
           </div>

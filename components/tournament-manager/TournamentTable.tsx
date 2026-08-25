@@ -381,7 +381,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
                     </td>
 
                     {/* Date */}
-                    <td className="px-5 py-4 text-xs text-slate-600 whitespace-nowrap font-mono font-semibold">
+                    <td className="px-5 py-4 text-xs text-slate-600 whitespace-nowrap font-sans font-semibold">
                       {formatDateRange(t.startDate, t.endDate)}
                     </td>
 
@@ -624,7 +624,7 @@ export function TournamentTable({ tournaments, onRefresh }: TournamentTableProps
               <div className="space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-medium">Dates:</span>
-                  <span className="font-mono font-semibold text-[11px] text-slate-700">
+                  <span className="font-sans font-semibold text-[11px] text-slate-700">
                     {formatDateRange(t.startDate, t.endDate)}
                   </span>
                 </div>

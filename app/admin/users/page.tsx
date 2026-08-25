@@ -277,7 +277,7 @@ export default function AdminUsersPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-extrabold text-slate-900 truncate">{user.displayName}</p>
-                            <p className="text-[11px] text-slate-400 font-mono">ID: {user.userCode || user.id.slice(0, 8)}</p>
+                            <p className="text-[11px] text-slate-400 font-sans font-medium">ID: {user.userCode || user.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>

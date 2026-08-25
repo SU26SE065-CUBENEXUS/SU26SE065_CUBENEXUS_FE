@@ -208,6 +208,16 @@ export interface RegistrationResultDto {
   registeredEvents: RegisteredEventDetailDto[];
 }
 
+export interface CompetitorAssignmentDto {
+  roundNumber: number;
+  groupId: string;
+  groupName: string;
+  stationNumber?: number | null;
+  groupStatusCode: string;
+  competitorStatusCode: string;
+  isPublished?: boolean;
+}
+
 export interface RegisteredEventDetailDto {
   registrationEventId: string;
   eventId: string;
@@ -217,6 +227,7 @@ export interface RegisteredEventDetailDto {
   seedTimeMs?: number;
   seedSourceCode?: string;
   seedGeneratedAt?: string;
+  assignments?: CompetitorAssignmentDto[];
 }
 
 export interface TournamentRegistrationDetailDto {

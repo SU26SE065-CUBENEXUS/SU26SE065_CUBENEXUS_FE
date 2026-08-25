@@ -73,7 +73,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   timestampSeconds = 75,
   timestampText = '01:15',
   onSeekVideo,
-  apiUrl = 'http://localhost:8000',
+  apiUrl = process.env.NEXT_PUBLIC_AI_FRAUD_DETECT_URL || 'https://reset-glue-popper.ngrok-free.dev',
   onAttachEvidence,
   onAutoFillVerdict,
 }) => {
@@ -176,7 +176,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       console.error('AI Check Error:', err);
       setErrorMsg(
         err.message ||
-          'Unable to connect to the AI service. Ensure ai_service.py is running at localhost:8000.'
+          `Unable to connect to the AI Fraud Detection service at ${apiUrl}. Please check the server status.`
       );
     } finally {
       setLoading(false);

@@ -10,7 +10,7 @@ interface ImageLightboxModalProps {
   onClose: () => void;
 }
 
-export function ImageLightboxModal({ isOpen, imageUrl, title = 'Xem Ảnh Chi Tiết', onClose }: ImageLightboxModalProps) {
+export function ImageLightboxModal({ isOpen, imageUrl, title = 'Image Preview', onClose }: ImageLightboxModalProps) {
   const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
@@ -18,57 +18,56 @@ export function ImageLightboxModal({ isOpen, imageUrl, title = 'Xem Ảnh Chi Ti
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     }
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen || !imageUrl) return null;
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `preview_${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-xl animate-fade-in">
-      {/* Top Header Bar */}
-      <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-2 text-white">
-          <span className="text-xl">🖼️</span>
-          <div>
-            <h3 className="text-sm font-extrabold tracking-wide uppercase">{title}</h3>
-            <p className="text-[10px] text-white/60">Nhấp vào ảnh hoặc dùng các phím điều khiển để thu phóng</p>
-          </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 backdrop-blur-md animate-in fade-in duration-200">
+      {/* Top action bar */}
+      <div className="flex h-14 items-center justify-between px-4 sm:px-6 bg-slate-900/60 border-b border-white/10 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-white tracking-wide truncate max-w-xs sm:max-w-md">{title}</span>
+          <p className="text-[10px] text-white/60 hidden sm:inline">Click image or use controls to zoom</p>
         </div>
-
         <div className="flex items-center gap-2">
+          {/* Zoom toggle button */}
           <button
+            type="button"
             onClick={() => setIsZoomed(!isZoomed)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/15"
-            title={isZoomed ? "Kích thước chuẩn" : "Phóng to 100%"}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition border border-white/15 cursor-pointer"
+            title={isZoomed ? "Actual size" : "Zoom in 100%"}
           >
-            {isZoomed ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            <span className="hidden sm:inline">{isZoomed ? 'Thu Nhỏ' : 'Phóng To'}</span>
+            {isZoomed ? <ZoomOut className="h-4 w-4" /> : <ZoomIn className="h-4 w-4" />}
+            <span className="hidden sm:inline">{isZoomed ? 'Zoom Out' : 'Zoom In'}</span>
           </button>
 
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition border-none shadow-lg shadow-primary/20"
-            title="Tải ảnh về máy"
+          {/* Download button */}
+          <a
+            href={imageUrl}
+            download={`evidence-${Date.now()}.png`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition border border-indigo-400/30 cursor-pointer"
+            title="Download image"
           >
             <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Tải Về</span>
-          </button>
+            <span className="hidden sm:inline">Download</span>
+          </a>
 
+          {/* Close button */}
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition border border-white/15 ml-2"
-            title="Đóng (ESC)"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition cursor-pointer"
+            title="Close (ESC)"
           >
             <X className="h-5 w-5" />
           </button>
