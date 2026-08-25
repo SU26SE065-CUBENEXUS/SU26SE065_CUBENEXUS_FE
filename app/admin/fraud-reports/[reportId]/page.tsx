@@ -266,13 +266,17 @@ export default function AdminFraudReportReviewDetailPage() {
               <SplitScreenReplayPlayer
                 matchId={match.id}
                 playerA={{
-                  username: match.player1Name || 'Player 1',
+                  username: match.player1UserCode
+                    ? `Player 1 (${match.player1UserCode})`
+                    : match.player1Name || 'Player 1',
                   videoUrl: p1Record?.playbackUrl || '',
                   solveTimeSeconds: (match.player1TimeMs || 10000) / 1000,
                   videoDurationSeconds: p1Record?.durationSeconds,
                 }}
                 playerB={{
-                  username: match.player2Name || 'Player 2',
+                  username: match.player2UserCode
+                    ? `Player 2 (${match.player2UserCode})`
+                    : match.player2Name || 'Player 2',
                   videoUrl: p2Record?.playbackUrl || '',
                   solveTimeSeconds: (match.player2TimeMs || 10000) / 1000,
                   videoDurationSeconds: p2Record?.durationSeconds,
@@ -313,9 +317,25 @@ export default function AdminFraudReportReviewDetailPage() {
                   </span>
                 </div>
                 <p className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                  <span>{report.reporterUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reporterUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
+                  <span>
+                    {report.reporterDisplayName
+                      || (report.reporterUserId === match.player1Id
+                        ? match.player1Name
+                        : report.reporterUserId === match.player2Id
+                          ? match.player2Name
+                          : null)
+                      || 'Player'}
+                  </span>
                 </p>
-                <p className="font-sans font-medium text-[10px] text-slate-500 truncate" title={report.reporterUserId}>ID: {report.reporterUserId}</p>
+                <p
+                  className="font-sans font-medium text-[10px] text-slate-500 truncate"
+                  title={report.reporterUserCode || report.reporterUserId}
+                >
+                  ID: {report.reporterUserCode
+                    || (report.reporterUserId === match.player1Id ? match.player1UserCode : null)
+                    || (report.reporterUserId === match.player2Id ? match.player2UserCode : null)
+                    || report.reporterUserId}
+                </p>
               </div>
 
               <div className="bg-rose-50/80 p-3 rounded-xl border border-rose-200 space-y-1.5 shadow-2xs">
@@ -326,10 +346,26 @@ export default function AdminFraudReportReviewDetailPage() {
                   </span>
                 </div>
                 <p className="text-xs font-bold text-rose-900 flex items-center gap-1">
-                  <span>{report.reportedUserId === match.player1Id ? (match.player1Name || 'Player 1') : report.reportedUserId === match.player2Id ? (match.player2Name || 'Player 2') : 'Player'}</span>
+                  <span>
+                    {report.reportedDisplayName
+                      || (report.reportedUserId === match.player1Id
+                        ? match.player1Name
+                        : report.reportedUserId === match.player2Id
+                          ? match.player2Name
+                          : null)
+                      || 'Player'}
+                  </span>
                   <span className="text-[10px] text-rose-600 font-semibold">(Reported)</span>
                 </p>
-                <p className="font-sans font-medium text-[10px] text-slate-500 truncate" title={report.reportedUserId}>ID: {report.reportedUserId}</p>
+                <p
+                  className="font-sans font-medium text-[10px] text-slate-500 truncate"
+                  title={report.reportedUserCode || report.reportedUserId}
+                >
+                  ID: {report.reportedUserCode
+                    || (report.reportedUserId === match.player1Id ? match.player1UserCode : null)
+                    || (report.reportedUserId === match.player2Id ? match.player2UserCode : null)
+                    || report.reportedUserId}
+                </p>
               </div>
             </div>
 

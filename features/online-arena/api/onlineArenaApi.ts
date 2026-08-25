@@ -325,6 +325,10 @@ export interface FraudReportDto {
   matchId: string;
   reporterUserId: string;
   reportedUserId: string;
+  reporterUserCode?: string | null;
+  reporterDisplayName?: string | null;
+  reportedUserCode?: string | null;
+  reportedDisplayName?: string | null;
   reasonCode?: string;
   fraudType: string;
   timestampText: string;

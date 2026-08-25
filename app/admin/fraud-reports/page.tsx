@@ -24,6 +24,15 @@ import { getFraudReports, FraudReportDto } from '@/features/online-arena/api/onl
 
 type TabType = 'ALL' | 'PENDING' | 'RESOLVED';
 
+function formatCompetitorLabel(userCode?: string | null, displayName?: string | null, fallbackUserId?: string) {
+  const code = userCode?.trim();
+  const name = displayName?.trim();
+  if (code && name) return `${code} của người chơi ${name}`;
+  if (code) return code;
+  if (name) return name;
+  return fallbackUserId ? `${fallbackUserId.slice(0, 8)}…` : 'Unknown';
+}
+
 export default function AdminFraudReportsQueuePage() {
   const [reports, setReports] = useState<FraudReportDto[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
@@ -265,13 +274,25 @@ export default function AdminFraudReportsQueuePage() {
                       <td className="px-5 py-4 text-slate-700">
                         <div className="flex items-center gap-1.5">
                           <User className="h-4 w-4 text-emerald-600 shrink-0" />
-                          <span className="font-medium">{report.reporterUserId.slice(0, 8)}</span>
+                          <span className="font-medium" title={report.reporterUserId}>
+                            {formatCompetitorLabel(
+                              report.reporterUserCode,
+                              report.reporterDisplayName,
+                              report.reporterUserId,
+                            )}
+                          </span>
                         </div>
                       </td>
                       <td className="px-5 py-4 text-slate-700">
                         <div className="flex items-center gap-1.5">
                           <User className="h-4 w-4 text-rose-600 shrink-0" />
-                          <span className="font-medium text-slate-900">{report.reportedUserId.slice(0, 8)}</span>
+                          <span className="font-medium text-slate-900" title={report.reportedUserId}>
+                            {formatCompetitorLabel(
+                              report.reportedUserCode,
+                              report.reportedDisplayName,
+                              report.reportedUserId,
+                            )}
+                          </span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -352,11 +373,23 @@ export default function AdminFraudReportsQueuePage() {
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                     <div>
                       <span className="text-[11px] text-slate-400 block font-medium">Reporter</span>
-                      <span className="font-semibold text-slate-900">{report.reporterUserId.slice(0, 8)}</span>
+                      <span className="font-semibold text-slate-900" title={report.reporterUserId}>
+                        {formatCompetitorLabel(
+                          report.reporterUserCode,
+                          report.reporterDisplayName,
+                          report.reporterUserId,
+                        )}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[11px] text-slate-400 block font-medium">Reported Player</span>
-                      <span className="font-semibold text-rose-600">{report.reportedUserId.slice(0, 8)}</span>
+                      <span className="font-semibold text-rose-600" title={report.reportedUserId}>
+                        {formatCompetitorLabel(
+                          report.reportedUserCode,
+                          report.reportedDisplayName,
+                          report.reportedUserId,
+                        )}
+                      </span>
                     </div>
                   </div>
 
