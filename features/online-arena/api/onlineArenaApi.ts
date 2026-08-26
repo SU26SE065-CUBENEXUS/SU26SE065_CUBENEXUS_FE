@@ -415,10 +415,27 @@ export async function reviewFraudReport(
   verdictCode: string,
   adminNote?: string,
 ): Promise<FraudReportDto> {
-  return apiFetch<FraudReportDto>(`/api/admin/fraud-reports/${reportId}/review`, {
+  const result = await apiFetch<FraudReportDto>(`/api/admin/fraud-reports/${reportId}/review`, {
     method: 'POST',
     body: JSON.stringify({ verdictCode, adminNote }),
   });
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('fraud-reports-updated', { detail: { reportId } }));
+  }
+  return result;
+}
+
+export interface OnlineMatchAvailabilityDto {
+  isAvailable: boolean;
+  mode: 'MANUAL' | 'AUTO';
+  availableCount: number;
+  message?: string | null;
+}
+
+export function getOnlineMatchAvailability(puzzleTypeId: string): Promise<OnlineMatchAvailabilityDto> {
+  return apiFetch<OnlineMatchAvailabilityDto>(
+    `/api/online/matchmaking/availability?puzzleTypeId=${encodeURIComponent(puzzleTypeId)}`,
+  );
 }
 
 export interface EloConfigDto {

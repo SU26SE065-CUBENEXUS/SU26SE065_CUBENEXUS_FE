@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { useAuth } from '@/contexts/auth-context';
 import { useOnlineArenaSignalR } from '@/features/online-arena/hooks/useOnlineArenaSignalR';
-import { findMatch, confirmMatch, cancelMatchmaking, getMyProfiles, initProfile } from '@/features/online-arena/api/onlineArenaApi';
+import { findMatch, confirmMatch, cancelMatchmaking, getMyProfiles, getOnlineMatchAvailability, initProfile } from '@/features/online-arena/api/onlineArenaApi';
 import type { MatchmakingStatusDto } from '@/features/online-arena/types';
 import { Loader2, Swords, User, ShieldAlert, Award, Clock, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const DEFAULT_PUZZLE_TYPE_ID = 'f4ddb522-426f-4dd0-a98d-20f21b192470'; // 3x3x3 
 export default function MatchmakingPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [status, setStatus] = useState<MatchmakingStatusDto['status'] | 'CONFIRMING' | 'COOLDOWN'>('IDLE');
+  const [status, setStatus] = useState<MatchmakingStatusDto['status'] | 'CONFIRMING' | 'COOLDOWN' | 'UNAVAILABLE'>('IDLE');
   const [matchmakingInfo, setMatchmakingInfo] = useState<MatchmakingStatusDto | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number>(60);
@@ -185,6 +185,12 @@ export default function MatchmakingPage() {
       setErrorMsg(null);
       setHasConfirmed(false);
       setMatchmakingInfo(null);
+      const availability = await getOnlineMatchAvailability(DEFAULT_PUZZLE_TYPE_ID);
+      if (!availability.isAvailable) {
+        setStatus('UNAVAILABLE');
+        setErrorMsg(availability.message || 'Online matches are temporarily unavailable.');
+        return;
+      }
       setStatus('QUEUED');
       const res = await findMatch(DEFAULT_PUZZLE_TYPE_ID);
       setMatchmakingInfo(res);
@@ -206,8 +212,9 @@ export default function MatchmakingPage() {
       }
     } catch (err: any) {
       console.error(err);
-      setStatus('IDLE');
-      setErrorMsg(err.message || 'Failed to start matchmaking queue.');
+      const message = err.message || 'Failed to start matchmaking queue.';
+      setStatus(message.toLowerCase().includes('temporarily unavailable') ? 'UNAVAILABLE' : 'IDLE');
+      setErrorMsg(message);
     }
   };
 
@@ -307,6 +314,22 @@ export default function MatchmakingPage() {
             <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
               Establishing real-time connection with matchmaking server...
             </p>
+          </div>
+        )}
+
+        {status === 'UNAVAILABLE' && (
+          <div className="mx-auto max-w-md space-y-5 rounded-3xl border border-amber-500/30 bg-card/70 p-8 text-center shadow-md">
+            <AlertTriangle className="mx-auto h-12 w-12 text-amber-500" />
+            <h2 className="text-xl font-black uppercase tracking-wider text-foreground">Arena temporarily unavailable</h2>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {errorMsg || 'Online matches are temporarily unavailable because the 3x3x3 scramble pool is empty.'}
+            </p>
+            <button
+              onClick={() => void startQueue()}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-extrabold uppercase tracking-widest text-white transition hover:bg-orange-600"
+            >
+              <RotateCcw className="h-4 w-4" /> Check again
+            </button>
           </div>
         )}
 
@@ -423,7 +446,7 @@ export default function MatchmakingPage() {
                 </div>
                 {/* Hiển thị CONFIRMED nếu đối thủ đã bấm chấp nhận */}
                 {Boolean(
-                  (matchmakingInfo.meUserId === matchmakingInfo.player1UserId
+                  (matchmakingInfo.isPlayer1
                     ? matchmakingInfo.player2Confirmed
                     : matchmakingInfo.player1Confirmed) ||
                   (!hasConfirmed && (matchmakingInfo.player1Confirmed || matchmakingInfo.player2Confirmed))

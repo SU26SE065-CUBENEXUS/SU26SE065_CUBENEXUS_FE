@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { useAuth } from '@/contexts/auth-context';
 import { ShieldCheck, Trophy, History, Zap, Play, Swords, User } from 'lucide-react';
-import { getMyProfiles, initProfile } from '@/features/online-arena/api/onlineArenaApi';
+import { getMyProfiles, getOnlineMatchAvailability, initProfile } from '@/features/online-arena/api/onlineArenaApi';
+
+const ONLINE_MATCH_PUZZLE_TYPE_ID = 'f4ddb522-426f-4dd0-a98d-20f21b192470';
 
 export default function OnlineLobbyPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [elo, setElo] = useState<number | null>(null);
+  const [matchmakingAvailable, setMatchmakingAvailable] = useState<boolean | null>(null);
+  const [availabilityMessage, setAvailabilityMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -19,7 +23,7 @@ export default function OnlineLobbyPage() {
         const profiles = await getMyProfiles();
         if (active) {
           if (!profiles || profiles.length === 0) {
-            const newProfile = await initProfile('f4ddb522-426f-4dd0-a98d-20f21b192470');
+            const newProfile = await initProfile(ONLINE_MATCH_PUZZLE_TYPE_ID);
             setElo(newProfile.elo);
           } else {
             setElo(profiles[0].elo);
@@ -32,6 +36,28 @@ export default function OnlineLobbyPage() {
     fetchOrInitProfile();
     return () => {
       active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const refreshAvailability = async () => {
+      try {
+        const result = await getOnlineMatchAvailability(ONLINE_MATCH_PUZZLE_TYPE_ID);
+        if (!active) return;
+        setMatchmakingAvailable(result.isAvailable);
+        setAvailabilityMessage(result.message ?? null);
+      } catch {
+        if (!active) return;
+        setMatchmakingAvailable(false);
+        setAvailabilityMessage('Online matches are temporarily unavailable.');
+      }
+    };
+    void refreshAvailability();
+    const intervalId = window.setInterval(() => void refreshAvailability(), 30000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -99,10 +125,16 @@ export default function OnlineLobbyPage() {
             <div className="mt-8">
               <button
                 onClick={() => router.push('/online/matchmaking')}
-                className="w-full sm:w-fit flex items-center justify-center gap-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl shadow-orange-500/25 transition-all uppercase tracking-widest text-xs cursor-pointer"
+                disabled={matchmakingAvailable !== true}
+                className="w-full sm:w-fit flex items-center justify-center gap-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl shadow-orange-500/25 transition-all uppercase tracking-widest text-xs cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-orange-500"
               >
                 <Play className="h-4.5 w-4.5 fill-current" /> FIND MATCH
               </button>
+              {matchmakingAvailable === false && (
+                <p className="mt-3 max-w-md text-xs font-semibold text-amber-600">
+                  {availabilityMessage || 'Online matches are temporarily unavailable.'}
+                </p>
+              )}
             </div>
           </div>
 

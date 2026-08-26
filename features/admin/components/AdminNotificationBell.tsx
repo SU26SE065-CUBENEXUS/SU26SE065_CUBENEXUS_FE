@@ -81,12 +81,27 @@ function isScrambleSource(n: ScrambleDepletedNotification) {
   return n.source !== 'fraud' && n.source !== 'tournament' && n.typeCode !== 'FRAUD_REPORT_CREATED';
 }
 
-export default function AdminNotificationBell() {
+function deduplicateNotifications(items: ScrambleDepletedNotification[]) {
+  const seenScrambleKeys = new Set<string>();
+  return items.filter((item) => {
+    if (!isScrambleSource(item)) return true;
+    const key = `${item.competitionMode}:${item.puzzleTypeId || item.puzzleCode}`.toUpperCase();
+    if (seenScrambleKeys.has(key)) return false;
+    seenScrambleKeys.add(key);
+    return true;
+  });
+}
+
+export default function AdminNotificationBell({
+  pendingFraudReportIds = null,
+}: {
+  pendingFraudReportIds?: string[] | null;
+}) {
   const [notifications, setNotifications] = useState<ScrambleDepletedNotification[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('admin_scramble_notifications');
-        return stored ? JSON.parse(stored) : [];
+        return stored ? deduplicateNotifications(JSON.parse(stored)) : [];
       } catch {
         return [];
       }
@@ -98,7 +113,42 @@ export default function AdminNotificationBell() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const pendingFraudIds = new Set(pendingFraudReportIds ?? []);
+  const visibleFraudNotifications = notifications.filter(
+    (notification) =>
+      notification.source === 'fraud' &&
+      (pendingFraudReportIds == null || Boolean(notification.reportId && pendingFraudIds.has(notification.reportId)))
+  );
+  const pendingFraudCount = pendingFraudReportIds?.length ?? visibleFraudNotifications.length;
+  const fraudSummaryNotification: ScrambleDepletedNotification | null = pendingFraudCount > 0
+    ? {
+        ...(visibleFraudNotifications[0] ?? {
+          id: 'fraud-reports-summary',
+          competitionMode: 'ONLINE_MATCH',
+          puzzleTypeId: '',
+          puzzleCode: 'FRAUD',
+          puzzleName: 'Fraud Reports Queue',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          source: 'fraud' as const,
+          typeCode: 'FRAUD_REPORT_CREATED',
+        }),
+        id: 'fraud-reports-summary',
+        title: 'Fraud Reports Queue',
+        message: `${pendingFraudCount} fraud report${pendingFraudCount === 1 ? '' : 's'} awaiting review.`,
+        reportId: undefined,
+        isRead: false,
+      }
+    : null;
+  const visibleNotifications = [
+    ...(fraudSummaryNotification ? [fraudSummaryNotification] : []),
+    ...notifications.filter((notification) => notification.source !== 'fraud'),
+  ];
+  const scrambleUnreadCount = visibleNotifications.filter((n) => n.source !== 'fraud' && !n.isRead).length;
+  const fraudUnreadCount = pendingFraudReportIds == null
+    ? (visibleFraudNotifications.some((n) => !n.isRead) ? 1 : 0)
+    : (pendingFraudReportIds.length > 0 ? 1 : 0);
+  const unreadCount = scrambleUnreadCount + fraudUnreadCount;
 
   const loadAdminNotifications = useCallback(async () => {
     try {
@@ -106,10 +156,10 @@ export default function AdminNotificationBell() {
       const mapped = serverItems
         .map(mapAdminNotification)
         .filter((item): item is ScrambleDepletedNotification => item != null);
-      setNotifications((previous) => [
+      setNotifications((previous) => deduplicateNotifications([
         ...mapped,
         ...previous.filter((item) => !item.id.startsWith('admin-')),
-      ].slice(0, 100));
+      ]).slice(0, 100));
     } catch {
       // Keep scramble notifications available when the notification table is not migrated yet.
     }
@@ -152,23 +202,17 @@ export default function AdminNotificationBell() {
         }
 
         const activeDepletedKeys = new Set<string>();
-        const replenishedKeys = new Set<string>();
 
         summaries.forEach((s) => {
           const key = `${s.competitionMode}-${s.puzzleCode}`;
           if (s.count === 0 && manualModes.has(s.competitionMode)) {
             activeDepletedKeys.add(key);
-          } else {
-            replenishedKeys.add(key);
           }
         });
 
         const activePrev = scramblePrev.filter((n) => {
           const key = `${n.competitionMode}-${n.puzzleCode}`;
-          if (replenishedKeys.has(key) || (n.competitionMode && !manualModes.has(n.competitionMode))) {
-            return false;
-          }
-          return true;
+          return activeDepletedKeys.has(key);
         });
 
         const prevMap = new Map(activePrev.map((n) => [`${n.competitionMode}-${n.puzzleCode}`, n]));
@@ -235,6 +279,7 @@ export default function AdminNotificationBell() {
     connection.on('ScramblePoolDepleted', (data: any) => {
       console.log('[SignalR Admin Bell] Received ScramblePoolDepleted event:', data);
       const mode = data.competitionMode || data.CompetitionMode || 'ONLINE_MATCH';
+      if (mode === 'ONLINE_ASYNC') return;
       const puzzleCode = data.puzzleCode || data.PuzzleCode || '3x3x3';
       const key = `${mode}-${puzzleCode}`;
 
@@ -280,6 +325,7 @@ export default function AdminNotificationBell() {
       // Reload from API so each admin gets their own notification row id for mark-as-read.
       if (data.typeCode === 'FRAUD_REPORT_CREATED') {
         void loadAdminNotifications();
+        window.dispatchEvent(new Event('fraud-reports-updated'));
         return;
       }
 
@@ -437,7 +483,7 @@ export default function AdminNotificationBell() {
               )}
             </div>
             <div className="flex items-center gap-1">
-              {notifications.length > 0 && (
+              {visibleNotifications.length > 0 && (
                 <>
                   <button
                     onClick={markAllAsRead}
@@ -475,13 +521,13 @@ export default function AdminNotificationBell() {
           )}
 
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-            {notifications.length > 0 ? (
-              notifications.map((n) => (
+            {visibleNotifications.length > 0 ? (
+              visibleNotifications.map((n) => (
                 <div
                   key={n.id}
                   onClick={() => markNotificationAsRead(n)}
                   className={`p-3.5 transition ${
-                    n.isRead ? 'bg-white opacity-80' : 'bg-rose-50/50'
+                    n.source !== 'fraud' && n.isRead ? 'bg-white opacity-80' : 'bg-rose-50/50'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -511,10 +557,10 @@ export default function AdminNotificationBell() {
                     {n.message}
                   </p>
 
-                  {n.source === 'fraud' && n.reportId && (
+                  {n.source === 'fraud' && (
                     <div className="mt-2.5">
                       <Link
-                        href={`/admin/fraud-reports/${n.reportId}`}
+                        href={n.reportId ? `/admin/fraud-reports/${n.reportId}` : '/admin/fraud-reports'}
                         onClick={(e) => {
                           e.stopPropagation();
                           markNotificationAsRead(n);

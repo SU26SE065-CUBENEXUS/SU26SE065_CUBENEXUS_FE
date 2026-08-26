@@ -150,6 +150,8 @@ export interface MatchmakingStatusDto {
   confirmDeadlineAt?: string;
   player1Confirmed?: boolean;
   player2Confirmed?: boolean;
+  /** Whether the current user occupies player slot 1 during confirmation */
+  isPlayer1?: boolean;
   remainingSeconds?: number;
   serverNow?: string;
   matchId?: string;

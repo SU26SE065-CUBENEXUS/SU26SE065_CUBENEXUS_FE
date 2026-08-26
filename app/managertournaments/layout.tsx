@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 
 import AdminNotificationBell from '@/features/admin/components/AdminNotificationBell';
+import { getFraudReports } from '@/features/online-arena/api/onlineArenaApi';
 
 export function isOfflineManagerTournament(t: TournamentDetailDto): boolean {
   if (t.isOnlineAsync || (t as any).tournamentType === 'ONLINE_ASYNC') return false;
@@ -43,11 +44,13 @@ function Sidebar({
   onToggle,
   tournaments,
   selectedId,
+  pendingFraudCount,
 }: {
   collapsed: boolean;
   onToggle: () => void;
   tournaments: TournamentDetailDto[];
   selectedId: string | null;
+  pendingFraudCount: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -302,7 +305,7 @@ function Sidebar({
               <li>
                 <Link
                   href="/admin/fraud-reports"
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/fraud-reports')
+                  className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${pathname.startsWith('/admin/fraud-reports')
                       ? 'text-rose-600 bg-rose-50 border border-rose-100 font-bold'
                       : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 border border-transparent'
                     } ${collapsed ? 'justify-center px-2' : ''}`}
@@ -311,6 +314,11 @@ function Sidebar({
                   <ShieldAlert className="h-4 w-4 shrink-0 text-rose-500" />
                   {!collapsed && (
                     <span className="flex-1 truncate">Fraud Reports</span>
+                  )}
+                  {pendingFraudCount > 0 && (
+                    <span className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-black text-white ${collapsed ? 'absolute ml-5 -mt-5' : ''}`}>
+                      {pendingFraudCount > 99 ? '99+' : pendingFraudCount}
+                    </span>
                   )}
                 </Link>
               </li>
@@ -332,7 +340,13 @@ function Sidebar({
 }
 
 // ─── Top Header Bar ──────────────────────────────────────────
-function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string }) {
+function TopHeader({
+  selectedTournamentName,
+  pendingFraudReportIds,
+}: {
+  selectedTournamentName?: string;
+  pendingFraudReportIds: string[] | null;
+}) {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const pathname = usePathname();
@@ -375,7 +389,9 @@ function TopHeader({ selectedTournamentName }: { selectedTournamentName?: string
 
       {/* Right: Actions & Profile */}
       <div className="flex items-center gap-3">
-        {user?.role?.toUpperCase() === 'ADMIN' && <AdminNotificationBell />}
+        {user?.role?.toUpperCase() === 'ADMIN' && (
+          <AdminNotificationBell pendingFraudReportIds={pendingFraudReportIds} />
+        )}
         <div
           className="relative"
           onMouseEnter={() => setIsDropdownOpen(true)}
@@ -464,6 +480,33 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
   const [collapsed, setCollapsed] = useState(false);
   const [tournamentsList, setTournamentsList] = useState<TournamentDetailDto[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pendingFraudReportIds, setPendingFraudReportIds] = useState<string[] | null>(null);
+
+  const refreshPendingFraudReports = useCallback(async () => {
+    if (!isAuthenticated || user?.role?.toUpperCase() !== 'ADMIN') {
+      setPendingFraudReportIds([]);
+      return;
+    }
+    try {
+      const reports = await getFraudReports();
+      setPendingFraudReportIds(reports.map((report) => report.id));
+    } catch {
+      // Keep the last successful count during temporary API failures.
+    }
+  }, [isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    void refreshPendingFraudReports();
+    const intervalId = window.setInterval(() => void refreshPendingFraudReports(), 30000);
+    const handleUpdate = () => void refreshPendingFraudReports();
+    window.addEventListener('fraud-reports-updated', handleUpdate);
+    window.addEventListener('focus', handleUpdate);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('fraud-reports-updated', handleUpdate);
+      window.removeEventListener('focus', handleUpdate);
+    };
+  }, [refreshPendingFraudReports]);
 
   // Protected route guard: Redirect unauthenticated users to login
   useEffect(() => {
@@ -639,9 +682,13 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
         onToggle={() => setCollapsed((v) => !v)}
         tournaments={tournamentsList}
         selectedId={selectedId}
+        pendingFraudCount={pendingFraudReportIds?.length ?? 0}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
-        <TopHeader selectedTournamentName={selectedTournament?.name} />
+        <TopHeader
+          selectedTournamentName={selectedTournament?.name}
+          pendingFraudReportIds={pendingFraudReportIds}
+        />
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
