@@ -471,18 +471,19 @@ export default function AdminNotificationBell({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 rounded-2xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden text-left animate-in fade-in zoom-in-95">
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-indigo-600" />
-              <span className="text-xs font-black text-slate-900">System Notifications</span>
+        <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm rounded-2xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden text-left animate-in fade-in zoom-in-95">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3.5 py-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Bell className="h-4 w-4 text-indigo-600 shrink-0" />
+              <span className="text-xs font-black text-slate-900 truncate">System Notifications</span>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-extrabold text-rose-700">
-                  {unreadCount} new
+                <span className="inline-flex flex-col items-center justify-center rounded-xl bg-rose-100 border border-rose-200 px-2 py-0.5 text-center leading-none text-rose-700 shrink-0 shadow-2xs">
+                  <span className="text-[11px] font-black">{unreadCount}</span>
+                  <span className="text-[8px] font-extrabold uppercase tracking-wider">new</span>
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               {visibleNotifications.length > 0 && (
                 <>
                   <button
@@ -491,11 +492,11 @@ export default function AdminNotificationBell({
                     title="Mark all as read"
                   >
                     <CheckCheck className="h-3.5 w-3.5" />
-                    Mark all as read
+                    <span className="hidden sm:inline">Mark all</span>
                   </button>
                   <button
                     onClick={clearAll}
-                    className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                    className="p-1.5 text-slate-400 hover:text-rose-600 cursor-pointer rounded-lg hover:bg-rose-50"
                     title="Clear all notifications"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -504,7 +505,7 @@ export default function AdminNotificationBell({
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer rounded-lg hover:bg-slate-100"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
