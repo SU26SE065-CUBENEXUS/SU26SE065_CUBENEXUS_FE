@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { OnlineMatchScanner } from '@/features/online-arena/components/OnlineMatchScanner';
-import { ExpectedScramble2DNetVisualizer } from '@/features/rubik-scanner-test/components/ExpectedScramble2DNetVisualizer';
 import { mockScramblePass } from '@/features/online-arena/api/onlineArenaApi';
-import { Radio, Clock, Shuffle } from 'lucide-react';
+import { simulateScramble, COLOR_HEX_MAP } from '@/features/rubik-scanner-test/utils/rubikSimulator';
+import { Radio, Clock, Shuffle, Eye, RotateCcw } from 'lucide-react';
 
 function useCountdown(deadlineIso: string | null, serverNowIso: string): string {
   const skewRef = React.useRef<number | null>(null);
@@ -112,9 +112,15 @@ function ScrambleDisplay({ sequence }: { sequence: string }) {
 }
 
 // ------------------------------------------------------------------
-// ColorSchemeGuide — Hướng dẫn chuẩn màu sắc 6 mặt khi bắt đầu từ Solved State
+// ColorSchemeGuide — Hướng dẫn chuẩn màu sắc 6 mặt & Mô hình 2D Target sau khi Scramble
 // ------------------------------------------------------------------
-function ColorSchemeGuide() {
+function ColorSchemeGuide({ scrambleSequence }: { scrambleSequence: string | null }) {
+  const [selectedFace, setSelectedFace] = useState<'U' | 'D' | 'F' | 'B' | 'R' | 'L' | null>(null);
+
+  const expectedState = useMemo(() => {
+    return scrambleSequence ? simulateScramble(scrambleSequence) : null;
+  }, [scrambleSequence]);
+
   const scheme = [
     { code: 'U', name: 'Up', colorName: 'White', bg: 'bg-white text-zinc-950 border-zinc-300' },
     { code: 'D', name: 'Down', colorName: 'Yellow', bg: 'bg-yellow-400 text-zinc-950 border-yellow-300' },
@@ -122,31 +128,105 @@ function ColorSchemeGuide() {
     { code: 'B', name: 'Back', colorName: 'Blue', bg: 'bg-blue-600 text-white border-blue-400' },
     { code: 'R', name: 'Right', colorName: 'Red', bg: 'bg-red-600 text-white border-red-400' },
     { code: 'L', name: 'Left', colorName: 'Orange', bg: 'bg-orange-500 text-white border-orange-400' },
-  ];
+  ] as const;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-foreground uppercase tracking-wider">
-          Starting Faces & Colors Convention (Solved State)
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <span className="text-xs font-bold text-foreground uppercase tracking-wider block">
+            Starting Faces & Target Scramble Layout
+          </span>
+          <span className="text-[10px] text-muted-foreground mt-0.5 block">
+            Compare your physical cube faces with the target 3x3 patterns below after scrambling.
+          </span>
+        </div>
+        <span className="text-[10px] font-mono font-bold text-orange-500 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+          Expected 2D Pattern
         </span>
-        <span className="text-[10px] text-muted-foreground">CubeNexus Standard</span>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        {scheme.map((item) => (
-          <div
-            key={item.code}
-            className="flex flex-col items-center p-2 rounded-xl bg-muted border border-border text-center space-y-1"
-          >
-            <div className={`w-6 h-6 rounded-md border font-black text-xs flex items-center justify-center shadow-sm ${item.bg}`}>
-              {item.code}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        {scheme.map((item) => {
+          const faceKey = item.code as 'U' | 'D' | 'F' | 'B' | 'R' | 'L';
+          const faceGrid = expectedState ? expectedState[faceKey] : null;
+          const isSelected = selectedFace === faceKey;
+
+          return (
+            <div
+              key={item.code}
+              onClick={() => setSelectedFace(isSelected ? null : faceKey)}
+              className={`flex flex-col items-center p-3 rounded-2xl border transition-all cursor-pointer select-none space-y-2.5 ${
+                isSelected
+                  ? 'bg-orange-500/10 border-orange-500 shadow-md ring-2 ring-orange-500/20 scale-105 z-10'
+                  : 'bg-muted/40 border-border/80 hover:border-orange-500/40 hover:bg-muted'
+              }`}
+            >
+              {/* Header badge */}
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-md border font-black text-xs flex items-center justify-center shadow-sm ${item.bg}`}>
+                  {item.code}
+                </div>
+                <div className="text-left">
+                  <span className="block text-[11px] font-extrabold text-foreground leading-none">{item.colorName}</span>
+                  <span className="block text-[9px] text-muted-foreground font-mono leading-none mt-0.5">({item.name})</span>
+                </div>
+              </div>
+
+              {/* 3x3 Target Rubik Grid */}
+              {faceGrid ? (
+                <div className="grid grid-cols-3 gap-1 p-1.5 bg-zinc-950 rounded-xl w-full max-w-[105px] aspect-square border border-zinc-800 shadow-inner">
+                  {faceGrid.flatMap((row, rIdx) =>
+                    row.map((color, cIdx) => (
+                      <span
+                        key={`${rIdx}-${cIdx}`}
+                        className="w-full aspect-square rounded-[2px] border border-black/40 shadow-xs"
+                        style={{ backgroundColor: COLOR_HEX_MAP[color] || '#4b5563' }}
+                        title={`${item.colorName} face (${color})`}
+                      />
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="w-[95px] h-[95px] rounded-xl bg-zinc-900 border border-border flex items-center justify-center">
+                  <span className="text-[9px] text-muted-foreground">Loading...</span>
+                </div>
+              )}
             </div>
-            <span className="text-[10px] font-bold text-foreground">{item.colorName}</span>
-            <span className="text-[9px] text-muted-foreground font-mono">({item.name})</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Detailed view if face clicked */}
+      {selectedFace && expectedState && (
+        <div className="p-4 rounded-2xl bg-background/90 border border-orange-500/30 space-y-3 shadow-xl animate-fade-in">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="flex items-center gap-1.5 text-foreground">
+              <Eye className="h-4 w-4 text-orange-500" /> Detailed Face View: <strong className="text-orange-500">{selectedFace} Face</strong>
+            </span>
+            <button
+              onClick={() => setSelectedFace(null)}
+              className="text-[10px] font-black uppercase tracking-wider bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-xl transition flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw className="h-3 w-3" /> Close Details
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5 max-w-[180px] mx-auto p-3 bg-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl">
+            {expectedState[selectedFace].flatMap((row, rIdx) =>
+              row.map((color, cIdx) => (
+                <div key={`${rIdx}-${cIdx}`} className="space-y-1 text-center">
+                  <span
+                    className="block w-full aspect-square rounded-lg border border-black/50 shadow-md"
+                    style={{ backgroundColor: COLOR_HEX_MAP[color] || '#4b5563' }}
+                  />
+                  <span className="text-[9px] font-mono text-zinc-400 capitalize">{color}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -199,19 +279,15 @@ export default function ScrambleCheckPage() {
 
       {/* Scramble Display */}
       {scramble ? (
-        <>
-          <ScrambleDisplay sequence={scramble} />
-          {/* 2D Rubik Net Visualizer based on Official Scramble */}
-          <ExpectedScramble2DNetVisualizer scrambleSequence={scramble} />
-        </>
+        <ScrambleDisplay sequence={scramble} />
       ) : (
         <div className="rounded-2xl border border-border bg-card p-5 text-center">
           <p className="text-xs text-muted-foreground">Loading scramble...</p>
         </div>
       )}
 
-      {/* Color Scheme Guide */}
-      <ColorSchemeGuide />
+      {/* Color Scheme & Target 3x3 Scramble Guide */}
+      <ColorSchemeGuide scrambleSequence={scramble} />
 
       <OnlineMatchScanner
         matchId={matchId}
@@ -227,3 +303,4 @@ export default function ScrambleCheckPage() {
     </div>
   );
 }
+

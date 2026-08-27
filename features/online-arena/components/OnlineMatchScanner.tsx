@@ -171,9 +171,8 @@ function StabilityBar({
       <div className="flex items-center justify-between text-[10px] font-bold">
         <span className="text-zinc-400 uppercase tracking-widest">Stability</span>
         <span
-          className={`font-mono font-black ${
-            stable >= required ? 'text-emerald-400' : stable > 0 ? 'text-orange-400' : 'text-zinc-500'
-          }`}
+          className={`font-mono font-black ${stable >= required ? 'text-emerald-400' : stable > 0 ? 'text-orange-400' : 'text-zinc-500'
+            }`}
         >
           {stable} / {required}
         </span>
@@ -182,9 +181,8 @@ function StabilityBar({
       {/* Progress bar */}
       <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-200 ${
-            stable >= required ? 'bg-emerald-500' : stable > 0 ? 'bg-orange-500' : 'bg-zinc-600'
-          }`}
+          className={`h-full rounded-full transition-all duration-200 ${stable >= required ? 'bg-emerald-500' : stable > 0 ? 'bg-orange-500' : 'bg-zinc-600'
+            }`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -194,13 +192,12 @@ function StabilityBar({
         {Array.from({ length: required }).map((_, i) => (
           <div
             key={i}
-            className={`h-2 flex-1 rounded-full transition-all duration-150 ${
-              i < stable
+            className={`h-2 flex-1 rounded-full transition-all duration-150 ${i < stable
                 ? stable >= required
                   ? 'bg-emerald-500'
                   : 'bg-orange-500'
                 : 'bg-zinc-700'
-            }`}
+              }`}
           />
         ))}
       </div>
@@ -328,10 +325,10 @@ function getSessionFingerprint(session: ScannerSessionDto | null) {
     })),
     validation: session.validation
       ? {
-          status: session.validation.status,
-          matched: session.validation.matched,
-          mismatchedStickerCount: session.validation.mismatchedStickerCount,
-        }
+        status: session.validation.status,
+        matched: session.validation.matched,
+        mismatchedStickerCount: session.validation.mismatchedStickerCount,
+      }
       : null,
   });
 }
@@ -486,7 +483,7 @@ async function runScannerBurst<TObservation>({
     const tickStartedAt = performance.now();
     lastObservation = await observe(snapshot);
     const duration = performance.now() - tickStartedAt;
-    
+
     onObservation?.(lastObservation);
 
     if (shouldStop(lastObservation)) {
@@ -772,7 +769,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
   const scanCurrentFace = async () => {
     if (!videoRef.current || isScanningFace) return;
 
-  if (cameraStatus !== 'ready') {
+    if (cameraStatus !== 'ready') {
       setError('Start the camera before scanning.');
       setScannerState('CAMERA_ERROR');
       setStatusMessage(UI_MESSAGE.CAMERA_ERROR);
@@ -1229,7 +1226,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
     <div className="space-y-6">
       {/* Side-by-Side Main Section on Desktop */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
-        
+
         {/* Left Side: Large Clean Camera Viewport (7 cols out of 12) */}
         <div className="lg:col-span-7 flex flex-col space-y-3">
           <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 shadow-2xl">
@@ -1274,7 +1271,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
         {/* Right Side: Scanner Control Buttons Panel & Metrics (5 cols out of 12) */}
         <div className="lg:col-span-5 flex flex-col space-y-4">
-          
+
           {/* Controls Panel Card */}
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
             <div>
@@ -1405,7 +1402,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       <div className="space-y-2 pt-2">
         <div className="flex items-center justify-between px-1">
           <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Captured Face Slots</h4>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Hover slot & click 🔄 to re-scan single face</span>
+          {/* <span className="text-[10px] font-bold text-slate-400 uppercase">Hover slot & click 🔄 to re-scan single face</span> */}
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
@@ -1416,13 +1413,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             return (
               <div
                 key={idx}
-                className={`p-3 bg-slate-50 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${
-                  isActive
+                className={`p-3 bg-slate-50 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${isActive
                     ? 'border-orange-500 bg-orange-50/70 shadow-orange-100/50 shadow-xs'
                     : face
                       ? 'border-emerald-200 bg-emerald-50/50'
                       : 'border-slate-200 bg-white/70'
-                }`}
+                  }`}
               >
                 <header className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
                   <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
