@@ -386,17 +386,23 @@ export default function MatchmakingPage() {
         )}
 
         {status === 'MATCH_FOUND' && matchmakingInfo && (() => {
-          const isMePlayer1 = Boolean(
-            matchmakingInfo.isPlayer1 ??
-            (matchmakingInfo.meUserId && (matchmakingInfo as any).player1UserId
-              ? matchmakingInfo.meUserId === (matchmakingInfo as any).player1UserId
-              : true)
-          );
+          const isMePlayer1 = matchmakingInfo.isPlayer1;
+
+          // My Card (Left Card): Confirmed ONLY if local user has confirmed
           const isMySlotConfirmed = Boolean(
-            hasConfirmed || (isMePlayer1 ? matchmakingInfo.player1Confirmed : matchmakingInfo.player2Confirmed)
+            hasConfirmed ||
+            (isMePlayer1 !== undefined
+              ? (isMePlayer1 ? matchmakingInfo.player1Confirmed : matchmakingInfo.player2Confirmed)
+              : false)
           );
+
+          // Opponent Card (Right Card): Confirmed ONLY if opponent has confirmed
           const isOpponentConfirmed = Boolean(
-            isMePlayer1 ? matchmakingInfo.player2Confirmed : matchmakingInfo.player1Confirmed
+            isMePlayer1 !== undefined
+              ? (isMePlayer1 ? matchmakingInfo.player2Confirmed : matchmakingInfo.player1Confirmed)
+              : (hasConfirmed
+                  ? (matchmakingInfo.player1Confirmed && matchmakingInfo.player2Confirmed)
+                  : (matchmakingInfo.player1Confirmed || matchmakingInfo.player2Confirmed))
           );
 
           return (
