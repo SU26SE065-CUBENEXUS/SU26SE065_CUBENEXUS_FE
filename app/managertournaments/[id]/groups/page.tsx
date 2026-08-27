@@ -438,10 +438,16 @@ function EventGroupPanel({
                     </span>
                     {Number(roundNumber) === 1 ? (
                       <button
+                        disabled={isLoading || isScramblesReady}
                         onClick={() => setIsGenerateGroupsOpen(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 transition shadow-2xs cursor-pointer"
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-2xs ${isScramblesReady
+                          ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer'
+                          }`}
+                        title={isScramblesReady ? 'Cannot regenerate groups after scrambles have been generated.' : 'Re-generate Groups'}
                       >
-                        <Shuffle className="h-3 w-3 text-indigo-600" /> Re-generate Groups
+                        <Shuffle className={`h-3 w-3 ${isScramblesReady ? 'text-slate-400' : 'text-indigo-600'}`} />
+                        {isScramblesReady ? 'Groups Locked (Scrambles Ready)' : 'Re-generate Groups'}
                       </button>
                     ) : (
                       <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg">
@@ -654,13 +660,34 @@ function EventGroupPanel({
                             {sCount} Stations (Judges Assigned)
                           </span>
                         </div>
-                        {stationDistribution.length > 0 && (
-                          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-emerald-800">
-                            <span className="font-semibold">Balanced allocation per group:</span>{' '}
-                            {stationDistribution.join(' / ')} competitors per station
-                            <span className="block mt-0.5 text-[10px] text-emerald-700">The difference between stations will never exceed 1 competitor; station labels may rotate for fairness.</span>
-                          </div>
-                        )}
+                        {totalEligibleCount > 0 && gSize > 0 && sCount > 0 && (() => {
+                          const totalGroups = Math.ceil(totalEligibleCount / gSize);
+                          const fullGroupsCount = Math.floor(totalEligibleCount / gSize);
+                          const lastGroupSize = totalEligibleCount % gSize;
+                          const stationsUsed = Math.min(gSize, sCount);
+
+                          let breakdownText = `${totalGroups} Groups total`;
+                          if (lastGroupSize === 0) {
+                            breakdownText += `: ${totalGroups} groups of ${gSize} competitors each.`;
+                          } else {
+                            breakdownText += `: ${fullGroupsCount} group${fullGroupsCount > 1 ? 's' : ''} of ${gSize} competitors + 1 group of ${lastGroupSize} competitor${lastGroupSize > 1 ? 's' : ''}.`;
+                          }
+
+                          return (
+                            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-emerald-800 text-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-emerald-900">Estimated Group Structure:</span>
+                                <span className="font-mono font-bold text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
+                                  {totalGroups} Groups
+                                </span>
+                              </div>
+                              <p className="text-emerald-800 font-medium">{breakdownText}</p>
+                              <p className="text-[10px] text-emerald-700 font-mono">
+                                Each heat will occupy Stations 1 to {stationsUsed} ({sCount - stationsUsed > 0 ? `${sCount - stationsUsed} station(s) idle` : 'All stations in use'}).
+                              </p>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
