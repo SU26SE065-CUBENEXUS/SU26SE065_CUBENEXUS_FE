@@ -192,6 +192,11 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
             ];
           }
         }
+        if (key === 'eventFormatCode' && value === 'TRADITIONAL') {
+          if (updated.solveCount !== 3 && updated.solveCount !== 5) {
+            updated.solveCount = 5;
+          }
+        }
         return updated;
       })
     );
@@ -791,14 +796,25 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Solves Count
                         </label>
-                        <input
-                          type="number"
-                          value={ev.solveCount}
-                          onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
-                          className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
-                          min="1"
-                          max="5"
-                        />
+                        {ev.eventFormatCode === 'TRADITIONAL' ? (
+                          <select
+                            value={ev.solveCount === 3 ? 3 : 5}
+                            onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
+                            className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition font-semibold`}
+                          >
+                            <option value={5}>5 Solves (Ao5 / Bo5 - 5 lượt thi)</option>
+                            <option value={3}>3 Solves (Bo3 / Mo3 - 3 lượt thi)</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="number"
+                            value={ev.solveCount}
+                            onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
+                            className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition`}
+                            min="1"
+                            max="5"
+                          />
+                        )}
                         {errors[`event_${i}_solveCount`] && (
                           <p className="text-[10px] text-red-600 mt-1 font-medium">
                             {errors[`event_${i}_solveCount`]}
