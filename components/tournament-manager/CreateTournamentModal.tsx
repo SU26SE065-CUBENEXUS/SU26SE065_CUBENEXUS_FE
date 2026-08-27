@@ -802,8 +802,8 @@ export function CreateTournamentModal({ onClose, onCreated }: Props) {
                             onChange={(e) => updateEvent(i, 'solveCount', Number(e.target.value))}
                             className={`w-full rounded-lg border ${errors[`event_${i}_solveCount`] ? 'border-red-500' : 'border-slate-200'} bg-slate-50 px-3.5 py-2 text-xs text-slate-900 outline-none focus:bg-white focus:border-indigo-600 transition font-semibold`}
                           >
-                            <option value={5}>5 Solves (Ao5 / Bo5 - 5 lượt thi)</option>
-                            <option value={3}>3 Solves (Bo3 / Mo3 - 3 lượt thi)</option>
+                            <option value={5}>5 Solves</option>
+                            <option value={3}>3 Solves</option>
                           </select>
                         ) : (
                           <input
