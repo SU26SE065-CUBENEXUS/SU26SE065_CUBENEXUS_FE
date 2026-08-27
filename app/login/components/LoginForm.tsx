@@ -23,17 +23,17 @@ import {
 // Left-side form panel (within a rounded white card on desktop)
 // using dark navy text, yellow accent branding, and a minimal light-gray page background.
 
-/** Map Vietnamese BE error messages to user-friendly English */
+/** Map Vietnamese or API BE error messages to user-friendly English */
 function mapErrorMessage(msg: string): string {
-  if (!msg) return 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
-  if (msg.includes('Email hoặc mật khẩu không đúng'))
-    return 'Tên đăng nhập hoặc mật khẩu không chính xác.';
-  if (msg.includes('bị vô hiệu hóa'))
-    return 'Tài khoản này đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.';
-  if (msg.includes('bị cấm'))
+  if (!msg) return 'Login failed. Please check your credentials.';
+  if (msg.includes('Email hoặc mật khẩu không đúng') || msg.includes('Invalid email or password'))
+    return 'Invalid email or password.';
+  if (msg.includes('bị vô hiệu hóa') || msg.includes('disabled'))
+    return 'This account has been disabled. Please contact an administrator.';
+  if (msg.includes('bị cấm') || msg.includes('banned'))
     return msg;
   if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch'))
-    return 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.';
+    return 'Unable to connect to server. Please check your network connection.';
   return msg;
 }
 
@@ -77,7 +77,7 @@ export default function LoginForm() {
 
     const isEmailValid = validateEmail(email);
     if (!password) {
-      setError('Mật khẩu không được để trống');
+      setError('Password is required');
       return;
     }
     if (!isEmailValid) return;
@@ -93,7 +93,7 @@ export default function LoginForm() {
         (res as any)?.role ||
         '';
 
-      toast.success('Đăng nhập thành công!', `Chào mừng quay trở lại, ${res.displayName || email}!`);
+      toast.success('Login successful!', `Welcome back, ${res.displayName || email}!`);
 
       const upperRole = role.toUpperCase();
       if (upperRole === 'ADMIN') {
