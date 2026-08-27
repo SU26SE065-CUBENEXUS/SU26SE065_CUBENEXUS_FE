@@ -1030,7 +1030,7 @@ export default function JudgeManagementPage({
                   value={singlePassword}
                   onChange={(e) => setSinglePassword(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-mono placeholder:text-slate-400 px-3 py-2 text-xs outline-none focus:bg-white focus:border-indigo-600 transition"
-                  placeholder="e.g. Judge@123456"
+                  placeholder="e.g. 1"
                 />
               </div>
 
