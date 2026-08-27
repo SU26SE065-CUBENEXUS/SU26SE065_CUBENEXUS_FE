@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMatchContext } from '@/features/online-arena/contexts/MatchContext';
 import { OnlineMatchScanner } from '@/features/online-arena/components/OnlineMatchScanner';
+import { ExpectedScramble2DNetVisualizer } from '@/features/rubik-scanner-test/components/ExpectedScramble2DNetVisualizer';
 import { mockScramblePass } from '@/features/online-arena/api/onlineArenaApi';
 import { Radio, Clock, Shuffle } from 'lucide-react';
 
@@ -198,7 +199,11 @@ export default function ScrambleCheckPage() {
 
       {/* Scramble Display */}
       {scramble ? (
-        <ScrambleDisplay sequence={scramble} />
+        <>
+          <ScrambleDisplay sequence={scramble} />
+          {/* 2D Rubik Net Visualizer based on Official Scramble */}
+          <ExpectedScramble2DNetVisualizer scrambleSequence={scramble} />
+        </>
       ) : (
         <div className="rounded-2xl border border-border bg-card p-5 text-center">
           <p className="text-xs text-muted-foreground">Loading scramble...</p>
