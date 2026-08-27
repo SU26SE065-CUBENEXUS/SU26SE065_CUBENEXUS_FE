@@ -158,7 +158,7 @@ export default function ResultPage() {
           <div className={`p-5 rounded-2xl border text-left space-y-3 ${!isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
             }`}>
             <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">
-              Player_{opponentPlayer.userId.slice(0, 6)}
+              {opponentPlayer.displayName || opponentPlayer.username || (opponentPlayer.userId ? `Player_${opponentPlayer.userId.slice(0, 6)}` : 'Opponent')}
             </span>
             <div className="space-y-1">
               <span className="block text-2xl font-black font-mono text-foreground">
@@ -369,9 +369,9 @@ function ReplaySection({
   const oppRecord = playbackData?.recordings?.find((r: any) => r.playerId === oppStateReplay?.userId);
 
   const winnerUsername = state?.winnerId === state?.player1?.userId
-    ? (state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
+    ? (state?.player1?.displayName || state?.player1?.username || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
     : state?.winnerId === state?.player2?.userId
-      ? (state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'))
+      ? (state?.player2?.displayName || state?.player2?.username || (state?.player2?.userId ? `Player_${state?.player2?.userId?.slice(0, 6)}` : 'Player 2'))
       : undefined;
 
   return (
@@ -414,14 +414,14 @@ function ReplaySection({
           <SplitScreenReplayPlayer
             matchId={matchId}
             playerA={{
-              username: meStateReplay?.username || (meStateReplay?.userId ? `Player_${meStateReplay?.userId?.slice(0, 6)}` : 'You'),
+              username: meStateReplay?.displayName || meStateReplay?.username || (meStateReplay?.userId ? `Player_${meStateReplay?.userId?.slice(0, 6)}` : 'You'),
               videoUrl: myRecord?.playbackUrl || '',
               solveTimeSeconds: ((meStateReplay?.timeMs || 10000) / 1000),
               videoDurationSeconds: myRecord?.durationSeconds,
               isWinner: Boolean(state?.winnerId && state?.winnerId === meStateReplay?.userId),
             }}
             playerB={{
-              username: oppStateReplay?.username || (oppStateReplay?.userId ? `Player_${oppStateReplay?.userId?.slice(0, 6)}` : 'Opponent'),
+              username: oppStateReplay?.displayName || oppStateReplay?.username || (oppStateReplay?.userId ? `Player_${oppStateReplay?.userId?.slice(0, 6)}` : 'Opponent'),
               videoUrl: oppRecord?.playbackUrl || '',
               solveTimeSeconds: ((oppStateReplay?.timeMs || 10000) / 1000),
               videoDurationSeconds: oppRecord?.durationSeconds,

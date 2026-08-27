@@ -385,113 +385,123 @@ export default function MatchmakingPage() {
           </div>
         )}
 
-        {(status === 'MATCH_FOUND' || status === 'MATCH_CONFIRMING') && matchmakingInfo && (
-          <div className="bg-card/60 border border-border/80 p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-md animate-fade-in text-center space-y-6">
-            <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
-            
-            {/* Opponent Confirmation Overlay */}
-            <div className="space-y-2">
-              <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
-                Match Found
-              </span>
-              <h2 className="text-xl font-black text-foreground uppercase tracking-wider">PREPARE DUEL</h2>
-            </div>
+        {status === 'MATCH_FOUND' && matchmakingInfo && (() => {
+          const isMePlayer1 = Boolean(
+            matchmakingInfo.isPlayer1 ??
+            (matchmakingInfo.meUserId && (matchmakingInfo as any).player1UserId
+              ? matchmakingInfo.meUserId === (matchmakingInfo as any).player1UserId
+              : true)
+          );
+          const isMySlotConfirmed = Boolean(
+            hasConfirmed || (isMePlayer1 ? matchmakingInfo.player1Confirmed : matchmakingInfo.player2Confirmed)
+          );
+          const isOpponentConfirmed = Boolean(
+            isMePlayer1 ? matchmakingInfo.player2Confirmed : matchmakingInfo.player1Confirmed
+          );
 
-            {/* VS Card Layout */}
-            <div className="flex justify-between items-center bg-background/80 border border-border/80 rounded-2xl p-6 relative overflow-hidden shadow-inner">
-              {/* Background gradient hints */}
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 pointer-events-none" />
-
-              {/* Player 1 (Me) */}
-              <div className="flex-1 flex flex-col items-center text-center space-y-2.5 relative">
-                <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-md">
-                  <User className="h-6 w-6" />
-                </div>
-                <div>
-                  <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
-                    {myDisplayName || user?.displayName || 'User'}
-                  </span>
-                  <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
-                    {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1,500 ELO'}
-                  </span>
-                </div>
-                {hasConfirmed && (
-                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
-                  </div>
-                )}
-              </div>
-
-              {/* VS Divider */}
-              <div className="px-4 shrink-0 flex flex-col items-center justify-center relative">
-                <div className="h-10 w-10 rounded-full bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-xs font-black text-orange-500 shadow-lg shadow-orange-500/10">
-                  VS
-                </div>
-              </div>
-
-              {/* Player 2 (Opponent) */}
-              <div className="flex-1 flex flex-col items-center text-center space-y-2.5 relative">
-                <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-md">
-                  <User className="h-6 w-6" />
-                </div>
-                <div>
-                  <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
-                    {matchmakingInfo.opponent?.displayName || 'Opponent'}
-                  </span>
-                  <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
-                    {matchmakingInfo.opponent?.rating != null
-                      ? `${Number(matchmakingInfo.opponent.rating).toLocaleString()} ELO`
-                      : '— ELO'}
-                  </span>
-                </div>
-                {/* Hiển thị CONFIRMED nếu đối thủ đã bấm chấp nhận */}
-                {Boolean(
-                  (matchmakingInfo.isPlayer1
-                    ? matchmakingInfo.player2Confirmed
-                    : matchmakingInfo.player1Confirmed) ||
-                  (!hasConfirmed && (matchmakingInfo.player1Confirmed || matchmakingInfo.player2Confirmed))
-                ) && (
-                  <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
-                  </div>
-                )}
-              </div>
-
-            </div>
-
-            {/* Countdown bar */}
-            <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                <Clock className="h-4 w-4 text-orange-500" />
-                <span>Confirmation deadline</span>
-              </div>
-              <span className="text-lg font-black font-mono text-orange-500">
-                {countdown}s
-              </span>
-            </div>
-
-            {/* Confirm Actions */}
-            <button
-              onClick={handleConfirm}
-              disabled={hasConfirmed || isConfirmingApi}
-              className={`w-full font-black text-xs py-4 px-6 rounded-xl transition-all uppercase tracking-widest cursor-pointer ${
-                hasConfirmed
-                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/25'
-              }`}
-            >
-              {isConfirmingApi ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Confirming...
+          return (
+            <div className="bg-card/60 border border-border p-6 sm:p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl animate-fade-in text-center space-y-6">
+              <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Opponent Confirmation Overlay */}
+              <div className="space-y-2">
+                <span className="bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
+                  Match Found
                 </span>
-              ) : hasConfirmed ? (
-                'WAITING FOR OPPONENT'
-              ) : (
-                'ACCEPT DUEL'
-              )}
-            </button>
-          </div>
-        )}
+                <h2 className="text-xl font-black text-foreground uppercase tracking-wider">PREPARE DUEL</h2>
+              </div>
+
+              {/* VS Card Layout */}
+              <div className="flex justify-between items-center bg-background/80 border border-border/80 rounded-2xl p-6 relative overflow-hidden shadow-inner">
+                {/* Background gradient hints */}
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 pointer-events-none" />
+
+                {/* Player 1 (Me) */}
+                <div className="flex-1 flex flex-col items-center text-center space-y-2.5 relative">
+                  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-md">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
+                      {myDisplayName || user?.displayName || 'User'}
+                    </span>
+                    <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                      {myElo !== null ? `${myElo.toLocaleString()} ELO` : '1,500 ELO'}
+                    </span>
+                  </div>
+                  {isMySlotConfirmed && (
+                    <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
+                    </div>
+                  )}
+                </div>
+
+                {/* VS Divider */}
+                <div className="px-4 shrink-0 flex flex-col items-center justify-center relative">
+                  <div className="h-10 w-10 rounded-full bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-xs font-black text-orange-500 shadow-lg shadow-orange-500/10">
+                    VS
+                  </div>
+                </div>
+
+                {/* Player 2 (Opponent) */}
+                <div className="flex-1 flex flex-col items-center text-center space-y-2.5 relative">
+                  <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-md">
+                    <User className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="block text-xs font-black text-foreground uppercase tracking-wider truncate max-w-[120px]">
+                      {matchmakingInfo.opponent?.displayName || 'Opponent'}
+                    </span>
+                    <span className="inline-block text-[10px] font-black text-orange-600 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full mt-1.5">
+                      {matchmakingInfo.opponent?.rating != null
+                        ? `${Number(matchmakingInfo.opponent.rating).toLocaleString()} ELO`
+                        : '— ELO'}
+                    </span>
+                  </div>
+                  {/* Hiển thị CONFIRMED nếu đối thủ đã bấm chấp nhận */}
+                  {isOpponentConfirmed && (
+                    <div className="flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md mt-1 animate-pulse">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> CONFIRMED
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Countdown bar */}
+              <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <Clock className="h-4 w-4 text-orange-500" />
+                  <span>Confirmation deadline</span>
+                </div>
+                <span className="text-lg font-black font-mono text-orange-500">
+                  {countdown}s
+                </span>
+              </div>
+
+              {/* Confirm Actions */}
+              <button
+                onClick={handleConfirm}
+                disabled={hasConfirmed || isConfirmingApi}
+                className={`w-full font-black text-xs py-4 px-6 rounded-xl transition-all uppercase tracking-widest cursor-pointer ${
+                  hasConfirmed
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/25'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/25'
+                }`}
+              >
+                {isConfirmingApi ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Confirming...
+                  </span>
+                ) : hasConfirmed ? (
+                  'WAITING FOR OPPONENT'
+                ) : (
+                  'ACCEPT DUEL'
+                )}
+              </button>
+            </div>
+          );
+        })()}
 
         {status === 'COOLDOWN' && (
           <div className="bg-card/60 border border-border p-8 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-md animate-fade-in text-center space-y-6">
