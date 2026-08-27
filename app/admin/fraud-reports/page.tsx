@@ -62,14 +62,16 @@ export default function AdminFraudReportsQueuePage() {
 
   const resolvedCount = reports.filter((r) => r.statusCode === 'RESOLVED').length;
 
-  const filteredReports = reports.filter((r) => {
-    const isPending = r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING';
-    const isResolved = r.statusCode === 'RESOLVED';
+  const filteredReports = reports
+    .filter((r) => {
+      const isPending = r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING';
+      const isResolved = r.statusCode === 'RESOLVED';
 
-    if (activeTab === 'PENDING') return isPending;
-    if (activeTab === 'RESOLVED') return isResolved;
-    return true; // 'ALL'
-  });
+      if (activeTab === 'PENDING') return isPending;
+      if (activeTab === 'RESOLVED') return isResolved;
+      return true; // 'ALL'
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const getVerdictBadge = (report: FraudReportDto) => {
     const isPending = report.statusCode === 'OPEN' || report.statusCode === 'REVIEWING' || report.statusCode === 'PENDING';
