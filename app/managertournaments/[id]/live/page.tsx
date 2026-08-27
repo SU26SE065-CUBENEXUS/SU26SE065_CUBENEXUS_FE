@@ -186,6 +186,8 @@ function EventRoundControlPanel({
     setMessage(null);
     setError(null);
     try {
+      // Pre-sync live board state to ensure groups and event status are up-to-date
+      await fetchLiveBoard(refreshRound ?? Number(roundNumber));
       await actionFn();
       if (refreshRound !== undefined) {
         setRoundNumber(String(refreshRound));

@@ -137,14 +137,14 @@ function EventGroupPanel({
     }
   };
 
-  // Trigger Live Board Load on Expand & Round Switch
+  // Trigger Live Board Load on Expand, Round Switch & Tab Switch
   useEffect(() => {
     if (expanded) {
       setError(null);
       setMessage(null);
       fetchLiveBoard(Number(roundNumber));
     }
-  }, [expanded, roundNumber]);
+  }, [expanded, roundNumber, activeTab, fetchLiveBoard]);
 
   // Trigger Scrambles Fetch when groups are loaded
   useEffect(() => {
@@ -160,6 +160,8 @@ function EventGroupPanel({
     setError(null);
     setMessage(null);
     try {
+      // Pre-sync live board state to ensure groups and event status are up-to-date
+      await fetchLiveBoard(Number(roundNumber));
       await fn();
       setMessage(successMsg);
       await fetchLiveBoard(Number(roundNumber));
