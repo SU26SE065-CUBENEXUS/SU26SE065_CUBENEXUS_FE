@@ -590,9 +590,8 @@ function EventGroupPanel({
               ? Math.ceil(totalEligibleCount / sCount)
               : 0;
             const isGroupExceeded = totalEligibleCount > 0 && gSize > totalEligibleCount;
-            const isGroupLessThanStations = sCount > 0 && gSize > 0 && gSize < sCount;
             const isNoStationsAssigned = sCount === 0;
-            const isInvalid = isGroupExceeded || isGroupLessThanStations || isNoStationsAssigned || gSize <= 0;
+            const isInvalid = isGroupExceeded || isNoStationsAssigned || gSize <= 0;
             const basePerStation = sCount > 0 ? Math.floor(gSize / sCount) : 0;
             const remainder = sCount > 0 ? gSize % sCount : 0;
             const stationDistribution = sCount > 0 && gSize > 0
@@ -655,7 +654,7 @@ function EventGroupPanel({
                             {sCount} Stations (Judges Assigned)
                           </span>
                         </div>
-                        {stationDistribution.length > 0 && !isGroupLessThanStations && (
+                        {stationDistribution.length > 0 && (
                           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-emerald-800">
                             <span className="font-semibold">Balanced allocation per group:</span>{' '}
                             {stationDistribution.join(' / ')} competitors per station
@@ -671,13 +670,6 @@ function EventGroupPanel({
                     <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium flex items-center gap-1.5">
                       <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
                       <span>Competitors per group ({gSize}) cannot exceed total eligible competitors ({totalEligibleCount}).</span>
-                    </div>
-                  )}
-
-                  {isGroupLessThanStations && (
-                    <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 font-medium flex items-center gap-1.5">
-                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                      <span>Competitors per group ({gSize}) cannot be fewer than available stations ({sCount} stations).</span>
                     </div>
                   )}
 
