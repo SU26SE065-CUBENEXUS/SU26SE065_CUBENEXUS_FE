@@ -2594,14 +2594,14 @@ export default function LiveOperationsPage({
                     if (isImage) {
                       return (
                         /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={sig} alt="Digital Signature" className="max-h-16 w-auto object-contain" />
+                        <img src={sig} alt="Digital Signature" className="max-h-24 w-full object-contain p-1" />
                       );
                     }
 
                     if (isSvg) {
                       return (
                         <div
-                          className="max-h-16 overflow-hidden flex items-center justify-center"
+                          className="max-h-24 w-full flex items-center justify-center p-1 [&>svg]:max-h-24 [&>svg]:w-full [&>svg]:h-auto"
                           dangerouslySetInnerHTML={{ __html: sig }}
                         />
                       );

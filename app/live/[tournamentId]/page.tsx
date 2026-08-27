@@ -1188,12 +1188,12 @@ export default function PublicLiveBoardDetailPage({
 
                       if (isImage) {
                         return (
-                          <div className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40">
+                          <div className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40 min-h-[80px]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={sig}
                               alt="Digital Signature"
-                              className="max-h-20 w-auto object-contain"
+                              className="max-h-24 w-full object-contain"
                             />
                           </div>
                         );
@@ -1202,7 +1202,7 @@ export default function PublicLiveBoardDetailPage({
                       if (isSvg) {
                         return (
                           <div
-                            className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40 max-h-20 overflow-hidden"
+                            className="bg-white rounded-lg p-2 w-full flex items-center justify-center shadow-xs border border-border/40 min-h-[80px] [&>svg]:max-h-24 [&>svg]:w-full [&>svg]:h-auto"
                             dangerouslySetInnerHTML={{ __html: sig }}
                           />
                         );
