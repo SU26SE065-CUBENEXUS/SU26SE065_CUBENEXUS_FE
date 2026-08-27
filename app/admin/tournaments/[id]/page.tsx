@@ -277,166 +277,103 @@ export default function AdminTournamentDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Detailed Parameters */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Overview Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-5">
-            <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-indigo-600" /> Tournament Information & Technical Configuration
-            </h2>
+      {/* Main Container */}
+      <div className="space-y-6">
+        {/* Overview Card */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-5">
+          <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-indigo-600" /> Tournament Information & Technical Configuration
+          </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Tournament Type</span>
-                <p className="font-extrabold text-slate-900">
-                  {isOnlineAsync ? 'Online Asynchronous (A01 Format)' : 'Offline WCA In-Person Tournament'}
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Current Status</span>
-                <p className="font-extrabold text-indigo-600 uppercase">{status}</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Start and End Time</span>
-                <p className="font-semibold text-slate-800">{formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Registration Window</span>
-                <p className="font-semibold text-slate-800">
-                  {formatDate(tournament.registrationOpenAt)} – {formatDate(tournament.registrationCloseAt)}
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Location</span>
-                <p className="font-semibold text-slate-800">{tournament.location || 'Online Server Arena'}</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                <span className="text-slate-400 font-bold text-[10px] uppercase">Created By</span>
-                <p className="font-semibold text-slate-800">{tournament.createdByUserName || 'Admin System'}</p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Tournament Type</span>
+              <p className="font-extrabold text-slate-900">
+                {isOnlineAsync ? 'Online Asynchronous (A01 Format)' : 'Offline WCA In-Person Tournament'}
+              </p>
             </div>
 
-            {tournament.description && (
-              <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tournament Description</span>
-                <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                  {tournament.description}
-                </p>
-              </div>
-            )}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Current Lifecycle Status</span>
+              <p className="font-extrabold text-indigo-600 uppercase">{status}</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Start and End Time</span>
+              <p className="font-semibold text-slate-800">{formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Registration Window</span>
+              <p className="font-semibold text-slate-800">
+                {formatDate(tournament.registrationOpenAt)} – {formatDate(tournament.registrationCloseAt)}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Location</span>
+              <p className="font-semibold text-slate-800">{tournament.location || 'Online Server Arena'}</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+              <span className="text-slate-400 font-bold text-[10px] uppercase">Created By</span>
+              <p className="font-semibold text-slate-800">{tournament.createdByUserName || 'Admin System'}</p>
+            </div>
           </div>
 
-          {/* Events / Format Section */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
-            <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Layers className="h-4 w-4 text-indigo-600" /> Events & Puzzle Formats
-            </h2>
-
-            {isOnlineAsync ? (
-              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-indigo-900">
-                    {tournament.puzzleTypeName || '3x3x3 Cube'} (A01 Single Solve)
-                  </span>
-                  <span className="px-2.5 py-1 rounded-md bg-indigo-200/80 text-indigo-800 text-[10px] font-bold uppercase">
-                    A01 Format
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-indigo-950 font-medium">
-                  <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Puzzle Type</span>
-                    <span className="font-bold">{tournament.puzzleTypeName || 'Rubik'}</span>
-                  </div>
-                  <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Attempt Time Limit</span>
-                    <span className="font-bold font-mono">
-                      {tournament.attemptTimeLimitMs ? `${tournament.attemptTimeLimitMs / 1000}s` : '300s (5 minutes)'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : tournament.events && tournament.events.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {tournament.events.map((ev: any) => (
-                  <div key={ev.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900">{formatEventLabel(ev)}</span>
-                    <span className="text-[10px] font-semibold text-slate-500">{ev.rounds?.length || 1} Round(s)</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-xs text-slate-400 font-semibold bg-slate-50 rounded-2xl">
-                No tournament events have been configured.
-              </div>
-            )}
-          </div>
+          {tournament.description && (
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tournament Description</span>
+              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                {tournament.description}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Right Col: Admin Controls */}
-        <div className="space-y-6">
-          {/* Fast Action Panel */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
-            <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <Zap className="h-4 w-4 text-amber-500" /> Admin Controls
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              System-level actions that directly control the tournament lifecycle.
-            </p>
+        {/* Events / Format Section */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
+          <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Layers className="h-4 w-4 text-indigo-600" /> Events & Puzzle Formats
+          </h2>
 
-            <div className="space-y-2 pt-2">
-              {/* Force Start */}
-              <button
-                onClick={handleForceStart}
-                disabled={actionLoading || status === 'ONGOING' || status === 'COMPLETED'}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition shadow-md disabled:opacity-40 cursor-pointer"
-              >
-                <Play className="h-3.5 w-3.5 fill-current" /> Force Start
-              </button>
-
-              {/* Open Registration */}
-              <button
-                onClick={() => handleUpdateStatus('REGISTRATION_OPEN', 'Registration Open')}
-                disabled={actionLoading || status === 'REGISTRATION_OPEN' || status === 'ONGOING' || status === 'COMPLETED'}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-2xs disabled:opacity-40 cursor-pointer"
-              >
-                <Unlock className="h-3.5 w-3.5" /> Open Registration
-              </button>
-
-              {/* Close Registration */}
-              <button
-                onClick={handleCloseReg}
-                disabled={actionLoading || status === 'REGISTRATION_CLOSED' || status === 'COMPLETED'}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs transition disabled:opacity-40 cursor-pointer"
-              >
-                <Lock className="h-3.5 w-3.5 text-amber-700" /> Close Registration
-              </button>
-
-              {/* Complete Tournament */}
-              <button
-                onClick={() => handleUpdateStatus('COMPLETED', 'Completed')}
-                disabled={actionLoading || status === 'COMPLETED'}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition disabled:opacity-40 cursor-pointer"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Complete Tournament
-              </button>
-
-              {/* Disable / Enable Toggle */}
-              <button
-                onClick={() => handleUpdateStatus(status === 'DISABLED' ? 'PUBLISHED' : 'DISABLED', status === 'DISABLED' ? 'Reactivated' : 'Disabled')}
-                disabled={actionLoading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-xs transition cursor-pointer"
-              >
-                <Power className="h-3.5 w-3.5" /> {status === 'DISABLED' ? 'Reactivate Tournament' : 'Disable Tournament'}
-              </button>
+          {isOnlineAsync ? (
+            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-indigo-900">
+                  {tournament.puzzleTypeName || '3x3x3 Cube'} (A01 Single Solve)
+                </span>
+                <span className="px-2.5 py-1 rounded-md bg-indigo-200/80 text-indigo-800 text-[10px] font-bold uppercase">
+                  A01 Format
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-indigo-950 font-medium">
+                <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Puzzle Type</span>
+                  <span className="font-bold">{tournament.puzzleTypeName || 'Rubik'}</span>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-indigo-100">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Attempt Time Limit</span>
+                  <span className="font-bold font-mono">
+                    {tournament.attemptTimeLimitMs ? `${tournament.attemptTimeLimitMs / 1000}s` : '300s (5 minutes)'}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : tournament.events && tournament.events.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {tournament.events.map((ev: any) => (
+                <div key={ev.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900">{formatEventLabel(ev)}</span>
+                  <span className="text-[10px] font-semibold text-slate-500">{ev.rounds?.length || 1} Round(s)</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 text-center text-xs text-slate-400 font-semibold bg-slate-50 rounded-2xl">
+              No tournament events have been configured.
+            </div>
+          )}
         </div>
       </div>
     </div>
