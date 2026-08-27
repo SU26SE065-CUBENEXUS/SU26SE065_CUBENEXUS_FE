@@ -15,14 +15,13 @@ import {
   Filter,
   CheckCircle,
   Clock3,
-  Edit3,
-  Lock,
   XCircle,
   HelpCircle,
+  Flame,
 } from 'lucide-react';
 import { getFraudReports, FraudReportDto } from '@/features/online-arena/api/onlineArenaApi';
 
-type TabType = 'ALL' | 'PENDING' | 'RESOLVED';
+type TabType = 'ALL' | 'PENDING' | 'PRIORITY' | 'RESOLVED';
 
 function formatCompetitorLabel(userCode?: string | null, displayName?: string | null, fallbackUserId?: string) {
   const code = userCode?.trim();
@@ -56,26 +55,52 @@ export default function AdminFraudReportsQueuePage() {
     fetchReports();
   }, []);
 
-  const pendingCount = reports.filter(
-    (r) => r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING'
-  ).length;
+  const isReportPending = (r: FraudReportDto) =>
+    r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING';
 
+  const isReportOverdue = (r: FraudReportDto) => {
+    if (!isReportPending(r)) return false;
+    const createdTime = new Date(r.createdAt).getTime();
+    const now = Date.now();
+    return now - createdTime >= 24 * 3600 * 1000; // >= 24 hours
+  };
+
+  const pendingCount = reports.filter(isReportPending).length;
+  const priorityCount = reports.filter(isReportOverdue).length;
   const resolvedCount = reports.filter((r) => r.statusCode === 'RESOLVED').length;
 
   const filteredReports = reports
     .filter((r) => {
-      const isPending = r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING';
+      const isPending = isReportPending(r);
       const isResolved = r.statusCode === 'RESOLVED';
 
       if (activeTab === 'PENDING') return isPending;
+      if (activeTab === 'PRIORITY') return isPending && (priorityCount > 0 ? isReportOverdue(r) : true);
       if (activeTab === 'RESOLVED') return isResolved;
       return true; // 'ALL'
     })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a, b) => {
+      // Priority tab sorts oldest first so long-pending items get handled first
+      if (activeTab === 'PRIORITY') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      // Other tabs sort newest first
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const getVerdictBadge = (report: FraudReportDto) => {
-    const isPending = report.statusCode === 'OPEN' || report.statusCode === 'REVIEWING' || report.statusCode === 'PENDING';
+    const isPending = isReportPending(report);
+    const isOverdue = isReportOverdue(report);
+
     if (isPending) {
+      if (isOverdue) {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-extrabold text-xs animate-pulse">
+            <Flame className="h-3.5 w-3.5 text-rose-600" />
+            Overdue (&gt;24h)
+          </span>
+        );
+      }
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-bold text-xs">
           <Clock3 className="h-3.5 w-3.5" />
@@ -111,26 +136,6 @@ export default function AdminFraudReportsQueuePage() {
     );
   };
 
-  const get24hStatusBadge = (report: FraudReportDto) => {
-    if (report.statusCode !== 'RESOLVED') return null;
-
-    if (report.canReReview !== false) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 font-medium text-xs">
-          <Edit3 className="h-3 w-3" />
-          Editable ({report.hoursLeftToReReview != null ? `${report.hoursLeftToReReview}h` : '<24h'})
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-medium text-xs">
-        <Lock className="h-3 w-3" />
-        Locked ({'>'}24h)
-      </span>
-    );
-  };
-
   return (
     <div className="w-full max-w-full p-4 sm:p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen transition-all duration-300 font-sans">
       {/* Header Banner */}
@@ -145,7 +150,7 @@ export default function AdminFraudReportsQueuePage() {
             Match Fraud Reports
           </h1>
           <p className="text-sm text-slate-500">
-            Review fraud reports, replay videos, inspect AI logs, and revise verdicts within 24 hours.
+            Review fraud reports, replay video evidence, inspect AI logs, and issue final non-reversible verdicts.
           </p>
         </div>
 
@@ -168,7 +173,7 @@ export default function AdminFraudReportsQueuePage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs (All, Pending, Priority/Overdue, Resolved) */}
       <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs">
         <button
           onClick={() => setActiveTab('ALL')}
@@ -192,6 +197,20 @@ export default function AdminFraudReportsQueuePage() {
         >
           <Clock3 className="h-3.5 w-3.5" />
           <span>Pending ({pendingCount})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('PRIORITY')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'PRIORITY'
+              ? 'bg-rose-600 text-white shadow-2xs'
+              : priorityCount > 0
+              ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+              : 'bg-transparent text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Flame className={`h-3.5 w-3.5 ${priorityCount > 0 ? 'text-rose-500 animate-pulse' : ''}`} />
+          <span>Priority / Overdue ({priorityCount})</span>
         </button>
 
         <button
@@ -232,6 +251,8 @@ export default function AdminFraudReportsQueuePage() {
           <h3 className="text-base font-bold text-slate-800">
             {activeTab === 'PENDING'
               ? 'No reports are awaiting review'
+              : activeTab === 'PRIORITY'
+              ? 'No overdue fraud reports pending'
               : activeTab === 'RESOLVED'
               ? 'No reports have been resolved'
               : 'No fraud reports found'}
@@ -239,6 +260,8 @@ export default function AdminFraudReportsQueuePage() {
           <p className="text-sm text-slate-500 max-w-sm mx-auto">
             {activeTab === 'PENDING'
               ? 'All fraud reports have been resolved, or no new reports have been submitted.'
+              : activeTab === 'PRIORITY'
+              ? 'All pending reports are within normal processing timeframe (<24h).'
               : 'The report list is empty.'}
           </p>
         </div>
@@ -261,11 +284,7 @@ export default function AdminFraudReportsQueuePage() {
               </thead>
               <tbody className="divide-y divide-slate-100 font-normal">
                 {filteredReports.map((report) => {
-                  const isPending =
-                    report.statusCode === 'OPEN' ||
-                    report.statusCode === 'REVIEWING' ||
-                    report.statusCode === 'PENDING';
-                  const canEdit = report.statusCode === 'RESOLVED' && report.canReReview !== false;
+                  const isPending = isReportPending(report);
 
                   return (
                     <tr key={report.id} className="hover:bg-slate-50/80 transition-colors whitespace-nowrap">
@@ -311,10 +330,7 @@ export default function AdminFraudReportsQueuePage() {
                         {new Date(report.createdAt).toLocaleString('en-US')}
                       </td>
                       <td className="px-5 py-4">
-                        <div className="space-y-1.5">
-                          <div>{getVerdictBadge(report)}</div>
-                          <div>{get24hStatusBadge(report)}</div>
-                        </div>
+                        <div>{getVerdictBadge(report)}</div>
                       </td>
                       <td className="px-5 py-4 text-right">
                         <Link
@@ -322,8 +338,6 @@ export default function AdminFraudReportsQueuePage() {
                           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs transition-all shadow-2xs cursor-pointer ${
                             isPending
                               ? 'bg-indigo-600 hover:bg-indigo-700'
-                              : canEdit
-                              ? 'bg-amber-600 hover:bg-amber-700'
                               : 'bg-slate-700 hover:bg-slate-800'
                           }`}
                         >
@@ -331,11 +345,6 @@ export default function AdminFraudReportsQueuePage() {
                             <>
                               <Eye className="h-3.5 w-3.5" />
                               <span>Review</span>
-                            </>
-                          ) : canEdit ? (
-                            <>
-                              <Edit3 className="h-3.5 w-3.5" />
-                              <span>View / Edit</span>
                             </>
                           ) : (
                             <>
@@ -356,11 +365,7 @@ export default function AdminFraudReportsQueuePage() {
           {/* Mobile Cards View for Small Screens */}
           <div className="md:hidden divide-y divide-slate-100">
             {filteredReports.map((report) => {
-              const isPending =
-                report.statusCode === 'OPEN' ||
-                report.statusCode === 'REVIEWING' ||
-                report.statusCode === 'PENDING';
-              const canEdit = report.statusCode === 'RESOLVED' && report.canReReview !== false;
+              const isPending = isReportPending(report);
 
               return (
                 <div key={report.id} className="p-4 space-y-3">
@@ -394,8 +399,6 @@ export default function AdminFraudReportsQueuePage() {
                     </div>
                   </div>
 
-                  {get24hStatusBadge(report) && <div>{get24hStatusBadge(report)}</div>}
-
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
                     <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 font-bold">
                       {report.fraudType || 'Other'} ({report.timestampText || '00:00'})
@@ -403,22 +406,13 @@ export default function AdminFraudReportsQueuePage() {
                     <Link
                       href={`/admin/fraud-reports/${report.id}`}
                       className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-bold text-xs ${
-                        isPending
-                          ? 'bg-indigo-600'
-                          : canEdit
-                          ? 'bg-amber-600'
-                          : 'bg-slate-700'
+                        isPending ? 'bg-indigo-600' : 'bg-slate-700'
                       }`}
                     >
                       {isPending ? (
                         <>
                           <Eye className="h-3.5 w-3.5" />
                           <span>Review</span>
-                        </>
-                      ) : canEdit ? (
-                        <>
-                          <Edit3 className="h-3.5 w-3.5" />
-                          <span>View / Edit</span>
                         </>
                       ) : (
                         <>
@@ -437,3 +431,4 @@ export default function AdminFraudReportsQueuePage() {
     </div>
   );
 }
+

@@ -465,33 +465,13 @@ export default function AdminFraudReportReviewDetailPage() {
               </div>
             )}
 
-            {isResolved && !isEditing ? (
+            {isResolved ? (
               <div className="space-y-4">
-                {/* 24-hour Status Banner */}
-                {report.canReReview !== false ? (
-                  <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs text-amber-800 font-medium">
-                      <Clock className="h-4 w-4 text-amber-600 shrink-0" />
-                      <span>
-                        This verdict can be revised within 24 hours (approximately{' '}
-                        <strong>{report.hoursLeftToReReview != null ? `${report.hoursLeftToReReview}h` : '<24h'}</strong>).
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(true)}
-                      className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs self-start sm:self-auto border-none"
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                      <span>Revise Verdict</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-600 font-medium">
-                    <Lock className="h-4 w-4 text-slate-500 shrink-0" />
-                    <span>This verdict is permanently locked because more than 24 hours have passed.</span>
-                  </div>
-                )}
+                {/* Permanent Verdict Lock Banner */}
+                <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-xl flex items-center gap-2 text-xs text-slate-700 font-semibold">
+                  <Lock className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span>This fraud report has been resolved with a final verdict and cannot be altered.</span>
+                </div>
 
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
                   <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
@@ -521,8 +501,7 @@ export default function AdminFraudReportReviewDetailPage() {
                     </p>
                   </div>
                 </div>
-
-                </div>
+              </div>
             ) : (
               <form onSubmit={handleReviewSubmit} className="space-y-4">
                 {isEditing && (
