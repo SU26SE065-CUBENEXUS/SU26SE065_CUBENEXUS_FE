@@ -286,7 +286,7 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Maximum ELO movement in standard matches (default: <strong>20</strong>).
+                      Maximum ELO movement in standard matches (currently set: <strong>{kStandard}</strong>).
                     </p>
                   </div>
 
@@ -305,7 +305,7 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Accelerated ELO movement during placement matches (default: <strong>100</strong>).
+                      Accelerated ELO movement during placement matches (currently set: <strong>{kPlacement}</strong>).
                     </p>
                   </div>
 
@@ -324,7 +324,7 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Initial matches required to determine a new player's rank (default: <strong>5 matches</strong>).
+                      Initial matches required to determine a new player's rank (currently set: <strong>{placementCount} matches</strong>).
                     </p>
                   </div>
 
@@ -343,7 +343,7 @@ export default function AdminEloManagementPage() {
                       required
                     />
                     <p className="text-[11px] text-slate-500 leading-normal">
-                      Rating assigned when an account starts PvP (default: <strong>1000 ELO</strong>).
+                      Rating assigned when an account starts PvP (currently set: <strong>{defaultElo} ELO</strong>).
                     </p>
                   </div>
                 </div>
