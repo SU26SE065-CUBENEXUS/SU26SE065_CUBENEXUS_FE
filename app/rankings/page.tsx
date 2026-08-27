@@ -325,7 +325,7 @@ export default function RankingsPage() {
                     <Sparkles className="h-3 w-3" /> Your Arena Profile Info
                   </span>
                   <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                    {isPlacementDone ? 'Placement Completed' : `Placing (${placementDoneCount}/5 matches)`}
+                    {isPlacementDone ? 'Placement Completed' : `Placing (${placementDoneCount}/${myProfile?.placementMatchCount ?? 5} matches)`}
                   </p>
                 </div>
                 <div className="text-right">

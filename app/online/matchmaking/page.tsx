@@ -140,7 +140,7 @@ export default function MatchmakingPage() {
               status: 'COOLDOWN',
               remainingSeconds: diff,
             }));
-            setErrorMsg('Bạn không xác nhận trận đấu đúng thời gian (60s) và tạm thời bị Cooldown.');
+            setErrorMsg('You failed to confirm the match within 60 seconds and have been placed on temporary cooldown.');
             return;
           }
         }
@@ -148,7 +148,7 @@ export default function MatchmakingPage() {
         // If cooldown already expired or diff is 0, return to IDLE so user can re-queue directly
         setStatus('IDLE');
         setMatchmakingInfo(null);
-        setErrorMsg('Trận đấu đã hết hạn xác nhận. Vui lòng bấm ghép trận lại.');
+        setErrorMsg('Match confirmation timed out. Please find a match again.');
       }
     },
     onMatchConfirmationCancelled: (payload) => {
@@ -362,7 +362,7 @@ export default function MatchmakingPage() {
               {autoRequeuedNotice && (
                 <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 max-w-sm mx-auto animate-fade-in">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-500" />
-                  <span>Đối thủ trước đó không xác nhận. Đang tiếp tục tìm đối thủ mới cho bạn...</span>
+                  <span>Previous opponent did not confirm. Searching for a new opponent...</span>
                 </div>
               )}
               {myElo !== null && (
