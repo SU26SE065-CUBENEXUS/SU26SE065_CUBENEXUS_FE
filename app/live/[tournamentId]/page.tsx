@@ -122,7 +122,7 @@ export default function PublicLiveBoardDetailPage({
     try {
       const data = await getPublicLiveTournamentDetail(tournamentId);
       setTournament(data);
-      
+
       if (initial && data.events.length > 0) {
         // Default to currently active event/round if returned, otherwise first event
         const defaultEventId = data.activeEventId || data.events[0].id;
@@ -151,8 +151,8 @@ export default function PublicLiveBoardDetailPage({
     setBoardError(null);
     try {
       const data = await getLiveBoardState(selectedEventId, selectedRoundNumber);
-      setLastUpdated(new Date().toLocaleTimeString('vi-VN'));
-      
+      setLastUpdated(new Date().toLocaleTimeString('en-US'));
+
       // Calculate highlight for changed rows
       if (data && data.competitors) {
         const newUpdates = new Set<string>();
@@ -174,7 +174,7 @@ export default function PublicLiveBoardDetailPage({
               prev[key].completedSolves !== currentVal.completedSolves ||
               prev[key].bestTimeMs !== currentVal.bestTimeMs ||
               prev[key].averageTimeMs !== currentVal.averageTimeMs;
-            
+
             if (hasUpdates) {
               newUpdates.add(key);
             }
@@ -359,11 +359,11 @@ export default function PublicLiveBoardDetailPage({
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 relative overflow-hidden">
       {/* Visual background accents */}
       <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-[140px] pointer-events-none" />
-      
+
       <Header />
 
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Back Link */}
         <div className="mb-6 flex justify-between items-center">
           <Link
@@ -405,7 +405,7 @@ export default function PublicLiveBoardDetailPage({
         ) : (
           /* Main Layout */
           <div className="space-y-6">
-            
+
             {/* Tournament Details Banner Card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 relative overflow-hidden shadow-2xs">
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -413,31 +413,31 @@ export default function PublicLiveBoardDetailPage({
                   <div className="flex flex-wrap items-center gap-3">
                     {tournament.isLive ? (
                       <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-extrabold text-red-700 flex items-center gap-1.5 uppercase animate-pulse">
-                        <Flame className="h-3.5 w-3.5 text-red-600" /> ĐANG THI ĐẤU (LIVE)
+                        <Flame className="h-3.5 w-3.5 text-red-600" /> ONGOING (LIVE)
                       </span>
                     ) : tournament.status === 'ONGOING' ? (
                       <span className="rounded-full bg-purple-50 border border-purple-200 px-3 py-1 text-[10px] font-extrabold text-purple-700 uppercase">
-                        ĐANG DIỄN RA
+                        ONGOING
                       </span>
                     ) : tournament.status === 'COMPLETED' ? (
                       <span className="rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase">
-                        ĐÃ HOÀN THÀNH
+                        COMPLETED
                       </span>
                     ) : tournament.status === 'REGISTRATION_OPEN' ? (
                       <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] font-bold text-emerald-700 uppercase">
-                        MỞ ĐĂNG KÝ
+                        REGISTRATION OPEN
                       </span>
                     ) : tournament.status === 'REGISTRATION_CLOSED' ? (
                       <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[10px] font-bold text-amber-700 uppercase">
-                        ĐÓNG ĐĂNG KÝ
+                        REGISTRATION CLOSED
                       </span>
                     ) : tournament.status === 'CANCELLED' ? (
                       <span className="rounded-full bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold text-red-700 uppercase">
-                        ĐÃ HỦY
+                        CANCELED
                       </span>
                     ) : (
                       <span className="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[10px] font-bold text-blue-700 uppercase">
-                        SẮP DIỄN RA
+                        UPCOMING
                       </span>
                     )}
                     {tournament.location ? (
@@ -446,7 +446,7 @@ export default function PublicLiveBoardDetailPage({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[11px] text-indigo-600 hover:text-indigo-800 hover:underline font-semibold uppercase flex items-center gap-1 transition"
-                        title="Xem địa điểm trên Google Maps (Mở tab mới)"
+                        title="View location on Google Maps (Opens in new tab)"
                       >
                         <MapPin className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
                         <span>{tournament.location}</span>
@@ -474,11 +474,10 @@ export default function PublicLiveBoardDetailPage({
                 {/* Hub realtime connection status */}
                 {tournament.status === 'ONGOING' && (
                   <div className="shrink-0 flex items-center gap-2">
-                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-2xs ${
-                      isHubConnected
-                        ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
-                        : 'text-amber-700 border-amber-200 bg-amber-50 animate-pulse'
-                    }`}>
+                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shadow-2xs ${isHubConnected
+                      ? 'text-emerald-700 border-emerald-200 bg-emerald-50'
+                      : 'text-amber-700 border-amber-200 bg-amber-50 animate-pulse'
+                      }`}>
                       {isHubConnected ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-amber-600" />}
                       <span className="uppercase text-[10px] tracking-wider font-extrabold">
                         {isHubConnected ? 'Realtime Connected' : 'Updates Paused (Auto-Polling)'}
@@ -494,7 +493,7 @@ export default function PublicLiveBoardDetailPage({
               {tournament.events.map((ev) => {
                 const isSelected = selectedEventId === ev.id;
                 const isEvLive = ev.roundStatus === 'ONGOING';
-                
+
                 return (
                   <button
                     key={ev.id}
@@ -502,11 +501,10 @@ export default function PublicLiveBoardDetailPage({
                       setSelectedEventId(ev.id);
                       setSelectedRoundNumber(ev.currentRoundNumber || 1);
                     }}
-                    className={`flex items-center gap-2 px-5 py-3 border-b-2 text-xs font-bold uppercase tracking-wider transition-all -mb-[2px] whitespace-nowrap cursor-pointer ${
-                      isSelected
-                        ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-t-lg'
-                    }`}
+                    className={`flex items-center gap-2 px-5 py-3 border-b-2 text-xs font-bold uppercase tracking-wider transition-all -mb-[2px] whitespace-nowrap cursor-pointer ${isSelected
+                      ? 'border-indigo-600 text-indigo-600 font-extrabold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 rounded-t-lg'
+                      }`}
                   >
                     <span>{formatEventLabel(ev)}</span>
                     {isEvLive && (
@@ -525,24 +523,24 @@ export default function PublicLiveBoardDetailPage({
                   {tournament.status === 'REGISTRATION_CLOSED'
                     ? 'Registration Closed — Starting Soon'
                     : tournament.status === 'REGISTRATION_OPEN'
-                    ? 'Registration Currently Open'
-                    : 'Tournament Has Not Started Yet'}
+                      ? 'Registration Currently Open'
+                      : 'Tournament Has Not Started Yet'}
                 </h3>
                 <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
                   {tournament.status === 'REGISTRATION_CLOSED'
                     ? `Registration has closed. The tournament will officially start on ${new Date(tournament.startTime).toLocaleDateString('en-US')}. Please check back when it starts for live results!`
                     : tournament.status === 'REGISTRATION_OPEN'
-                    ? `Registration is currently open. Official matches begin on ${new Date(tournament.startTime).toLocaleDateString('en-US')}.`
-                    : `Tournament is scheduled to start on ${new Date(tournament.startTime).toLocaleDateString('en-US')}. Please check back later for live rankings.`}
+                      ? `Registration is currently open. Official matches begin on ${new Date(tournament.startTime).toLocaleDateString('en-US')}.`
+                      : `Tournament is scheduled to start on ${new Date(tournament.startTime).toLocaleDateString('en-US')}. Please check back later for live rankings.`}
                 </p>
                 <div className="pt-2">
                   <span className="inline-flex rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2 text-xs font-bold text-indigo-700 uppercase shadow-2xs">
                     STATUS: {
                       tournament.status === 'REGISTRATION_OPEN' ? 'REGISTRATION OPEN' :
-                      tournament.status === 'REGISTRATION_CLOSED' ? 'REGISTRATION CLOSED' :
-                      tournament.status === 'PUBLISHED' ? 'UPCOMING' :
-                      tournament.status === 'DRAFT' ? 'DRAFT' :
-                      tournament.status.replace('_', ' ')
+                        tournament.status === 'REGISTRATION_CLOSED' ? 'REGISTRATION CLOSED' :
+                          tournament.status === 'PUBLISHED' ? 'UPCOMING' :
+                            tournament.status === 'DRAFT' ? 'DRAFT' :
+                              tournament.status.replace('_', ' ')
                     }
                   </span>
                 </div>
@@ -555,7 +553,7 @@ export default function PublicLiveBoardDetailPage({
             ) : (
               /* Main dynamic live board section */
               <div className="space-y-6">
-                
+
                 {/* Event Round selection & details header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200 p-4 rounded-2xl shadow-2xs">
                   <div className="flex items-center gap-3">
@@ -583,11 +581,10 @@ export default function PublicLiveBoardDetailPage({
                           <button
                             key={r}
                             onClick={() => setSelectedRoundNumber(r)}
-                            className={`h-8 w-8 rounded-lg text-xs font-bold transition cursor-pointer ${
-                              selectedRoundNumber === r
-                                ? 'bg-indigo-600 text-white shadow-2xs'
-                                : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
-                            }`}
+                            className={`h-8 w-8 rounded-lg text-xs font-bold transition cursor-pointer ${selectedRoundNumber === r
+                              ? 'bg-indigo-600 text-white shadow-2xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
+                              }`}
                           >
                             {r}
                           </button>
@@ -614,16 +611,15 @@ export default function PublicLiveBoardDetailPage({
                 ) : (
                   /* Live Board Stats & Standings table */
                   <div className="space-y-6">
-                    
+
                     {/* Live Stats Overview Banner */}
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Round Status</span>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`h-2 w-2 rounded-full ${
-                            liveBoard.roundStatus === 'ONGOING' ? 'bg-red-500 animate-pulse' :
+                          <span className={`h-2 w-2 rounded-full ${liveBoard.roundStatus === 'ONGOING' ? 'bg-red-500 animate-pulse' :
                             liveBoard.roundStatus === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-400'
-                          }`} />
+                            }`} />
                           <span className="font-extrabold text-sm uppercase text-slate-900">{liveBoard.roundStatus}</span>
                         </div>
                       </div>
@@ -667,7 +663,7 @@ export default function PublicLiveBoardDetailPage({
                         </h3>
 
                         <div className="flex flex-col sm:flex-row items-end justify-center gap-6 max-w-4xl mx-auto">
-                          
+
                           {/* 2nd Place */}
                           {secondPlace && (
                             <div className="w-full sm:w-1/3 flex flex-col items-center order-2 sm:order-1 mt-4 sm:mt-0">
@@ -685,7 +681,7 @@ export default function PublicLiveBoardDetailPage({
                               </div>
                               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-tight text-center truncate w-full">{secondPlace.competitorName}</h4>
                               <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{secondPlace.competitorUserCode}</p>
-                              
+
                               <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5 shadow-2xs">
                                 <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(secondPlace.bestTimeMs, secondPlace.competitorStatus === 'DNF', secondPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
@@ -713,7 +709,7 @@ export default function PublicLiveBoardDetailPage({
                               </div>
                               <h4 className="font-black text-sm text-amber-700 uppercase tracking-tight text-center truncate w-full">{firstPlace.competitorName}</h4>
                               <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{firstPlace.competitorUserCode}</p>
-                              
+
                               <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2 text-center text-xs space-y-0.5 shadow-2xs">
                                 <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(firstPlace.bestTimeMs, firstPlace.competitorStatus === 'DNF', firstPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
@@ -740,7 +736,7 @@ export default function PublicLiveBoardDetailPage({
                               </div>
                               <h4 className="font-bold text-xs text-slate-900 uppercase tracking-tight text-center truncate w-full">{thirdPlace.competitorName}</h4>
                               <p className="text-[9px] text-slate-500 font-mono tracking-tighter">{thirdPlace.competitorUserCode}</p>
-                              
+
                               <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-2 text-center text-[10px] space-y-0.5 shadow-2xs">
                                 <p className="text-slate-600">Best: <span className="font-mono font-bold text-slate-900">{formatDisplayTime(thirdPlace.bestTimeMs, thirdPlace.competitorStatus === 'DNF', thirdPlace.competitorStatus === 'NO_SHOW')}</span></p>
                                 {showAverage && (
@@ -791,13 +787,11 @@ export default function PublicLiveBoardDetailPage({
                                 return (
                                   <tr
                                     key={c.groupCompetitorId}
-                                    className={`transition-all duration-500 hover:bg-slate-50 ${
-                                      isUpdating ? 'bg-indigo-50/80 font-semibold' : ''
-                                    } ${
-                                      c.rank === 1 ? 'bg-amber-50/40 hover:bg-amber-50/70' :
-                                      c.rank === 2 ? 'bg-slate-50/60 hover:bg-slate-100/60' :
-                                      c.rank === 3 ? 'bg-amber-100/30 hover:bg-amber-100/50' : ''
-                                    }`}
+                                    className={`transition-all duration-500 hover:bg-slate-50 ${isUpdating ? 'bg-indigo-50/80 font-semibold' : ''
+                                      } ${c.rank === 1 ? 'bg-amber-50/40 hover:bg-amber-50/70' :
+                                        c.rank === 2 ? 'bg-slate-50/60 hover:bg-slate-100/60' :
+                                          c.rank === 3 ? 'bg-amber-100/30 hover:bg-amber-100/50' : ''
+                                      }`}
                                   >
                                     {/* Rank column with medal indicator */}
                                     <td className="px-4 py-3.5 text-center font-bold">
@@ -870,14 +864,14 @@ export default function PublicLiveBoardDetailPage({
                                       const isAttemptDns = attempt?.penaltyCode === 'DNS' || (c.competitorStatus === 'NO_SHOW' && i === 0 && !attempt);
                                       const isCutoffStoppedCell = !attempt && c.isCutoffReached && i >= reqAttempts;
 
-                                      const val = attempt 
+                                      const val = attempt
                                         ? (isAttemptDns ? 'DNS' : (isAttemptDnf ? 'DNF' : formatDisplayTime(finalMs, false)))
                                         : (isAttemptDns ? 'DNS' : '—');
 
                                       return (
                                         <td key={i} className="px-3 py-3.5 text-center font-mono text-xs">
                                           {isCutoffStoppedCell ? (
-                                            <span className="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Dừng thi do không vượt qua mốc Cutoff ở các lượt đầu">
+                                            <span className="inline-flex items-center rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase tracking-wider" title="Disqualified from further attempts for missing Cutoff in early solves">
                                               CUTOFF
                                             </span>
                                           ) : (
@@ -902,32 +896,31 @@ export default function PublicLiveBoardDetailPage({
                                                   });
                                                 }
                                               }}
-                                              className={`px-2 py-1 rounded-lg transition-all flex items-center justify-center gap-1 mx-auto ${
-                                                !attempt
-                                                  ? 'text-slate-400 font-normal cursor-default'
-                                                  : isOverTimeLimit
-                                                    ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold hover:scale-105'
-                                                    : isOverCutoff
-                                                      ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold hover:scale-105'
-                                                      : isAttemptDnf
-                                                        ? 'bg-red-50 text-red-700 border border-red-200 font-bold hover:scale-105'
-                                                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold hover:scale-105'
-                                              }`}
-                                              title="Bấm để xem ảnh minh chứng Cloudflare R2 & chi tiết"
+                                              className={`px-2 py-1 rounded-lg transition-all flex items-center justify-center gap-1 mx-auto ${!attempt
+                                                ? 'text-slate-400 font-normal cursor-default'
+                                                : isOverTimeLimit
+                                                  ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold hover:scale-105'
+                                                  : isOverCutoff
+                                                    ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold hover:scale-105'
+                                                    : isAttemptDnf
+                                                      ? 'bg-red-50 text-red-700 border border-red-200 font-bold hover:scale-105'
+                                                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold hover:scale-105'
+                                                }`}
+                                              title="Click to inspect Cloudflare R2 scorecard photo & details"
                                             >
                                               <span>{val}</span>
                                               {isOverTimeLimit ? (
-                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatDisplayTime(rawOrFinalMs, false)}) vượt mốc Time Limit (${formatLimitMs(timeLimitMs!)})`}>
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-600 text-white uppercase tracking-tight shadow-2xs" title={`Time (${formatDisplayTime(rawOrFinalMs, false)}) exceeded Time Limit (${formatLimitMs(timeLimitMs!)})`}>
                                                   Time Limit (DNF)
                                                 </span>
                                               ) : isOverCutoff ? (
-                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Thời gian (${formatDisplayTime(finalMs, false)}) vượt mốc Cutoff (${formatLimitMs(cutoffMs!)})`}>
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500 text-white uppercase tracking-tight shadow-2xs" title={`Time (${formatDisplayTime(finalMs, false)}) exceeded Cutoff (${formatLimitMs(cutoffMs!)})`}>
                                                   Cutoff
                                                 </span>
                                               ) : null}
                                               {!isOverTimeLimit && attempt?.penaltyCode === 'PLUS_2' && <span className="text-[10px] text-amber-600 font-semibold ml-0.5">+2</span>}
                                               {attempt?.evidencePhotoUrl && (
-                                                <span className="text-[9px] ml-0.5" title="Có ảnh tờ ghi điểm R2">📸</span>
+                                                <span className="text-[9px] ml-0.5" title="Scorecard photo evidence attached">📸</span>
                                               )}
                                               {attempt?.isLocked && (
                                                 <span className="text-[7px] text-emerald-600 font-extrabold align-super ml-0.5" title="Verified by Judge">✓</span>
@@ -956,7 +949,7 @@ export default function PublicLiveBoardDetailPage({
                           </tbody>
                         </table>
                       </div>
-                      
+
                       {/* Legend / Tooltips */}
                       <div className="flex flex-wrap gap-4 px-4 py-3 bg-slate-50 border-t border-slate-200 text-[10px] text-slate-500 font-medium select-none">
                         <span className="flex items-center gap-1"><span className="text-emerald-600 font-extrabold font-mono">✓</span> Verified</span>"
@@ -973,13 +966,12 @@ export default function PublicLiveBoardDetailPage({
                       {liveBoard.competitors && liveBoard.competitors.map((c: any) => {
                         const isUpdating = updatedCompetitorIds.has(c.groupCompetitorId);
                         const compGroup = liveBoard.groups?.find((g: any) => g.groupId === c.groupId);
-                        
+
                         return (
                           <div
                             key={c.groupCompetitorId}
-                            className={`rounded-2xl border border-border bg-card p-4 space-y-3 transition-all duration-500 ${
-                              isUpdating ? 'border-primary bg-primary/10' : ''
-                            }`}
+                            className={`rounded-2xl border border-border bg-card p-4 space-y-3 transition-all duration-500 ${isUpdating ? 'border-primary bg-primary/10' : ''
+                              }`}
                           >
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-3">
@@ -1011,12 +1003,12 @@ export default function PublicLiveBoardDetailPage({
                                 const attempt = c.results && c.results.find((r: any) => r.solveNumber === i + 1);
                                 const isAttemptDnf = attempt?.isDnf || attempt?.penaltyCode === 'DNF';
                                 const isAttemptDns = attempt?.penaltyCode === 'DNS' || (c.competitorStatus === 'NO_SHOW' && i === 0 && !attempt);
-                                const val = attempt 
+                                const val = attempt
                                   ? (isAttemptDns ? 'DNS' : formatDisplayTime(attempt.finalTimeMs, isAttemptDnf))
                                   : (isAttemptDns ? 'DNS' : '—');
                                 return (
                                   <div key={i} className="bg-muted/15 py-1 rounded">
-                                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-sans font-bold">#{i+1}</p>
+                                    <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-sans font-bold">#{i + 1}</p>
                                     <p className={`mt-0.5 font-bold ${isAttemptDnf ? 'text-red-400' : isAttemptDns ? 'text-muted-foreground/80' : 'text-foreground'}`}>
                                       {val}
                                       {attempt?.penaltyCode === 'PLUS_2' && <span className="text-[8px] text-orange-400 font-semibold ml-0.5">+2</span>}
@@ -1058,10 +1050,10 @@ export default function PublicLiveBoardDetailPage({
                   </span>
                   <div>
                     <h3 className="text-base font-black text-foreground uppercase tracking-tight leading-tight">
-                      📸 Tờ Ghi Điểm Minh Chứng — Solve #{selectedInspectSolve.solveNumber}
+                      📸 Scorecard Photo Evidence — Solve #{selectedInspectSolve.solveNumber}
                     </h3>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                      Thí sinh: <strong className="text-foreground">{selectedInspectSolve.competitorName}</strong> ({selectedInspectSolve.competitorUserCode})
+                      Competitor: <strong className="text-foreground">{selectedInspectSolve.competitorName}</strong> ({selectedInspectSolve.competitorUserCode})
                     </p>
                   </div>
                 </div>
@@ -1076,21 +1068,21 @@ export default function PublicLiveBoardDetailPage({
               {/* Details Row */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono text-center">
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
-                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Hạng Mục</p>
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Event</p>
                   <p className="font-extrabold text-foreground mt-0.5 truncate">{selectedInspectSolve.eventName}</p>
                 </div>
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
-                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Lượt Thi</p>
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Solve Attempt</p>
                   <p className="font-extrabold text-foreground mt-0.5">Solve #{selectedInspectSolve.solveNumber}</p>
                 </div>
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5">
-                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Hình Phạt</p>
+                  <p className="text-[10px] text-muted-foreground font-sans uppercase font-bold">Penalty</p>
                   <p className={`font-extrabold mt-0.5 ${selectedInspectSolve.isDnf ? 'text-red-400' : selectedInspectSolve.penaltyCode === 'PLUS_2' ? 'text-orange-400' : 'text-emerald-400'}`}>
                     {selectedInspectSolve.penaltyCode || 'OK'}
                   </p>
                 </div>
                 <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
-                  <p className="text-[10px] text-primary font-sans uppercase font-bold">Kết Quả Cuối</p>
+                  <p className="text-[10px] text-primary font-sans uppercase font-bold">Final Result</p>
                   <p className="font-black text-primary text-sm mt-0.5">
                     {formatDisplayTime(selectedInspectSolve.finalTimeMs, selectedInspectSolve.isDnf)}
                   </p>
@@ -1106,14 +1098,14 @@ export default function PublicLiveBoardDetailPage({
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
                           <FileText className="h-4 w-4 text-primary" />
-                          Ảnh Tờ Ghi Điểm Trọng Tài Minh Chứng
+                          Official Judge Scorecard Photo Evidence
                         </label>
                         {formattedUrl && (
                           <button
                             onClick={() => window.open(formattedUrl, '_blank')}
                             className="inline-flex items-center gap-1 text-[11px] font-extrabold text-primary hover:underline"
                           >
-                            Mở Ảnh Gốc Tab Mới <ExternalLink className="h-3 w-3" />
+                            Open Original Photo (New Tab) <ExternalLink className="h-3 w-3" />
                           </button>
                         )}
                       </div>
@@ -1122,7 +1114,7 @@ export default function PublicLiveBoardDetailPage({
                         <div
                           onClick={() => window.open(formattedUrl, '_blank')}
                           className="group relative rounded-2xl border border-primary/40 bg-black/80 overflow-hidden cursor-pointer shadow-2xl hover:border-primary transition-all duration-300 min-h-[220px] flex items-center justify-center p-2"
-                          title="Click trực tiếp để mở ảnh gốc ở tab mới với độ phân giải cao nhất"
+                          title="Click to open original high-resolution photo in a new tab"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -1180,10 +1172,10 @@ export default function PublicLiveBoardDetailPage({
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1.5">
                       <PenTool className="h-3.5 w-3.5 text-primary" />
-                      Chữ Ký Trọng Tài / Thí Sinh (E-Signature)
+                      Judge / Competitor E-Signature
                     </p>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-extrabold border border-emerald-500/20">
-                      <ShieldCheck className="h-3 w-3" /> Đã Ký Xác Nhận
+                      <ShieldCheck className="h-3 w-3" /> Signed & Verified
                     </span>
                   </div>
 
@@ -1221,7 +1213,7 @@ export default function PublicLiveBoardDetailPage({
                         return (
                           <div className="flex items-center gap-2 text-xs font-mono text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
                             <PenTool className="h-3.5 w-3.5" />
-                            <span>Chữ ký cảm ứng di động hợp lệ ({pointCount} điểm vẽ)</span>
+                            <span>Valid mobile touch signature ({pointCount} draw points)</span>
                           </div>
                         );
                       }
@@ -1232,7 +1224,7 @@ export default function PublicLiveBoardDetailPage({
                           <p className="font-serif italic text-base sm:text-lg font-black text-primary tracking-wider">
                             "{sig}"
                           </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">Xác nhận bằng ký danh / mã thí sinh điện tử</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">Verified by electronic signature / competitor ID</p>
                         </div>
                       );
                     })()}

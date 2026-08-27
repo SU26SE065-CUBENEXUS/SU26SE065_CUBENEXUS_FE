@@ -176,7 +176,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
           getOnlineAsyncTournamentById(tournamentId),
           getOnlineAsyncAttemptState(attemptId),
         ]);
-        if (attempt.tournamentId !== tournamentId) throw new Error('Attempt không thuộc giải đấu này.');
+        if (attempt.tournamentId !== tournamentId) throw new Error('Attempt does not belong to this tournament.');
         setTournament(data);
         setAttemptScramble(attempt.scrambleSequence);
         if (attempt.attemptDeadlineAt) {
@@ -202,7 +202,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
           setStep('FINISH_SCAN');
         }
       } catch (err: any) {
-        setError(err?.message || 'Không thể tải thông tin attempt.');
+        setError(err?.message || 'Unable to load attempt details.');
       }
     }
     init();
@@ -224,13 +224,13 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
           if (expired.isDnf || expired.penaltyCode === 'DNF') {
             discardRecording();
             setRecordedVideoUrl(null);
-            setError('Đã hết thời gian cho phép của lượt thi (Time Remain = 0s). Lượt thi đấu tự động bị đánh DNF.');
+            setError('Attempt time limit exceeded (Time Remain = 0s). Attempt marked as DNF automatically.');
           } else {
             setError(null);
           }
         } catch {
           hasExpiredRef.current = false;
-          setError('Time Remain đã về 0 nhưng chưa thể xác nhận kết quả với server. Hệ thống sẽ thử lại.');
+          setError('Time Remain reached 0 but could not confirm result with server. Retrying...');
           return;
         }
         setStep('RESULT');
@@ -254,14 +254,14 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       if (recordingStartedAtRef.current > 0 && mediaRecorderRef.current?.state === 'recording') {
         recordingInterruptedRef.current = true;
         setRecordingInterrupted(true);
-        setError('Camera đã bị ngắt trong lúc thi. Recording evidence không còn liên tục; hãy giữ camera bật cho tới khi hoàn tất finish scan.');
+        setError('Camera disconnected during attempt. Video recording is interrupted; please keep camera enabled until finish scan is complete.');
         mediaRecorderRef.current.stop();
       }
       setIsRecording(false);
       return;
     }
     if (recordingInterruptedRef.current) {
-      setError('Không thể tiếp tục recording sau khi camera đã bị ngắt giữa lượt thi.');
+      setError('Cannot resume recording after camera was disconnected during attempt.');
       return;
     }
     if (cameraStreamRef.current === stream) return;
@@ -278,7 +278,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     };
     recorder.onerror = () => {
       setIsRecording(false);
-      setError('Trình duyệt gặp lỗi khi recording video. Vui lòng kiểm tra quyền camera.');
+      setError('Browser error during video recording. Please check camera permissions.');
     };
     recorder.start(1000);
     const videoTrack = stream.getVideoTracks()[0];
@@ -288,7 +288,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
         recordingInterruptedRef.current = true;
         setRecordingInterrupted(true);
         setIsRecording(false);
-        setError('Camera track đã kết thúc trong lúc thi. Recording evidence bị gián đoạn.');
+        setError('Camera track ended during attempt. Video evidence recording interrupted.');
       }, { once: true });
     }
     mediaRecorderRef.current = recorder;
@@ -342,7 +342,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       setSolveElapsedMs(0);
       setStep('SOLVING');
     } catch (err: any) {
-      setError(err?.message || 'Không thể bắt đầu timer.');
+      setError(err?.message || 'Could not start solve timer.');
     } finally {
       setIsProcessing(false);
     }
@@ -396,7 +396,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       setScanFaces([]);
       setStep('TIMER_READY');
     } catch (err: any) {
-      setError(err?.message || 'Scramble check không hợp lệ. Vui lòng thử lại.');
+      setError(err?.message || 'Invalid scramble check. Please try again.');
     } finally {
       // Scanner completion can be emitted more than once in React development
       // mode. Keep the synchronous guard briefly after the request settles.
@@ -457,7 +457,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       setScanFaces([]);
       setStep('FINISH_SCAN');
     } catch (err: any) {
-      setError(err?.message || 'Lỗi khi lưu thời gian solve.');
+      setError(err?.message || 'Error saving solve time.');
     } finally {
       setIsProcessing(false);
     }
@@ -467,7 +467,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
   const handleConfirmFinish = async (facesToUse?: AsyncScannerFace[]) => {
     if (finishSubmitInFlightRef.current) return;
     if (recordingInterruptedRef.current || recordingInterrupted || mediaRecorderRef.current?.state !== 'recording') {
-      setError('Không thể xác nhận kết quả: camera/recording đã bị ngắt trước khi finish scan hoàn tất.');
+      setError('Cannot verify result: camera/recording was interrupted before finish scan completed.');
       return;
     }
     const faces = facesToUse || scanFaces;
@@ -500,7 +500,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
       }
       setStep('RESULT');
     } catch (err: any) {
-      setError(err?.message || 'Lỗi khi xác nhận kết quả.');
+      setError(err?.message || 'Error verifying result.');
     } finally {
       window.setTimeout(() => { finishSubmitInFlightRef.current = false; }, 500);
       setIsProcessing(false);
@@ -532,7 +532,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <Sparkles className="h-5 w-5 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900 tracking-tight">Thi Đấu Online Asynchronous</h1>
+            <h1 className="text-lg font-black text-slate-900 tracking-tight">Online Asynchronous Match</h1>
             <p className="text-xs text-slate-500 font-medium">Attempt Flow • {tournament?.name || 'Tournament Arena'}</p>
           </div>
         </div>
@@ -574,9 +574,9 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
 
       {remainingMs !== null && step !== 'RESULT' && (
         <div className={`rounded-2xl border px-4 py-3 text-center shadow-sm ${remainingMs <= 60_000 ? 'border-red-200 bg-red-50 text-red-700' : 'border-indigo-200 bg-indigo-50 text-indigo-800'}`}>
-          <p className="text-[11px] font-bold uppercase tracking-wider">Thời gian còn lại của attempt</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider">Attempt Time Remaining</p>
           <p className="font-mono text-2xl font-black">{formatRemaining(remainingMs)}</p>
-          <p className="text-xs font-medium">Tổng thời gian tính từ lúc bắt đầu attempt, bao gồm cả hai bước scan; hết giờ hệ thống tự đánh DNF.</p>
+          <p className="text-xs font-medium">Total time from attempt start including both scan steps. Reaching 0 results in an automatic DNF.</p>
         </div>
       )}
 
@@ -591,7 +591,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             onClick={() => setError(null)}
             className="text-red-500 hover:text-red-800 font-extrabold text-xs px-2 py-1"
           >
-            Đóng
+            Close
           </button>
         </div>
       )}
@@ -650,13 +650,13 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 1 / 5 • Scramble & AI Scan
+                  Step 1 / 5 • Scramble & AI Scan
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   Scramble & AI Scan Cube
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Xoay khối Rubik từ trạng thái Solved State theo đúng chuỗi Scramble dưới đây và đưa trước camera để AI tự động quét 5 mặt.
+                  Scramble your Rubik's cube from solved state according to the sequence below, then present 5 faces to the camera for AI scanning.
                 </p>
               </div>
 
@@ -674,7 +674,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                     className="flex items-center gap-1 px-3 py-1 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-2xs transition"
                   >
                     {copiedScramble ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                    {copiedScramble ? 'Đã Copy' : 'Copy'}
+                    {copiedScramble ? 'Copied' : 'Copy'}
                   </button>
                 </div>
 
@@ -691,16 +691,16 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-800 flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-indigo-600" /> Tự động xác minh Scramble
+                    <ShieldCheck className="h-4 w-4 text-indigo-600" /> Automatic Scramble Verification
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${scanFaces.length === 5 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
-                    {scanFaces.length} / 5 mặt
+                    {scanFaces.length} / 5 faces
                   </span>
                 </div>
                 <p className="text-slate-600">
                   {scanFaces.length === 5
-                    ? 'Đã nhận đủ 5 mặt. Hệ thống đang tự động xác minh scramble...'
-                    : `Hãy lần lượt đưa 5 mặt Rubik khác màu trước camera. Sau khi AI nhận đủ 5 mặt, hệ thống sẽ tự động xác minh và chuyển sang Bước 2.`}
+                    ? 'Captured 5 faces. System is automatically verifying scramble...'
+                    : `Present 5 different faces of the cube to the camera. Once all 5 faces are detected, the system will verify and proceed to Step 2.`}
                 </p>
               </div>
 
@@ -712,11 +712,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Đang xác minh scramble...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Verifying scramble...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4" /> Xác minh Scramble & Sang Bước 2
+                    <CheckCircle className="h-4 w-4" /> Verify Scramble & Proceed to Step 2
                   </>
                 )}
               </button>
@@ -728,13 +728,13 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 2 / 5 • Thời Gian Quan Sát & Chuẩn Bị (Inspection Timer)
+                  Step 2 / 5 • Inspection & Preparation Timer
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Xác Minh Scramble Thành Công!
+                  Scramble Verified Successfully!
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Khối Rubik của bạn đã hợp lệ. Hãy đặt khối Rubik xuống bàn, quan sát và chuẩn bị tư thế sẵn sàng giải.
+                  Your scramble is valid. Place the cube down, inspect, and prepare to start solving.
                 </p>
               </div>
 
@@ -747,7 +747,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 }`}>
                 <div className="flex items-center justify-between px-2">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 font-mono">
-                    Thời Gian Quan Sát / Chuẩn Bị
+                    Inspection / Preparation Time
                   </span>
                   <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase border ${handElapsedMs > 14_000
                       ? 'bg-rose-200 text-rose-800 border-rose-300 animate-pulse'
@@ -755,7 +755,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                         ? 'bg-amber-200 text-amber-800 border-amber-300'
                         : 'bg-emerald-200 text-emerald-800 border-emerald-300'
                     }`}>
-                    {handElapsedMs > 14_000 ? 'DNF (Quá 14s)' : handElapsedMs > 6_000 ? '+2 Giây Penalty (Quá 6s)' : 'Hợp Lệ (Không Phạt)'}
+                    {handElapsedMs > 14_000 ? 'DNF (Exceeded 14s)' : handElapsedMs > 6_000 ? '+2s Penalty (Exceeded 6s)' : 'Valid (No Penalty)'}
                   </span>
                 </div>
 
@@ -766,17 +766,17 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                   </p>
                   <p className="mt-1.5 text-xs font-bold text-slate-600">
                     {handElapsedMs > 14_000
-                      ? 'Đã vượt quá 14 giây chuẩn bị — Lượt thi đấu sẽ bị xử DNF!'
+                      ? 'Exceeded 14s inspection — Attempt marked as DNF!'
                       : handElapsedMs > 6_000
-                        ? 'Đã vượt quá 6 giây quan sát — Sẽ bị cộng +2.00s vào kết quả giải.'
-                        : 'Bấm BẮT ĐẦU hoặc nhấn SPACE ngay để không bị phạt thời gian!'}
+                        ? 'Exceeded 6s inspection — +2.00s penalty will be added to your result.'
+                        : 'Click START or press SPACE now to avoid time penalties!'}
                   </p>
                 </div>
 
                 {/* Regulation helper pills */}
                 <div className="pt-3 border-t border-slate-200/80 text-left space-y-2">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono">
-                    Quy định mốc thời gian chuẩn bị:
+                    Inspection Time Regulations:
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-bold">
                     <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs <= 6_000
@@ -784,21 +784,21 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                         : 'bg-white/70 border-slate-200 text-slate-400'
                       }`}>
                       <p className="uppercase text-[11px] font-extrabold">🟢 0.00s – 6.00s</p>
-                      <p className="font-semibold text-[10px] mt-0.5 text-emerald-850">Chuẩn bị hợp lệ (Không phạt)</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-emerald-850">Valid Inspection (No Penalty)</p>
                     </div>
                     <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs > 6_000 && handElapsedMs <= 14_000
                         ? 'bg-amber-100 border-amber-400 text-amber-950 font-black shadow-xs ring-1 ring-amber-400'
                         : 'bg-white/70 border-slate-200 text-slate-400'
                       }`}>
                       <p className="uppercase text-[11px] font-extrabold">🟡 6.01s – 14.00s</p>
-                      <p className="font-semibold text-[10px] mt-0.5 text-amber-850">Phạt +2 giây (+2s)</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-amber-850">Penalty +2 seconds (+2s)</p>
                     </div>
                     <div className={`p-2.5 rounded-xl border transition-all ${handElapsedMs > 14_000
                         ? 'bg-rose-100 border-rose-400 text-rose-950 font-black shadow-xs ring-1 ring-rose-400'
                         : 'bg-white/70 border-slate-200 text-slate-400'
                       }`}>
                       <p className="uppercase text-[11px] font-extrabold">🔴 &gt; 14.00s</p>
-                      <p className="font-semibold text-[10px] mt-0.5 text-rose-850">Quá hạn: Xử thua (DNF)</p>
+                      <p className="font-semibold text-[10px] mt-0.5 text-rose-850">Over Limit: Disqualified (DNF)</p>
                     </div>
                   </div>
                 </div>
@@ -807,12 +807,12 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               {/* Ready notice */}
               <div className="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
                 <p className="font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <Hand className="h-4 w-4 text-indigo-600" /> Lưu ý quan trọng:
+                  <Hand className="h-4 w-4 text-indigo-600" /> Important Notes:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-slate-500">
-                  <li>Thời gian giải Rubik chính thức <strong>CHƯA CHẠY</strong>.</li>
-                  <li>Khi bạn bấm nút bên dưới hoặc nhấn <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd>, <strong>Đồng hồ giải sẽ bắt đầu chạy từ 00.00s</strong>.</li>
-                  <li>Sau khi xoay xong Rubik $\rightarrow$ Nhấn <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd> (hoặc bấm Dừng) để chốt thời gian giải.</li>
+                  <li>Official solve timer has <strong>NOT STARTED YET</strong>.</li>
+                  <li>When you click below or press <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd>, the <strong>Solve Timer will begin from 0.00s</strong>.</li>
+                  <li>After solving the cube $\rightarrow$ Press <kbd className="px-1.5 py-0.5 bg-slate-200 text-slate-900 font-mono font-bold rounded">SPACE</kbd> (or click Stop) to finish the solve timer.</li>
                 </ul>
               </div>
 
@@ -821,7 +821,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 disabled={isProcessing}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:brightness-105 px-6 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/25 transition cursor-pointer"
               >
-                <Play className="h-5 w-5 fill-current" /> BẮT ĐẦU TÍNH GIỜ GIẢI (NHẤN SPACE HOẶC BẤM VÀO ĐÂY)
+                <Play className="h-5 w-5 fill-current" /> START SOLVE TIMER (PRESS SPACE OR CLICK HERE)
               </button>
             </div>
           )}
@@ -831,27 +831,27 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-8 text-center my-auto">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 3 / 5 • Đồng Hồ Giải Rubik Đang Chạy
+                  Step 3 / 5 • Solve Timer In Progress
                 </span>
                 <h2 className="text-2xl font-black text-slate-900">SOLVING IN PROGRESS</h2>
                 <p className="text-xs text-slate-500 font-medium">
-                  Giải khối Rubik thật nhanh và dừng timer trước khi Time Remain về 0.
+                  Solve the Rubik's cube as fast as possible and stop timer before remaining time reaches 0.
                 </p>
                 <p className={`inline-flex rounded-full px-3 py-1 text-[11px] font-extrabold ${activePenaltyCode === 'PLUS2' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}>
-                  {activePenaltyCode === 'PLUS2' ? '⚠️ Penalty từ bước chuẩn bị: +2.00 giây' : '✅ Chuẩn bị hợp lệ: Không bị phạt (0s)'}
+                  {activePenaltyCode === 'PLUS2' ? '⚠️ Inspection Penalty: +2.00 seconds' : '✅ Valid Inspection: No Penalty (+0s)'}
                 </p>
               </div>
 
               {/* Large Solve Timer (Runs starting from 0.00s) */}
               <div className="p-8 bg-slate-900 rounded-3xl text-white shadow-xl border border-slate-800 space-y-2">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider font-mono">Solve Time (Thời Gian Giải)</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider font-mono">Solve Time</p>
                 <p className="text-6xl sm:text-7xl font-mono font-black text-indigo-400 tracking-tight">
                   {(solveElapsedMs / 1000).toFixed(2)}s
                 </p>
               </div>
 
               <p className="text-xs text-slate-500 font-semibold">
-                Sau khi hoàn tất giải Rubik, nhấn phím <kbd className="px-2.5 py-1 bg-slate-200 text-slate-900 border border-slate-300 rounded font-mono font-bold">SPACE</kbd> hoặc nút bấm bên dưới để dừng đồng hồ.
+                When you finish solving the cube, press <kbd className="px-2.5 py-1 bg-slate-200 text-slate-900 border border-slate-300 rounded font-mono font-bold">SPACE</kbd> or click the button below to stop the timer.
               </p>
 
               <button
@@ -859,7 +859,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
                 disabled={isProcessing}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-6 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/20 transition cursor-pointer"
               >
-                <Square className="h-5 w-5 fill-current" /> DỪNG TIMER & QUÉT CUBE ĐÃ GIẢI (SPACE)
+                <Square className="h-5 w-5 fill-current" /> STOP TIMER & SCAN SOLVED CUBE (SPACE)
               </button>
             </div>
           )}
@@ -869,13 +869,13 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-6">
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full text-[11px] font-extrabold uppercase tracking-wider">
-                  Bước 4 / 5 • Scan Solved Cube
+                  Step 4 / 5 • Scan Solved Cube
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Scan Solved Cube & Lưu Recording
+                  Scan Solved Cube & Save Recording
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Đưa các mặt khối Rubik đã được giải hoàn chỉnh trước camera lần thứ 2 để AI xác nhận.
+                  Present the 5 faces of your solved cube to the camera for AI verification.
                 </p>
               </div>
 
@@ -891,16 +891,16 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-800 flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600" /> Tự động lưu video & kết quả
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" /> Automatic Video & Result Saving
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black ${scanFaces.length === 5 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
-                    {scanFaces.length} / 5 mặt
+                    {scanFaces.length} / 5 faces
                   </span>
                 </div>
                 <p className="text-slate-600">
                   {scanFaces.length === 5
-                    ? 'Đã nhận đủ 5 mặt. Hệ thống đang tự động dừng recording, upload video và xác minh kết quả...'
-                    : `Hãy đưa 5 mặt Rubik đã giải xong trước camera. Khi đủ 5 mặt, hệ thống sẽ tự động lưu và chuyển sang Bước 5.`}
+                    ? 'Captured 5 faces. Stopping recording, uploading video, and verifying result...'
+                    : `Present 5 solved cube faces to camera. System will save and proceed to Step 5.`}
                 </p>
               </div>
 
@@ -911,11 +911,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Đang xác minh cube & upload video...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Verifying cube & uploading video...
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4" /> Xác minh 5 mặt & Hoàn tất Attempt
+                    <CheckCircle className="h-4 w-4" /> Verify 5 Faces & Complete Attempt
                   </>
                 )}
               </button>
@@ -927,11 +927,11 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
             <div className="space-y-6 text-center my-auto">
               <div className="space-y-1.5">
                 <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider border ${finalResult.isDnf ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
-                  Bước 5 / 5 • {finalResult.isDnf ? 'Attempt DNF' : 'Hoàn Tất Attempt'}
+                  Step 5 / 5 • {finalResult.isDnf ? 'Attempt DNF' : 'Attempt Complete'}
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">KẾT QUẢ ATTEMPT</h2>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">ATTEMPT RESULT</h2>
                 <p className="text-xs text-slate-500">
-                  {finalResult.isDnf ? 'Attempt bị đánh DNF. Khung hình/Video đã bị hủy tự động và không lưu công khai.' : 'Kết quả hợp lệ đã được lưu và video evidence đang chờ Ban Tổ Chức review.'}
+                  {finalResult.isDnf ? 'Attempt marked DNF. Recording discarded automatically and not published.' : 'Valid result saved. Video evidence queued for Organizer review.'}
                 </p>
               </div>
 

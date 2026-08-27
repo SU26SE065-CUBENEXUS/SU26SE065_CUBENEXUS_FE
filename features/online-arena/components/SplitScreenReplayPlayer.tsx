@@ -220,7 +220,7 @@ export function SplitScreenReplayPlayer({
             </>
           ) : (
             <span className="text-amber-600 font-bold uppercase">
-              {officialWinnerText === 'INCONCLUSIVE' ? 'KẾT QUẢ: HÒA - ĐÃ KIỂM DUYỆT (INCONCLUSIVE)' : 'KẾT QUẢ: HÒA (DRAW)'}
+              {officialWinnerText === 'INCONCLUSIVE' ? 'RESULT: DRAW - AUDITED (INCONCLUSIVE)' : 'RESULT: DRAW'}
             </span>
           )}
         </div>

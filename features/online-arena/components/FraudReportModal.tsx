@@ -13,12 +13,12 @@ interface FraudReportModalProps {
 }
 
 const FRAUD_TYPES = [
-  { id: 'HIDDEN_CUBE', label: 'Hidden Cube (Giấu Rubik dưới bàn/ngoài camera)' },
-  { id: 'TIMER_MANIPULATION', label: 'Timer Manipulation (Bấm dừng/chạy timer bất thường)' },
-  { id: 'CAMERA_OBSTRUCTION', label: 'Camera Obstruction (Che khuất camera/mờ đục)' },
-  { id: 'ILLEGAL_SCRAMBLE', label: 'Illegal Scramble (Xáo trộn sai quy định/tráo cube)' },
-  { id: 'EXTERNAL_ASSISTANCE', label: 'External Assistance (Nhờ sự trợ giúp của người khác)' },
-  { id: 'OTHER', label: 'Other (Hành vi nghi vấn khác)' },
+  { id: 'HIDDEN_CUBE', label: 'Hidden Cube (Hiding cube under table/off camera)' },
+  { id: 'TIMER_MANIPULATION', label: 'Timer Manipulation (Abnormal timer stop/start)' },
+  { id: 'CAMERA_OBSTRUCTION', label: 'Camera Obstruction (Obstructing/blurring camera)' },
+  { id: 'ILLEGAL_SCRAMBLE', label: 'Illegal Scramble (Incorrect scramble/swapping cube)' },
+  { id: 'EXTERNAL_ASSISTANCE', label: 'External Assistance (Receiving help from others)' },
+  { id: 'OTHER', label: 'Other (Other suspicious behavior)' },
 ];
 
 export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudReportModalProps) {
@@ -41,7 +41,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
     if (!text || !text.trim()) return { seconds: 0, formatted: '00:00' };
     const raw = text.trim().toLowerCase();
 
-    // 1. Dạng MM:SS hoặc HH:MM:SS (01:15, 1:15, 0:45)
+    // 1. MM:SS or HH:MM:SS format (01:15, 1:15, 0:45)
     if (raw.includes(':')) {
       const parts = raw.split(':').map((p) => parseInt(p.trim(), 10) || 0);
       if (parts.length === 2) {
@@ -58,9 +58,9 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
       }
     }
 
-    // 2. Dạng tự nhiên (1 phút 15 giây, 1p 15s, 1m15s, 75 giây, 75s)
-    const minMatch = raw.match(/(\d+)\s*(?:phút|phut|p|m|min)/);
-    const secMatch = raw.match(/(\d+)\s*(?:giây|giay|s|sec)/);
+    // 2. Natural language format (1 min 15 sec, 1m 15s, 75 sec, 75s)
+    const minMatch = raw.match(/(\d+)\s*(?:min|m|p|phút|phut)/);
+    const secMatch = raw.match(/(\d+)\s*(?:sec|s|giây|giay)/);
 
     let totalSec = 0;
     let hasMatch = false;
@@ -80,7 +80,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
       return { seconds: totalSec, formatted: `${m}:${s}` };
     }
 
-    // 3. Chỉ nhập số đơn thuần (ví dụ: 75 hoặc 90)
+    // 3. Plain number input (e.g. 75 or 90)
     const num = parseInt(raw.replace(/\D/g, ''), 10);
     if (!isNaN(num) && num > 0) {
       const m = Math.floor(num / 60).toString().padStart(2, '0');
@@ -94,7 +94,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim()) {
-      setError('Vui lòng nhập chi tiết mô tả hành vi gian lận.');
+      setError('Please enter details describing the fraudulent behavior.');
       return;
     }
 
@@ -119,7 +119,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
       }, 1800);
     } catch (err: any) {
       console.error('Failed to submit fraud report:', err);
-      setError(err?.message || 'Không thể gửi báo cáo gian lận. Vui lòng thử lại sau.');
+      setError(err?.message || 'Failed to submit fraud report. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -143,8 +143,8 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
             <ShieldAlert className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-zinc-900 uppercase tracking-wider">Báo cáo Gian lận Trận đấu</h3>
-            <p className="text-xs text-zinc-500 font-semibold">Gửi khiếu nại chi tiết kèm mốc thời gian để Trọng tài kiểm duyệt.</p>
+            <h3 className="text-lg font-black text-zinc-900 uppercase tracking-wider">Report Match Fraud</h3>
+            <p className="text-xs text-zinc-500 font-semibold">Submit detailed report with timestamp for Referee review.</p>
           </div>
         </div>
 
@@ -152,16 +152,16 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
           <div className="py-6 text-center space-y-4 animate-fade-in">
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-zinc-900 uppercase">Đã gửi Báo cáo Thành công!</h4>
+              <h4 className="text-base font-bold text-zinc-900 uppercase">Report Submitted Successfully!</h4>
               <p className="text-xs text-zinc-500 max-w-xs mx-auto font-medium">
-                Báo cáo đã được chuyển đến Ban Quản Trị &amp; Trọng tài. Kết quả xử lý sẽ được cập nhật sớm nhất.
+                Report has been forwarded to Administrators &amp; Referees. Status will be updated soon.
               </p>
             </div>
             <button
               onClick={onClose}
               className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-md cursor-pointer border-none"
             >
-              Quay Lại / Đóng
+              Back / Close
             </button>
           </div>
         ) : (
@@ -169,7 +169,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
             {/* 1. Fraud Type */}
             <div className="space-y-1.5">
               <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750">
-                1. Loại hành vi gian lận (Fraud Type)
+                1. Fraud Type
               </label>
               <select
                 value={fraudType}
@@ -187,14 +187,14 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
             {/* 2. Timestamp */}
             <div className="space-y-1.5">
               <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750 flex items-center justify-between">
-                <span>2. Mốc thời gian xuất hiện gian lận (Timestamp)</span>
-                <span className="text-[10px] text-orange-600 font-mono">Định dạng MM:SS</span>
+                <span>2. Timestamp of Violation</span>
+                <span className="text-[10px] text-orange-600 font-mono">Format MM:SS</span>
               </label>
               <div className="relative">
                 <Clock className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="01:15 hoặc 1 phút 15 giây"
+                  placeholder="01:15 or 1 min 15 sec"
                   value={timestampText}
                   onChange={(e) => setTimestampText(e.target.value)}
                   className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
@@ -202,9 +202,9 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
               </div>
               {timestampText.trim() && (
                 <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono pt-0.5">
-                  <span>⏱️ Quy đổi chuẩn:</span>
+                  <span>⏱️ Standardized:</span>
                   <span className="font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
-                    {parseTimestampSeconds(timestampText).formatted} ({parseTimestampSeconds(timestampText).seconds} giây)
+                    {parseTimestampSeconds(timestampText).formatted} ({parseTimestampSeconds(timestampText).seconds} seconds)
                   </span>
                 </div>
               )}
@@ -213,11 +213,11 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
             {/* 3. Description */}
             <div className="space-y-1.5">
               <label className="block text-xs font-extrabold uppercase tracking-wider text-zinc-750">
-                3. Chi tiết mô tả (Description)
+                3. Detailed Description
               </label>
               <textarea
                 rows={3}
-                placeholder="Ví dụ: Đối thủ giấu Rubik bên dưới mép bàn từ phút 01:15 đến 01:22..."
+                placeholder="Example: Opponent hid the cube under the table edge from 01:15 to 01:22..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
@@ -240,7 +240,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 disabled={isSubmitting}
                 className="w-1/3 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200 font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 type="submit"
@@ -249,11 +249,11 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Đang gửi báo cáo...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
                   </>
                 ) : (
                   <>
-                    <Send className="h-4 w-4" /> Gửi Báo Cáo Gian Lận
+                    <Send className="h-4 w-4" /> Submit Fraud Report
                   </>
                 )}
               </button>
