@@ -51,11 +51,10 @@ function CountdownTimer({ deadlineIso, serverNowIso }: { deadlineIso: string | n
   if (!deadlineIso) return null;
   return (
     <div
-      className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border text-xs font-bold ${
-        parseInt(countdownStr) < 60
+      className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border text-xs font-bold ${parseInt(countdownStr) < 60
           ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
           : 'border-orange-500/20 bg-orange-500/10 text-orange-400'
-      }`}
+        }`}
     >
       <span className="flex items-center gap-1.5">
         <Clock className="h-3.5 w-3.5" />
@@ -141,9 +140,9 @@ function ColorSchemeGuide({ scrambleSequence }: { scrambleSequence: string | nul
             Compare your physical cube faces with the target 3x3 patterns below after scrambling.
           </span>
         </div>
-        <span className="text-[10px] font-mono font-bold text-orange-500 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+        {/* <span className="text-[10px] font-mono font-bold text-orange-500 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
           Expected 2D Pattern
-        </span>
+        </span> */}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
@@ -156,11 +155,10 @@ function ColorSchemeGuide({ scrambleSequence }: { scrambleSequence: string | nul
             <div
               key={item.code}
               onClick={() => setSelectedFace(isSelected ? null : faceKey)}
-              className={`flex flex-col items-center p-3 rounded-2xl border transition-all cursor-pointer select-none space-y-2.5 ${
-                isSelected
+              className={`flex flex-col items-center p-3 rounded-2xl border transition-all cursor-pointer select-none space-y-2.5 ${isSelected
                   ? 'bg-orange-500/10 border-orange-500 shadow-md ring-2 ring-orange-500/20 scale-105 z-10'
                   : 'bg-muted/40 border-border/80 hover:border-orange-500/40 hover:bg-muted'
-              }`}
+                }`}
             >
               {/* Header badge */}
               <div className="flex items-center gap-2">

@@ -1227,7 +1227,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       {/* Side-by-Side Main Section on Desktop */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
 
-        {/* Left Side: Large Clean Camera Viewport (7 cols out of 12) */}
+        {/* Left Side: Large Clean Camera Viewport + Remaining Colors (7 cols out of 12) */}
         <div className="lg:col-span-7 flex flex-col space-y-3">
           <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/90 shadow-2xl">
             {/* Camera Viewport 4:3 */}
@@ -1254,6 +1254,20 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                 />
               </div>
             </div>
+          </div>
+
+          {/* Remaining Center Colors Card (Positioned directly under Camera Viewport) */}
+          <div className="rounded-3xl border border-orange-200 bg-orange-50/50 p-4 space-y-2 shadow-xs">
+            <div className="flex items-center justify-between">
+              <strong className="text-xs font-extrabold uppercase tracking-wider text-orange-950">Remaining Colors</strong>
+              <span className="text-[10px] font-bold text-orange-600 uppercase">
+                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'All 5 Captured'}
+              </span>
+            </div>
+            <p className="text-xs text-orange-850 font-bold">
+              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 center colors captured.'}
+            </p>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">{scannerGuidance}</p>
           </div>
 
           {/* Error messages if any */}
@@ -1381,28 +1395,13 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
               <StatusItem label="Observed Center" value={observedCenterText} />
             </div>
           </div>
-
-          {/* Remaining Center Colors Card */}
-          <div className="rounded-3xl border border-orange-200 bg-orange-50/50 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <strong className="text-xs font-extrabold uppercase tracking-wider text-orange-950">Remaining Colors</strong>
-              <span className="text-[10px] font-bold text-orange-600 uppercase">
-                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'All 5 Captured'}
-              </span>
-            </div>
-            <p className="text-xs text-orange-850 font-bold">
-              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 center colors captured.'}
-            </p>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">{scannerGuidance}</p>
-          </div>
         </div>
       </div>
 
-      {/* Bottom Section: 5 Captured Face Cards Slots */}
-      <div className="space-y-2 pt-2">
+      {/* Bottom Section: 5 Captured Face Cards Slots (Pulled Up directly below Camera & Controls) */}
+      <div className="space-y-2 pt-0">
         <div className="flex items-center justify-between px-1">
           <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Captured Face Slots</h4>
-          {/* <span className="text-[10px] font-bold text-slate-400 uppercase">Hover slot & click 🔄 to re-scan single face</span> */}
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
