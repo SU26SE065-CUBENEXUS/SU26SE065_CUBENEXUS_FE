@@ -364,10 +364,14 @@ export async function createFraudReport(
   matchId: string,
   payload: CreateFraudReportPayload,
 ): Promise<FraudReportDto> {
-  return apiFetch<FraudReportDto>(`/api/online/matches/${matchId}/reports`, {
+  const result = await apiFetch<FraudReportDto>(`/api/online/matches/${matchId}/reports`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('fraud-reports-updated', { detail: { matchId } }));
+  }
+  return result;
 }
 
 export interface MatchFraudReportStatusDto {

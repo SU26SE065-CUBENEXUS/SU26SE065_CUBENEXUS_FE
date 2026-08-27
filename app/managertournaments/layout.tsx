@@ -489,7 +489,10 @@ export default function ManagerLayout({ children }: { children: React.ReactNode 
     }
     try {
       const reports = await getFraudReports();
-      setPendingFraudReportIds(reports.map((report) => report.id));
+      const pendingReports = reports.filter(
+        (r) => r.statusCode === 'OPEN' || r.statusCode === 'REVIEWING' || r.statusCode === 'PENDING'
+      );
+      setPendingFraudReportIds(pendingReports.map((report) => report.id));
     } catch {
       // Keep the last successful count during temporary API failures.
     }

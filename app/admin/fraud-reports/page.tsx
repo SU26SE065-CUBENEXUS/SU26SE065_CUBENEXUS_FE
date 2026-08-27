@@ -114,7 +114,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs">
           <XCircle className="h-3.5 w-3.5" />
-          Resolved: GUILTY
+          GUILTY
         </span>
       );
     }
@@ -123,7 +123,7 @@ export default function AdminFraudReportsQueuePage() {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-xs">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Resolved: INNOCENT
+          INNOCENT
         </span>
       );
     }
@@ -131,7 +131,7 @@ export default function AdminFraudReportsQueuePage() {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs">
         <HelpCircle className="h-3.5 w-3.5" />
-        Resolved: INCONCLUSIVE
+        INCONCLUSIVE
       </span>
     );
   };
@@ -177,11 +177,10 @@ export default function AdminFraudReportsQueuePage() {
       <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-2xs">
         <button
           onClick={() => setActiveTab('ALL')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'ALL'
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeTab === 'ALL'
               ? 'bg-indigo-600 text-white shadow-2xs'
               : 'bg-transparent text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           <Filter className="h-3.5 w-3.5" />
           <span>All ({reports.length})</span>
@@ -189,11 +188,10 @@ export default function AdminFraudReportsQueuePage() {
 
         <button
           onClick={() => setActiveTab('PENDING')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'PENDING'
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeTab === 'PENDING'
               ? 'bg-amber-600 text-white shadow-2xs'
               : 'bg-transparent text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           <Clock3 className="h-3.5 w-3.5" />
           <span>Pending ({pendingCount})</span>
@@ -201,13 +199,12 @@ export default function AdminFraudReportsQueuePage() {
 
         <button
           onClick={() => setActiveTab('PRIORITY')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'PRIORITY'
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeTab === 'PRIORITY'
               ? 'bg-rose-600 text-white shadow-2xs'
               : priorityCount > 0
-              ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-              : 'bg-transparent text-slate-600 hover:bg-slate-100'
-          }`}
+                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                : 'bg-transparent text-slate-600 hover:bg-slate-100'
+            }`}
         >
           <Flame className={`h-3.5 w-3.5 ${priorityCount > 0 ? 'text-rose-500 animate-pulse' : ''}`} />
           <span>Priority / Overdue ({priorityCount})</span>
@@ -215,11 +212,10 @@ export default function AdminFraudReportsQueuePage() {
 
         <button
           onClick={() => setActiveTab('RESOLVED')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === 'RESOLVED'
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${activeTab === 'RESOLVED'
               ? 'bg-emerald-600 text-white shadow-2xs'
               : 'bg-transparent text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           <CheckCircle className="h-3.5 w-3.5" />
           <span>Resolved ({resolvedCount})</span>
@@ -252,17 +248,17 @@ export default function AdminFraudReportsQueuePage() {
             {activeTab === 'PENDING'
               ? 'No reports are awaiting review'
               : activeTab === 'PRIORITY'
-              ? 'No overdue fraud reports pending'
-              : activeTab === 'RESOLVED'
-              ? 'No reports have been resolved'
-              : 'No fraud reports found'}
+                ? 'No overdue fraud reports pending'
+                : activeTab === 'RESOLVED'
+                  ? 'No reports have been resolved'
+                  : 'No fraud reports found'}
           </h3>
           <p className="text-sm text-slate-500 max-w-sm mx-auto">
             {activeTab === 'PENDING'
               ? 'All fraud reports have been resolved, or no new reports have been submitted.'
               : activeTab === 'PRIORITY'
-              ? 'All pending reports are within normal processing timeframe (<24h).'
-              : 'The report list is empty.'}
+                ? 'All pending reports are within normal processing timeframe (<24h).'
+                : 'The report list is empty.'}
           </p>
         </div>
       ) : (
@@ -335,11 +331,10 @@ export default function AdminFraudReportsQueuePage() {
                       <td className="px-5 py-4 text-right">
                         <Link
                           href={`/admin/fraud-reports/${report.id}`}
-                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs transition-all shadow-2xs cursor-pointer ${
-                            isPending
+                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs transition-all shadow-2xs cursor-pointer ${isPending
                               ? 'bg-indigo-600 hover:bg-indigo-700'
                               : 'bg-slate-700 hover:bg-slate-800'
-                          }`}
+                            }`}
                         >
                           {isPending ? (
                             <>
@@ -405,9 +400,8 @@ export default function AdminFraudReportsQueuePage() {
                     </span>
                     <Link
                       href={`/admin/fraud-reports/${report.id}`}
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-bold text-xs ${
-                        isPending ? 'bg-indigo-600' : 'bg-slate-700'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white font-bold text-xs ${isPending ? 'bg-indigo-600' : 'bg-slate-700'
+                        }`}
                     >
                       {isPending ? (
                         <>
