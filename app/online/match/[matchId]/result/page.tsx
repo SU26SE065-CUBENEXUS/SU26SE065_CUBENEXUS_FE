@@ -158,7 +158,7 @@ export default function ResultPage() {
           <div className={`p-5 rounded-2xl border text-left space-y-3 ${!isWinner && !isDraw ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/60 border-border'
             }`}>
             <span className="text-[9px] text-muted-foreground font-black tracking-wider uppercase block">
-              {opponentPlayer.displayName || opponentPlayer.username || (opponentPlayer.userId ? `Player_${opponentPlayer.userId.slice(0, 6)}` : 'Opponent')}
+              {opponentPlayer.displayName || (opponentPlayer.userId ? `Player_${opponentPlayer.userId.slice(0, 6)}` : 'Opponent')}
             </span>
             <div className="space-y-1">
               <span className="block text-2xl font-black font-mono text-foreground">

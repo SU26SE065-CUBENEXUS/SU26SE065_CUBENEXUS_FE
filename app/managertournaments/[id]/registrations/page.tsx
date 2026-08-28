@@ -6,6 +6,7 @@ import { getTournamentById, getTournamentRegistrations, generateDemoParticipants
 import type { TournamentDetailDto, TournamentRegistrationDetailDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
   ChevronRight,
   Trophy,
@@ -85,6 +86,10 @@ export default function RegistrationManagementPage({
   const [selectedRegForQr, setSelectedRegForQr] = useState<TournamentRegistrationDetailDto | null>(null);
   const [copiedToken, setCopiedToken] = useState(false);
 
+  // Check-in All Modal State
+  const [showCheckInAllConfirm, setShowCheckInAllConfirm] = useState(false);
+  const [isCheckingInAll, setIsCheckingInAll] = useState(false);
+
   // ---------- Load Data ----------
   const loadData = useCallback(async (showLoader = false) => {
     if (showLoader) setIsLoading(true);
@@ -114,6 +119,10 @@ export default function RegistrationManagementPage({
   const remainingCapacity = maxParticipants > 0
     ? Math.max(0, maxParticipants - activeRegisteredCount)
     : 20;
+
+  const confirmedUncheckedCompetitors = registrations.filter(
+    r => r.statusCode === 'CONFIRMED' && !r.checkedInAt
+  );
 
   useEffect(() => {
     setDemoCount(String(remainingCapacity > 0 ? remainingCapacity : 1));
@@ -153,6 +162,44 @@ export default function RegistrationManagementPage({
       loadData();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to check in competitor');
+    }
+  };
+
+  const handleCheckInAll = async () => {
+    setActionError(null);
+    setActionSuccess(null);
+    setIsCheckingInAll(true);
+    try {
+      const targets = confirmedUncheckedCompetitors;
+      if (targets.length === 0) {
+        setActionError('No confirmed competitors waiting for check-in.');
+        setShowCheckInAllConfirm(false);
+        return;
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const reg of targets) {
+        try {
+          await checkInRegistration(reg.registrationId);
+          successCount++;
+        } catch {
+          failCount++;
+        }
+      }
+
+      if (failCount === 0) {
+        setActionSuccess(`Checked in all ${successCount} confirmed competitors successfully.`);
+      } else {
+        setActionSuccess(`Checked in ${successCount} competitor(s). (${failCount} failed)`);
+      }
+      await loadData();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to check in competitors');
+    } finally {
+      setIsCheckingInAll(false);
+      setShowCheckInAllConfirm(false);
     }
   };
 
@@ -473,10 +520,26 @@ export default function RegistrationManagementPage({
             </select>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
+            <button
+              onClick={() => setShowCheckInAllConfirm(true)}
+              disabled={!canCheckIn || confirmedUncheckedCompetitors.length === 0}
+              title={
+                !canCheckIn
+                  ? 'Check-in is available only when tournament status is CHECKING_IN or ONGOING'
+                  : confirmedUncheckedCompetitors.length === 0
+                  ? 'No confirmed competitors waiting for check-in'
+                  : `Check in all ${confirmedUncheckedCompetitors.length} confirmed competitors`
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 h-8 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              Check-in All ({confirmedUncheckedCompetitors.length})
+            </button>
+
             <button
               onClick={() => loadData(true)}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
               title="Reload"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -485,7 +548,7 @@ export default function RegistrationManagementPage({
             <button
               onClick={handleExportCSV}
               disabled={registrations.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 h-8 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 h-8 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs disabled:opacity-50 cursor-pointer"
             >
               Export CSV
             </button>
@@ -826,6 +889,19 @@ export default function RegistrationManagementPage({
           </div>
         </div>
       )}
+
+      {/* Confirm Modal: Check-in All */}
+      <ConfirmModal
+        isOpen={showCheckInAllConfirm}
+        title="Check-in All Competitors"
+        description={`Check in all ${confirmedUncheckedCompetitors.length} confirmed competitor(s)? This will mark them as checked in for the tournament.`}
+        confirmText={`Check-in All (${confirmedUncheckedCompetitors.length})`}
+        cancelText="Cancel"
+        variant="primary"
+        isLoading={isCheckingInAll}
+        onConfirm={handleCheckInAll}
+        onClose={() => setShowCheckInAllConfirm(false)}
+      />
     </div>
   );
 }
