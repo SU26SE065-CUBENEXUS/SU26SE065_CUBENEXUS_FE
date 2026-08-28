@@ -209,14 +209,6 @@ function WebRtcConnectStep({
     }
   }, [remoteStream]);
 
-  // When ICE reaches connected state, immediately call markWebRtcConnected so the
-  // backend checklist item updates even while the user is still on the setup page.
-  useEffect(() => {
-    if (status === 'connected' && !alreadyConnected) {
-      onConnected().catch((e) => console.error('[WebRtcConnectStep] onConnected error:', e));
-    }
-  }, [status, alreadyConnected, onConnected]);
-
   const currentStream = localStream ?? stream;
 
   return (
