@@ -78,6 +78,7 @@ export default function RegistrationManagementPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
+  const [isCheckingInAll, setIsCheckingInAll] = useState(false);
   const [demoCount, setDemoCount] = useState('1');
   const isRegistrationOpen = String(tournament?.statusCode ?? '').toUpperCase() === 'REGISTRATION_OPEN';
 
@@ -111,6 +112,9 @@ export default function RegistrationManagementPage({
   const maxParticipants = tournament?.maxParticipants ?? 0;
   const tournamentStatus = String(tournament?.statusCode ?? '').toUpperCase();
   const canCheckIn = tournamentStatus === 'CHECKING_IN' || tournamentStatus === 'ONGOING';
+  const checkInEligibleRegistrations = registrations.filter(
+    (registration) => registration.statusCode === 'CONFIRMED' && !registration.checkedInAt,
+  );
   const remainingCapacity = maxParticipants > 0
     ? Math.max(0, maxParticipants - activeRegisteredCount)
     : 20;
@@ -153,6 +157,41 @@ export default function RegistrationManagementPage({
       loadData();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to check in competitor');
+    }
+  };
+
+  const handleCheckInAll = async () => {
+    if (!canCheckIn || isCheckingInAll || checkInEligibleRegistrations.length === 0) return;
+
+    const eligible = [...checkInEligibleRegistrations];
+    const confirmed = window.confirm(
+      `Check in all ${eligible.length} confirmed competitor${eligible.length === 1 ? '' : 's'}?`,
+    );
+    if (!confirmed) return;
+
+    setActionError(null);
+    setActionSuccess(null);
+    setIsCheckingInAll(true);
+
+    try {
+      const results = await Promise.allSettled(
+        eligible.map((registration) => checkInRegistration(registration.registrationId)),
+      );
+      const successCount = results.filter((result) => result.status === 'fulfilled').length;
+      const failureCount = results.length - successCount;
+
+      if (successCount > 0) {
+        setActionSuccess(`Checked in ${successCount} competitor${successCount === 1 ? '' : 's'} successfully.`);
+      }
+      if (failureCount > 0) {
+        setActionError(
+          `${failureCount} competitor${failureCount === 1 ? '' : 's'} could not be checked in. Please retry the remaining entries.`,
+        );
+      }
+
+      await loadData();
+    } finally {
+      setIsCheckingInAll(false);
     }
   };
 
@@ -475,6 +514,23 @@ export default function RegistrationManagementPage({
 
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             <button
+              type="button"
+              onClick={handleCheckInAll}
+              disabled={!canCheckIn || isCheckingInAll || checkInEligibleRegistrations.length === 0}
+              title={!canCheckIn
+                ? 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'
+                : checkInEligibleRegistrations.length === 0
+                  ? 'No confirmed competitors are waiting for check-in'
+                  : `Check in all ${checkInEligibleRegistrations.length} confirmed competitors`}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-2xs transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isCheckingInAll
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <UserCheck className="h-3.5 w-3.5" />}
+              {isCheckingInAll ? 'Checking In...' : `Check-in All (${checkInEligibleRegistrations.length})`}
+            </button>
+
+            <button
               onClick={() => loadData(true)}
               className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs"
               title="Reload"
@@ -677,9 +733,9 @@ export default function RegistrationManagementPage({
                             <>
                               <button
                                 onClick={() => handleCheckIn(reg.registrationId)}
-                                disabled={!canCheckIn}
+                                disabled={!canCheckIn || isCheckingInAll}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-[10px] font-bold transition shadow-2xs ${
-                                  canCheckIn
+                                  canCheckIn && !isCheckingInAll
                                     ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
                                     : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
                                 }`}
