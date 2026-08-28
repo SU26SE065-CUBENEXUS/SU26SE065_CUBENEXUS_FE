@@ -27,7 +27,7 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     return (decoded?.sub as string) || (decoded?.nameid as string) || '';
   }, []);
 
-  const { state, isLoading, error, refetch } = useOnlineMatchState(matchId);
+  const { state, isLoading, error, refetch, applyWebRtcConnectionUpdate } = useOnlineMatchState(matchId);
 
   const { connection, isConnected } = useOnlineArenaSignalR(matchId, {
     onMatchPhaseUpdated: async () => { await refetch(); },
@@ -49,7 +49,12 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     },
     onTimerDisconnected: async () => { await refetch(); },
     onCameraReadyUpdated: async () => { await refetch(); },
-    onWebRtcConnectionUpdated: async () => { await refetch(); },
+    onWebRtcConnectionUpdated: async (payload) => {
+      // Update the visible checklist synchronously from the realtime payload.
+      // The refetch remains as reconciliation for phase/ready changes.
+      applyWebRtcConnectionUpdate(payload);
+      await refetch();
+    },
     onVideoRecordingStarted: async () => { await refetch(); },
   });
 
@@ -64,12 +69,13 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
 
   const handleWebRtcConnected = useCallback(async () => {
     try {
-      await markWebRtcConnected(matchId);
+      const response = await markWebRtcConnected(matchId);
+      applyWebRtcConnectionUpdate(response);
       await refetch();
     } catch (e) {
       console.error('[Layout] markWebRtcConnected failed:', e);
     }
-  }, [matchId, refetch]);
+  }, [matchId, refetch, applyWebRtcConnectionUpdate]);
 
   /** Activate WebRTC signaling once BOTH players have their timer ready */
   const shouldActivateWebRtc = Boolean(

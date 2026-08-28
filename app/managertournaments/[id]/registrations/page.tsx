@@ -116,13 +116,12 @@ export default function RegistrationManagementPage({
   const maxParticipants = tournament?.maxParticipants ?? 0;
   const tournamentStatus = String(tournament?.statusCode ?? '').toUpperCase();
   const canCheckIn = tournamentStatus === 'CHECKING_IN' || tournamentStatus === 'ONGOING';
+  const checkInEligibleRegistrations = registrations.filter(
+    (registration) => registration.statusCode === 'CONFIRMED' && !registration.checkedInAt,
+  );
   const remainingCapacity = maxParticipants > 0
     ? Math.max(0, maxParticipants - activeRegisteredCount)
     : 20;
-
-  const confirmedUncheckedCompetitors = registrations.filter(
-    r => r.statusCode === 'CONFIRMED' && !r.checkedInAt
-  );
 
   useEffect(() => {
     setDemoCount(String(remainingCapacity > 0 ? remainingCapacity : 1));
@@ -170,7 +169,7 @@ export default function RegistrationManagementPage({
     setActionSuccess(null);
     setIsCheckingInAll(true);
     try {
-      const targets = confirmedUncheckedCompetitors;
+      const targets = checkInEligibleRegistrations;
       if (targets.length === 0) {
         setActionError('No confirmed competitors waiting for check-in.');
         setShowCheckInAllConfirm(false);
@@ -236,9 +235,9 @@ export default function RegistrationManagementPage({
 
     // Header row
     const headers = ['Competitor Name', 'Email', 'User Code', 'Registration Status', 'Check-In Status', 'Checked-In At', 'Registered At', 'Registered Events'];
-    
+
     const rows = filteredRegistrations.map(r => {
-      const eventsStr = r.registeredEvents.map(e => 
+      const eventsStr = r.registeredEvents.map(e =>
         `${e.puzzleTypeName} (${e.statusCode})`
       ).join('; ');
 
@@ -272,7 +271,7 @@ export default function RegistrationManagementPage({
   // ---------- Filter Logic ----------
   const filteredRegistrations = registrations.filter(r => {
     // Search filter
-    const matchesSearch = 
+    const matchesSearch =
       r.competitorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.competitorUserCode.toLowerCase().includes(searchQuery.toLowerCase());
@@ -284,8 +283,8 @@ export default function RegistrationManagementPage({
     const matchesStatus = filterStatus === 'ALL' || r.statusCode === filterStatus;
 
     // Check-in status filter
-    const matchesCheckIn = 
-      filterCheckIn === 'ALL' || 
+    const matchesCheckIn =
+      filterCheckIn === 'ALL' ||
       (filterCheckIn === 'CHECKED_IN' && r.checkedInAt !== null && r.checkedInAt !== undefined) ||
       (filterCheckIn === 'NOT_CHECKED_IN' && (!r.checkedInAt));
 
@@ -439,7 +438,7 @@ export default function RegistrationManagementPage({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           {tournament.events.map(ev => {
-            const count = registrations.filter(r => 
+            const count = registrations.filter(r =>
               r.registeredEvents.some(e => e.eventId === ev.id && e.statusCode === 'REGISTERED')
             ).length;
 
@@ -454,9 +453,9 @@ export default function RegistrationManagementPage({
                 </div>
                 {ev.maxCapacity && (
                   <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
-                    <div 
-                      className={`h-full ${count >= ev.maxCapacity ? 'bg-red-500' : 'bg-indigo-600'}`} 
-                      style={{ width: `${Math.min(100, (count / ev.maxCapacity) * 100)}%` }} 
+                    <div
+                      className={`h-full ${count >= ev.maxCapacity ? 'bg-red-500' : 'bg-indigo-600'}`}
+                      style={{ width: `${Math.min(100, (count / ev.maxCapacity) * 100)}%` }}
                     />
                   </div>
                 )}
@@ -523,18 +522,18 @@ export default function RegistrationManagementPage({
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
             <button
               onClick={() => setShowCheckInAllConfirm(true)}
-              disabled={!canCheckIn || confirmedUncheckedCompetitors.length === 0}
+              disabled={!canCheckIn || checkInEligibleRegistrations.length === 0 || isCheckingInAll}
               title={
                 !canCheckIn
                   ? 'Check-in is available only when tournament status is CHECKING_IN or ONGOING'
-                  : confirmedUncheckedCompetitors.length === 0
+                  : checkInEligibleRegistrations.length === 0
                   ? 'No confirmed competitors waiting for check-in'
-                  : `Check in all ${confirmedUncheckedCompetitors.length} confirmed competitors`
+                  : `Check in all ${checkInEligibleRegistrations.length} confirmed competitors`
               }
               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 h-8 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <UserCheck className="h-3.5 w-3.5" />
-              Check-in All ({confirmedUncheckedCompetitors.length})
+              Check-in All ({checkInEligibleRegistrations.length})
             </button>
 
             <button
@@ -594,13 +593,13 @@ export default function RegistrationManagementPage({
                       });
                     });
                     const roundStationEntries = Array.from(roundStationMap.entries()).sort(([a], [b]) => a - b);
-                    
+
                     return (
                       <tr key={reg.registrationId} className="hover:bg-slate-50 transition border-b border-slate-100">
                         <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-bold">
                           {index + 1}
                         </td>
-                        
+
                         {/* Profile Info */}
                         <td className="px-4 py-3.5 font-bold">
                           <div className="flex items-center gap-3">
@@ -645,12 +644,11 @@ export default function RegistrationManagementPage({
 
                         {/* Registration Status */}
                         <td className="px-4 py-3.5 text-center">
-                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ring-1 ring-inset ${
-                            reg.statusCode === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
-                            reg.statusCode === 'CHECKED_IN' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
-                            reg.statusCode === 'CANCELLED' ? 'bg-red-50 text-red-700 ring-red-200' :
-                            'bg-amber-50 text-amber-700 ring-amber-200'
-                          }`}>
+                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ring-1 ring-inset ${reg.statusCode === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
+                              reg.statusCode === 'CHECKED_IN' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
+                                reg.statusCode === 'CANCELLED' ? 'bg-red-50 text-red-700 ring-red-200' :
+                                  'bg-amber-50 text-amber-700 ring-amber-200'
+                            }`}>
                             {reg.statusCode}
                           </span>
                         </td>
@@ -665,11 +663,10 @@ export default function RegistrationManagementPage({
                               return (
                                 <div
                                   key={ev.registrationEventId}
-                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1 text-xs transition ${
-                                    isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
-                                    isDisqualified ? 'bg-rose-50 border-rose-200 text-rose-700 font-medium' :
-                                    'bg-slate-50 border-slate-200 text-slate-800 shadow-2xs font-medium'
-                                  }`}
+                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1 text-xs transition ${isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
+                                      isDisqualified ? 'bg-rose-50 border-rose-200 text-rose-700 font-medium' :
+                                        'bg-slate-50 border-slate-200 text-slate-800 shadow-2xs font-medium'
+                                    }`}
                                 >
                                   <span className="font-bold text-slate-900">{formatEventLabel(ev)}</span>
                                 </div>
@@ -740,12 +737,11 @@ export default function RegistrationManagementPage({
                             <>
                               <button
                                 onClick={() => handleCheckIn(reg.registrationId)}
-                                disabled={!canCheckIn}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-[10px] font-bold transition shadow-2xs ${
-                                  canCheckIn
+                                disabled={!canCheckIn || isCheckingInAll}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-[10px] font-bold transition shadow-2xs ${canCheckIn && !isCheckingInAll
                                     ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
                                     : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                                }`}
+                                  }`}
                                 title={canCheckIn ? 'Mark Checked-In' : 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'}
                               >
                                 <UserCheck className="h-3.5 w-3.5" /> Check-In
@@ -894,8 +890,8 @@ export default function RegistrationManagementPage({
       <ConfirmModal
         isOpen={showCheckInAllConfirm}
         title="Check-in All Competitors"
-        description={`Check in all ${confirmedUncheckedCompetitors.length} confirmed competitor(s)? This will mark them as checked in for the tournament.`}
-        confirmText={`Check-in All (${confirmedUncheckedCompetitors.length})`}
+        description={`Check in all ${checkInEligibleRegistrations.length} confirmed competitor(s)? This will mark them as checked in for the tournament.`}
+        confirmText={`Check-in All (${checkInEligibleRegistrations.length})`}
         cancelText="Cancel"
         variant="primary"
         isLoading={isCheckingInAll}

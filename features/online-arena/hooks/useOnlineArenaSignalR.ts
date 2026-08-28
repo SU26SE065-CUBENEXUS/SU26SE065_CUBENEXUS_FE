@@ -68,6 +68,32 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();
 
+    conn.onreconnecting(() => {
+      if (!active) return;
+      setIsConnected(false);
+    });
+
+    conn.onreconnected(async () => {
+      if (!active) return;
+      try {
+        // SignalR creates a new connection id after reconnecting, so group
+        // membership must be restored explicitly or realtime UI updates stop.
+        if (matchId) await conn.invoke('JoinMatchRoom', matchId);
+        setConnection(conn);
+        setIsConnected(true);
+        setError(null);
+      } catch (err: any) {
+        console.error('Failed to rejoin match room after reconnect:', err);
+        setError(err?.message || 'Failed to rejoin match room');
+      }
+    });
+
+    conn.onclose(() => {
+      if (!active) return;
+      setIsConnected(false);
+      setConnection(null);
+    });
+
     // Setup event listeners
     const register = (event: string, callbackKey: keyof SignalRCallbacks) => {
       conn.on(event, (payload: any) => {
