@@ -79,6 +79,7 @@ export default function RegistrationManagementPage({
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
   const [isCheckingInAll, setIsCheckingInAll] = useState(false);
+  const [checkingInRegistrationId, setCheckingInRegistrationId] = useState<string | null>(null);
   const [demoCount, setDemoCount] = useState('1');
   const isRegistrationOpen = String(tournament?.statusCode ?? '').toUpperCase() === 'REGISTRATION_OPEN';
 
@@ -113,7 +114,9 @@ export default function RegistrationManagementPage({
   const tournamentStatus = String(tournament?.statusCode ?? '').toUpperCase();
   const canCheckIn = tournamentStatus === 'CHECKING_IN' || tournamentStatus === 'ONGOING';
   const checkInEligibleRegistrations = registrations.filter(
-    (registration) => registration.statusCode === 'CONFIRMED' && !registration.checkedInAt,
+    (registration) =>
+      String(registration.statusCode).toUpperCase() === 'CONFIRMED'
+      && !registration.checkedInAt,
   );
   const remainingCapacity = maxParticipants > 0
     ? Math.max(0, maxParticipants - activeRegisteredCount)
@@ -149,14 +152,25 @@ export default function RegistrationManagementPage({
   };
 
   const handleCheckIn = async (regId: string) => {
+    if (checkingInRegistrationId || isCheckingInAll) return;
     setActionError(null);
     setActionSuccess(null);
+    setCheckingInRegistrationId(regId);
     try {
       await checkInRegistration(regId);
+      // Remove this competitor from the remaining batch immediately. The GET
+      // below then reconciles the optimistic state with the backend.
+      setRegistrations((current) => current.map((registration) =>
+        registration.registrationId === regId
+          ? { ...registration, statusCode: 'CHECKED_IN', checkedInAt: new Date().toISOString() }
+          : registration
+      ));
       setActionSuccess('Competitor checked in successfully.');
-      loadData();
+      await loadData();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to check in competitor');
+    } finally {
+      setCheckingInRegistrationId(null);
     }
   };
 
@@ -165,7 +179,7 @@ export default function RegistrationManagementPage({
 
     const eligible = [...checkInEligibleRegistrations];
     const confirmed = window.confirm(
-      `Check in all ${eligible.length} confirmed competitor${eligible.length === 1 ? '' : 's'}?`,
+      `Check in the remaining ${eligible.length} confirmed competitor${eligible.length === 1 ? '' : 's'}? Already checked-in competitors will be skipped.`,
     );
     if (!confirmed) return;
 
@@ -521,13 +535,13 @@ export default function RegistrationManagementPage({
                 ? 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'
                 : checkInEligibleRegistrations.length === 0
                   ? 'No confirmed competitors are waiting for check-in'
-                  : `Check in all ${checkInEligibleRegistrations.length} confirmed competitors`}
+                  : `Check in the remaining ${checkInEligibleRegistrations.length} confirmed competitors`}
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-2xs transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isCheckingInAll
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 : <UserCheck className="h-3.5 w-3.5" />}
-              {isCheckingInAll ? 'Checking In...' : `Check-in All (${checkInEligibleRegistrations.length})`}
+              {isCheckingInAll ? 'Checking In...' : `Check-in Remaining (${checkInEligibleRegistrations.length})`}
             </button>
 
             <button
@@ -729,19 +743,22 @@ export default function RegistrationManagementPage({
                             </>
                           )}
 
-                          {(reg.statusCode === 'CONFIRMED') && (
+                          {(reg.statusCode === 'CONFIRMED' && !reg.checkedInAt) && (
                             <>
                               <button
                                 onClick={() => handleCheckIn(reg.registrationId)}
-                                disabled={!canCheckIn || isCheckingInAll}
+                                disabled={!canCheckIn || isCheckingInAll || checkingInRegistrationId !== null}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-[10px] font-bold transition shadow-2xs ${
-                                  canCheckIn && !isCheckingInAll
+                                  canCheckIn && !isCheckingInAll && checkingInRegistrationId === null
                                     ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
                                     : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
                                 }`}
                                 title={canCheckIn ? 'Mark Checked-In' : 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'}
                               >
-                                <UserCheck className="h-3.5 w-3.5" /> Check-In
+                                {checkingInRegistrationId === reg.registrationId
+                                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  : <UserCheck className="h-3.5 w-3.5" />}
+                                {checkingInRegistrationId === reg.registrationId ? 'Checking In...' : 'Check-In'}
                               </button>
                               <button
                                 onClick={() => handleCancel(reg.registrationId)}

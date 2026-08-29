@@ -30,6 +30,7 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
   const { state, isLoading, error, refetch, applyWebRtcConnectionUpdate } = useOnlineMatchState(matchId);
 
   const { connection, isConnected } = useOnlineArenaSignalR(matchId, {
+    onReconnected: () => { void refetch(); },
     onMatchPhaseUpdated: async () => { await refetch(); },
     onCountdownStarted: async () => { await refetch(); },
     onInspectionStarted: async () => { await refetch(); },

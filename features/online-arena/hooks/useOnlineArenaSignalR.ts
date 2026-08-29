@@ -5,6 +5,7 @@ import * as signalR from '@microsoft/signalr';
 import { getAccessToken, API_BASE_URL } from '@/lib/api/config';
 
 interface SignalRCallbacks {
+  onReconnected?: () => void;
   onMatchmakingQueued?: (payload: any) => void;
   onMatchmakingFound?: (payload: any) => void;
   onMatchFound?: (payload: any) => void;
@@ -82,6 +83,7 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
         setConnection(conn);
         setIsConnected(true);
         setError(null);
+        callbacksRef.current?.onReconnected?.();
       } catch (err: any) {
         console.error('Failed to rejoin match room after reconnect:', err);
         setError(err?.message || 'Failed to rejoin match room');

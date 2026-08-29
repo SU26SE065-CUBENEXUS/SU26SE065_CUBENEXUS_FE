@@ -83,6 +83,17 @@ export default function SolvingPage() {
     state?.serverNow ?? new Date().toISOString()
   );
 
+  // SignalR is the primary update channel. Once the visible deadline reaches
+  // zero, briefly poll as a fallback so a missed timeout event cannot leave
+  // either player stuck on the solving screen until they reload the page.
+  useEffect(() => {
+    if (countdownStr !== '0:00' || state?.phase !== 'SOLVING') return;
+
+    void refetch();
+    const id = window.setInterval(() => { void refetch(); }, 3000);
+    return () => window.clearInterval(id);
+  }, [countdownStr, state?.phase, refetch]);
+
   if (!state || !myState) return null;
 
   const formatTime = (ms: number) => {
