@@ -6,6 +6,7 @@ import { getTournamentById, getTournamentRegistrations, generateDemoParticipants
 import type { TournamentDetailDto, TournamentRegistrationDetailDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import { StatusBadge } from '@/components/tournament-manager/StatusBadge';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
   ChevronRight,
   Trophy,
@@ -78,7 +79,6 @@ export default function RegistrationManagementPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
-  const [isCheckingInAll, setIsCheckingInAll] = useState(false);
   const [checkingInRegistrationId, setCheckingInRegistrationId] = useState<string | null>(null);
   const [demoCount, setDemoCount] = useState('1');
   const isRegistrationOpen = String(tournament?.statusCode ?? '').toUpperCase() === 'REGISTRATION_OPEN';
@@ -86,6 +86,10 @@ export default function RegistrationManagementPage({
   // QR Modal State
   const [selectedRegForQr, setSelectedRegForQr] = useState<TournamentRegistrationDetailDto | null>(null);
   const [copiedToken, setCopiedToken] = useState(false);
+
+  // Check-in All Modal State
+  const [showCheckInAllConfirm, setShowCheckInAllConfirm] = useState(false);
+  const [isCheckingInAll, setIsCheckingInAll] = useState(false);
 
   // ---------- Load Data ----------
   const loadData = useCallback(async (showLoader = false) => {
@@ -178,34 +182,40 @@ export default function RegistrationManagementPage({
     if (!canCheckIn || isCheckingInAll || checkInEligibleRegistrations.length === 0) return;
 
     const eligible = [...checkInEligibleRegistrations];
-    const confirmed = window.confirm(
-      `Check in the remaining ${eligible.length} confirmed competitor${eligible.length === 1 ? '' : 's'}? Already checked-in competitors will be skipped.`,
-    );
-    if (!confirmed) return;
-
     setActionError(null);
     setActionSuccess(null);
     setIsCheckingInAll(true);
-
     try {
-      const results = await Promise.allSettled(
-        eligible.map((registration) => checkInRegistration(registration.registrationId)),
-      );
-      const successCount = results.filter((result) => result.status === 'fulfilled').length;
-      const failureCount = results.length - successCount;
-
-      if (successCount > 0) {
-        setActionSuccess(`Checked in ${successCount} competitor${successCount === 1 ? '' : 's'} successfully.`);
-      }
-      if (failureCount > 0) {
-        setActionError(
-          `${failureCount} competitor${failureCount === 1 ? '' : 's'} could not be checked in. Please retry the remaining entries.`,
-        );
+      const targets = eligible;
+      if (targets.length === 0) {
+        setActionError('No confirmed competitors waiting for check-in.');
+        setShowCheckInAllConfirm(false);
+        return;
       }
 
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const reg of targets) {
+        try {
+          await checkInRegistration(reg.registrationId);
+          successCount++;
+        } catch {
+          failCount++;
+        }
+      }
+
+      if (failCount === 0) {
+        setActionSuccess(`Checked in all ${successCount} confirmed competitors successfully.`);
+      } else {
+        setActionSuccess(`Checked in ${successCount} competitor(s). (${failCount} failed)`);
+      }
       await loadData();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to check in competitors');
     } finally {
       setIsCheckingInAll(false);
+      setShowCheckInAllConfirm(false);
     }
   };
 
@@ -242,9 +252,9 @@ export default function RegistrationManagementPage({
 
     // Header row
     const headers = ['Competitor Name', 'Email', 'User Code', 'Registration Status', 'Check-In Status', 'Checked-In At', 'Registered At', 'Registered Events'];
-    
+
     const rows = filteredRegistrations.map(r => {
-      const eventsStr = r.registeredEvents.map(e => 
+      const eventsStr = r.registeredEvents.map(e =>
         `${e.puzzleTypeName} (${e.statusCode})`
       ).join('; ');
 
@@ -278,7 +288,7 @@ export default function RegistrationManagementPage({
   // ---------- Filter Logic ----------
   const filteredRegistrations = registrations.filter(r => {
     // Search filter
-    const matchesSearch = 
+    const matchesSearch =
       r.competitorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.competitorUserCode.toLowerCase().includes(searchQuery.toLowerCase());
@@ -290,8 +300,8 @@ export default function RegistrationManagementPage({
     const matchesStatus = filterStatus === 'ALL' || r.statusCode === filterStatus;
 
     // Check-in status filter
-    const matchesCheckIn = 
-      filterCheckIn === 'ALL' || 
+    const matchesCheckIn =
+      filterCheckIn === 'ALL' ||
       (filterCheckIn === 'CHECKED_IN' && r.checkedInAt !== null && r.checkedInAt !== undefined) ||
       (filterCheckIn === 'NOT_CHECKED_IN' && (!r.checkedInAt));
 
@@ -445,7 +455,7 @@ export default function RegistrationManagementPage({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           {tournament.events.map(ev => {
-            const count = registrations.filter(r => 
+            const count = registrations.filter(r =>
               r.registeredEvents.some(e => e.eventId === ev.id && e.statusCode === 'REGISTERED')
             ).length;
 
@@ -460,9 +470,9 @@ export default function RegistrationManagementPage({
                 </div>
                 {ev.maxCapacity && (
                   <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
-                    <div 
-                      className={`h-full ${count >= ev.maxCapacity ? 'bg-red-500' : 'bg-indigo-600'}`} 
-                      style={{ width: `${Math.min(100, (count / ev.maxCapacity) * 100)}%` }} 
+                    <div
+                      className={`h-full ${count >= ev.maxCapacity ? 'bg-red-500' : 'bg-indigo-600'}`}
+                      style={{ width: `${Math.min(100, (count / ev.maxCapacity) * 100)}%` }}
                     />
                   </div>
                 )}
@@ -526,17 +536,17 @@ export default function RegistrationManagementPage({
             </select>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end flex-wrap sm:flex-nowrap">
             <button
               type="button"
-              onClick={handleCheckInAll}
+              onClick={() => setShowCheckInAllConfirm(true)}
               disabled={!canCheckIn || isCheckingInAll || checkInEligibleRegistrations.length === 0}
               title={!canCheckIn
                 ? 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'
                 : checkInEligibleRegistrations.length === 0
                   ? 'No confirmed competitors are waiting for check-in'
                   : `Check in the remaining ${checkInEligibleRegistrations.length} confirmed competitors`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 shadow-2xs transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-2xs transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isCheckingInAll
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -546,7 +556,7 @@ export default function RegistrationManagementPage({
 
             <button
               onClick={() => loadData(true)}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white h-8 w-8 text-slate-600 hover:bg-slate-50 transition shadow-2xs cursor-pointer"
               title="Reload"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -555,7 +565,7 @@ export default function RegistrationManagementPage({
             <button
               onClick={handleExportCSV}
               disabled={registrations.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 h-8 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 h-8 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition shadow-2xs disabled:opacity-50 cursor-pointer"
             >
               Export CSV
             </button>
@@ -601,13 +611,13 @@ export default function RegistrationManagementPage({
                       });
                     });
                     const roundStationEntries = Array.from(roundStationMap.entries()).sort(([a], [b]) => a - b);
-                    
+
                     return (
                       <tr key={reg.registrationId} className="hover:bg-slate-50 transition border-b border-slate-100">
                         <td className="px-4 py-3.5 text-center text-xs text-slate-700 font-bold">
                           {index + 1}
                         </td>
-                        
+
                         {/* Profile Info */}
                         <td className="px-4 py-3.5 font-bold">
                           <div className="flex items-center gap-3">
@@ -652,12 +662,11 @@ export default function RegistrationManagementPage({
 
                         {/* Registration Status */}
                         <td className="px-4 py-3.5 text-center">
-                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ring-1 ring-inset ${
-                            reg.statusCode === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
-                            reg.statusCode === 'CHECKED_IN' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
-                            reg.statusCode === 'CANCELLED' ? 'bg-red-50 text-red-700 ring-red-200' :
-                            'bg-amber-50 text-amber-700 ring-amber-200'
-                          }`}>
+                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ring-1 ring-inset ${reg.statusCode === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' :
+                              reg.statusCode === 'CHECKED_IN' ? 'bg-blue-50 text-blue-700 ring-blue-200' :
+                                reg.statusCode === 'CANCELLED' ? 'bg-red-50 text-red-700 ring-red-200' :
+                                  'bg-amber-50 text-amber-700 ring-amber-200'
+                            }`}>
                             {reg.statusCode}
                           </span>
                         </td>
@@ -672,11 +681,10 @@ export default function RegistrationManagementPage({
                               return (
                                 <div
                                   key={ev.registrationEventId}
-                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1 text-xs transition ${
-                                    isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
-                                    isDisqualified ? 'bg-rose-50 border-rose-200 text-rose-700 font-medium' :
-                                    'bg-slate-50 border-slate-200 text-slate-800 shadow-2xs font-medium'
-                                  }`}
+                                  className={`rounded-lg border px-2.5 py-1 flex items-center gap-1 text-xs transition ${isWithdrawn ? 'bg-slate-100 border-dashed border-slate-300 text-slate-400 line-through' :
+                                      isDisqualified ? 'bg-rose-50 border-rose-200 text-rose-700 font-medium' :
+                                        'bg-slate-50 border-slate-200 text-slate-800 shadow-2xs font-medium'
+                                    }`}
                                 >
                                   <span className="font-bold text-slate-900">{formatEventLabel(ev)}</span>
                                 </div>
@@ -752,7 +760,7 @@ export default function RegistrationManagementPage({
                                   canCheckIn && !isCheckingInAll && checkingInRegistrationId === null
                                     ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'
                                     : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                                }`}
+                                  }`}
                                 title={canCheckIn ? 'Mark Checked-In' : 'Check-in is available only when the tournament is CHECKING_IN or ONGOING'}
                               >
                                 {checkingInRegistrationId === reg.registrationId
@@ -899,6 +907,19 @@ export default function RegistrationManagementPage({
           </div>
         </div>
       )}
+
+      {/* Confirm Modal: Check-in All */}
+      <ConfirmModal
+        isOpen={showCheckInAllConfirm}
+        title="Check-in Remaining Competitors"
+        description={`Check in the remaining ${checkInEligibleRegistrations.length} confirmed competitor(s)? Competitors who are already checked in will be skipped.`}
+        confirmText={`Check-in Remaining (${checkInEligibleRegistrations.length})`}
+        cancelText="Cancel"
+        variant="primary"
+        isLoading={isCheckingInAll}
+        onConfirm={handleCheckInAll}
+        onClose={() => setShowCheckInAllConfirm(false)}
+      />
     </div>
   );
 }
