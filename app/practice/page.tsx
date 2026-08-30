@@ -124,7 +124,7 @@ export default function PracticePage() {
         setSessionSummary(details);
         setSolvesList(details.solves);
       }
-    } catch (_) {}
+    } catch (_) { }
   }, []);
 
   // ── SignalR Instant Real-time Synchronization ──
@@ -151,7 +151,7 @@ export default function PracticePage() {
     },
     onPracticeAttemptUpdated: async (attempt: PracticeAttemptResponseDto) => {
       console.log('[Practice SignalR] Attempt updated:', attempt);
-      
+
       const stateName = attempt.state;
       const activeTouchStates = ['HoldingHands', 'Ready', 'Solving'];
       if (activeTouchStates.includes(stateName)) {
@@ -285,12 +285,12 @@ export default function PracticePage() {
         const details = await getPracticeSessionDetail(active.id);
         setSessionSummary(details);
         setSolvesList(details.solves || []);
-        
+
         // Check for pending current attempt; if none, create one to show scramble
         let attempt: any = null;
         try {
           attempt = await getCurrentPracticeAttempt(active.id);
-        } catch (_) {}
+        } catch (_) { }
 
         if (attempt) {
           setCurrentAttempt(attempt);
@@ -584,26 +584,25 @@ export default function PracticePage() {
                         currentAttempt?.state === 'Solving'
                           ? '#06d6a0'
                           : currentAttempt?.state === 'Ready'
-                          ? '#06d6a0'
-                          : currentAttempt?.state === 'HoldingHands'
-                          ? '#ef4444'
-                          : (currentAttempt?.state === 'Completed' || currentAttempt?.state === 'Stopped' || (frozenTimeMs !== null && currentAttempt?.state !== 'Scrambled'))
-                          ? '#06d6a0'
-                          : '#ca8a04',
+                            ? '#06d6a0'
+                            : currentAttempt?.state === 'HoldingHands'
+                              ? '#ef4444'
+                              : (currentAttempt?.state === 'Completed' || currentAttempt?.state === 'Stopped' || (frozenTimeMs !== null && currentAttempt?.state !== 'Scrambled'))
+                                ? '#06d6a0'
+                                : '#ca8a04',
                     }}
-                    className={`font-mono text-6xl sm:text-8xl font-black transition-all duration-150 select-none ${
-                      currentAttempt?.state === 'Ready' ? 'animate-pulse' : ''
-                    }`}
+                    className={`font-mono text-6xl sm:text-8xl font-black transition-all duration-150 select-none ${currentAttempt?.state === 'Ready' ? 'animate-pulse' : ''
+                      }`}
                   >
                     {currentAttempt?.state === 'Solving' && liveTimeMs !== null
                       ? formatTime(liveTimeMs)
                       : currentAttempt?.state === 'Solving'
-                      ? '0.00s'
-                      : (currentAttempt?.state === 'HoldingHands' || currentAttempt?.state === 'Ready' || currentAttempt?.state === 'Scrambled')
-                      ? '0.00s'
-                      : (currentAttempt?.state === 'Completed' || currentAttempt?.state === 'Stopped' || frozenTimeMs !== null)
-                      ? formatTime(currentAttempt?.displayTimeMs ?? currentAttempt?.timeMs ?? frozenTimeMs ?? (solvesList.length > 0 ? solvesList[solvesList.length - 1].displayTimeMs : 0))
-                      : '0.00s'}
+                        ? '0.00s'
+                        : (currentAttempt?.state === 'HoldingHands' || currentAttempt?.state === 'Ready' || currentAttempt?.state === 'Scrambled')
+                          ? '0.00s'
+                          : (currentAttempt?.state === 'Completed' || currentAttempt?.state === 'Stopped' || frozenTimeMs !== null)
+                            ? formatTime(currentAttempt?.displayTimeMs ?? currentAttempt?.timeMs ?? frozenTimeMs ?? (solvesList.length > 0 ? solvesList[solvesList.length - 1].displayTimeMs : 0))
+                            : '0.00s'}
                   </div>
 
                   {/* Mobile state instruction banner */}
@@ -648,7 +647,7 @@ export default function PracticePage() {
                     variant="outline"
                     className="border-border text-xs px-3 py-1.5 h-auto text-muted-foreground hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 flex items-center gap-1.5 bg-transparent rounded-lg"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" /> End Session
+                    <XCircle className="h-3.5 w-3.5" /> End Practice
                   </Button>
                 </div>
               </Card>
@@ -700,9 +699,8 @@ export default function PracticePage() {
                             </div>
                             <div className="text-right flex-shrink-0">
                               <span
-                                className={`text-xs font-black block ${
-                                  solve.penaltyCode === 'DNF' ? 'text-red-500' : 'text-foreground'
-                                }`}
+                                className={`text-xs font-black block ${solve.penaltyCode === 'DNF' ? 'text-red-500' : 'text-foreground'
+                                  }`}
                               >
                                 {solve.penaltyCode === 'DNF' ? 'DNF' : formatTime(solve.displayTimeMs)}
                               </span>
@@ -731,7 +729,7 @@ export default function PracticePage() {
                     <Zap className="h-3.5 w-3.5 text-amber-500" /> Solve Trend (Time Progression)
                   </h3>
                   <div className="pt-2">
-                     <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-24 overflow-visible">
+                    <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-24 overflow-visible">
                       <polyline
                         fill="none"
                         stroke="#ca8a04"
