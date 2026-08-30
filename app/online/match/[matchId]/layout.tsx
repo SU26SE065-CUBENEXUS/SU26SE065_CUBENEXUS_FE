@@ -51,10 +51,11 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     onTimerDisconnected: async () => { await refetch(); },
     onCameraReadyUpdated: async () => { await refetch(); },
     onWebRtcConnectionUpdated: async (payload) => {
-      // Update the visible checklist synchronously from the realtime payload.
-      // The refetch remains as reconciliation for phase/ready changes.
+      // Apply optimistically first for instant UI update.
       applyWebRtcConnectionUpdate(payload);
       await refetch();
+      // Re-apply after refetch — guard against stale DB data overwriting the optimistic update.
+      applyWebRtcConnectionUpdate(payload);
     },
     onVideoRecordingStarted: async () => { await refetch(); },
     onMatchJoined: async () => {
@@ -75,8 +76,12 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
   const handleWebRtcConnected = useCallback(async () => {
     try {
       const response = await markWebRtcConnected(matchId);
+      // Apply optimistically for instant UI update (B sees "connected" immediately).
       applyWebRtcConnectionUpdate(response);
       await refetch();
+      // Re-apply after refetch — prevent stale DB read from overwriting the flag
+      // in the brief window before the DB write is visible to subsequent GET requests.
+      applyWebRtcConnectionUpdate(response);
     } catch (e) {
       console.error('[Layout] markWebRtcConnected failed:', e);
     }
