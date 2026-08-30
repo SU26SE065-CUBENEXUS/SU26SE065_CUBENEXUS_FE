@@ -424,8 +424,8 @@ export default function AdminFraudReportReviewDetailPage() {
             player1DurationSeconds={p1Record?.durationSeconds}
             player2DurationSeconds={p2Record?.durationSeconds}
             defaultTarget={report.reportedUserId === match.player1Id ? 'player1' : 'player2'}
-            timestampSeconds={parseSmartSeconds(report.timestampText, report.timestampSeconds) || 75}
-            timestampText={report.timestampText || '01:15'}
+            timestampSeconds={parseSmartSeconds(report.timestampText, report.timestampSeconds)}
+            timestampText={report.timestampText || '00:00'}
             onSeekVideo={(sec) => {
               const videoTags = document.querySelectorAll('video');
               videoTags.forEach(v => {
