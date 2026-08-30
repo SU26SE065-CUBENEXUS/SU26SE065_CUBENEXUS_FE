@@ -193,9 +193,21 @@ export async function completeEvent(eventId: string): Promise<unknown> {
   });
 }
 
+export interface GroupScrambleDto {
+  id: string;
+  scrambleSetId?: string;
+  solveNumber: number;
+  puzzleTypeId: string;
+  puzzleCode?: string;
+  puzzleName?: string;
+  sequence: string;
+  sortOrder: number;
+  isExtra?: boolean;
+}
+
 /** GET /api/tournament-operation/groups/{groupId}/scrambles — Lấy danh sách Scramble của Group */
-export async function getGroupScrambles(groupId: string): Promise<Array<{ id: string; solveNumber: number; puzzleTypeId: string; sequence: string; sortOrder: number }>> {
-  return apiFetch<Array<{ id: string; solveNumber: number; puzzleTypeId: string; sequence: string; sortOrder: number }>>(
+export async function getGroupScrambles(groupId: string): Promise<GroupScrambleDto[]> {
+  return apiFetch<GroupScrambleDto[]>(
     `/api/tournament-operation/groups/${groupId}/scrambles`
   );
 }

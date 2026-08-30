@@ -38,6 +38,7 @@ import {
   Check,
   ShieldCheck,
   X,
+  Copy,
 } from 'lucide-react';
 
 function msToDisplay(ms: number | null | undefined): string {
@@ -91,6 +92,7 @@ function EventGroupPanel({
   const [groupScrambles, setGroupScrambles] = useState<Record<string, any[]>>({});
   const [isScramblesLoading, setIsScramblesLoading] = useState(false);
   const [offlineScrambleMode, setOfflineScrambleMode] = useState<'MANUAL' | 'AUTO' | null>(null);
+  const [copiedScrambleId, setCopiedScrambleId] = useState<string | null>(null);
 
   // Modal open states
   const [isGenerateGroupsOpen, setIsGenerateGroupsOpen] = useState(false);
@@ -596,12 +598,63 @@ function EventGroupPanel({
                             </div>
                           ) : scrambles && scrambles.length > 0 ? (
                             <div className="space-y-2">
-                              {scrambles.map((s: any) => (
-                                <div key={s.id} className="text-xs flex flex-col sm:flex-row items-center justify-between gap-2 p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
-                                  <span className="font-bold text-indigo-600 min-w-[70px] font-mono">Solve #{s.solveNumber}:</span>
-                                  <span className="font-mono break-all text-slate-900 font-semibold select-all tracking-wider text-xs">{s.sequence}</span>
-                                </div>
-                              ))}
+                              {scrambles.map((s: any, idx: number) => {
+                                const isMedley = event.eventFormatCode === 'MEDLEY';
+                                const puzzleLabel = s.puzzleName || s.puzzleCode || 'Rubik';
+                                const isCopied = copiedScrambleId === s.id;
+
+                                return (
+                                  <div
+                                    key={s.id || idx}
+                                    className="text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50/70 hover:bg-slate-100/70 rounded-xl border border-slate-200 transition"
+                                  >
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold text-indigo-700 font-mono text-xs px-2.5 py-1 rounded-lg bg-indigo-100/70 border border-indigo-200 shadow-2xs">
+                                        Solve #{s.solveNumber}
+                                      </span>
+
+                                      {puzzleLabel && (
+                                        <span className="inline-flex items-center gap-1 font-bold text-slate-800 text-[11px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                          {puzzleLabel}
+                                          {s.puzzleCode && s.puzzleName && s.puzzleName !== s.puzzleCode && (
+                                            <span className="text-slate-400 font-normal">({s.puzzleCode})</span>
+                                          )}
+                                        </span>
+                                      )}
+
+                                      {isMedley && s.sortOrder > 0 && (
+                                        <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">
+                                          Step #{s.sortOrder}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-1 sm:justify-end w-full sm:w-auto">
+                                      <span className="font-mono break-all text-slate-900 font-bold select-all tracking-wider text-xs bg-white px-3 py-1.5 rounded-lg border border-slate-200 flex-1 sm:flex-none shadow-2xs">
+                                        {s.sequence}
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          if (s.sequence) {
+                                            navigator.clipboard.writeText(s.sequence);
+                                            setCopiedScrambleId(s.id);
+                                            setTimeout(() => setCopiedScrambleId(null), 2000);
+                                          }
+                                        }}
+                                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-white text-slate-500 hover:text-slate-900 transition cursor-pointer shrink-0 shadow-2xs"
+                                        title="Copy Scramble Sequence"
+                                      >
+                                        {isCopied ? (
+                                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                        ) : (
+                                          <Copy className="h-3.5 w-3.5" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : scrambles ? (
                             <p className="text-xs text-slate-500 italic py-2">
