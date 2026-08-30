@@ -3,13 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ShieldAlert, Clock, AlertTriangle, Send, Loader2, CheckCircle2 } from 'lucide-react';
-import { createFraudReport, CreateFraudReportPayload } from '../api/onlineArenaApi';
+import {
+  createFraudReport,
+  CreateFraudReportPayload,
+  getMatchRecordingPlaybackUrls,
+} from '../api/onlineArenaApi';
+import {
+  formatDuration,
+  getMatchDurationSeconds,
+  parseFraudTimestamp,
+  validateFraudTimestamp,
+} from '../utils/fraudTimestamp';
 
 interface FraudReportModalProps {
   matchId: string;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /** Max match / recording duration in seconds. If omitted, modal fetches playback URLs. */
+  maxDurationSeconds?: number | null;
 }
 
 const FRAUD_TYPES = [
@@ -21,75 +33,74 @@ const FRAUD_TYPES = [
   { id: 'OTHER', label: 'Other (Other suspicious behavior)' },
 ];
 
-export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudReportModalProps) {
+export function FraudReportModal({
+  matchId,
+  isOpen,
+  onClose,
+  onSuccess,
+  maxDurationSeconds: maxDurationProp,
+}: FraudReportModalProps) {
   const [fraudType, setFraudType] = useState<string>('HIDDEN_CUBE');
-  const [timestampText, setTimestampText] = useState<string>('01:15');
+  const [timestampText, setTimestampText] = useState<string>('00:00');
   const [description, setDescription] = useState<string>('');
-  
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [mounted, setMounted] = useState(false);
+  const [resolvedMaxDuration, setResolvedMaxDuration] = useState<number | null>(
+    typeof maxDurationProp === 'number' && maxDurationProp > 0 ? maxDurationProp : null
+  );
+  const [isLoadingDuration, setIsLoadingDuration] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setFraudType('HIDDEN_CUBE');
+    setTimestampText('00:00');
+    setDescription('');
+    setError(null);
+    setIsSuccess(false);
+
+    if (typeof maxDurationProp === 'number' && maxDurationProp > 0) {
+      setResolvedMaxDuration(maxDurationProp);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingDuration(true);
+    getMatchRecordingPlaybackUrls(matchId)
+      .then((data) => {
+        if (cancelled) return;
+        setResolvedMaxDuration(getMatchDurationSeconds(data.recordings));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setResolvedMaxDuration(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingDuration(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, matchId, maxDurationProp]);
+
+  useEffect(() => {
+    if (typeof maxDurationProp === 'number' && maxDurationProp > 0) {
+      setResolvedMaxDuration(maxDurationProp);
+    }
+  }, [maxDurationProp]);
+
   if (!isOpen || !mounted) return null;
 
-    const parseTimestampSeconds = (text: string): { seconds: number; formatted: string } => {
-    if (!text || !text.trim()) return { seconds: 0, formatted: '00:00' };
-    const raw = text.trim().toLowerCase();
-
-    // 1. MM:SS or HH:MM:SS format (01:15, 1:15, 0:45)
-    if (raw.includes(':')) {
-      const parts = raw.split(':').map((p) => parseInt(p.trim(), 10) || 0);
-      if (parts.length === 2) {
-        const sec = parts[0] * 60 + parts[1];
-        const m = Math.floor(sec / 60).toString().padStart(2, '0');
-        const s = (sec % 60).toString().padStart(2, '0');
-        return { seconds: sec, formatted: `${m}:${s}` };
-      }
-      if (parts.length === 3) {
-        const sec = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        const m = Math.floor(sec / 60).toString().padStart(2, '0');
-        const s = (sec % 60).toString().padStart(2, '0');
-        return { seconds: sec, formatted: `${m}:${s}` };
-      }
-    }
-
-    // 2. Natural language format (1 min 15 sec, 1m 15s, 75 sec, 75s)
-    const minMatch = raw.match(/(\d+)\s*(?:min|m|p|phút|phut)/);
-    const secMatch = raw.match(/(\d+)\s*(?:sec|s|giây|giay)/);
-
-    let totalSec = 0;
-    let hasMatch = false;
-
-    if (minMatch) {
-      totalSec += parseInt(minMatch[1], 10) * 60;
-      hasMatch = true;
-    }
-    if (secMatch) {
-      totalSec += parseInt(secMatch[1], 10);
-      hasMatch = true;
-    }
-
-    if (hasMatch) {
-      const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
-      const s = (totalSec % 60).toString().padStart(2, '0');
-      return { seconds: totalSec, formatted: `${m}:${s}` };
-    }
-
-    // 3. Plain number input (e.g. 75 or 90)
-    const num = parseInt(raw.replace(/\D/g, ''), 10);
-    if (!isNaN(num) && num > 0) {
-      const m = Math.floor(num / 60).toString().padStart(2, '0');
-      const s = (num % 60).toString().padStart(2, '0');
-      return { seconds: num, formatted: `${m}:${s}` };
-    }
-
-    return { seconds: 0, formatted: '00:00' };
-  };
+  const parsed = parseFraudTimestamp(timestampText);
+  const timestampValidation = validateFraudTimestamp(parsed.seconds, resolvedMaxDuration);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,10 +109,15 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
       return;
     }
 
+    const validation = validateFraudTimestamp(parsed.seconds, resolvedMaxDuration);
+    if (!validation.valid) {
+      setError(validation.error || 'Please enter a valid timestamp within the match duration.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
-    const parsed = parseTimestampSeconds(timestampText);
     const payload: CreateFraudReportPayload = {
       fraudType,
       timestampText: parsed.formatted,
@@ -194,19 +210,41 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
                 <Clock className="absolute left-3.5 top-3 h-4 w-4 text-zinc-400" />
                 <input
                   type="text"
-                  placeholder="01:15 or 1 min 15 sec"
+                  placeholder="00:20 or 20 sec"
                   value={timestampText}
-                  onChange={(e) => setTimestampText(e.target.value)}
+                  onChange={(e) => {
+                    setTimestampText(e.target.value);
+                    setError(null);
+                  }}
                   className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                 />
               </div>
+              {resolvedMaxDuration != null && (
+                <p className="text-[11px] text-zinc-500 font-medium">
+                  Valid range: <span className="font-mono font-bold text-zinc-700">00:00 – {formatDuration(resolvedMaxDuration)}</span>
+                </p>
+              )}
+              {isLoadingDuration && (
+                <p className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Loading match duration...
+                </p>
+              )}
               {timestampText.trim() && (
-                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 font-mono pt-0.5">
-                  <span>⏱️ Standardized:</span>
-                  <span className="font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
-                    {parseTimestampSeconds(timestampText).formatted} ({parseTimestampSeconds(timestampText).seconds} seconds)
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-500 font-mono pt-0.5">
+                  <span>Standardized:</span>
+                  <span
+                    className={`font-bold px-1.5 py-0.5 rounded border ${
+                      timestampValidation.valid
+                        ? 'text-orange-600 bg-orange-50 border-orange-200'
+                        : 'text-rose-600 bg-rose-50 border-rose-200'
+                    }`}
+                  >
+                    {parsed.formatted} ({parsed.seconds} seconds)
                   </span>
                 </div>
+              )}
+              {!timestampValidation.valid && timestampText.trim() && resolvedMaxDuration != null && (
+                <p className="text-[11px] text-rose-600 font-semibold">{timestampValidation.error}</p>
               )}
             </div>
 
@@ -217,7 +255,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
               </label>
               <textarea
                 rows={3}
-                placeholder="Example: Opponent hid the cube under the table edge from 01:15 to 01:22..."
+                placeholder="Example: Opponent hid the cube under the table edge from 00:15 to 00:22..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors resize-none"
@@ -244,7 +282,7 @@ export function FraudReportModal({ matchId, isOpen, onClose, onSuccess }: FraudR
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingDuration || !timestampValidation.valid}
                 className="w-2/3 py-3 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-black text-xs rounded-xl uppercase tracking-wider shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 border-none"
               >
                 {isSubmitting ? (
