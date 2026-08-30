@@ -57,6 +57,10 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
       await refetch();
     },
     onVideoRecordingStarted: async () => { await refetch(); },
+    onMatchJoined: async () => {
+      console.log('[SignalR] MatchJoined event received! Refetching match state...');
+      await refetch();
+    },
   });
 
   // ── WebRTC props derived from match state ─────────────────────────────────

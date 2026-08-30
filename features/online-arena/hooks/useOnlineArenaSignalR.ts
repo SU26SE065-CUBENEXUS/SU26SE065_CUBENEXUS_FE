@@ -39,6 +39,7 @@ interface SignalRCallbacks {
   onCameraReadyUpdated?: (payload: any) => void;
   onWebRtcConnectionUpdated?: (payload: any) => void;
   onVideoRecordingStarted?: (payload: any) => void;
+  onMatchJoined?: (payload: any) => void;
 }
 
 export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallbacks) {
@@ -138,6 +139,7 @@ export function useOnlineArenaSignalR(matchId?: string, callbacks?: SignalRCallb
     register('CameraReadyUpdated', 'onCameraReadyUpdated');
     register('WebRtcConnectionUpdated', 'onWebRtcConnectionUpdated');
     register('VideoRecordingStarted', 'onVideoRecordingStarted');
+    register('MatchJoined', 'onMatchJoined');
 
     // WebRTC signaling
     register('WebRtcOfferReceived', 'onWebRtcOfferReceived');

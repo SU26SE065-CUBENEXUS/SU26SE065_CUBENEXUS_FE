@@ -87,6 +87,8 @@ export function useWebRtcSetup({
   const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
   const negotiatingRef = useRef(false);   // lock: prevents concurrent negotiations
   const connectedRef = useRef(false);     // true once ICE is connected/completed
+  const offerSentAtRef = useRef<number>(0); // timestamp when P1 sent offer
+  const pendingOfferRef = useRef<any>(null); // buffer for P2 if offer arrives before stream is ready
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
 
@@ -254,10 +256,12 @@ export function useWebRtcSetup({
       const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
       await pc.setLocalDescription(offer);
       await conn.invoke('SendWebRtcOffer', matchId, uid, offer.sdp!);
+      offerSentAtRef.current = Date.now();
       console.log('[WebRTC] Offer sent. Waiting for answer...');
     } catch (e) {
       console.error('[WebRTC] Failed to send offer:', e);
       negotiatingRef.current = false;
+      offerSentAtRef.current = 0;
     }
   }, [matchId, createPc]);
 
@@ -272,13 +276,21 @@ export function useWebRtcSetup({
     console.log('[WebRTC] P1 reset: P2 requested a fresh offer. Resetting PC...');
     connectedRef.current = false;
     negotiatingRef.current = false;
+    offerSentAtRef.current = 0;
     createPc(); // closes old PC, creates fresh one with local tracks
     await sendOffer();
   }, [createPc, sendOffer]);
 
   // ── Incoming offer handler (P2) ───────────────────────────────────────────
   const handleOffer = useCallback(async (payload: any) => {
-    if (!enabledRef.current || !streamRef.current) return;
+    if (!enabledRef.current) return;
+    if (!streamRef.current) {
+      console.log('[WebRTC] P2: offer received before stream ready, buffering offer...');
+      pendingOfferRef.current = payload;
+      return;
+    }
+
+    pendingOfferRef.current = null;
     console.log('[WebRTC] Offer received from:', payload.fromUserId);
 
     const conn = connectionRef.current;
@@ -323,6 +335,7 @@ export function useWebRtcSetup({
     try {
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: payload.answer }));
       negotiatingRef.current = false;
+      offerSentAtRef.current = 0;
       console.log('[WebRTC] Remote answer applied. ICE negotiation started.');
       await drainIceCandidates(pc);
     } catch (e) {
@@ -412,14 +425,31 @@ export function useWebRtcSetup({
         negotiatingRef.current = false;
         sendOffer();
       } else if (pc.signalingState === 'have-local-offer') {
-        // Patiently waiting for P2's answer. No reset.
-        console.log('[WebRTC] P1: in have-local-offer, waiting for P2 answer...');
+        const elapsed = offerSentAtRef.current > 0 ? Date.now() - offerSentAtRef.current : 0;
+        if (offerSentAtRef.current > 0 && elapsed > 8_000) {
+          console.warn(`[WebRTC] P1: stuck in 'have-local-offer' for ${Math.round(elapsed / 1000)}s without answer. Auto-resetting PC...`);
+          offerSentAtRef.current = 0;
+          negotiatingRef.current = false;
+          resetAndSendOffer();
+        } else {
+          console.log(`[WebRTC] P1: in have-local-offer, waiting for P2 answer (${Math.round(elapsed / 1000)}s)...`);
+        }
       }
     }, P1_STABLE_RETRY_INTERVAL_MS);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, isP1, connection, stream]);
+
+  // ── P2: Process buffered offer as soon as local stream becomes ready ─────
+  useEffect(() => {
+    if (enabled && !isP1 && stream && pendingOfferRef.current) {
+      console.log('[WebRTC] P2: local stream is now active, processing buffered offer...');
+      const buffered = pendingOfferRef.current;
+      pendingOfferRef.current = null;
+      handleOffer(buffered);
+    }
+  }, [enabled, isP1, stream, handleOffer]);
 
   // ── P2: create PC, send RequestOffer, and repeat until connected ──────────
   useEffect(() => {
