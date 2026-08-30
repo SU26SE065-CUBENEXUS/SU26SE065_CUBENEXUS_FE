@@ -272,6 +272,7 @@ export default function ResultPage() {
 import { SplitScreenReplayPlayer } from '@/features/online-arena/components/SplitScreenReplayPlayer';
 import { FraudReportModal } from '@/features/online-arena/components/FraudReportModal';
 import { getMatchRecordingPlaybackUrls, PlaybackResponseDto } from '@/features/online-arena/api/onlineArenaApi';
+import { getMatchDurationSeconds } from '@/features/online-arena/utils/fraudTimestamp';
 import { Video, ShieldAlert } from 'lucide-react';
 
 function ReplaySection({
@@ -375,6 +376,7 @@ function ReplaySection({
 
   const myRecord = playbackData?.recordings?.find((r: any) => r.playerId === meStateReplay?.userId);
   const oppRecord = playbackData?.recordings?.find((r: any) => r.playerId === oppStateReplay?.userId);
+  const maxDurationSeconds = getMatchDurationSeconds(playbackData?.recordings);
 
   const winnerUsername = state?.winnerId === state?.player1?.userId
     ? (state?.player1?.displayName || (state?.player1?.userId ? `Player_${state?.player1?.userId?.slice(0, 6)}` : 'Player 1'))
@@ -409,6 +411,7 @@ function ReplaySection({
         matchId={matchId}
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
+        maxDurationSeconds={maxDurationSeconds}
       />
 
       {error && (

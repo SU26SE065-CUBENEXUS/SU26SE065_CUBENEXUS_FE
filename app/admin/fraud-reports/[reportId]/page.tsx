@@ -421,6 +421,8 @@ export default function AdminFraudReportReviewDetailPage() {
             player2VideoUrl={p2Record?.playbackUrl || ''}
             player1Name={match.player1Name || 'Player 1'}
             player2Name={match.player2Name || 'Player 2'}
+            player1DurationSeconds={p1Record?.durationSeconds}
+            player2DurationSeconds={p2Record?.durationSeconds}
             defaultTarget={report.reportedUserId === match.player1Id ? 'player1' : 'player2'}
             timestampSeconds={parseSmartSeconds(report.timestampText, report.timestampSeconds) || 75}
             timestampText={report.timestampText || '01:15'}

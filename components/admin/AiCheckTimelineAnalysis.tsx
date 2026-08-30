@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { computeAiScanWindow } from '@/features/online-arena/utils/aiScanWindow';
 import {
   Sparkles,
   Play,
@@ -84,6 +85,8 @@ interface Props {
   player2VideoUrl?: string;
   player1Name?: string;
   player2Name?: string;
+  player1DurationSeconds?: number;
+  player2DurationSeconds?: number;
   defaultTarget?: 'player1' | 'player2';
   timestampSeconds?: number;
   timestampText?: string;
@@ -101,6 +104,8 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   player2VideoUrl,
   player1Name = 'Player 1',
   player2Name = 'Player 2',
+  player1DurationSeconds,
+  player2DurationSeconds,
   defaultTarget = 'player1',
   timestampSeconds = 75,
   timestampText = '01:15',
@@ -150,8 +155,18 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       ? player2Name
       : targetPlayerName;
 
-  const windowStart = Math.max(0, (timestampSeconds || 0) - 15);
-  const windowEnd = (timestampSeconds || 0) + 15;
+  const activeDurationSeconds =
+    selectedTarget === 'player1'
+      ? player1DurationSeconds
+      : selectedTarget === 'player2'
+      ? player2DurationSeconds
+      : undefined;
+
+  const { scanStart, scanEnd } = computeAiScanWindow(
+    timestampSeconds || 0,
+    15,
+    activeDurationSeconds
+  );
 
   const formatSec = (s: number) => {
     const m = Math.floor(s / 60);
@@ -190,6 +205,9 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       if (scanScope === 'WINDOW' && timestampSeconds !== undefined && timestampSeconds >= 0) {
         payload.target_timestamp_sec = timestampSeconds;
         payload.window_padding_sec = 15.0;
+        if (activeDurationSeconds != null && activeDurationSeconds > 0) {
+          payload.video_duration_sec = activeDurationSeconds;
+        }
       }
 
       const response = await fetch(`${apiUrl}/api/v1/analyze-video`, {
@@ -324,7 +342,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
               }`}
             >
-              ±15s Window ({formatSec(windowStart)} - {formatSec(windowEnd)})
+              ±15s Window ({formatSec(scanStart)} - {formatSec(scanEnd)})
             </button>
             <button
               type="button"

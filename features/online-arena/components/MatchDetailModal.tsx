@@ -6,6 +6,7 @@ import { X, Trophy, Video, ShieldCheck, Clock, Award, Hash, ArrowUpRight, ArrowD
 import { SplitScreenReplayPlayer } from './SplitScreenReplayPlayer';
 import { FraudReportModal } from './FraudReportModal';
 import { getMatchRecordingPlaybackUrls, getMatchFraudReport, PlaybackResponseDto, OnlineMatchHistoryItemDto, MatchFraudReportStatusDto } from '../api/onlineArenaApi';
+import { getMatchDurationSeconds } from '../utils/fraudTimestamp';
 import { AuditVerdictBadge } from './AuditVerdictBadge';
 
 interface MatchDetailModalProps {
@@ -81,6 +82,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
 
   const p1Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.meUserId);
   const p2Record = playbackData?.recordings?.find((r) => r.playerId === matchItem.opponentUserId);
+  const maxDurationSeconds = getMatchDurationSeconds(playbackData?.recordings);
 
   const effectiveEloChange = matchItem.isDraw
     ? 0
@@ -322,6 +324,7 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
             matchId={matchItem.matchId}
             isOpen={isReportModalOpen}
             onClose={() => setIsReportModalOpen(false)}
+            maxDurationSeconds={maxDurationSeconds}
             onSuccess={() => {
               console.log('[MatchDetailModal] Fraud report submitted successfully!');
             }}
