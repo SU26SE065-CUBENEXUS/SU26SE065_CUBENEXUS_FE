@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, use } from 'react';
+import { useEffect, useState, useRef, useCallback, use } from 'react';
 import Link from 'next/link';
 import { getTournamentById, getTournamentJudges, getTournamentRegistrations, generateGroups, generateScrambles } from '@/lib/api/tournaments';
 import {
@@ -12,6 +12,7 @@ import {
   getLiveBoardState,
   getGroupScrambles,
 } from '@/lib/api/operations';
+import { getScrambleMode } from '@/features/admin/api/adminScrambleApi';
 import type { TournamentDetailDto, EventDetailDto, TournamentJudgeDto } from '@/lib/api/types';
 import { formatEventLabel } from '@/lib/utils/eventFormatter';
 import {
@@ -89,6 +90,7 @@ function EventGroupPanel({
   // Scramble sequences details state
   const [groupScrambles, setGroupScrambles] = useState<Record<string, any[]>>({});
   const [isScramblesLoading, setIsScramblesLoading] = useState(false);
+  const [offlineScrambleMode, setOfflineScrambleMode] = useState<'MANUAL' | 'AUTO' | null>(null);
 
   // Modal open states
   const [isGenerateGroupsOpen, setIsGenerateGroupsOpen] = useState(false);
@@ -98,6 +100,16 @@ function EventGroupPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch OFFLINE scramble generation mode
+  const fetchScrambleMode = useCallback(async () => {
+    try {
+      const modeRes = await getScrambleMode('OFFLINE');
+      setOfflineScrambleMode(modeRes.mode);
+    } catch {
+      setOfflineScrambleMode(null);
+    }
+  }, []);
 
   // Fetch Live Board Status
   const fetchLiveBoard = async (roundNum: number) => {
@@ -154,6 +166,13 @@ function EventGroupPanel({
       setGroupScrambles({});
     }
   }, [liveBoard?.groups]);
+
+  // Trigger Scramble Mode Fetch when viewing scrambles
+  useEffect(() => {
+    if (expanded && activeTab === 'scrambles') {
+      void fetchScrambleMode();
+    }
+  }, [expanded, activeTab, fetchScrambleMode]);
 
   const doAction = async (fn: () => Promise<unknown>, successMsg: string) => {
     setIsLoading(true);
@@ -516,10 +535,26 @@ function EventGroupPanel({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500 font-bold font-mono">
-                      Scrambles Sets Management
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-xs text-slate-500 font-bold font-mono">
+                        Scrambles Sets Management
+                      </span>
+                      {offlineScrambleMode && (
+                        <Link
+                          href="/admin/scrambles?mode=OFFLINE"
+                          target="_blank"
+                          title="Open Offline Scramble Pool in Control Center"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border transition shadow-2xs ${offlineScrambleMode === 'AUTO'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+                            }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${offlineScrambleMode === 'AUTO' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          Pool Mode: {offlineScrambleMode}
+                        </Link>
+                      )}
+                    </div>
                     <button
                       disabled={isLoading || isScramblesReady}
                       onClick={() => doAction(
@@ -528,7 +563,7 @@ function EventGroupPanel({
                       )}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition shadow-2xs ${isScramblesReady
                         ? 'bg-purple-50 border border-purple-200 text-purple-700 cursor-not-allowed'
-                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60'
+                        : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-60 cursor-pointer'
                         }`}
                     >
                       {isLoading ? (

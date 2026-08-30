@@ -47,6 +47,11 @@ const STATUS_CONFIG: Record<string, { label: string; style: string }> = {
 export default function ScrambleControlCenterPage() {
   const [mode, setMode] = useState<ScrambleMode>('ONLINE_MATCH');
   const [generationMode, setGenerationMode] = useState<'MANUAL' | 'AUTO'>('MANUAL');
+  const [modesSettings, setModesSettings] = useState<Record<ScrambleMode, 'MANUAL' | 'AUTO'>>({
+    ONLINE_MATCH: 'MANUAL',
+    OFFLINE: 'MANUAL',
+    ONLINE_ASYNC: 'MANUAL',
+  });
   const [puzzles, setPuzzles] = useState<PuzzleTypeResponseDto[]>([]);
   const [puzzleId, setPuzzleId] = useState('');
   const [listPuzzleId, setListPuzzleId] = useState('');
@@ -62,18 +67,38 @@ export default function ScrambleControlCenterPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Read initial mode from URL if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlMode = params.get('mode') as ScrambleMode | null;
+      if (urlMode && ['ONLINE_MATCH', 'OFFLINE', 'ONLINE_ASYNC'].includes(urlMode)) {
+        setMode(urlMode);
+      }
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [page, totals, modeRes] = await Promise.all([
+      const [page, totals, matchMode, offlineMode, asyncMode] = await Promise.all([
         getScrambles({ mode, status, puzzleTypeId: listPuzzleId || undefined, pageSize: 100 }),
         getScrambleSummary(),
-        getScrambleMode(mode).catch(() => ({ competitionMode: mode, mode: 'MANUAL' as const })),
+        getScrambleMode('ONLINE_MATCH').catch(() => ({ competitionMode: 'ONLINE_MATCH' as const, mode: 'MANUAL' as const })),
+        getScrambleMode('OFFLINE').catch(() => ({ competitionMode: 'OFFLINE' as const, mode: 'MANUAL' as const })),
+        getScrambleMode('ONLINE_ASYNC').catch(() => ({ competitionMode: 'ONLINE_ASYNC' as const, mode: 'MANUAL' as const })),
       ]);
       setItems(page.items);
       setTotalItems(page.total);
       setSummary(totals);
-      setGenerationMode(modeRes.mode);
+
+      const newSettings: Record<ScrambleMode, 'MANUAL' | 'AUTO'> = {
+        ONLINE_MATCH: matchMode.mode,
+        OFFLINE: offlineMode.mode,
+        ONLINE_ASYNC: asyncMode.mode,
+      };
+      setModesSettings(newSettings);
+      setGenerationMode(newSettings[mode]);
     } catch (error: any) {
       setMessage({ ok: false, text: error?.message || 'Failed to load scramble pool.' });
     } finally {
@@ -92,6 +117,18 @@ export default function ScrambleControlCenterPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const handleSelectMode = (newMode: ScrambleMode) => {
+    setMode(newMode);
+    setStatus('');
+    setListPuzzleId('');
+    setGenerationMode(modesSettings[newMode] || 'MANUAL');
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', newMode);
+      window.history.replaceState(null, '', url.toString());
+    }
+  };
 
   const statusCards = useMemo(() => {
     const totals = summary
@@ -163,13 +200,61 @@ export default function ScrambleControlCenterPage() {
           </button>
         </header>
 
-        {/* Scramble Generation Mode Switcher Banner */}
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs">
+        {/* Competition Modes Navigation Cards with live AUTO/MANUAL Badges */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+              Select Competition Mode
+            </span>
+            <span className="text-xs text-indigo-600 font-semibold">
+              Currently Editing: <strong>{MODES.find((item) => item.value === mode)?.label}</strong>
+            </span>
+          </div>
+          <div className="grid gap-3.5 md:grid-cols-3">
+            {MODES.map((item) => {
+              const isActive = mode === item.value;
+              const itemSetting = modesSettings[item.value] || 'MANUAL';
+              return (
+                <button
+                  key={item.value}
+                  onClick={() => handleSelectMode(item.value)}
+                  className={`rounded-2xl border p-4 text-left transition cursor-pointer relative overflow-hidden ${isActive
+                    ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-200 shadow-sm'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
+                    }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <b className={`text-sm font-extrabold ${isActive ? 'text-indigo-950' : 'text-slate-800'}`}>
+                      {item.label}
+                    </b>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${itemSetting === 'AUTO'
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        : 'bg-amber-100 text-amber-800 border-amber-300'
+                        }`}
+                    >
+                      {itemSetting}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs text-slate-500 font-medium leading-relaxed">{item.help}</p>
+                  {isActive && (
+                    <div className="mt-2 text-[11px] font-bold text-indigo-700 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Active Configuration
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active Mode Generation Switcher Banner */}
+        <section className="rounded-3xl border border-indigo-200 bg-indigo-50/30 p-6 shadow-2xs">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
-                  Scramble Allocation & Generation Mode — {MODES.find((item) => item.value === mode)?.label}
+                  Scramble Generation Mode — <span className="text-indigo-600">{MODES.find((item) => item.value === mode)?.label}</span>
                 </h2>
                 <span
                   className={`rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${generationMode === 'AUTO'
@@ -180,14 +265,14 @@ export default function ScrambleControlCenterPage() {
                   {generationMode === 'AUTO' ? 'AUTO' : 'MANUAL'}
                 </span>
               </div>
-              <p className="mt-1.5 text-xs text-slate-500 font-medium max-w-3xl leading-relaxed">
+              <p className="mt-1.5 text-xs text-slate-600 font-medium max-w-3xl leading-relaxed">
                 {generationMode === 'AUTO'
-                  ? `AUTO GENERATION MODE: Applies to every Rubik type in ${MODES.find((item) => item.value === mode)?.label}. When its pool is depleted, the system generates a valid scramble on demand.`
-                  : `MANUAL GENERATION MODE: Applies to every Rubik type in ${MODES.find((item) => item.value === mode)?.label}. SignalR alerts Admins when a pool runs low.`}
+                  ? `AUTO GENERATION MODE: When the ${MODES.find((item) => item.value === mode)?.label} pool is depleted, the system automatically generates valid 2-move scrambles on demand without blocking tournament rounds.`
+                  : `MANUAL GENERATION MODE: Only pre-approved scrambles in the pool can be used. When empty, admins must generate or import new sets.`}
               </p>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-2xs">
               <button
                 disabled={busy}
                 onClick={async () => {
@@ -195,7 +280,8 @@ export default function ScrambleControlCenterPage() {
                   try {
                     const res = await setScrambleMode(mode, 'MANUAL');
                     setGenerationMode(res.mode);
-                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to MANUAL. The setting was saved to the database.` });
+                    setModesSettings((prev) => ({ ...prev, [mode]: res.mode }));
+                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to MANUAL. Saved to database.` });
                   } catch (e: any) {
                     setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
                   } finally {
@@ -216,7 +302,8 @@ export default function ScrambleControlCenterPage() {
                   try {
                     const res = await setScrambleMode(mode, 'AUTO');
                     setGenerationMode(res.mode);
-                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to AUTO for all Rubik types. The setting was saved to the database.` });
+                    setModesSettings((prev) => ({ ...prev, [mode]: res.mode }));
+                    setMessage({ ok: true, text: `${MODES.find((item) => item.value === mode)?.label} switched to AUTO. Saved to database.` });
                   } catch (e: any) {
                     setMessage({ ok: false, text: e?.message || 'Failed to switch mode' });
                   } finally {
@@ -233,35 +320,6 @@ export default function ScrambleControlCenterPage() {
             </div>
           </div>
         </section>
-
-        {/* Competition Modes */}
-        <div className="grid gap-3.5 md:grid-cols-3">
-          {MODES.map((item) => {
-            const isActive = mode === item.value;
-            return (
-              <button
-                key={item.value}
-                onClick={() => {
-                  setMode(item.value);
-                  setStatus('');
-                  setListPuzzleId('');
-                }}
-                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${isActive
-                  ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-100 shadow-2xs'
-                  : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-              >
-                <div className="flex items-center justify-between">
-                  <b className={`text-sm font-extrabold ${isActive ? 'text-indigo-950' : 'text-slate-800'}`}>
-                    {item.label}
-                  </b>
-                  {isActive && <span className="h-2 w-2 rounded-full bg-indigo-600"></span>}
-                </div>
-                <p className="mt-1 text-xs text-slate-500 font-medium">{item.help}</p>
-              </button>
-            );
-          })}
-        </div>
 
         <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-xs leading-relaxed text-indigo-900">
           <strong>Allocation Rules:</strong> Competitions only draw <strong>AVAILABLE (approved)</strong> scrambles matching the exact mode and puzzle type.
