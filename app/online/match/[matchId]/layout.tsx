@@ -33,6 +33,7 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     error,
     refetch,
     applyWebRtcConnectionUpdate,
+    markWebRtcConnectedForUser,
     applyTimerConnectionUpdate,
     applyTimerDisconnectionUpdate,
     applyRealtimeMatchStateUpdate,
@@ -95,18 +96,27 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
   const opponentUserId = isP1 ? (state?.player2?.userId ?? null) : (state?.player1?.userId ?? null);
 
   const handleWebRtcConnected = useCallback(async () => {
-    try {
-      const response = await markWebRtcConnected(matchId);
-      // Apply optimistically for instant UI update (B sees "connected" immediately).
-      applyWebRtcConnectionUpdate(response);
-      await refetch();
-      // Re-apply after refetch — prevent stale DB read from overwriting the flag
-      // in the brief window before the DB write is visible to subsequent GET requests.
-      applyWebRtcConnectionUpdate(response);
-    } catch (e) {
-      console.error('[Layout] markWebRtcConnected failed:', e);
+    // ICE connected locally: update this player's UI immediately. Persist it
+    // separately so an API race cannot hide a real P2P/TURN connection.
+    markWebRtcConnectedForUser(userId);
+
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      try {
+        const response = await markWebRtcConnected(matchId);
+        applyWebRtcConnectionUpdate(response);
+        await refetch();
+        applyWebRtcConnectionUpdate(response);
+        return;
+      } catch (e) {
+        lastError = e;
+        const retryDelayMs = Math.min(500 * (2 ** attempt), 5_000);
+        console.warn(`[Layout] markWebRtcConnected attempt ${attempt + 1} failed; retrying in ${retryDelayMs}ms.`, e);
+        await new Promise((resolve) => window.setTimeout(resolve, retryDelayMs));
+      }
     }
-  }, [matchId, refetch, applyWebRtcConnectionUpdate]);
+    console.error('[Layout] Unable to persist WebRTC connected state after retries:', lastError);
+  }, [matchId, userId, refetch, applyWebRtcConnectionUpdate, markWebRtcConnectedForUser]);
 
   /** Activate WebRTC signaling strictly once BOTH players have completed Mobile Timer pairing */
   const shouldActivateWebRtc = Boolean(
@@ -116,6 +126,9 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
       && state.player2?.timerReady,
   );
   const alreadyWebRtcConnected = Boolean(myState?.webRtcConnected);
+  const opponentAlreadyWebRtcConnected = Boolean(
+    isP1 ? state?.player2?.webRtcConnected : state?.player1?.webRtcConnected,
+  );
 
   // SignalR is the fast path, but setup must not depend on one event arriving.
   // Reconcile while either player is still setting up and whenever the tab is
@@ -208,6 +221,7 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
           opponentUserId={opponentUserId}
           connection={connection}
           alreadyConnected={alreadyWebRtcConnected}
+          opponentAlreadyConnected={opponentAlreadyWebRtcConnected}
           onConnected={handleWebRtcConnected}
           shouldActivate={shouldActivateWebRtc}
           myTimerReady={Boolean(myState?.timerReady)}
