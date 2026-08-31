@@ -87,12 +87,12 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     }
   }, [matchId, refetch, applyWebRtcConnectionUpdate]);
 
-  /** Activate WebRTC signaling once BOTH players have their timer ready */
+  /** Activate WebRTC signaling once match is active and both players are present in match state */
   const shouldActivateWebRtc = Boolean(
     state
       && !['COMPLETED', 'CANCELLED', 'DRAW', 'NEEDS_REVIEW'].includes(state.statusCode)
-      && state.player1?.timerReady
-      && state.player2?.timerReady,
+      && state.player1?.userId
+      && state.player2?.userId,
   );
   const alreadyWebRtcConnected = Boolean(myState?.webRtcConnected);
 

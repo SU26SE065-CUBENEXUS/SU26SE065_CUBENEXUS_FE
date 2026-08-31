@@ -118,14 +118,16 @@ export function useWebRtcSetup({
   }, []);
 
   // ── create the one-and-only RTCPeerConnection ─────────────────────────────
-  const createPc = useCallback(() => {
+  const createPc = useCallback((preserveIceQueue = false) => {
     if (pcRef.current) {
       pcRef.current.close();
     }
     console.log('[WebRTC] Creating new RTCPeerConnection...');
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceCandidatePoolSize: 10 });
     pcRef.current = pc;
-    iceCandidateQueue.current = [];
+    if (!preserveIceQueue) {
+      iceCandidateQueue.current = [];
+    }
     negotiatingRef.current = false;
     connectedRef.current = false; // reset so onConnected fires for the new PC
 
@@ -296,12 +298,16 @@ export function useWebRtcSetup({
     const conn = connectionRef.current;
     const uid = opponentUserIdRef.current;
     if (!conn || !uid) return;
+    if (connectedRef.current && pcRef.current?.iceConnectionState === 'connected') {
+      console.log('[WebRTC] Offer received but already connected. Ignoring duplicate offer.');
+      return;
+    }
 
     // Reset flags and force a fresh PeerConnection to prevent setting remote description on a dead/stale connection
     connectedRef.current = false;
     negotiatingRef.current = false;
     setStatus('connecting');
-    const pc = createPc();
+    const pc = createPc(true);
 
     try {
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: payload.offer }));
@@ -374,6 +380,11 @@ export function useWebRtcSetup({
   // ── P1: handles RequestOffer from P2 ─────────────────────────────────────
   const handleRequestOffer = useCallback(async (payload: any) => {
     if (!enabledRef.current || !streamRef.current || !isP1) return;
+    const currentPc = pcRef.current;
+    if (connectedRef.current || currentPc?.iceConnectionState === 'connected' || currentPc?.iceConnectionState === 'checking') {
+      console.log('[WebRTC] RequestOffer received but connection is already active/checking. Ignoring.');
+      return;
+    }
     console.log('[WebRTC] RequestOffer received from P2 (', payload.fromUserId, '). Resetting and re-offering...');
     await resetAndSendOffer();
   }, [isP1, resetAndSendOffer]);
@@ -426,14 +437,7 @@ export function useWebRtcSetup({
         sendOffer();
       } else if (pc.signalingState === 'have-local-offer') {
         const elapsed = offerSentAtRef.current > 0 ? Date.now() - offerSentAtRef.current : 0;
-        if (offerSentAtRef.current > 0 && elapsed > 8_000) {
-          console.warn(`[WebRTC] P1: stuck in 'have-local-offer' for ${Math.round(elapsed / 1000)}s without answer. Auto-resetting PC...`);
-          offerSentAtRef.current = 0;
-          negotiatingRef.current = false;
-          resetAndSendOffer();
-        } else {
-          console.log(`[WebRTC] P1: in have-local-offer, waiting for P2 answer (${Math.round(elapsed / 1000)}s)...`);
-        }
+        console.log(`[WebRTC] P1: in have-local-offer, waiting for P2 answer (${Math.round(elapsed / 1000)}s)...`);
       }
     }, P1_STABLE_RETRY_INTERVAL_MS);
 
@@ -456,12 +460,17 @@ export function useWebRtcSetup({
     if (!enabled || isP1 || !connection || !stream) return;
     if (connectedRef.current) return;
 
-    setStatus('connecting');
-    connectedRef.current = false;
-    createPc(); // attach local tracks to new PC
+    // Only create PC if not already created (e.g. by handleOffer for a buffered offer)
+    if (!pcRef.current || pcRef.current.signalingState === 'closed') {
+      setStatus('connecting');
+      connectedRef.current = false;
+      createPc(); // attach local tracks to new PC
+    }
 
     const sendRequest = () => {
       if (connectedRef.current) return;
+      const pc = pcRef.current;
+      if (pc?.iceConnectionState === 'connected' || pc?.iceConnectionState === 'checking') return;
       const uid = opponentUserIdRef.current;
       const conn = connectionRef.current;
       if (!uid || !conn) return;
@@ -472,8 +481,10 @@ export function useWebRtcSetup({
         .catch((e) => console.warn('[WebRTC] P2: SendWebRtcRequestOffer error:', e));
     };
 
-    // Send immediately
-    sendRequest();
+    // Send immediately only if an offer is not already being processed
+    if (!pendingOfferRef.current && pcRef.current?.signalingState !== 'have-remote-offer') {
+      sendRequest();
+    }
 
     // Repeat every 10s until ICE is connected (safety net for lost RequestOffer signals)
     const interval = setInterval(() => {
