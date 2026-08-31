@@ -57,6 +57,8 @@ interface WebRtcProviderProps {
   connection: HubConnection | null;
   /** True when this user's backend record already has webRtcConnected=true */
   alreadyConnected: boolean;
+  /** Backend says the opponent connected but this client has not yet done so. */
+  opponentAlreadyConnected?: boolean;
   /** Called when ICE reaches connected/completed → should call markWebRtcConnected */
   onConnected: () => Promise<void>;
   /**
@@ -75,6 +77,7 @@ export function WebRtcProvider({
   opponentUserId,
   connection,
   alreadyConnected,
+  opponentAlreadyConnected = false,
   onConnected,
   shouldActivate,
   myTimerReady = false,
@@ -97,6 +100,7 @@ export function WebRtcProvider({
     // Pass null if not yet active — hook won't start negotiation without stream
     stream: shouldActivate ? stream : null,
     alreadyConnected,
+    opponentAlreadyConnected,
     onConnected,
     enabled: shouldActivate,
   });

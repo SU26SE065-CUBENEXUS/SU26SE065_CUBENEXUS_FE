@@ -126,6 +126,9 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
       && state.player2?.timerReady,
   );
   const alreadyWebRtcConnected = Boolean(myState?.webRtcConnected);
+  const opponentAlreadyWebRtcConnected = Boolean(
+    isP1 ? state?.player2?.webRtcConnected : state?.player1?.webRtcConnected,
+  );
 
   // SignalR is the fast path, but setup must not depend on one event arriving.
   // Reconcile while either player is still setting up and whenever the tab is
@@ -218,6 +221,7 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
           opponentUserId={opponentUserId}
           connection={connection}
           alreadyConnected={alreadyWebRtcConnected}
+          opponentAlreadyConnected={opponentAlreadyWebRtcConnected}
           onConnected={handleWebRtcConnected}
           shouldActivate={shouldActivateWebRtc}
           myTimerReady={Boolean(myState?.timerReady)}
