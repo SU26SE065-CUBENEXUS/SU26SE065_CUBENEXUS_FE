@@ -224,11 +224,9 @@ function StabilityBar({
   );
 }
 
-const OVERLAY_INSET_RATIO = 0.08;
-// The backend runs YOLO at imgsz=640. Sending a slightly larger 800px frame
-// preserves JPEG detail without paying the latency cost of 1280px snapshots.
-const SNAPSHOT_MAX_WIDTH = 800;
-const SNAPSHOT_QUALITY = 0.84;
+const SCAN_ROI_RATIO = 0.86;
+const SNAPSHOT_SIZE = 640;
+const SNAPSHOT_QUALITY = 0.88;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
@@ -423,16 +421,17 @@ async function captureSnapshot(
     throw new Error('Camera preview is not ready.');
   }
 
-  const sourceWidth = video.videoWidth;
-  const sourceHeight = video.videoHeight;
-  const width = Math.min(SNAPSHOT_MAX_WIDTH, sourceWidth);
-  const height = Math.round((sourceHeight / sourceWidth) * width);
+  // Crop exactly the square shown by the guide. YOLO also infers at 640x640,
+  // so this avoids letterbox padding and spends all model pixels on the cube.
+  const sourceSize = Math.round(Math.min(video.videoWidth, video.videoHeight) * SCAN_ROI_RATIO);
+  const sourceX = Math.round((video.videoWidth - sourceSize) / 2);
+  const sourceY = Math.round((video.videoHeight - sourceSize) / 2);
 
   const canvas = canvasRef.current ?? document.createElement('canvas');
   canvasRef.current = canvas;
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
+  if (canvas.width !== SNAPSHOT_SIZE || canvas.height !== SNAPSHOT_SIZE) {
+    canvas.width = SNAPSHOT_SIZE;
+    canvas.height = SNAPSHOT_SIZE;
   }
 
   const context = canvas.getContext('2d');
@@ -441,7 +440,18 @@ async function captureSnapshot(
   }
 
   context.imageSmoothingEnabled = true;
-  context.drawImage(video, 0, 0, width, height);
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(
+    video,
+    sourceX,
+    sourceY,
+    sourceSize,
+    sourceSize,
+    0,
+    0,
+    SNAPSHOT_SIZE,
+    SNAPSHOT_SIZE,
+  );
   const blob = await new Promise<Blob | null>((resolve) => {
     canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
   });
@@ -725,7 +735,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
     const width = canvas.width;
     const height = canvas.height;
-    const inset = Math.round(Math.min(width, height) * OVERLAY_INSET_RATIO);
+    const roiSize = Math.round(Math.min(width, height) * SCAN_ROI_RATIO);
+    const roiX = Math.round((width - roiSize) / 2);
+    const roiY = Math.round((height - roiSize) / 2);
+    // Canvas coordinates use the camera's native resolution and CSS scales the
+    // canvas down. Scale UI primitives too, otherwise labels look half-sized on HD.
+    const uiScale = Math.max(1, Math.min(width, height) / 480);
     const observedCenter = preview?.observedCenterColor || session?.observedCenterColor || '';
     const secondaryCenters = remainingCenters.length > 0
       ? `Remaining: ${remainingCenters.map((color) => color.toUpperCase()).join(', ')}`
@@ -733,38 +748,46 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
     context.clearRect(0, 0, width, height);
     context.strokeStyle = 'rgba(249, 115, 22, 0.72)';
-    context.lineWidth = 3;
-    context.setLineDash([8, 8]);
-    context.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
+    context.lineWidth = 3 * uiScale;
+    context.setLineDash([8 * uiScale, 8 * uiScale]);
+    context.strokeRect(roiX, roiY, roiSize, roiSize);
     context.setLineDash([]);
 
     context.fillStyle = 'rgba(9, 9, 11, 0.85)';
-    context.fillRect(16, 16, Math.min(320, width - 32), 48);
+    context.fillRect(16 * uiScale, 16 * uiScale, Math.min(320 * uiScale, width - 32 * uiScale), 48 * uiScale);
     context.fillStyle = '#ffffff';
-    context.font = 'bold 11px sans-serif';
+    context.font = `bold ${11 * uiScale}px sans-serif`;
     context.fillText(
       observedCenter ? `Observed center: ${observedCenter.toUpperCase()}` : 'Observed center: waiting',
-      24,
-      34,
+      24 * uiScale,
+      34 * uiScale,
     );
     context.fillStyle = 'rgba(161, 161, 170, 1)';
-    context.font = '10px sans-serif';
-    context.fillText(secondaryCenters, 24, 50);
+    context.font = `${10 * uiScale}px sans-serif`;
+    context.fillText(secondaryCenters, 24 * uiScale, 50 * uiScale);
 
     for (const [index, sticker] of effectiveStickers.entries()) {
-      const [x1, y1, x2, y2] = sticker.bbox;
-      if ([x1, y1, x2, y2].some((value) => typeof value !== 'number')) {
+      const [rawX1, rawY1, rawX2, rawY2] = sticker.bbox;
+      if (![rawX1, rawY1, rawX2, rawY2].every(Number.isFinite)) {
         continue;
       }
-
+      const scale = roiSize / SNAPSHOT_SIZE;
+      const x1 = roiX + rawX1 * scale;
+      const y1 = roiY + rawY1 * scale;
+      const x2 = roiX + rawX2 * scale;
+      const y2 = roiY + rawY2 * scale;
       context.strokeStyle = 'rgba(250, 204, 21, 0.95)';
-      context.lineWidth = 2;
+      context.lineWidth = 2 * uiScale;
       context.strokeRect(x1, y1, x2 - x1, y2 - y1);
       context.fillStyle = 'rgba(15, 23, 42, 0.84)';
-      context.fillRect(x1, Math.max(0, y1 - 18), 92, 16);
+      context.fillRect(x1, Math.max(0, y1 - 18 * uiScale), 92 * uiScale, 16 * uiScale);
       context.fillStyle = '#f8fafc';
-      context.font = '10px sans-serif';
-      context.fillText(`${index + 1}. ${sticker.color}`, x1 + 4, Math.max(11, y1 - 6));
+      context.font = `${10 * uiScale}px sans-serif`;
+      context.fillText(
+        `${index + 1}. ${sticker.color}`,
+        x1 + 4 * uiScale,
+        Math.max(11 * uiScale, y1 - 6 * uiScale),
+      );
     }
   }, [cameraActive, effectiveStickers, preview?.observedCenterColor, remainingCenters, session?.observedCenterColor]);
 

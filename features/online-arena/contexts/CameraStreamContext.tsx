@@ -59,16 +59,16 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
       const videoConstraints: any = targetDeviceId
         ? {
             deviceId: { exact: targetDeviceId },
-            // The Rubik model infers at 640px. A 4:3 capture keeps the cube
-            // larger after YOLO letterboxing and avoids unnecessary HD upload/decode work.
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            // Keep a sharp source for the model's centered 640x640 crop. The
+            // browser may gracefully fall back when the camera cannot do HD.
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             frameRate: { ideal: 30 },
             resizeMode: 'none',
           }
         : {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             facingMode: 'user',
             frameRate: { ideal: 30 },
             resizeMode: 'none',
@@ -78,6 +78,26 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
         video: videoConstraints,
         audio: false,
       });
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.contentHint = 'detail';
+
+        // Prefer continuous camera controls when the browser/device exposes
+        // them. Unsupported controls are omitted, so desktop webcams and older
+        // mobile browsers continue to work normally.
+        try {
+          const capabilities = videoTrack.getCapabilities?.() as any;
+          const advanced: Record<string, string> = {};
+          if (capabilities?.focusMode?.includes?.('continuous')) advanced.focusMode = 'continuous';
+          if (capabilities?.exposureMode?.includes?.('continuous')) advanced.exposureMode = 'continuous';
+          if (capabilities?.whiteBalanceMode?.includes?.('continuous')) advanced.whiteBalanceMode = 'continuous';
+          if (Object.keys(advanced).length > 0) {
+            await videoTrack.applyConstraints({ advanced: [advanced] } as any);
+          }
+        } catch {
+          // Camera controls are best-effort and must never block match setup.
+        }
+      }
       streamRef.current = mediaStream;
       setStream(mediaStream);
       return mediaStream;

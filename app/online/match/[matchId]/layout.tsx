@@ -27,7 +27,16 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     return (decoded?.sub as string) || (decoded?.nameid as string) || '';
   }, []);
 
-  const { state, isLoading, error, refetch, applyWebRtcConnectionUpdate } = useOnlineMatchState(matchId);
+  const {
+    state,
+    isLoading,
+    error,
+    refetch,
+    applyWebRtcConnectionUpdate,
+    applyTimerConnectionUpdate,
+    applyTimerDisconnectionUpdate,
+    applyRealtimeMatchStateUpdate,
+  } = useOnlineMatchState(matchId);
 
   const { connection, isConnected } = useOnlineArenaSignalR(matchId, {
     onReconnected: () => { void refetch(); },
@@ -42,13 +51,25 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
     onMatchCompleted: async () => { await refetch(); },
     onMatchCancelled: async () => { await refetch(); },
     onSolveTimeout: async () => { await refetch(); },
-    onMatchStateChanged: async () => { await refetch(); },
-    onChecklistUpdated: async () => { await refetch(); },
-    onTimerConnected: async () => {
-      console.log('[SignalR] Mobile timer connected! Instant refetch...');
+    onMatchStateChanged: async (payload) => {
+      applyRealtimeMatchStateUpdate(payload);
       await refetch();
     },
-    onTimerDisconnected: async () => { await refetch(); },
+    onChecklistUpdated: async (payload) => {
+      applyRealtimeMatchStateUpdate(payload);
+      await refetch();
+      applyRealtimeMatchStateUpdate(payload);
+    },
+    onTimerConnected: async (payload) => {
+      console.log('[SignalR] Mobile timer connected! Instant refetch...');
+      applyTimerConnectionUpdate(payload);
+      await refetch();
+      applyTimerConnectionUpdate(payload);
+    },
+    onTimerDisconnected: async (payload) => {
+      applyTimerDisconnectionUpdate(payload);
+      await refetch();
+    },
     onCameraReadyUpdated: async () => { await refetch(); },
     onWebRtcConnectionUpdated: async (payload) => {
       // Apply optimistically first for instant UI update.
@@ -95,6 +116,30 @@ export default function MatchLayout({ children }: { children: React.ReactNode })
       && state.player2?.timerReady,
   );
   const alreadyWebRtcConnected = Boolean(myState?.webRtcConnected);
+
+  // SignalR is the fast path, but setup must not depend on one event arriving.
+  // Reconcile while either player is still setting up and whenever the tab is
+  // focused again. This replaces the user's manual page reload recovery path.
+  useEffect(() => {
+    if (!matchId || !state) return;
+    const isSetupPhase = state.statusCode === 'CREATED'
+      && ['ROOM_SETUP', 'WEBRTC_CONNECTING', 'MOBILE_TIMER_PAIRING', 'SCRAMBLE_CHECKING'].includes(state.phase);
+    if (!isSetupPhase) return;
+
+    const reconcile = () => { void refetch(); };
+    const intervalId = window.setInterval(reconcile, 2_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') reconcile();
+    };
+    window.addEventListener('focus', reconcile);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', reconcile);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [matchId, state?.statusCode, state?.phase, refetch]);
 
   // Prefetch match routes for production chunk loading
   // AND trigger eager compilation in dev mode via background fetch
