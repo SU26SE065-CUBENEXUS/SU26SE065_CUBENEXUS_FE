@@ -127,8 +127,8 @@ export default function ResultPage() {
             <div className="flex items-center gap-2">
               <span className="text-3xl font-black tracking-tight text-foreground">{eloAfter}</span>
               <span className={`flex items-center gap-0.5 text-sm font-extrabold px-2.5 py-0.5 rounded-full ${eloDelta >= 0
-                  ? 'text-emerald-600 bg-emerald-500/10'
-                  : 'text-rose-600 bg-rose-500/10'
+                ? 'text-emerald-600 bg-emerald-500/10'
+                : 'text-rose-600 bg-rose-500/10'
                 }`}>
                 {eloDelta >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {eloDelta >= 0 ? `+${eloDelta}` : eloDelta} ELO
@@ -148,8 +148,8 @@ export default function ResultPage() {
                 {formatTime(mePlayer.resultStatus, mePlayer.timeMs)}
               </span>
               <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${mePlayer.resultStatus === 'DNF'
-                  ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
-                  : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
+                ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
                 }`}>
                 {mePlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
@@ -173,8 +173,8 @@ export default function ResultPage() {
                 {formatTime(opponentPlayer.resultStatus, opponentPlayer.timeMs)}
               </span>
               <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full border ${opponentPlayer.resultStatus === 'DNF'
-                  ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
-                  : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
+                ? 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                : 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
                 }`}>
                 {opponentPlayer.resultStatus === 'DNF' ? 'DNF' : 'VALID'}
               </span>
@@ -311,7 +311,7 @@ function ReplaySection({
           className="w-full py-3 px-4 bg-muted/50 border border-border text-muted-foreground font-black text-xs rounded-2xl uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
         >
           <Video className="h-4 w-4 text-muted-foreground/60" />
-          🎬 Replay Unavailable (Setup Incomplete)
+          Replay Unavailable (Incomplete Match)
         </button>
         <button
           onClick={() => setIsReportModalOpen(true)}
