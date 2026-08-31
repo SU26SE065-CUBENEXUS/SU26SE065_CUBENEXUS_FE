@@ -164,6 +164,7 @@ function WebRtcConnectStep({
   connection,
   alreadyConnected,
   onConnected,
+  opponentTimerReady = false,
 }: {
   matchId?: string;
   isP1: boolean;
@@ -171,6 +172,7 @@ function WebRtcConnectStep({
   connection?: any;
   alreadyConnected: boolean;
   onConnected: () => Promise<void>;
+  opponentTimerReady?: boolean;
 }) {
   // Camera stream comes from WebRtcContext (which internally uses CameraStreamContext)
   const { status, error, remoteStream, localStream, retry, acquireLocalStream } = useWebRtcContext();
@@ -309,7 +311,11 @@ function WebRtcConnectStep({
               ) : (
                 <>
                   <Loader2 className="h-6 w-6 text-orange-500 animate-spin" />
-                  <p className="text-[10px] text-zinc-500">Waiting for opponent camera...</p>
+                  <p className="text-[10px] text-zinc-500 text-center px-4">
+                    {!opponentTimerReady
+                      ? 'Waiting for opponent to connect mobile timer...'
+                      : 'Connecting opponent camera (P2P)...'}
+                  </p>
                 </>
               )}
             </div>
@@ -511,6 +517,7 @@ export default function RoomSetupPage() {
                 connection={connection ?? null}
                 alreadyConnected={myState?.webRtcConnected ?? false}
                 onConnected={handleWebRtcConnected}
+                opponentTimerReady={Boolean(opponentState?.timerReady)}
               />
             </div>
           )}
@@ -557,19 +564,31 @@ export default function RoomSetupPage() {
           </div>
 
           <div
-            onClick={() => setOverrideStep('webrtc')}
-            className="cursor-pointer transition hover:opacity-90"
-            title="Click to view Camera WebRTC setup"
+            onClick={() => {
+              if (myState.timerReady) setOverrideStep('webrtc');
+            }}
+            className={`${myState.timerReady ? 'cursor-pointer hover:opacity-90' : 'cursor-not-allowed opacity-60'} transition`}
+            title={myState.timerReady ? "Click to view Camera WebRTC setup" : "Please connect Mobile Timer first"}
           >
             <ChecklistRow
               icon={<Wifi className="h-4 w-4" />}
               label="P2P Connection"
-              sublabel="Opponent video feed link"
-              done={myState.webRtcConnected}
+              sublabel={
+                !myState.timerReady
+                  ? "Pair mobile timer first"
+                  : myState.webRtcConnected
+                    ? "Live video connected"
+                    : "Connecting opponent feed..."
+              }
+              done={Boolean(myState.timerReady && myState.webRtcConnected)}
               status={
-                myState.webRtcConnected ? 'ok'
-                  : currentStep === 'webrtc' ? 'loading'
-                    : 'pending'
+                !myState.timerReady
+                  ? 'pending'
+                  : myState.webRtcConnected
+                    ? 'ok'
+                    : currentStep === 'webrtc'
+                      ? 'loading'
+                      : 'pending'
               }
             />
           </div>
@@ -583,7 +602,7 @@ export default function RoomSetupPage() {
               <div className="grid grid-cols-2 gap-1.5">
                 <OpponentChecklistBadge done={opponentState.scrambleCheckStatus === 'PASSED'} label="Scramble" />
                 <OpponentChecklistBadge done={opponentState.timerReady} label="Timer" />
-                <OpponentChecklistBadge done={opponentState.webRtcConnected} label="WebRTC" />
+                <OpponentChecklistBadge done={Boolean(opponentState.timerReady && opponentState.webRtcConnected)} label="WebRTC" />
               </div>
               {opponentState.checklistPassed && (
                 <div className="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">

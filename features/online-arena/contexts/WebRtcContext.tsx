@@ -64,6 +64,8 @@ interface WebRtcProviderProps {
    * Set to true once both players have timerReady (the setup step requires it).
    */
   shouldActivate: boolean;
+  /** True when the local player has completed mobile timer pairing and needs camera preview */
+  myTimerReady?: boolean;
   children: React.ReactNode;
 }
 
@@ -75,16 +77,17 @@ export function WebRtcProvider({
   alreadyConnected,
   onConnected,
   shouldActivate,
+  myTimerReady = false,
   children,
 }: WebRtcProviderProps) {
   const { stream, acquireStream, isAcquiring, cameraError } = useCameraStream();
 
-  // Automatically acquire camera when WebRTC should activate
+  // Automatically acquire local camera as soon as local player is ready for camera step (timer paired or P2P active)
   useEffect(() => {
-    if (shouldActivate && !stream && !isAcquiring && !cameraError) {
+    if ((shouldActivate || myTimerReady) && !stream && !isAcquiring && !cameraError) {
       acquireStream();
     }
-  }, [shouldActivate, stream, isAcquiring, cameraError, acquireStream]);
+  }, [shouldActivate, myTimerReady, stream, isAcquiring, cameraError, acquireStream]);
 
   const { status, error, remoteStream, retry } = useWebRtcSetup({
     matchId,
