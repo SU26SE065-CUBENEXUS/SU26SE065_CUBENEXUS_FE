@@ -59,14 +59,16 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
       const videoConstraints: any = targetDeviceId
         ? {
             deviceId: { exact: targetDeviceId },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            // The Rubik model infers at 640px. A 4:3 capture keeps the cube
+            // larger after YOLO letterboxing and avoids unnecessary HD upload/decode work.
+            width: { ideal: 640 },
+            height: { ideal: 480 },
             frameRate: { ideal: 30 },
             resizeMode: 'none',
           }
         : {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
             facingMode: 'user',
             frameRate: { ideal: 30 },
             resizeMode: 'none',

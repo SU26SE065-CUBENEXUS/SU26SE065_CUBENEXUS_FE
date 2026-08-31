@@ -225,8 +225,10 @@ function StabilityBar({
 }
 
 const OVERLAY_INSET_RATIO = 0.08;
-const SNAPSHOT_MAX_WIDTH = 1280;
-const SNAPSHOT_QUALITY = 0.9;
+// The backend runs YOLO at imgsz=640. Sending a slightly larger 800px frame
+// preserves JPEG detail without paying the latency cost of 1280px snapshots.
+const SNAPSHOT_MAX_WIDTH = 800;
+const SNAPSHOT_QUALITY = 0.84;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
