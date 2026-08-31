@@ -128,6 +128,25 @@ export function useOnlineMatchState(matchId: string) {
     });
   }, []);
 
+  // ICE is the source of truth for the local UI. Mark the matching player
+  // immediately, before the confirmation POST completes, so a transient API
+  // failure cannot leave a genuinely connected peer stuck on the setup screen.
+  const markWebRtcConnectedForUser = useCallback((userId: string) => {
+    if (!userId) return;
+    setState((current) => {
+      if (!current) return current;
+      const isPlayer1 = current.player1.userId === userId;
+      const isPlayer2 = current.player2.userId === userId;
+      if (isPlayer1) webRtcLock.current.player1 = true;
+      if (isPlayer2) webRtcLock.current.player2 = true;
+      return {
+        ...current,
+        player1: isPlayer1 ? { ...current.player1, webRtcConnected: true } : current.player1,
+        player2: isPlayer2 ? { ...current.player2, webRtcConnected: true } : current.player2,
+      };
+    });
+  }, []);
+
   const applyTimerDisconnectionUpdate = useCallback((update: TimerConnectionUpdate) => {
     setState((current) => {
       if (!current || !update.playerId) return current;
@@ -198,6 +217,7 @@ export function useOnlineMatchState(matchId: string) {
     error,
     refetch: fetchState,
     applyWebRtcConnectionUpdate,
+    markWebRtcConnectedForUser,
     applyTimerConnectionUpdate,
     applyTimerDisconnectionUpdate,
     applyRealtimeMatchStateUpdate,

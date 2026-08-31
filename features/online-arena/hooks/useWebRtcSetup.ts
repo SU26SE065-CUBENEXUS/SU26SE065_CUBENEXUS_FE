@@ -131,6 +131,19 @@ export function useWebRtcSetup({
     negotiatingRef.current = false;
     connectedRef.current = false; // reset so onConnected fires for the new PC
 
+    const confirmConnected = async (source: 'ice' | 'peer') => {
+      if (!enabledRef.current || connectedRef.current || pcRef.current !== pc) return;
+      connectedRef.current = true;
+      setStatus('connected');
+      setError(null);
+      console.log(`[WebRTC] Connection confirmed by ${source} state.`);
+      try {
+        await onConnectedRef.current();
+      } catch (e) {
+        console.error('[WebRTC] onConnected callback error:', e);
+      }
+    };
+
     // Attach local tracks with optimized video encoding constraints to save CPU & bandwidth
     const s = streamRef.current;
     if (s) {
@@ -181,14 +194,8 @@ export function useWebRtcSetup({
       const s = pc.iceConnectionState;
       console.log('[WebRTC] iceConnectionState →', s);
 
-      if ((s === 'connected' || s === 'completed') && !connectedRef.current) {
-        connectedRef.current = true;
-        setStatus('connected');
-        try {
-          await onConnectedRef.current();
-        } catch (e) {
-          console.error('[WebRTC] onConnected callback error:', e);
-        }
+      if (s === 'connected' || s === 'completed') {
+        await confirmConnected('ice');
       } else if (s === 'failed') {
         console.error('[WebRTC] ICE failed — resetting PC and retrying negotiation...');
         connectedRef.current = false;
@@ -217,6 +224,16 @@ export function useWebRtcSetup({
             }
           }
         }, 3000);
+      }
+    };
+
+    // Some browser/network combinations update the aggregate peer connection
+    // state more reliably than iceConnectionState. Listen to both and dedupe
+    // through connectedRef so the player who joined first cannot miss success.
+    pc.onconnectionstatechange = () => {
+      console.log('[WebRTC] connectionState →', pc.connectionState);
+      if (pc.connectionState === 'connected') {
+        void confirmConnected('peer');
       }
     };
 
