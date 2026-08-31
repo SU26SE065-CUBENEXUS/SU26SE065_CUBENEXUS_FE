@@ -20,18 +20,27 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
   const [isAcquiring, setIsAcquiring] = useState(false);
 
   const acquireStream = useCallback(async (deviceId?: string): Promise<MediaStream | null> => {
+    const previousDeviceId = selectedDeviceIdRef.current;
     if (deviceId) {
       selectedDeviceIdRef.current = deviceId;
     }
 
     const targetDeviceId = selectedDeviceIdRef.current;
+    const activeVideoTrack = streamRef.current?.getVideoTracks()[0];
+    const activeDeviceId = activeVideoTrack?.getSettings?.().deviceId;
+    const isSwitchingDevice = Boolean(
+      deviceId
+      && (activeDeviceId
+        ? activeDeviceId !== deviceId
+        : previousDeviceId !== deviceId),
+    );
 
     // Reuse existing stream if it is still active and live and no device switch is requested
     if (
       streamRef.current &&
       streamRef.current.active &&
       streamRef.current.getVideoTracks().some((t) => t.readyState === 'live') &&
-      (!deviceId || deviceId === selectedDeviceIdRef.current)
+      !isSwitchingDevice
     ) {
       return streamRef.current;
     }
@@ -50,16 +59,16 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
       const videoConstraints: any = targetDeviceId
         ? {
             deviceId: { exact: targetDeviceId },
-            width: { ideal: 640 },
-            height: { ideal: 360 },
-            frameRate: { ideal: 30, min: 24 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
             resizeMode: 'none',
           }
         : {
-            width: { ideal: 640 },
-            height: { ideal: 360 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
             facingMode: 'user',
-            frameRate: { ideal: 30, min: 24 },
+            frameRate: { ideal: 30 },
             resizeMode: 'none',
           };
 

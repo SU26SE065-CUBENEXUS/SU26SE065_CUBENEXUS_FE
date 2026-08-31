@@ -11,6 +11,7 @@ import {
 } from '../api/onlineArenaApi';
 import { observeScannerTestFrame, resetScannerTestSession } from '../../rubik-scanner-test/api/onlineScannerTestApi';
 import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
+import { useCameraStream } from '../contexts/CameraStreamContext';
 import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen, RotateCcw } from 'lucide-react';
 
 interface OnlineMatchScannerProps {
@@ -224,8 +225,8 @@ function StabilityBar({
 }
 
 const OVERLAY_INSET_RATIO = 0.08;
-const SNAPSHOT_MAX_WIDTH = 800;
-const SNAPSHOT_QUALITY = 0.82;
+const SNAPSHOT_MAX_WIDTH = 1280;
+const SNAPSHOT_QUALITY = 0.9;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
@@ -535,6 +536,7 @@ function isCurrentObservation(
 }
 
 export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, validationType, onSuccess }: OnlineMatchScannerProps) {
+  const { stream: sharedCameraStream, acquireStream: acquireSharedCameraStream } = useCameraStream();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -1082,16 +1084,16 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       setCameraStatus('starting');
       setError(null);
       setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: 30 },
-          facingMode: 'environment',
-          resizeMode: 'none',
-        } as any,
-        audio: false,
-      });
+      // Reuse the exact stream/device selected during match setup. This keeps
+      // WebRTC, recording and Rubik scanning on one camera and avoids opening
+      // a second browser-selected device with different quality settings.
+      const stream = sharedCameraStream?.active
+        ? sharedCameraStream
+        : await acquireSharedCameraStream();
+      if (!stream) throw new Error('Unable to acquire the selected match camera.');
+
+      const track = stream.getVideoTracks()[0];
+      if (track?.readyState !== 'live') throw new Error('The selected camera is no longer active.');
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -1101,10 +1103,10 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       streamRef.current = stream;
       setCameraActive(true);
       setCameraStatus('ready');
-      const track = stream.getVideoTracks()[0];
       const settings = track?.getSettings?.();
       const resolution = settings?.width && settings?.height ? `${settings.width}x${settings.height}` : 'unknown resolution';
-      const nextMessage = `Camera started (${resolution}). Hold one full face steady, then press Scan / Accept Next Face.`;
+      const fps = settings?.frameRate ? ` @ ${Math.round(settings.frameRate)} FPS` : '';
+      const nextMessage = `Selected match camera started (${resolution}${fps}). Hold one full face steady, then press Scan / Accept Next Face.`;
       setLastReason(nextMessage);
       setStatusMessage(nextMessage);
     } catch (err: any) {
