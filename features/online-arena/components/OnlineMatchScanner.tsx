@@ -224,9 +224,9 @@ function StabilityBar({
   );
 }
 
-const SCAN_ROI_RATIO = 0.86;
-const SNAPSHOT_SIZE = 640;
-const SNAPSHOT_QUALITY = 0.88;
+const OVERLAY_INSET_RATIO = 0.08;
+const SNAPSHOT_MAX_WIDTH = 800;
+const SNAPSHOT_QUALITY = 0.82;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
@@ -421,17 +421,14 @@ async function captureSnapshot(
     throw new Error('Camera preview is not ready.');
   }
 
-  // Crop exactly the square shown by the guide. YOLO also infers at 640x640,
-  // so this avoids letterbox padding and spends all model pixels on the cube.
-  const sourceSize = Math.round(Math.min(video.videoWidth, video.videoHeight) * SCAN_ROI_RATIO);
-  const sourceX = Math.round((video.videoWidth - sourceSize) / 2);
-  const sourceY = Math.round((video.videoHeight - sourceSize) / 2);
+  const width = Math.min(SNAPSHOT_MAX_WIDTH, video.videoWidth);
+  const height = Math.round((video.videoHeight / video.videoWidth) * width);
 
   const canvas = canvasRef.current ?? document.createElement('canvas');
   canvasRef.current = canvas;
-  if (canvas.width !== SNAPSHOT_SIZE || canvas.height !== SNAPSHOT_SIZE) {
-    canvas.width = SNAPSHOT_SIZE;
-    canvas.height = SNAPSHOT_SIZE;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
   }
 
   const context = canvas.getContext('2d');
@@ -440,18 +437,7 @@ async function captureSnapshot(
   }
 
   context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-  context.drawImage(
-    video,
-    sourceX,
-    sourceY,
-    sourceSize,
-    sourceSize,
-    0,
-    0,
-    SNAPSHOT_SIZE,
-    SNAPSHOT_SIZE,
-  );
+  context.drawImage(video, 0, 0, width, height);
   const blob = await new Promise<Blob | null>((resolve) => {
     canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
   });
@@ -735,9 +721,9 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
     const width = canvas.width;
     const height = canvas.height;
-    const roiSize = Math.round(Math.min(width, height) * SCAN_ROI_RATIO);
-    const roiX = Math.round((width - roiSize) / 2);
-    const roiY = Math.round((height - roiSize) / 2);
+    const inset = Math.round(Math.min(width, height) * OVERLAY_INSET_RATIO);
+    const snapshotWidth = Math.min(SNAPSHOT_MAX_WIDTH, width);
+    const snapshotHeight = Math.round((height / width) * snapshotWidth);
     // Canvas coordinates use the camera's native resolution and CSS scales the
     // canvas down. Scale UI primitives too, otherwise labels look half-sized on HD.
     const uiScale = Math.max(1, Math.min(width, height) / 480);
@@ -750,7 +736,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
     context.strokeStyle = 'rgba(249, 115, 22, 0.72)';
     context.lineWidth = 3 * uiScale;
     context.setLineDash([8 * uiScale, 8 * uiScale]);
-    context.strokeRect(roiX, roiY, roiSize, roiSize);
+    context.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
     context.setLineDash([]);
 
     context.fillStyle = 'rgba(9, 9, 11, 0.85)';
@@ -771,11 +757,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       if (![rawX1, rawY1, rawX2, rawY2].every(Number.isFinite)) {
         continue;
       }
-      const scale = roiSize / SNAPSHOT_SIZE;
-      const x1 = roiX + rawX1 * scale;
-      const y1 = roiY + rawY1 * scale;
-      const x2 = roiX + rawX2 * scale;
-      const y2 = roiY + rawY2 * scale;
+      const scaleX = width / snapshotWidth;
+      const scaleY = height / snapshotHeight;
+      const x1 = rawX1 * scaleX;
+      const y1 = rawY1 * scaleY;
+      const x2 = rawX2 * scaleX;
+      const y2 = rawY2 * scaleY;
       context.strokeStyle = 'rgba(250, 204, 21, 0.95)';
       context.lineWidth = 2 * uiScale;
       context.strokeRect(x1, y1, x2 - x1, y2 - y1);
