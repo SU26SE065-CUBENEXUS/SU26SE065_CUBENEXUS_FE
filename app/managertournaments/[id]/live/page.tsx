@@ -932,6 +932,7 @@ export default function LiveOperationsPage({
   const [isLoadingLiveState, setIsLoadingLiveState] = useState(false);
   const [isGeneratingDemoScores, setIsGeneratingDemoScores] = useState(false);
   const [showDemoScoreConfirm, setShowDemoScoreConfirm] = useState(false);
+  const [demoScoreTarget, setDemoScoreTarget] = useState<{ eventId: string; roundNumber: number; eventName: string } | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [groupScrambles, setGroupScrambles] = useState<any[]>([]);
   const [isLoadingScrambles, setIsLoadingScrambles] = useState(false);
@@ -1596,24 +1597,43 @@ export default function LiveOperationsPage({
   const traditionalEvents = tournament.events.filter((e) => e.eventFormatCode === 'TRADITIONAL');
   const currentEvent = tournament.events.find((e) => e.id === selectedEventId);
 
-  const handleGenerateDemoScores = async () => {
-    if (!selectedEventId || !currentEvent || currentEvent.eventFormatCode !== 'TRADITIONAL') return;
-    if (!liveState?.competitors?.length) return;
+  const handleGenerateDemoScores = async (targetEventId?: string, targetRoundNumber?: number) => {
+    const evId = targetEventId || selectedEventId;
+    const rNum = targetRoundNumber ?? Number(roundNumber);
+    const ev = tournament.events.find((e) => e.id === evId);
+    if (!evId || !ev) return;
+    if (ev.eventFormatCode !== 'TRADITIONAL' && ev.eventFormatCode !== 'MEDLEY') return;
 
     setShowDemoScoreConfirm(false);
     setIsGeneratingDemoScores(true);
     try {
-      const result = await generateDemoScores(selectedEventId, Number(roundNumber));
-      const refreshed = await getLiveBoardState(selectedEventId, Number(roundNumber));
-      setLiveState(refreshed);
+      const result = await generateDemoScores(evId, rNum);
+      if (selectedEventId === evId && Number(roundNumber) === rNum) {
+        const refreshed = await getLiveBoardState(evId, rNum);
+        setLiveState(refreshed);
+      }
+      if (medleyEventId === evId && Number(medleyRoundNumber) === rNum) {
+        const refreshedMedley = await getLiveBoardState(evId, rNum);
+        setMedleyLiveState(refreshedMedley);
+      }
+      const successMsg = `Generated ${result.solvesGenerated} demo solves. Preserved ${result.solvesSkipped} existing solves in Round ${rNum}.`;
       setRoundActionResult({
         ok: true,
-        message: `Generated ${result.solvesGenerated} demo solves. Preserved ${result.solvesSkipped} existing solves in Round ${roundNumber}.`,
+        message: successMsg,
+      });
+      setSubmitMedleyResultStatus({
+        ok: true,
+        message: successMsg,
       });
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Demo score generation failed.';
       setRoundActionResult({
         ok: false,
-        message: err instanceof Error ? err.message : 'Demo score generation failed.',
+        message: errorMsg,
+      });
+      setSubmitMedleyResultStatus({
+        ok: false,
+        message: errorMsg,
       });
     } finally {
       setIsGeneratingDemoScores(false);
@@ -1641,7 +1661,7 @@ export default function LiveOperationsPage({
               <div>
                 <h3 className="text-base font-bold text-slate-900">Generate demo scores?</h3>
                 <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                  This will fill only missing solves for <strong>{formatEventLabel(currentEvent!)}</strong>, Round <strong>{roundNumber}</strong>.
+                  This will fill only missing solves for <strong>{demoScoreTarget?.eventName || (currentEvent && formatEventLabel(currentEvent))}</strong>, Round <strong>{demoScoreTarget?.roundNumber ?? roundNumber}</strong>.
                   Existing Judge scores will be preserved and other rounds will not be changed.
                 </p>
               </div>
@@ -1656,7 +1676,7 @@ export default function LiveOperationsPage({
               </button>
               <button
                 type="button"
-                onClick={handleGenerateDemoScores}
+                onClick={() => handleGenerateDemoScores(demoScoreTarget?.eventId, demoScoreTarget?.roundNumber)}
                 disabled={isGeneratingDemoScores}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
               >
@@ -1800,10 +1820,17 @@ export default function LiveOperationsPage({
                 >
                   <RefreshCw className="h-4 w-4" />
                 </button>
-                {currentEvent?.eventFormatCode === 'TRADITIONAL' && (
+                {(currentEvent?.eventFormatCode === 'TRADITIONAL' || currentEvent?.eventFormatCode === 'MEDLEY') && (
                   <button
                     type="button"
-                    onClick={() => setShowDemoScoreConfirm(true)}
+                    onClick={() => {
+                      setDemoScoreTarget({
+                        eventId: selectedEventId,
+                        roundNumber: Number(roundNumber),
+                        eventName: currentEvent ? formatEventLabel(currentEvent) : 'Event'
+                      });
+                      setShowDemoScoreConfirm(true);
+                    }}
                     disabled={isGeneratingDemoScores || !liveState?.competitors?.length}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                     title="Fill missing scores only for this event and round"
@@ -2235,10 +2262,34 @@ export default function LiveOperationsPage({
       {activeTab === 'medley' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-6 shadow-2xs text-slate-900">
-            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-              <TimerIcon className="h-4 w-4 text-indigo-600" /> Medley Relay Score Entry
-            </h2>
-            <p className="text-xs text-slate-500 mb-5">Enter team relay results across multiple puzzle categories.</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <TimerIcon className="h-4 w-4 text-indigo-600" /> Medley Relay Score Entry
+                </h2>
+                <p className="text-xs text-slate-500">Enter team relay results across multiple puzzle categories.</p>
+              </div>
+              {medleyEvents.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const mEv = tournament.events.find((e) => e.id === medleyEventId);
+                    setDemoScoreTarget({
+                      eventId: medleyEventId,
+                      roundNumber: Number(medleyRoundNumber),
+                      eventName: mEv ? formatEventLabel(mEv) : 'Medley Relay'
+                    });
+                    setShowDemoScoreConfirm(true);
+                  }}
+                  disabled={isGeneratingDemoScores || !medleyLiveState?.competitors?.length}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Fill missing demo scores only for this Medley event and round"
+                >
+                  {isGeneratingDemoScores ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                  {isGeneratingDemoScores ? 'Generating...' : 'Generate Missing Demo Scores'}
+                </button>
+              )}
+            </div>
 
             {medleyEvents.length === 0 ? (
               <p className="text-center py-10 text-xs text-slate-500">No Medley events configured.</p>
