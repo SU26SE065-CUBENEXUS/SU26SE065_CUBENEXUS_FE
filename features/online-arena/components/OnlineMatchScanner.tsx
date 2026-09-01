@@ -10,9 +10,7 @@ import {
   submitScrambleBatch,
 } from '../api/onlineArenaApi';
 import { observeScannerTestFrame, resetScannerTestSession } from '../../rubik-scanner-test/api/onlineScannerTestApi';
-import { captureScannerSnapshot, SNAPSHOT_MAX_WIDTH } from '../../rubik-scanner-test/camera/scannerCamera';
 import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
-import { useCameraStream } from '../contexts/CameraStreamContext';
 import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen, RotateCcw } from 'lucide-react';
 
 interface OnlineMatchScannerProps {
@@ -226,6 +224,8 @@ function StabilityBar({
 }
 
 const OVERLAY_INSET_RATIO = 0.08;
+const SNAPSHOT_MAX_WIDTH = 800;
+const SNAPSHOT_QUALITY = 0.82;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
@@ -412,6 +412,44 @@ function getScannerGuidance(session: ScannerSessionDto | null, validationType: '
   return 'Scan any face that has not been accepted yet and keep the full 3x3 grid visible.';
 }
 
+async function captureSnapshot(
+  video: HTMLVideoElement | null,
+  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
+): Promise<Blob> {
+  if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+    throw new Error('Camera preview is not ready.');
+  }
+
+  const sourceWidth = video.videoWidth;
+  const sourceHeight = video.videoHeight;
+  const width = Math.min(SNAPSHOT_MAX_WIDTH, sourceWidth);
+  const height = Math.round((sourceHeight / sourceWidth) * width);
+
+  const canvas = canvasRef.current ?? document.createElement('canvas');
+  canvasRef.current = canvas;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas 2D context is not available.');
+  }
+
+  context.imageSmoothingEnabled = true;
+  context.drawImage(video, 0, 0, width, height);
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
+  });
+
+  if (!blob) {
+    throw new Error('Failed to capture a camera snapshot.');
+  }
+
+  return blob;
+}
+
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -497,7 +535,6 @@ function isCurrentObservation(
 }
 
 export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, validationType, onSuccess }: OnlineMatchScannerProps) {
-  const { stream: sharedCameraStream, acquireStream: acquireSharedCameraStream } = useCameraStream();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const captureCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -816,12 +853,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       //   → Python cộng dồn stable_observation_count trong RAM, trả ACCEPTED sau 3 frame
       // Không còn lỗi 401, session mismatch, hay RETRY giả do gọi sai endpoint.
       const result = await runScannerBurst<ScannerObservationDto>({
-        capture: async () => {
-          if (!videoRef.current) {
-            throw new Error('Camera preview is not ready.');
-          }
-          return captureScannerSnapshot(videoRef.current, captureCanvasRef);
-        },
+        capture: async () => captureSnapshot(videoRef.current, captureCanvasRef),
         observe: async (snapshot) => {
           const requestId = createRequestId();
           return observeScannerTestFrame({
@@ -1064,16 +1096,16 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       setCameraStatus('starting');
       setError(null);
       setCameraError(null);
-      // Reuse the exact stream/device selected during match setup. This keeps
-      // WebRTC, recording and Rubik scanning on one camera and avoids opening
-      // a second browser-selected device with different quality settings.
-      const stream = sharedCameraStream?.active
-        ? sharedCameraStream
-        : await acquireSharedCameraStream();
-      if (!stream) throw new Error('Unable to acquire the selected match camera.');
-
-      const track = stream.getVideoTracks()[0];
-      if (track?.readyState !== 'live') throw new Error('The selected camera is no longer active.');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30 },
+          facingMode: 'environment',
+          resizeMode: 'none',
+        } as any,
+        audio: false,
+      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -1083,10 +1115,10 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       streamRef.current = stream;
       setCameraActive(true);
       setCameraStatus('ready');
+      const track = stream.getVideoTracks()[0];
       const settings = track?.getSettings?.();
       const resolution = settings?.width && settings?.height ? `${settings.width}x${settings.height}` : 'unknown resolution';
-      const fps = settings?.frameRate ? ` @ ${Math.round(settings.frameRate)} FPS` : '';
-      const nextMessage = `Selected match camera started (${resolution}${fps}). Hold one full face steady, then press Scan / Accept Next Face.`;
+      const nextMessage = `Camera started (${resolution}). Hold one full face steady, then press Scan / Accept Next Face.`;
       setLastReason(nextMessage);
       setStatusMessage(nextMessage);
     } catch (err: any) {
