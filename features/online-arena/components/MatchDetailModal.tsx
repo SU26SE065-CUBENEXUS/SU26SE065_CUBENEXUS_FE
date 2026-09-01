@@ -197,16 +197,20 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
                 playerA={{
                   username: matchItem.meUsername,
                   videoUrl: p1Record?.playbackUrl || '',
-                  solveTimeSeconds: (matchItem.meTimeMs || 10000) / 1000,
+                  solveTimeSeconds: matchItem.meIsDnf ? 0 : (matchItem.meTimeMs || 0) / 1000,
                   videoDurationSeconds: p1Record?.durationSeconds,
                   isWinner: matchItem.isWinner,
+                  isDnf: matchItem.meIsDnf,
+                  resultStatus: matchItem.meIsDnf ? 'DNF' : 'VALID',
                 }}
                 playerB={{
                   username: matchItem.opponentUsername,
                   videoUrl: p2Record?.playbackUrl || '',
-                  solveTimeSeconds: (matchItem.opponentTimeMs || 10000) / 1000,
+                  solveTimeSeconds: matchItem.opponentIsDnf ? 0 : (matchItem.opponentTimeMs || 0) / 1000,
                   videoDurationSeconds: p2Record?.durationSeconds,
                   isWinner: !matchItem.isWinner && !matchItem.isDraw,
+                  isDnf: matchItem.opponentIsDnf,
+                  resultStatus: matchItem.opponentIsDnf ? 'DNF' : 'VALID',
                 }}
                 officialWinnerName={
                   matchItem.isDraw || matchItem.outcome === 'DRAW' || matchItem.outcome === 'INCONCLUSIVE'

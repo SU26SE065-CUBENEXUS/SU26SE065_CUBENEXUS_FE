@@ -1450,18 +1450,82 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             </div>
           </div>
 
-          {/* Remaining Center Colors Card (Positioned directly under Camera Viewport) */}
-          <div className="rounded-3xl border border-orange-200 bg-orange-50/50 p-4 space-y-2 shadow-xs">
-            <div className="flex items-center justify-between">
-              <strong className="text-xs font-extrabold uppercase tracking-wider text-orange-950">Remaining Colors</strong>
-              <span className="text-[10px] font-bold text-orange-600 uppercase">
-                {remainingCenterLabels.length ? `${remainingCenterLabels.length} left` : 'All 5 Captured'}
-              </span>
+          {/* Captured Face Slots Card (Positioned directly under Camera Viewport for instant scanning verification) */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">Captured Face Slots</h4>
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-black text-slate-700">
+                  {effectiveCapturedFaceCount} / 5
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                <span className="text-slate-400 uppercase text-[10px]">Remaining:</span>
+                <span className="text-orange-600 font-extrabold">
+                  {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 Captured'}
+                </span>
+              </div>
             </div>
-            <p className="text-xs text-orange-850 font-bold">
-              {remainingCenterLabels.length ? remainingCenterLabels.join(', ') : 'All 5 center colors captured.'}
-            </p>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">{scannerGuidance}</p>
+
+            {/* 5 Mini Rubik Face Slots in a Row */}
+            <div className="grid grid-cols-5 gap-2 sm:gap-2.5">
+              {Array.from({ length: 5 }).map((_, idx) => {
+                const face = effectiveFaces.find((item) => item.faceIndex === idx + 1);
+                const isActive = session ? !face && idx === effectiveCapturedFaceCount : false;
+
+                return (
+                  <div
+                    key={idx}
+                    className={`p-2 border rounded-2xl flex flex-col gap-1.5 transition-all duration-300 relative group ${
+                      isActive
+                        ? 'border-orange-500 bg-orange-50/70 shadow-sm ring-2 ring-orange-400/30'
+                        : face
+                          ? 'border-emerald-300 bg-emerald-50/60'
+                          : 'border-slate-200 bg-slate-50/60'
+                    }`}
+                  >
+                    <header className="flex justify-between items-center text-[9px] font-black uppercase">
+                      <span className={isActive ? 'text-orange-600 font-extrabold' : face ? 'text-emerald-700 font-extrabold' : 'text-slate-500'}>
+                        {face?.faceCode || SLOT_FACE_CODES[idx]}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        <span className={`text-[8px] font-bold truncate max-w-[38px] ${face?.observedCenterColor ? 'text-orange-600' : 'text-slate-400'}`}>
+                          {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'wait'}
+                        </span>
+                        {face && (
+                          <button
+                            type="button"
+                            onClick={() => rescanSingleFace(face)}
+                            title="Quét lại mặt này"
+                            className="p-0.5 text-slate-400 hover:text-orange-600 hover:bg-slate-200/80 rounded transition-colors border-none bg-transparent cursor-pointer"
+                          >
+                            <RotateCcw className="h-2.5 w-2.5" />
+                          </button>
+                        )}
+                      </div>
+                    </header>
+                    <div className="grid grid-cols-3 gap-0.5 h-12 w-12 sm:h-14 sm:w-14 mx-auto bg-slate-300/70 p-1 rounded-xl border border-slate-300/80">
+                      {Array.from({ length: 9 }).map((_, cellIndex) => {
+                        const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
+                        return (
+                          <span
+                            key={cellIndex}
+                            className="rounded-[2px] transition-all duration-300"
+                            style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {scannerGuidance && (
+              <p className="text-[10px] text-slate-500 leading-snug font-medium pt-1 border-t border-slate-100">
+                💡 <span className="font-semibold text-slate-600">{scannerGuidance}</span>
+              </p>
+            )}
           </div>
 
           {/* Error messages if any */}
@@ -1672,85 +1736,11 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             )}
           </div>
 
-          {/* Realtime Metrics Grid Card */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 space-y-3 shadow-sm">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Scan Status & Metrics</h4>
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <StatusItem
-                label="Target"
-                value={
-                  validationType === 'SCRAMBLE'
-                    ? `Face ${Math.min(effectiveCapturedFaceCount + 1, 5)} of 5`
-                    : (session?.requestedFaceLabel ?? 'Not started')
-                }
-              />
-              <StatusItem
-                label="Progress"
-                value={`${effectiveCapturedFaceCount} / 5 Captured`}
-              />
-              <StatusItem label="AI Model" value={effectiveModelVersion} />
-              <StatusItem label="Observed Center" value={observedCenterText} />
-            </div>
-          </div>
+
         </div>
       </div>
 
-      {/* Bottom Section: 5 Captured Face Cards Slots (Pulled Up directly below Camera & Controls) */}
-      <div className="space-y-2 pt-0">
-        <div className="flex items-center justify-between px-1">
-          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Captured Face Slots</h4>
-        </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, idx) => {
-            const face = effectiveFaces.find((item) => item.faceIndex === idx + 1);
-            const isActive = session ? !face && idx === effectiveCapturedFaceCount : false;
-
-            return (
-              <div
-                key={idx}
-                className={`p-3 bg-slate-50 border rounded-2xl flex flex-col gap-2 transition-all duration-300 relative group ${isActive
-                    ? 'border-orange-500 bg-orange-50/70 shadow-orange-100/50 shadow-xs'
-                    : face
-                      ? 'border-emerald-200 bg-emerald-50/50'
-                      : 'border-slate-200 bg-white/70'
-                  }`}
-              >
-                <header className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
-                  <strong>{face?.faceCode || SLOT_FACE_CODES[idx]}</strong>
-                  <div className="flex items-center gap-1">
-                    <span className={face?.observedCenterColor ? 'text-orange-600 font-bold' : 'text-slate-400'}>
-                      {face?.observedCenterColor ?? face?.expectedCenterColor ?? 'pending'}
-                    </span>
-                    {face && (
-                      <button
-                        type="button"
-                        onClick={() => rescanSingleFace(face)}
-                        title="Quét lại mặt này"
-                        className="p-1 text-slate-400 hover:text-orange-600 hover:bg-slate-200 rounded-md transition-colors border-none bg-transparent cursor-pointer"
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                </header>
-                <div className="grid grid-cols-3 gap-1 h-16 w-16 mx-auto bg-slate-200 p-1.5 rounded-xl border border-slate-300/60">
-                  {Array.from({ length: 9 }).map((_, cellIndex) => {
-                    const color = face?.grid3x3?.[Math.floor(cellIndex / 3)]?.[cellIndex % 3] ?? 'unknown';
-                    return (
-                      <span
-                        key={cellIndex}
-                        className="rounded-sm transition-all duration-300"
-                        style={{ background: COLOR_STYLE[color] ?? COLOR_STYLE.unknown }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {session?.validation && !session.validation.matched && (
         <div className="bg-rose-50 border border-rose-200 p-5 rounded-3xl space-y-3">
@@ -1806,11 +1796,4 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
   );
 });
 
-function StatusItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">{label}</span>
-      <strong className="mt-1 block text-sm font-extrabold text-slate-900">{value}</strong>
-    </div>
-  );
-}
+

@@ -10,6 +10,8 @@ export interface PlayerReplayTrack {
   solveTimeSeconds: number;
   videoDurationSeconds?: number; // Known duration from server — shown immediately without preloading
   isWinner?: boolean;
+  isDnf?: boolean;
+  resultStatus?: string;
 }
 
 export interface SplitScreenReplayProps {
@@ -122,15 +124,17 @@ export function SplitScreenReplayPlayer({
     const globalTime = Math.max(timeA, timeB);
     setCurrentTime(globalTime);
 
-    const limitA = playerA.solveTimeSeconds && playerA.solveTimeSeconds > 0 ? playerA.solveTimeSeconds : Infinity;
-    const limitB = playerB.solveTimeSeconds && playerB.solveTimeSeconds > 0 ? playerB.solveTimeSeconds : Infinity;
+    const isADnf = Boolean(playerA.isDnf || playerA.resultStatus === 'DNF');
+    const isBDnf = Boolean(playerB.isDnf || playerB.resultStatus === 'DNF');
+    const limitA = !isADnf && playerA.solveTimeSeconds && playerA.solveTimeSeconds > 0 ? playerA.solveTimeSeconds : Infinity;
+    const limitB = !isBDnf && playerB.solveTimeSeconds && playerB.solveTimeSeconds > 0 ? playerB.solveTimeSeconds : Infinity;
 
     if (videoA) {
-      setIsAFinished(timeA >= limitA);
+      setIsAFinished(!isADnf && timeA >= limitA);
     }
 
     if (videoB) {
-      setIsBFinished(timeB >= limitB);
+      setIsBFinished(!isBDnf && timeB >= limitB);
     }
 
     // Both videos naturally ended (reached end of file)
@@ -261,15 +265,19 @@ export function SplitScreenReplayPlayer({
 
             <div
               className={`bg-white/90 backdrop-blur-md border px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm transition-all ${
-                isAFinished
-                  ? 'border-emerald-200 text-emerald-600 bg-emerald-50'
-                  : 'border-zinc-200 text-zinc-700'
+                playerA.isDnf || playerA.resultStatus === 'DNF'
+                  ? 'border-rose-200 text-rose-600 bg-rose-50'
+                  : isAFinished
+                    ? 'border-emerald-200 text-emerald-600 bg-emerald-50'
+                    : 'border-zinc-200 text-zinc-700'
               }`}
             >
               <span className="text-[10px] font-bold font-mono">
-                {playerA.solveTimeSeconds.toFixed(2)}s
+                {playerA.isDnf || playerA.resultStatus === 'DNF'
+                  ? 'DNF'
+                  : `${playerA.solveTimeSeconds.toFixed(2)}s`}
               </span>
-              {isAFinished && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+              {!playerA.isDnf && playerA.resultStatus !== 'DNF' && isAFinished && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
             </div>
           </div>
         </div>
@@ -304,15 +312,19 @@ export function SplitScreenReplayPlayer({
 
             <div
               className={`bg-white/90 backdrop-blur-md border px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm transition-all ${
-                isBFinished
-                  ? 'border-emerald-200 text-emerald-600 bg-emerald-50'
-                  : 'border-zinc-200 text-zinc-700'
+                playerB.isDnf || playerB.resultStatus === 'DNF'
+                  ? 'border-rose-200 text-rose-600 bg-rose-50'
+                  : isBFinished
+                    ? 'border-emerald-200 text-emerald-600 bg-emerald-50'
+                    : 'border-zinc-200 text-zinc-700'
               }`}
             >
               <span className="text-[10px] font-bold font-mono">
-                {playerB.solveTimeSeconds.toFixed(2)}s
+                {playerB.isDnf || playerB.resultStatus === 'DNF'
+                  ? 'DNF'
+                  : `${playerB.solveTimeSeconds.toFixed(2)}s`}
               </span>
-              {isBFinished && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+              {!playerB.isDnf && playerB.resultStatus !== 'DNF' && isBFinished && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
             </div>
           </div>
         </div>

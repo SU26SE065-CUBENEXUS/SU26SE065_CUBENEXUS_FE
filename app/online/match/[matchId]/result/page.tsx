@@ -427,16 +427,20 @@ function ReplaySection({
             playerA={{
               username: meStateReplay?.displayName || (meStateReplay?.userId ? `Player_${meStateReplay?.userId?.slice(0, 6)}` : 'You'),
               videoUrl: myRecord?.playbackUrl || '',
-              solveTimeSeconds: ((meStateReplay?.timeMs || 10000) / 1000),
+              solveTimeSeconds: ((meStateReplay?.timeMs || 0) / 1000),
               videoDurationSeconds: myRecord?.durationSeconds,
               isWinner: Boolean(state?.winnerId && state?.winnerId === meStateReplay?.userId),
+              isDnf: meStateReplay?.resultStatus === 'DNF' || meStateReplay?.status === 'DNF',
+              resultStatus: meStateReplay?.resultStatus || meStateReplay?.status,
             }}
             playerB={{
               username: oppStateReplay?.displayName || (oppStateReplay?.userId ? `Player_${oppStateReplay?.userId?.slice(0, 6)}` : 'Opponent'),
               videoUrl: oppRecord?.playbackUrl || '',
-              solveTimeSeconds: ((oppStateReplay?.timeMs || 10000) / 1000),
+              solveTimeSeconds: ((oppStateReplay?.timeMs || 0) / 1000),
               videoDurationSeconds: oppRecord?.durationSeconds,
               isWinner: Boolean(state?.winnerId && state?.winnerId === oppStateReplay?.userId),
+              isDnf: oppStateReplay?.resultStatus === 'DNF' || oppStateReplay?.status === 'DNF',
+              resultStatus: oppStateReplay?.resultStatus || oppStateReplay?.status,
             }}
             officialWinnerName={winnerUsername}
             officialWinnerText={state?.outcome}
