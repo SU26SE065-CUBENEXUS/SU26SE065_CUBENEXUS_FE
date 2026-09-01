@@ -415,6 +415,106 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
           </button>
         </div>
 
+        {/* Camera Image Controls for Compact Mode */}
+        {camera.status === 'ready' && (camera.manualFocusRange || camera.exposureRange) && (
+          <div className="mt-2 rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-3 space-y-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-800">Camera Image Controls</p>
+              <p className="mt-0.5 text-[9px] leading-relaxed text-slate-500">
+                Cube mờ? Chỉnh Focus. Cháy sáng sticker? Kéo {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} về phía tối hơn.
+              </p>
+            </div>
+
+            {camera.manualFocusRange ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-slate-700">Focus</p>
+                    <p className="text-[8px] font-semibold text-slate-400">
+                      {camera.focusMode === 'auto' ? 'AUTO · Lấy nét tự động liên tục' : 'MANUAL · Chỉnh thủ công'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void camera.handleEnableAutoFocus()}
+                    disabled={camera.focusMode === 'auto'}
+                    className="rounded-md border border-orange-200 bg-white px-2 py-1 text-[9px] font-black uppercase text-orange-700 hover:bg-orange-100 disabled:opacity-50 cursor-pointer"
+                  >
+                    Use Auto
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  min={camera.manualFocusRange.min}
+                  max={camera.manualFocusRange.max}
+                  step={camera.manualFocusRange.step}
+                  value={camera.focusDistance}
+                  onChange={(e) => void camera.handleManualFocusChange(Number(e.target.value))}
+                  aria-label="Manual camera focus distance"
+                  className="w-full cursor-pointer accent-orange-500 h-1.5"
+                />
+                <div className="flex justify-between text-[8px] font-bold text-slate-400">
+                  <span>Far</span>
+                  <span className="text-slate-600">{camera.focusDistance.toFixed(2)}</span>
+                  <span>Near</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-orange-200/80 bg-white/70 px-2.5 py-1.5 text-[9px] text-slate-500 flex items-center justify-between">
+                <span className="font-bold text-slate-600">Focus: Fixed-Focus</span>
+                <span className="text-[8px] text-slate-400">Phần cứng không hỗ trợ chỉnh tiêu cự</span>
+              </div>
+            )}
+
+            {camera.manualFocusRange && camera.exposureRange && <div className="h-px bg-orange-100" />}
+
+            {camera.exposureRange && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-slate-700">
+                      {camera.exposureRange.type === 'brightness' ? 'Brightness' : 'Exposure'}
+                    </p>
+                    <p className="text-[8px] font-semibold text-slate-400">
+                      {camera.exposureMode === 'auto'
+                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Mức chuẩn (0)' : 'AUTO · Mặc định')
+                        : 'ADJUSTED · Tùy chỉnh'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void camera.handleEnableAutoExposure()}
+                    disabled={camera.exposureMode === 'auto'}
+                    className="rounded-md border border-orange-200 bg-white px-2 py-1 text-[9px] font-black uppercase text-orange-700 hover:bg-orange-100 disabled:opacity-50 cursor-pointer"
+                  >
+                    Reset Auto
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  min={camera.exposureRange.min}
+                  max={camera.exposureRange.max}
+                  step={camera.exposureRange.step}
+                  value={camera.exposureCompensation}
+                  onChange={(e) => void camera.handleExposureChange(Number(e.target.value))}
+                  aria-label={camera.exposureRange.type === 'brightness' ? 'Camera brightness' : 'Camera exposure compensation'}
+                  className="w-full cursor-pointer accent-orange-500 h-1.5"
+                />
+                <div className="flex justify-between text-[8px] font-bold text-slate-400">
+                  <span>Tối hơn</span>
+                  <span className="text-slate-600">
+                    {camera.exposureCompensation > 0 ? '+' : ''}
+                    {camera.exposureRange.type === 'brightness'
+                      ? Math.round(camera.exposureCompensation)
+                      : camera.exposureCompensation.toFixed(1)}
+                  </span>
+                  <span>Sáng hơn</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="mt-3 space-y-2">
           <div className="flex items-center justify-between text-[11px] font-bold">
             <span className="text-slate-500">Remaining center colors:</span>
@@ -645,6 +745,106 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             </button>
           </div>
         </div>
+
+        {/* Camera Image Controls for Full Mode */}
+        {camera.status === 'ready' && (camera.manualFocusRange || camera.exposureRange) && (
+          <div className="rounded-xl border border-orange-500/30 bg-zinc-950 p-4 space-y-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-wider text-orange-400">Camera Image Controls</p>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-zinc-400">
+                Cube mờ? Chỉnh Focus. Cháy sáng sticker? Kéo {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} về phía tối hơn.
+              </p>
+            </div>
+
+            {camera.manualFocusRange ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-zinc-300">Focus</p>
+                    <p className="text-[8px] font-semibold text-zinc-500">
+                      {camera.focusMode === 'auto' ? 'AUTO · Lấy nét tự động liên tục' : 'MANUAL · Chỉnh thủ công'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void camera.handleEnableAutoFocus()}
+                    disabled={camera.focusMode === 'auto'}
+                    className="rounded-md border border-orange-500/30 bg-zinc-900 px-2 py-1 text-[9px] font-black uppercase text-orange-400 hover:bg-zinc-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    Use Auto
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  min={camera.manualFocusRange.min}
+                  max={camera.manualFocusRange.max}
+                  step={camera.manualFocusRange.step}
+                  value={camera.focusDistance}
+                  onChange={(e) => void camera.handleManualFocusChange(Number(e.target.value))}
+                  aria-label="Manual camera focus distance"
+                  className="w-full cursor-pointer accent-orange-500 h-1.5"
+                />
+                <div className="flex justify-between text-[8px] font-bold text-zinc-500">
+                  <span>Far</span>
+                  <span className="text-zinc-300">{camera.focusDistance.toFixed(2)}</span>
+                  <span>Near</span>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-[9px] text-zinc-400 flex items-center justify-between">
+                <span className="font-bold text-zinc-300">Focus: Fixed-Focus</span>
+                <span className="text-[8px] text-zinc-500">Phần cứng không hỗ trợ chỉnh tiêu cự</span>
+              </div>
+            )}
+
+            {camera.manualFocusRange && camera.exposureRange && <div className="h-px bg-zinc-800" />}
+
+            {camera.exposureRange && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-extrabold text-zinc-300">
+                      {camera.exposureRange.type === 'brightness' ? 'Brightness' : 'Exposure'}
+                    </p>
+                    <p className="text-[8px] font-semibold text-zinc-500">
+                      {camera.exposureMode === 'auto'
+                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Mức chuẩn (0)' : 'AUTO · Mặc định')
+                        : 'ADJUSTED · Tùy chỉnh'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void camera.handleEnableAutoExposure()}
+                    disabled={camera.exposureMode === 'auto'}
+                    className="rounded-md border border-orange-500/30 bg-zinc-900 px-2 py-1 text-[9px] font-black uppercase text-orange-400 hover:bg-zinc-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    Reset Auto
+                  </button>
+                </div>
+                <input
+                  type="range"
+                  min={camera.exposureRange.min}
+                  max={camera.exposureRange.max}
+                  step={camera.exposureRange.step}
+                  value={camera.exposureCompensation}
+                  onChange={(e) => void camera.handleExposureChange(Number(e.target.value))}
+                  aria-label={camera.exposureRange.type === 'brightness' ? 'Camera brightness' : 'Camera exposure compensation'}
+                  className="w-full cursor-pointer accent-orange-500 h-1.5"
+                />
+                <div className="flex justify-between text-[8px] font-bold text-zinc-500">
+                  <span>Tối hơn</span>
+                  <span className="text-zinc-300">
+                    {camera.exposureCompensation > 0 ? '+' : ''}
+                    {camera.exposureRange.type === 'brightness'
+                      ? Math.round(camera.exposureCompensation)
+                      : camera.exposureCompensation.toFixed(1)}
+                  </span>
+                  <span>Sáng hơn</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* RUNTIME SCANNING METRICS */}
         <div className="grid grid-cols-2 gap-2 bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 font-mono text-xs text-zinc-400">

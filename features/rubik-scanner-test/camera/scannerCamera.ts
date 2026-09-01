@@ -4,9 +4,10 @@ export const SNAPSHOT_MAX_WIDTH = 1280;
 export const SNAPSHOT_QUALITY = 0.95;
 
 const SCANNER_VIDEO_PROFILE = {
-  width: { ideal: 1280 },
-  height: { ideal: 720 },
+  width: { ideal: 640 },
+  height: { ideal: 480 },
   frameRate: { ideal: 30 },
+  facingMode: 'environment',
   resizeMode: 'none',
 } as const;
 
@@ -23,7 +24,7 @@ export function buildScannerVideoConstraints(
 
   return {
     ...SCANNER_VIDEO_PROFILE,
-    facingMode: options?.facingMode ?? 'user',
+    facingMode: options?.facingMode ?? 'environment',
   } as MediaTrackConstraints;
 }
 
