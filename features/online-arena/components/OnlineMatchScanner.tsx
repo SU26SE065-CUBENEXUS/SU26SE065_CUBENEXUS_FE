@@ -412,6 +412,18 @@ function getScannerGuidance(session: ScannerSessionDto | null, validationType: '
   return 'Scan any face that has not been accepted yet and keep the full 3x3 grid visible.';
 }
 
+interface ManualFocusRange {
+  min: number;
+  max: number;
+  step: number;
+}
+
+interface ExposureRange {
+  min: number;
+  max: number;
+  step: number;
+}
+
 async function captureSnapshot(
   video: HTMLVideoElement | null,
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
@@ -558,6 +570,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
   const [isScanningFace, setIsScanningFace] = useState(false);
   const [isPreparingSession, setIsPreparingSession] = useState(false);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
+  const [manualFocusRange, setManualFocusRange] = useState<ManualFocusRange | null>(null);
+  const [focusDistance, setFocusDistance] = useState(0);
+  const [focusMode, setFocusMode] = useState<'auto' | 'manual'>('auto');
+  const [exposureRange, setExposureRange] = useState<ExposureRange | null>(null);
+  const [exposureCompensation, setExposureCompensation] = useState(0);
+  const [exposureMode, setExposureMode] = useState<'auto' | 'manual'>('auto');
   const [error, setError] = useState<string | null>(null);
   const [lastReason, setLastReason] = useState<string | null>(null);
   const [scannerState, setScannerState] = useState<string>('POSITION_FACE');
@@ -1116,6 +1134,70 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       setCameraActive(true);
       setCameraStatus('ready');
       const track = stream.getVideoTracks()[0];
+      const capabilities = (track as any)?.getCapabilities?.() as any;
+      const supportedFocusModes = Array.isArray(capabilities?.focusMode) ? capabilities.focusMode : [];
+
+      if (supportedFocusModes.includes('continuous')) {
+        try {
+          await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any);
+          setFocusMode('auto');
+        } catch {
+          // Keep the camera's default autofocus when this browser rejects the hint.
+        }
+      }
+
+      const focusCapability = capabilities?.focusDistance;
+      if (
+        focusCapability
+        && Number.isFinite(focusCapability.min)
+        && Number.isFinite(focusCapability.max)
+        && focusCapability.max > focusCapability.min
+      ) {
+        const settings = (track as any).getSettings?.() as any;
+        const initialDistance = Number.isFinite(settings?.focusDistance)
+          ? settings.focusDistance
+          : (focusCapability.min + focusCapability.max) / 2;
+        setManualFocusRange({
+          min: focusCapability.min,
+          max: focusCapability.max,
+          step: focusCapability.step > 0 ? focusCapability.step : 0.01,
+        });
+        setFocusDistance(initialDistance);
+      } else {
+        setManualFocusRange(null);
+      }
+
+      const supportedExposureModes = Array.isArray(capabilities?.exposureMode) ? capabilities.exposureMode : [];
+      if (supportedExposureModes.includes('continuous')) {
+        try {
+          await track.applyConstraints({ advanced: [{ exposureMode: 'continuous' }] } as any);
+          setExposureMode('auto');
+        } catch {
+          // Keep the camera's default auto-exposure when this hint is unsupported.
+        }
+      }
+
+      const exposureCapability = capabilities?.exposureCompensation;
+      if (
+        exposureCapability
+        && Number.isFinite(exposureCapability.min)
+        && Number.isFinite(exposureCapability.max)
+        && exposureCapability.max > exposureCapability.min
+      ) {
+        const currentSettings = (track as any).getSettings?.() as any;
+        const initialExposure = Number.isFinite(currentSettings?.exposureCompensation)
+          ? currentSettings.exposureCompensation
+          : Math.max(exposureCapability.min, Math.min(exposureCapability.max, 0));
+        setExposureRange({
+          min: exposureCapability.min,
+          max: exposureCapability.max,
+          step: exposureCapability.step > 0 ? exposureCapability.step : 0.1,
+        });
+        setExposureCompensation(initialExposure);
+      } else {
+        setExposureRange(null);
+      }
+
       const settings = track?.getSettings?.();
       const resolution = settings?.width && settings?.height ? `${settings.width}x${settings.height}` : 'unknown resolution';
       const nextMessage = `Camera started (${resolution}). Hold one full face steady, then press Scan / Accept Next Face.`;
@@ -1143,11 +1225,77 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
     }
 
     setCameraActive(false);
+    setManualFocusRange(null);
+    setFocusMode('auto');
+    setExposureRange(null);
+    setExposureMode('auto');
     setCameraStatus('idle');
     setIsScanningFace(false);
     setPreview(null);
     setStatusMessage('Camera stopped.');
     setLastReason('Camera stopped.');
+  };
+
+  const handleManualFocusChange = async (nextDistance: number) => {
+    setFocusDistance(nextDistance);
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+
+    try {
+      await track.applyConstraints({
+        advanced: [{ focusMode: 'manual', focusDistance: nextDistance }],
+      } as any);
+      setFocusMode('manual');
+      setCameraError(null);
+    } catch {
+      setCameraError('This camera could not apply the selected manual focus distance.');
+    }
+  };
+
+  const handleEnableAutoFocus = async () => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+
+    try {
+      await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any);
+      setFocusMode('auto');
+      setCameraError(null);
+    } catch {
+      setCameraError('Continuous autofocus is not available on this camera.');
+    }
+  };
+
+  const handleExposureChange = async (nextExposure: number) => {
+    setExposureCompensation(nextExposure);
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+
+    try {
+      await track.applyConstraints({
+        advanced: [{ exposureMode: 'continuous', exposureCompensation: nextExposure }],
+      } as any);
+      setExposureMode('manual');
+      setCameraError(null);
+    } catch {
+      setCameraError('This camera could not apply the selected brightness level.');
+    }
+  };
+
+  const handleEnableAutoExposure = async () => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track || !exposureRange) return;
+
+    const neutralExposure = Math.max(exposureRange.min, Math.min(exposureRange.max, 0));
+    try {
+      await track.applyConstraints({
+        advanced: [{ exposureMode: 'continuous', exposureCompensation: neutralExposure }],
+      } as any);
+      setExposureCompensation(neutralExposure);
+      setExposureMode('auto');
+      setCameraError(null);
+    } catch {
+      setCameraError('Automatic exposure is not available on this camera.');
+    }
   };
 
   const handleLoadExistingSession = async () => {
@@ -1387,6 +1535,95 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                 <span>Stop Camera</span>
               </button>
             </div>
+
+            {cameraStatus === 'ready' && (manualFocusRange || exposureRange) && (
+              <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-4 space-y-4">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-wider text-slate-800">Camera Image Controls</p>
+                  <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">
+                    Blurry cube? Adjust Focus. Washed-out stickers? Move Exposure toward Darker.
+                  </p>
+                </div>
+
+                {manualFocusRange && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-extrabold text-slate-700">Focus</p>
+                        <p className="text-[9px] font-semibold text-slate-400">
+                          {focusMode === 'auto' ? 'AUTO · Camera is focusing continuously' : 'MANUAL · Set before scanning'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void handleEnableAutoFocus()}
+                        disabled={focusMode === 'auto'}
+                        className="rounded-lg border border-orange-200 bg-white px-2.5 py-1.5 text-[10px] font-black uppercase text-orange-700 transition hover:bg-orange-100 disabled:cursor-default disabled:opacity-50"
+                      >
+                        Use Auto
+                      </button>
+                    </div>
+                    <input
+                      type="range"
+                      min={manualFocusRange.min}
+                      max={manualFocusRange.max}
+                      step={manualFocusRange.step}
+                      value={focusDistance}
+                      onChange={(event) => void handleManualFocusChange(Number(event.target.value))}
+                      aria-label="Manual camera focus distance"
+                      className="w-full cursor-pointer accent-orange-500"
+                    />
+                    <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                      <span>Far</span>
+                      <span className="text-slate-600">{focusDistance.toFixed(2)}</span>
+                      <span>Near</span>
+                    </div>
+                  </div>
+                )}
+
+                {manualFocusRange && exposureRange && <div className="h-px bg-orange-100" />}
+
+                {exposureRange && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-extrabold text-slate-700">Exposure</p>
+                        <p className="text-[9px] font-semibold text-slate-400">
+                          {exposureMode === 'auto' ? 'AUTO · Neutral brightness' : 'ADJUSTED · Custom brightness'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void handleEnableAutoExposure()}
+                        disabled={exposureMode === 'auto'}
+                        className="rounded-lg border border-orange-200 bg-white px-2.5 py-1.5 text-[10px] font-black uppercase text-orange-700 transition hover:bg-orange-100 disabled:cursor-default disabled:opacity-50"
+                      >
+                        Reset Auto
+                      </button>
+                    </div>
+                    <input
+                      type="range"
+                      min={exposureRange.min}
+                      max={exposureRange.max}
+                      step={exposureRange.step}
+                      value={exposureCompensation}
+                      onChange={(event) => void handleExposureChange(Number(event.target.value))}
+                      aria-label="Camera exposure compensation"
+                      className="w-full cursor-pointer accent-orange-500"
+                    />
+                    <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                      <span>Darker</span>
+                      <span className="text-slate-600">{exposureCompensation > 0 ? '+' : ''}{exposureCompensation.toFixed(1)}</span>
+                      <span>Brighter</span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="rounded-xl bg-white/80 px-3 py-2 text-[9px] font-semibold leading-relaxed text-slate-500">
+                  Adjust while watching the preview, then hold the cube still and press Scan. Controls appear only when supported by your camera.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Realtime Metrics Grid Card */}
