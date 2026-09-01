@@ -31,7 +31,7 @@ type Props = {
 };
 
 const CAPTURE_INTERVAL_MS = 220;
-const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không loop tự động nhiều lần
+const MAX_SCAN_BURST_MS = 7500;  // 7.5s — enough for AI to scan 1 face without loop
 
 const COLOR_STYLE: Record<string, string> = {
   white: '#f8fafc',
@@ -74,8 +74,8 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
   allowCameraStop = true,
 }: Props) {
   const camera = useCameraStream();
-  // Tự resolve URL trực tiếp: khi local → http://localhost:5212 (bypass Next.js proxy)
-  // Khi prod → '' (relative URL qua Nginx)
+  // Resolve URL directly: local -> http://localhost:5212 (bypass Next.js proxy)
+  // Prod -> '' (relative URL via Nginx)
   const backendUrl = useMemo(() => resolveBackendUrl(backendUrlProp), [backendUrlProp]);
   const [scanMode, setScanMode] = useState<'scramble' | 'finish'>('scramble');
   const [aiHealth, setAiHealth] = useState<AiRubikHealthResponse | null>(null);
@@ -83,7 +83,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
   const [observation, setObservation] = useState<AiRubikScannerPreviewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scannerState, setScannerState] = useState<AiRubikScannerPreviewResponse['scannerState'] | AiRubikScannerSessionResponse['scannerState']>('POSITION_FACE');
-  const [statusMessage, setStatusMessage] = useState('Bấm Start Camera, sau đó Start Scan Session để test AI trực tiếp.');
+  const [statusMessage, setStatusMessage] = useState('Click Start Camera, then Start Scan Session to begin AI test.');
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [isPreparingSession, setIsPreparingSession] = useState(false);
   const [isScanningFace, setIsScanningFace] = useState(false);
@@ -174,7 +174,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
     setObservation(null);
     setError(null);
     setScannerState('POSITION_FACE');
-    setStatusMessage(`Đang ở chế độ ${scanMode === 'scramble' ? 'Scramble' : 'Finish'}. Bấm Start Scan Session để bắt đầu.`);
+    setStatusMessage(`Current mode: ${scanMode === 'scramble' ? 'Scramble' : 'Finish'}. Click Start Scan Session to begin.`);
   }, [scanMode]);
 
   async function refreshHealth() {
@@ -199,7 +199,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
       setSession(created);
       setObservation(null);
       setScannerState(created.scannerState);
-      setStatusMessage('Session đã sẵn sàng. Giữ một mặt ổn định rồi bấm Scan / Accept Next Face.');
+      setStatusMessage('Session ready. Hold a face steady, then click Scan / Accept Next Face.');
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -212,7 +212,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
 
   async function scanCurrentFace() {
     if (camera.status !== 'ready') {
-      setError('Hãy bật camera trước khi scan.');
+      setError('Please start the camera before scanning.');
       setScannerState('CAMERA_ERROR');
       setStatusMessage(UI_MESSAGE.CAMERA_ERROR);
       return;
@@ -242,7 +242,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
     setIsScanningFace(true);
     setObservation(null);
     setScannerState('SCANNING');
-    setStatusMessage(`Đang scan ${currentSession.requestedFaceLabel}. Giữ yên cube để AI khóa mặt.`);
+    setStatusMessage(`Scanning ${currentSession.requestedFaceLabel}. Keep the cube steady for AI detection.`);
     setError(null);
 
     try {
@@ -294,7 +294,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
 
       if (result.reason === 'timeout' && !abortController.signal.aborted) {
         setScannerState('RETRY');
-        setStatusMessage('AI chưa đủ frame ổn định. Giữ thẳng hơn, bớt chói sáng, rồi bấm scan lại.');
+        setStatusMessage('Not enough stable frames detected. Hold the cube steady, avoid glare, and try scanning again.');
       }
     } catch (err) {
       if (abortController.signal.aborted) {
@@ -327,7 +327,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
       setSession(updated);
       setObservation(null);
       setScannerState(updated.scannerState);
-      setStatusMessage('Đã xóa trạng thái mặt hiện tại. Canh lại đúng mặt đó rồi scan tiếp.');
+      setStatusMessage('Cleared current face state. Align the face properly and scan again.');
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -347,7 +347,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
       setSession(updated);
       setObservation(null);
       setScannerState(updated.scannerState);
-      setStatusMessage('Session đã reset. Bạn có thể scan lại từ đầu ngay bây giờ.');
+      setStatusMessage('Session reset. You can restart scanning now.');
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -381,8 +381,8 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-slate-900">Quét cube với AI</p>
-            <p className="text-xs text-slate-500">Quét lần lượt {requiredFaceCount} mặt có tâm màu khác nhau.</p>
+            <p className="text-sm font-bold text-slate-900">AI Cube Scanner</p>
+            <p className="text-xs text-slate-500">Scan {requiredFaceCount} faces with distinct center colors in sequence.</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-bold ${isComplete ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-700'}`}>{progressText}</span>
         </div>
@@ -411,7 +411,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             disabled={!allowCameraStop}
             className="col-span-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
-            {allowCameraStop ? 'Stop Camera' : 'Camera phải bật trong suốt lượt thi'}
+            {allowCameraStop ? 'Stop Camera' : 'Camera must stay on during the attempt'}
           </button>
         </div>
 
@@ -421,7 +421,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             <div>
               <p className="text-[10px] font-black uppercase tracking-wider text-slate-800">Camera Image Controls</p>
               <p className="mt-0.5 text-[9px] leading-relaxed text-slate-500">
-                Cube mờ? Chỉnh Focus. Cháy sáng sticker? Kéo {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} về phía tối hơn.
+                Blurry cube? Adjust Focus. Blown-out stickers? Drag {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} darker.
               </p>
             </div>
 
@@ -431,7 +431,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                   <div>
                     <p className="text-[10px] font-extrabold text-slate-700">Focus</p>
                     <p className="text-[8px] font-semibold text-slate-400">
-                      {camera.focusMode === 'auto' ? 'AUTO · Lấy nét tự động liên tục' : 'MANUAL · Chỉnh thủ công'}
+                      {camera.focusMode === 'auto' ? 'AUTO · Continuous autofocus' : 'MANUAL · Manual adjustment'}
                     </p>
                   </div>
                   <button
@@ -462,7 +462,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             ) : (
               <div className="rounded-lg border border-dashed border-orange-200/80 bg-white/70 px-2.5 py-1.5 text-[9px] text-slate-500 flex items-center justify-between">
                 <span className="font-bold text-slate-600">Focus: Fixed-Focus</span>
-                <span className="text-[8px] text-slate-400">Phần cứng không hỗ trợ chỉnh tiêu cự</span>
+                <span className="text-[8px] text-slate-400">Hardware does not support focus distance</span>
               </div>
             )}
 
@@ -477,8 +477,8 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                     </p>
                     <p className="text-[8px] font-semibold text-slate-400">
                       {camera.exposureMode === 'auto'
-                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Mức chuẩn (0)' : 'AUTO · Mặc định')
-                        : 'ADJUSTED · Tùy chỉnh'}
+                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Standard level (0)' : 'AUTO · Default')
+                        : 'ADJUSTED · Manual override'}
                     </p>
                   </div>
                   <button
@@ -501,14 +501,14 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                   className="w-full cursor-pointer accent-orange-500 h-1.5"
                 />
                 <div className="flex justify-between text-[8px] font-bold text-slate-400">
-                  <span>Tối hơn</span>
+                  <span>Darker</span>
                   <span className="text-slate-600">
                     {camera.exposureCompensation > 0 ? '+' : ''}
                     {camera.exposureRange.type === 'brightness'
                       ? Math.round(camera.exposureCompensation)
                       : camera.exposureCompensation.toFixed(1)}
                   </span>
-                  <span>Sáng hơn</span>
+                  <span>Brighter</span>
                 </div>
               </div>
             )}
@@ -628,7 +628,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
         <header className="space-y-1">
           <h2 className="text-xl font-black text-white uppercase tracking-wider">OnlineArena AI Scanner Test</h2>
           <p className="text-zinc-400 text-xs">
-            Phiên bản sandbox này bỏ qua match và JWT để bạn test luồng AI hoàn chỉnh trước.
+            Sandbox mode bypassing match credentials to test the full AI scanning flow.
           </p>
         </header>
 
@@ -752,7 +752,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             <div>
               <p className="text-[11px] font-black uppercase tracking-wider text-orange-400">Camera Image Controls</p>
               <p className="mt-0.5 text-[10px] leading-relaxed text-zinc-400">
-                Cube mờ? Chỉnh Focus. Cháy sáng sticker? Kéo {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} về phía tối hơn.
+                Blurry cube? Adjust Focus. Blown-out stickers? Drag {camera.exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} darker.
               </p>
             </div>
 
@@ -762,7 +762,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                   <div>
                     <p className="text-[10px] font-extrabold text-zinc-300">Focus</p>
                     <p className="text-[8px] font-semibold text-zinc-500">
-                      {camera.focusMode === 'auto' ? 'AUTO · Lấy nét tự động liên tục' : 'MANUAL · Chỉnh thủ công'}
+                      {camera.focusMode === 'auto' ? 'AUTO · Continuous autofocus' : 'MANUAL · Manual adjustment'}
                     </p>
                   </div>
                   <button
@@ -793,7 +793,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             ) : (
               <div className="rounded-lg border border-dashed border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-[9px] text-zinc-400 flex items-center justify-between">
                 <span className="font-bold text-zinc-300">Focus: Fixed-Focus</span>
-                <span className="text-[8px] text-zinc-500">Phần cứng không hỗ trợ chỉnh tiêu cự</span>
+                <span className="text-[8px] text-zinc-500">Hardware does not support focus distance</span>
               </div>
             )}
 
@@ -808,8 +808,8 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                     </p>
                     <p className="text-[8px] font-semibold text-zinc-500">
                       {camera.exposureMode === 'auto'
-                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Mức chuẩn (0)' : 'AUTO · Mặc định')
-                        : 'ADJUSTED · Tùy chỉnh'}
+                        ? (camera.exposureRange.type === 'brightness' ? 'AUTO · Standard level (0)' : 'AUTO · Default')
+                        : 'ADJUSTED · Manual override'}
                     </p>
                   </div>
                   <button
@@ -832,14 +832,14 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
                   className="w-full cursor-pointer accent-orange-500 h-1.5"
                 />
                 <div className="flex justify-between text-[8px] font-bold text-zinc-500">
-                  <span>Tối hơn</span>
+                  <span>Darker</span>
                   <span className="text-zinc-300">
                     {camera.exposureCompensation > 0 ? '+' : ''}
                     {camera.exposureRange.type === 'brightness'
                       ? Math.round(camera.exposureCompensation)
                       : camera.exposureCompensation.toFixed(1)}
                   </span>
-                  <span>Sáng hơn</span>
+                  <span>Brighter</span>
                 </div>
               </div>
             )}
@@ -882,7 +882,7 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
             {remainingCenters.length ? remainingCenters.join(', ') : 'All 6 center colors captured.'}
           </p>
           <p className="text-[10px] text-zinc-500 leading-normal">
-            Chế độ test này không ép mặt đơn sắc. Chỉ cần AI thấy đủ 9 stickers và tâm màu chưa bị trùng là có thể nhận mặt.
+            This test mode does not enforce uniform face colors. As long as AI detects all 9 stickers with an uncaptured center color, the face is accepted.
           </p>
         </div>
 
