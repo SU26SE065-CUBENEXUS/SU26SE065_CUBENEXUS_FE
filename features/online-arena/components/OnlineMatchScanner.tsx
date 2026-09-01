@@ -422,6 +422,7 @@ interface ExposureRange {
   min: number;
   max: number;
   step: number;
+  type?: 'exposureCompensation' | 'brightness';
 }
 
 async function captureSnapshot(
@@ -1178,6 +1179,7 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       }
 
       const exposureCapability = capabilities?.exposureCompensation;
+      const brightnessCapability = capabilities?.brightness;
       if (
         exposureCapability
         && Number.isFinite(exposureCapability.min)
@@ -1192,8 +1194,26 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
           min: exposureCapability.min,
           max: exposureCapability.max,
           step: exposureCapability.step > 0 ? exposureCapability.step : 0.1,
+          type: 'exposureCompensation',
         });
         setExposureCompensation(initialExposure);
+      } else if (
+        brightnessCapability
+        && Number.isFinite(brightnessCapability.min)
+        && Number.isFinite(brightnessCapability.max)
+        && brightnessCapability.max > brightnessCapability.min
+      ) {
+        const currentSettings = (track as any).getSettings?.() as any;
+        const initialBrightness = Number.isFinite(currentSettings?.brightness)
+          ? currentSettings.brightness
+          : Math.max(brightnessCapability.min, Math.min(brightnessCapability.max, 0));
+        setExposureRange({
+          min: brightnessCapability.min,
+          max: brightnessCapability.max,
+          step: brightnessCapability.step > 0 ? brightnessCapability.step : 1,
+          type: 'brightness',
+        });
+        setExposureCompensation(initialBrightness);
       } else {
         setExposureRange(null);
       }
@@ -1271,9 +1291,15 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
     if (!track) return;
 
     try {
-      await track.applyConstraints({
-        advanced: [{ exposureMode: 'continuous', exposureCompensation: nextExposure }],
-      } as any);
+      if (exposureRange?.type === 'brightness') {
+        await track.applyConstraints({
+          advanced: [{ brightness: nextExposure }],
+        } as any);
+      } else {
+        await track.applyConstraints({
+          advanced: [{ exposureMode: 'continuous', exposureCompensation: nextExposure }],
+        } as any);
+      }
       setExposureMode('manual');
       setCameraError(null);
     } catch {
@@ -1287,9 +1313,15 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
 
     const neutralExposure = Math.max(exposureRange.min, Math.min(exposureRange.max, 0));
     try {
-      await track.applyConstraints({
-        advanced: [{ exposureMode: 'continuous', exposureCompensation: neutralExposure }],
-      } as any);
+      if (exposureRange?.type === 'brightness') {
+        await track.applyConstraints({
+          advanced: [{ brightness: neutralExposure }],
+        } as any);
+      } else {
+        await track.applyConstraints({
+          advanced: [{ exposureMode: 'continuous', exposureCompensation: neutralExposure }],
+        } as any);
+      }
       setExposureCompensation(neutralExposure);
       setExposureMode('auto');
       setCameraError(null);
@@ -1541,11 +1573,11 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-wider text-slate-800">Camera Image Controls</p>
                   <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">
-                    Blurry cube? Adjust Focus. Washed-out stickers? Move Exposure toward Darker.
+                    Blurry cube? Adjust Focus. Washed-out stickers? Move {exposureRange?.type === 'brightness' ? 'Brightness' : 'Exposure'} toward Darker.
                   </p>
                 </div>
 
-                {manualFocusRange && (
+                {manualFocusRange ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1579,6 +1611,11 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                       <span>Near</span>
                     </div>
                   </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-orange-200/80 bg-white/70 px-3 py-2 text-[10px] text-slate-500 flex items-center justify-between">
+                    <span className="font-bold text-slate-600">Focus: Fixed-Focus</span>
+                    <span className="text-[9px] text-slate-400 font-medium">Hardware does not support manual focus distance</span>
+                  </div>
                 )}
 
                 {manualFocusRange && exposureRange && <div className="h-px bg-orange-100" />}
@@ -1587,9 +1624,13 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[11px] font-extrabold text-slate-700">Exposure</p>
+                        <p className="text-[11px] font-extrabold text-slate-700">
+                          {exposureRange.type === 'brightness' ? 'Brightness' : 'Exposure'}
+                        </p>
                         <p className="text-[9px] font-semibold text-slate-400">
-                          {exposureMode === 'auto' ? 'AUTO · Neutral brightness' : 'ADJUSTED · Custom brightness'}
+                          {exposureMode === 'auto'
+                            ? (exposureRange.type === 'brightness' ? 'AUTO · Neutral brightness (0)' : 'AUTO · Neutral brightness')
+                            : 'ADJUSTED · Custom level'}
                         </p>
                       </div>
                       <button
@@ -1608,12 +1649,17 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
                       step={exposureRange.step}
                       value={exposureCompensation}
                       onChange={(event) => void handleExposureChange(Number(event.target.value))}
-                      aria-label="Camera exposure compensation"
+                      aria-label={exposureRange.type === 'brightness' ? 'Camera brightness' : 'Camera exposure compensation'}
                       className="w-full cursor-pointer accent-orange-500"
                     />
                     <div className="flex justify-between text-[9px] font-bold uppercase tracking-wider text-slate-400">
                       <span>Darker</span>
-                      <span className="text-slate-600">{exposureCompensation > 0 ? '+' : ''}{exposureCompensation.toFixed(1)}</span>
+                      <span className="text-slate-600">
+                        {exposureCompensation > 0 ? '+' : ''}
+                        {exposureRange.type === 'brightness'
+                          ? Math.round(exposureCompensation)
+                          : exposureCompensation.toFixed(1)}
+                      </span>
                       <span>Brighter</span>
                     </div>
                   </div>

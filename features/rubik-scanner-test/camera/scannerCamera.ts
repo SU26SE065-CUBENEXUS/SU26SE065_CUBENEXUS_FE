@@ -35,10 +35,10 @@ export async function applyScannerVideoTrackSettings(stream: MediaStream): Promi
   const track = stream.getVideoTracks()[0];
   if (!track?.applyConstraints) return;
 
-  const capabilities = track.getCapabilities?.();
+  const capabilities = (track as any)?.getCapabilities?.() as any;
   if (!capabilities) return;
 
-  const advanced: MediaTrackConstraintSet[] = [];
+  const advanced: any[] = [];
 
   const exposureModes = capabilities.exposureMode as string[] | undefined;
   if (Array.isArray(exposureModes) && exposureModes.includes('continuous')) {
@@ -65,7 +65,7 @@ export async function applyScannerVideoTrackSettings(stream: MediaStream): Promi
   if (!advanced.length) return;
 
   try {
-    await track.applyConstraints({ advanced });
+    await track.applyConstraints({ advanced } as any);
   } catch {
     // Unsupported on this device/browser — keep default auto exposure.
   }
