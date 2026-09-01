@@ -1522,8 +1522,8 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
             </div>
 
             {scannerGuidance && (
-              <p className="text-[10px] text-slate-500 leading-snug font-medium pt-1 border-t border-slate-100">
-                💡 <span className="font-semibold text-slate-600">{scannerGuidance}</span>
+              <p className="text-[10px] text-slate-600 leading-snug font-semibold pt-1 border-t border-slate-100">
+                {scannerGuidance}
               </p>
             )}
           </div>
