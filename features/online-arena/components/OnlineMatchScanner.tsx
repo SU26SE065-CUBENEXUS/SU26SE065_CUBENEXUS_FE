@@ -10,6 +10,7 @@ import {
   submitScrambleBatch,
 } from '../api/onlineArenaApi';
 import { observeScannerTestFrame, resetScannerTestSession } from '../../rubik-scanner-test/api/onlineScannerTestApi';
+import { captureScannerSnapshot } from '../../rubik-scanner-test/camera/scannerCamera';
 import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
 import { useCameraStream } from '../contexts/CameraStreamContext';
 import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen, RotateCcw } from 'lucide-react';
@@ -225,8 +226,6 @@ function StabilityBar({
 }
 
 const OVERLAY_INSET_RATIO = 0.08;
-const SNAPSHOT_MAX_WIDTH = 800;
-const SNAPSHOT_QUALITY = 0.82;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không tự động loop kéo dài
 const CAPTURE_INTERVAL_MS = 220;
 // RETRY cũng là terminal — burst dừng ngay, không tự retry liên tục
@@ -411,42 +410,6 @@ function getScannerGuidance(session: ScannerSessionDto | null, validationType: '
   }
 
   return 'Scan any face that has not been accepted yet and keep the full 3x3 grid visible.';
-}
-
-async function captureSnapshot(
-  video: HTMLVideoElement | null,
-  canvasRef: React.MutableRefObject<HTMLCanvasElement | null>,
-): Promise<Blob> {
-  if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
-    throw new Error('Camera preview is not ready.');
-  }
-
-  const width = Math.min(SNAPSHOT_MAX_WIDTH, video.videoWidth);
-  const height = Math.round((video.videoHeight / video.videoWidth) * width);
-
-  const canvas = canvasRef.current ?? document.createElement('canvas');
-  canvasRef.current = canvas;
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-  }
-
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Canvas 2D context is not available.');
-  }
-
-  context.imageSmoothingEnabled = true;
-  context.drawImage(video, 0, 0, width, height);
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
-  });
-
-  if (!blob) {
-    throw new Error('Failed to capture a camera snapshot.');
-  }
-
-  return blob;
 }
 
 function delay(ms: number) {
@@ -853,7 +816,12 @@ export const OnlineMatchScanner = memo(function OnlineMatchScanner({ matchId, va
       //   → Python cộng dồn stable_observation_count trong RAM, trả ACCEPTED sau 3 frame
       // Không còn lỗi 401, session mismatch, hay RETRY giả do gọi sai endpoint.
       const result = await runScannerBurst<ScannerObservationDto>({
-        capture: async () => captureSnapshot(videoRef.current, captureCanvasRef),
+        capture: async () => {
+          if (!videoRef.current) {
+            throw new Error('Camera preview is not ready.');
+          }
+          return captureScannerSnapshot(videoRef.current, captureCanvasRef);
+        },
         observe: async (snapshot) => {
           const requestId = createRequestId();
           return observeScannerTestFrame({

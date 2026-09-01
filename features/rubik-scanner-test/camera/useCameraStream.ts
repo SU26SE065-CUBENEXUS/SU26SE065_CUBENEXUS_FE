@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  applyScannerVideoTrackSettings,
+  buildScannerVideoConstraints,
+} from './scannerCamera';
 
 export function useCameraStream() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -13,15 +17,10 @@ export function useCameraStream() {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: 30 },
-          facingMode: 'environment',
-          resizeMode: 'none',
-        } as any,
+        video: buildScannerVideoConstraints(undefined, { facingMode: 'environment' }),
         audio: false,
       });
+      await applyScannerVideoTrackSettings(stream);
       streamRef.current = stream;
       setDeviceLabel(stream.getVideoTracks()[0]?.label ?? '');
       if (videoRef.current) {

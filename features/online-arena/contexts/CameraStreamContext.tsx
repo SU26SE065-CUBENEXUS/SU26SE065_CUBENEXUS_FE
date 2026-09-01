@@ -1,6 +1,10 @@
 'use client';
 
 import { createContext, useContext, useRef, useState, useCallback, ReactNode } from 'react';
+import {
+  applyScannerVideoTrackSettings,
+  buildScannerVideoConstraints,
+} from '@/features/rubik-scanner-test/camera/scannerCamera';
 
 interface CameraStreamContextType {
   stream: MediaStream | null;
@@ -56,27 +60,13 @@ export function CameraStreamProvider({ children }: { children: ReactNode }) {
     setCameraError(null);
 
     try {
-      const videoConstraints: any = targetDeviceId
-        ? {
-            deviceId: { exact: targetDeviceId },
-            // 640x480 is the proven scanner profile for the current model.
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            frameRate: { ideal: 30 },
-            resizeMode: 'none',
-          }
-        : {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: 'user',
-            frameRate: { ideal: 30 },
-            resizeMode: 'none',
-          };
+      const videoConstraints = buildScannerVideoConstraints(targetDeviceId);
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: videoConstraints,
         audio: false,
       });
+      await applyScannerVideoTrackSettings(mediaStream);
       streamRef.current = mediaStream;
       setStream(mediaStream);
       return mediaStream;

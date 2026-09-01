@@ -9,6 +9,7 @@ import {
   startScannerTestSession,
 } from '../api/onlineScannerTestApi';
 import { useCameraStream } from '../camera/useCameraStream';
+import { captureScannerSnapshot } from '../camera/scannerCamera';
 import { runScannerBurst } from '../utils/scanBurstControl';
 import { resolveBackendUrl } from '../utils/resolveBackendUrl';
 import type {
@@ -31,8 +32,6 @@ type Props = {
 
 const CAPTURE_INTERVAL_MS = 220;
 const MAX_SCAN_BURST_MS = 7500;  // 7.5s — đủ cho AI scan 1 mặt, không loop tự động nhiều lần
-const SNAPSHOT_MAX_WIDTH = 800;
-const SNAPSHOT_QUALITY = 0.82;
 
 const COLOR_STYLE: Record<string, string> = {
   white: '#f8fafc',
@@ -364,37 +363,10 @@ export const OnlineArenaScannerTestPanel = memo(function OnlineArenaScannerTestP
 
   async function captureSnapshot(): Promise<Blob> {
     const video = camera.videoRef.current;
-    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+    if (!video) {
       throw new Error('Camera preview is not ready.');
     }
-
-    const sourceWidth = video.videoWidth;
-    const sourceHeight = video.videoHeight;
-    const width = Math.min(SNAPSHOT_MAX_WIDTH, sourceWidth);
-    const height = Math.round((sourceHeight / sourceWidth) * width);
-
-    const canvas = captureCanvasRef.current ?? document.createElement('canvas');
-    captureCanvasRef.current = canvas;
-    if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = width;
-      canvas.height = height;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('Canvas 2D context is not available.');
-    }
-
-    context.drawImage(video, 0, 0, width, height);
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, 'image/jpeg', SNAPSHOT_QUALITY);
-    });
-
-    if (!blob) {
-      throw new Error('Failed to capture a camera snapshot.');
-    }
-
-    return blob;
+    return captureScannerSnapshot(video, captureCanvasRef);
   }
 
   const faceSlots = session?.faces ?? [];
