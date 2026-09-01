@@ -10,7 +10,7 @@ import {
   submitScrambleBatch,
 } from '../api/onlineArenaApi';
 import { observeScannerTestFrame, resetScannerTestSession } from '../../rubik-scanner-test/api/onlineScannerTestApi';
-import { captureScannerSnapshot } from '../../rubik-scanner-test/camera/scannerCamera';
+import { captureScannerSnapshot, SNAPSHOT_MAX_WIDTH } from '../../rubik-scanner-test/camera/scannerCamera';
 import { resolveBackendUrl } from '../../rubik-scanner-test/utils/resolveBackendUrl';
 import { useCameraStream } from '../contexts/CameraStreamContext';
 import { RefreshCw, AlertTriangle, Loader2, Play, Camera, Square, FolderOpen, RotateCcw } from 'lucide-react';

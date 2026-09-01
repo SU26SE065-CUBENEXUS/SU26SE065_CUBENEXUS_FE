@@ -17,7 +17,7 @@ export function useCameraStream() {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: buildScannerVideoConstraints(undefined, { facingMode: 'environment' }),
+        video: buildScannerVideoConstraints(undefined, { facingMode: 'user' }),
         audio: false,
       });
       await applyScannerVideoTrackSettings(stream);

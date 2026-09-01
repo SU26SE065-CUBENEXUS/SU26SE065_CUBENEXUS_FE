@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OnlineArenaScannerTestPanel } from '@/features/rubik-scanner-test/components/OnlineArenaScannerTestPanel';
+import { captureScannerSnapshot } from '@/features/rubik-scanner-test/camera/scannerCamera';
 import { ExpectedScramble2DNetVisualizer } from '@/features/rubik-scanner-test/components/ExpectedScramble2DNetVisualizer';
 import { SingleVideoReplayPlayer } from '@/features/online-arena/components/SingleVideoReplayPlayer';
 import { fixWebmDuration } from '@/features/online-arena/utils/fixWebmDuration';
@@ -405,16 +406,19 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     }
   };
 
-  const captureCameraSnapshot = () => {
+  const captureCameraSnapshot = async () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
       throw new Error('Camera is not ready. Please allow camera access and try again.');
     }
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.min(video.videoWidth, 960);
-    canvas.height = Math.round(video.videoHeight * (canvas.width / video.videoWidth));
-    canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+    const blob = await captureScannerSnapshot(video);
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result ?? ''));
+      reader.onerror = () => reject(new Error('Failed to encode camera snapshot.'));
+      reader.readAsDataURL(blob);
+    });
+    return dataUrl.split(',')[1] ?? '';
   };
 
   const stopAndBuildVideo = () => new Promise<Blob>((resolve, reject) => {
@@ -477,7 +481,7 @@ export default function AsyncAttemptFlowPage({ params }: Props) {
     setIsProcessing(true);
     setError(null);
     try {
-      const res = await verifyAsyncFinish(attemptId, captureCameraSnapshot(), faces);
+      const res = await verifyAsyncFinish(attemptId, await captureCameraSnapshot(), faces);
       if (res.isDnf || res.penaltyCode === 'DNF') {
         discardRecording();
         setRecordedVideoUrl(null);
