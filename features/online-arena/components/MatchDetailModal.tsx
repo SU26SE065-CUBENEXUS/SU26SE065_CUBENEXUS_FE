@@ -13,9 +13,10 @@ interface MatchDetailModalProps {
   matchItem: OnlineMatchHistoryItemDto | null;
   isOpen: boolean;
   onClose: () => void;
+  allowReport?: boolean;
 }
 
-export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModalProps) {
+export function MatchDetailModal({ matchItem, isOpen, onClose, allowReport = true }: MatchDetailModalProps) {
   const [playbackData, setPlaybackData] = useState<PlaybackResponseDto | null>(null);
   const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -161,13 +162,13 @@ export function MatchDetailModal({ matchItem, isOpen, onClose }: MatchDetailModa
               </div>
 
               {/* Report Fraud Button */}
-              <button
+              {allowReport && <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
                 Report
-              </button>
+              </button>}
             </div>
           </div>
 

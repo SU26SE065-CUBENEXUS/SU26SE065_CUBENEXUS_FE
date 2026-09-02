@@ -165,6 +165,9 @@ export default function AdminUsersPage() {
             <p className="text-xs text-slate-500 mt-0.5">
               Manage system accounts, roles, and time-limited or permanent bans.
             </p>
+            <p className="mt-1 text-[11px] font-medium text-indigo-600">
+              Select “Match history” on a competitor row to review their Online Arena records.
+            </p>
           </div>
         </div>
 
@@ -322,10 +325,11 @@ export default function AdminUsersPage() {
                           {/* View Detail */}
                           <button
                             onClick={() => setSelectedUserDetail(user)}
-                            title="View user details"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition cursor-pointer"
+                            title={user.userRole.toUpperCase() === 'COMPETITOR' ? 'View competitor match history' : 'View user details'}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[11px] font-bold text-indigo-700 transition hover:border-indigo-200 hover:bg-indigo-100 cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
+                            <span>{user.userRole.toUpperCase() === 'COMPETITOR' ? 'Match history' : 'Details'}</span>
                           </button>
 
                           {/* Change Role */}

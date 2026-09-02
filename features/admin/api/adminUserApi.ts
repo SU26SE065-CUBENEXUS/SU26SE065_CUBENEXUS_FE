@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api/config';
+import type { OnlineMatchHistoryResponseDto } from '@/features/online-arena/api/onlineArenaApi';
 
 export interface AdminUserDto {
   id: string;
@@ -45,6 +46,19 @@ export async function getAdminUsers(params: {
 
 export async function getAdminUserById(userId: string): Promise<AdminUserDto> {
   return apiFetch<AdminUserDto>(`/api/admin/users/${userId}`);
+}
+
+export async function getAdminUserOnlineMatches(
+  userId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  puzzleTypeId?: string,
+): Promise<OnlineMatchHistoryResponseDto> {
+  const query = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+  if (puzzleTypeId) query.set('puzzleTypeId', puzzleTypeId);
+  return apiFetch<OnlineMatchHistoryResponseDto>(
+    `/api/admin/users/${userId}/online-matches?${query.toString()}`,
+  );
 }
 
 export async function updateUserRole(userId: string, userRole: string): Promise<AdminUserDto> {

@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, User, Mail, Phone, MapPin, Shield, Calendar, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import type { AdminUserDto } from '@/features/admin/api/adminUserApi';
+import { AdminUserMatchHistory } from './AdminUserMatchHistory';
 
 interface UserDetailModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
@@ -129,6 +130,18 @@ export function UserDetailModal({ isOpen, user, onClose }: UserDetailModalProps)
             <p className="font-semibold text-slate-800">{formatDate(user.updatedAt)}</p>
           </div>
         </div>
+
+        {user.userRole.toUpperCase() === 'COMPETITOR' && (
+          <section className="space-y-3 border-t border-slate-100 pt-5">
+            <div>
+              <h4 className="text-sm font-extrabold text-slate-900">Online match history</h4>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                Administrative view of this competitor&apos;s ranked matches, results, ELO changes, evidence, and reports.
+              </p>
+            </div>
+            <AdminUserMatchHistory userId={user.id} />
+          </section>
+        )}
 
         {/* Footer */}
         <div className="flex justify-end pt-2 border-t border-slate-100">
