@@ -123,12 +123,65 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
   const [showEvidenceModal, setShowEvidenceModal] = useState(false);
   const [attachedKeys, setAttachedKeys] = useState<Record<string, boolean>>({});
   const [autoFilledSuccess, setAutoFilledSuccess] = useState(false);
+  const [evidenceBlobUrl, setEvidenceBlobUrl] = useState<string | null>(null);
+  const [evidencePrefetchError, setEvidencePrefetchError] = useState<string | null>(null);
+  const [isPrefetchingEvidence, setIsPrefetchingEvidence] = useState(false);
 
   const evidenceVideoRef = React.useRef<HTMLVideoElement | null>(null);
+  const evidenceBlobUrlRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (evidenceBlobUrlRef.current) {
+        URL.revokeObjectURL(evidenceBlobUrlRef.current);
+        evidenceBlobUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  const revokeEvidenceBlob = () => {
+    if (evidenceBlobUrlRef.current) {
+      URL.revokeObjectURL(evidenceBlobUrlRef.current);
+      evidenceBlobUrlRef.current = null;
+    }
+    setEvidenceBlobUrl(null);
+  };
+
+  const prefetchEvidenceVideo = async (rawEvidenceUrl: string) => {
+    const resolvedUrl = resolveEvidenceVideoUrl(rawEvidenceUrl, apiUrl);
+    if (!resolvedUrl) return;
+
+    setIsPrefetchingEvidence(true);
+    setEvidencePrefetchError(null);
+    revokeEvidenceBlob();
+
+    try {
+      const response = await fetch(resolvedUrl, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Evidence video HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      evidenceBlobUrlRef.current = objectUrl;
+      setEvidenceBlobUrl(objectUrl);
+    } catch (err: any) {
+      console.error('Evidence prefetch failed:', err);
+      setEvidencePrefetchError(
+        err?.message ||
+          'Unable to prefetch the AI evidence video. Open it in a new tab if the player stays blank.'
+      );
+    } finally {
+      setIsPrefetchingEvidence(false);
+    }
+  };
 
   // Close modal on ESC
   useEffect(() => {
@@ -193,6 +246,8 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
     setLoading(true);
     setErrorMsg(null);
     setAutoFilledSuccess(false);
+    revokeEvidenceBlob();
+    setEvidencePrefetchError(null);
 
     try {
       const payload: any = {
@@ -203,25 +258,49 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       };
 
       if (scanScope === 'WINDOW' && timestampSeconds !== undefined && timestampSeconds >= 0) {
+        // Always send the report clock (±15s). Do NOT send DB durationSeconds —
+        // that metadata is often shorter than the real playback file (e.g. 42s
+        // stored vs ~2:46 playable), which made the UI show "01:07 - 00:42"
+        // and caused Invalid scan window 500s. AI measures duration from the file.
         payload.target_timestamp_sec = timestampSeconds;
         payload.window_padding_sec = 15.0;
-        if (activeDurationSeconds != null && activeDurationSeconds > 0) {
-          payload.video_duration_sec = activeDurationSeconds;
+        if (
+          activeDurationSeconds != null &&
+          activeDurationSeconds > 0 &&
+          timestampSeconds >= activeDurationSeconds
+        ) {
+          console.warn(
+            `Report timestamp ${timestampSeconds}s exceeds stored duration ${activeDurationSeconds}s; AI will use real file length.`
+          );
         }
       }
 
       const response = await fetch(`${apiUrl}/api/v1/analyze-video`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`AI microservice error: ${response.statusText}`);
+        let detail = response.statusText;
+        try {
+          const errBody = await response.json();
+          detail = errBody?.detail || errBody?.message || detail;
+        } catch {
+          // keep statusText
+        }
+        throw new Error(`AI microservice error: ${detail}`);
       }
 
       const data: AiCheckResult = await response.json();
       setAiData(data);
+      // Prefetch evidence through fetch (can send ngrok bypass header).
+      // <video src="ngrok..."> cannot send that header, so the player often
+      // stays blank until the interstitial is accepted in a new tab.
+      void prefetchEvidenceVideo(data.evidence_video_url);
     } catch (err: any) {
       console.error('AI Check Error:', err);
       setErrorMsg(
@@ -439,10 +518,15 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setShowEvidenceModal(true)}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm border-none"
+                disabled={isPrefetchingEvidence && !evidenceBlobUrl}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm border-none disabled:opacity-60"
               >
                 <Video className="h-3.5 w-3.5" />
-                <span>View AI Analysis Video</span>
+                <span>
+                  {isPrefetchingEvidence && !evidenceBlobUrl
+                    ? 'Preparing AI Video...'
+                    : 'View AI Analysis Video'}
+                </span>
                 <ExternalLink className="h-3 w-3 opacity-80" />
               </button>
             </div>
@@ -453,6 +537,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       {/* AI evidence video modal */}
       {mounted && showEvidenceModal && aiData && (() => {
         const resolvedUrl = resolveEvidenceVideoUrl(aiData.evidence_video_url, apiUrl);
+        const playableUrl = evidenceBlobUrl || resolvedUrl;
         return createPortal(
           <div
             className="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
@@ -492,23 +577,43 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
 
               {/* VIDEO PLAYER CONTAINING ANNOTATED VIDEO */}
               <div className="rounded-2xl overflow-hidden bg-black border border-slate-200 shadow-inner relative group">
-                <video
-                  ref={evidenceVideoRef}
-                  key={resolvedUrl}
-                  src={resolvedUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="w-full max-h-[480px] object-contain mx-auto"
-                >
-                  <source src={resolvedUrl} type="video/mp4" />
-                </video>
+                {isPrefetchingEvidence && !evidenceBlobUrl ? (
+                  <div className="flex h-64 items-center justify-center text-xs font-bold text-white/80">
+                    Loading annotated video...
+                  </div>
+                ) : (
+                  <video
+                    ref={evidenceVideoRef}
+                    key={playableUrl}
+                    src={playableUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full max-h-[480px] object-contain mx-auto"
+                  >
+                    <source src={playableUrl} type="video/mp4" />
+                  </video>
+                )}
               </div>
+
+              {(evidencePrefetchError || (!evidenceBlobUrl && !isPrefetchingEvidence)) && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                  {evidencePrefetchError ||
+                    'If the player is blank, open the ngrok evidence link once in a new tab to dismiss the browser warning, then reopen this modal.'}
+                  <button
+                    type="button"
+                    onClick={() => void prefetchEvidenceVideo(aiData.evidence_video_url)}
+                    className="ml-2 font-bold text-indigo-700 underline"
+                  >
+                    Retry prefetch
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <span className="truncate max-w-lg">Stream: {resolvedUrl}</span>
                 <a
-                  href={resolvedUrl}
+                  href={playableUrl}
                   download="ai-evidence.mp4"
                   className="font-bold text-indigo-600 hover:underline shrink-0"
                 >
