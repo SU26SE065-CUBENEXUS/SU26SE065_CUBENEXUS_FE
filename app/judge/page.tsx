@@ -977,7 +977,7 @@ export default function JudgePage() {
                     </label>
                     <input
                       value={stackmat}
-                      onChange={(e) => setStackmat(e.target.value)}
+                      onChange={(e) => setStackmat(e.target.value.replace(/,/g, '.'))}
                       disabled={!verifiedCompetitor}
                       placeholder="Vd: 45.20"
                       className="w-full rounded-xl border border-border bg-muted/10 px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary font-mono font-bold"
