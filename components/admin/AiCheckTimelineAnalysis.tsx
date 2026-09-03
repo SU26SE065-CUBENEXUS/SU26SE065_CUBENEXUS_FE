@@ -215,7 +215,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       ? player2DurationSeconds
       : undefined;
 
-  const { scanStart, scanEnd, usedIdealWindow } = computeAiScanWindow(
+  const { scanStart, scanEnd } = computeAiScanWindow(
     timestampSeconds || 0,
     15,
     activeDurationSeconds
@@ -455,16 +455,6 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
             )}
           </button>
         </div>
-        {usedIdealWindow &&
-          activeDurationSeconds != null &&
-          activeDurationSeconds > 0 &&
-          (timestampSeconds || 0) >= activeDurationSeconds && (
-            <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
-              Report clock ({formatSec(timestampSeconds || 0)}) is past stored duration (
-              {formatSec(activeDurationSeconds)}). Window keeps ±15s around report time; AI
-              measures real file length.
-            </p>
-          )}
 
         {errorMsg && (
           <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2 font-medium">
