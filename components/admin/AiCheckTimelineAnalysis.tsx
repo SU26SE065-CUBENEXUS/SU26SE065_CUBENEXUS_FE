@@ -215,7 +215,7 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       ? player2DurationSeconds
       : undefined;
 
-  const { scanStart, scanEnd } = computeAiScanWindow(
+  const { scanStart, scanEnd, usedIdealWindow } = computeAiScanWindow(
     timestampSeconds || 0,
     15,
     activeDurationSeconds
@@ -258,10 +258,20 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       };
 
       if (scanScope === 'WINDOW' && timestampSeconds !== undefined && timestampSeconds >= 0) {
+        // Always send the report clock (±15s). Do NOT send DB durationSeconds —
+        // that metadata is often shorter than the real playback file (e.g. 42s
+        // stored vs ~2:46 playable), which made the UI show "01:07 - 00:42"
+        // and caused Invalid scan window 500s. AI measures duration from the file.
         payload.target_timestamp_sec = timestampSeconds;
         payload.window_padding_sec = 15.0;
-        if (activeDurationSeconds != null && activeDurationSeconds > 0) {
-          payload.video_duration_sec = activeDurationSeconds;
+        if (
+          activeDurationSeconds != null &&
+          activeDurationSeconds > 0 &&
+          timestampSeconds >= activeDurationSeconds
+        ) {
+          console.warn(
+            `Report timestamp ${timestampSeconds}s exceeds stored duration ${activeDurationSeconds}s; AI will use real file length.`
+          );
         }
       }
 
@@ -275,7 +285,14 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`AI microservice error: ${response.statusText}`);
+        let detail = response.statusText;
+        try {
+          const errBody = await response.json();
+          detail = errBody?.detail || errBody?.message || detail;
+        } catch {
+          // keep statusText
+        }
+        throw new Error(`AI microservice error: ${detail}`);
       }
 
       const data: AiCheckResult = await response.json();
@@ -438,6 +455,16 @@ export const AiCheckTimelineAnalysis: React.FC<Props> = ({
             )}
           </button>
         </div>
+        {usedIdealWindow &&
+          activeDurationSeconds != null &&
+          activeDurationSeconds > 0 &&
+          (timestampSeconds || 0) >= activeDurationSeconds && (
+            <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+              Report clock ({formatSec(timestampSeconds || 0)}) is past stored duration (
+              {formatSec(activeDurationSeconds)}). Window keeps ±15s around report time; AI
+              measures real file length.
+            </p>
+          )}
 
         {errorMsg && (
           <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2 font-medium">
