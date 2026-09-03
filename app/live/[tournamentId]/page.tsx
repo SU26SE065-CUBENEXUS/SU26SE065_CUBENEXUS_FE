@@ -1050,7 +1050,7 @@ export default function PublicLiveBoardDetailPage({
                   </span>
                   <div>
                     <h3 className="text-base font-black text-foreground uppercase tracking-tight leading-tight">
-                      📸 Scorecard Photo Evidence — Solve #{selectedInspectSolve.solveNumber}
+                      Scorecard Photo Evidence — Solve #{selectedInspectSolve.solveNumber}
                     </h3>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">
                       Competitor: <strong className="text-foreground">{selectedInspectSolve.competitorName}</strong> ({selectedInspectSolve.competitorUserCode})

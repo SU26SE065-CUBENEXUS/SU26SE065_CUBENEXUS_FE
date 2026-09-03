@@ -56,6 +56,19 @@ function formatDate(dateStr?: string): string {
   });
 }
 
+function getQrExpiresAt(qrToken?: string): string | null {
+  if (!qrToken) return null;
+  try {
+    const parsed = JSON.parse(qrToken);
+    if (parsed && (parsed.ExpiresAt || parsed.expiresAt)) {
+      return parsed.ExpiresAt || parsed.expiresAt;
+    }
+  } catch {
+    // Non-JSON string
+  }
+  return null;
+}
+
 export default function RegistrationManagementPage({
   params,
 }: {
@@ -844,16 +857,24 @@ export default function RegistrationManagementPage({
             </div>
 
             {/* High-Resolution QR Display */}
-            <div className="flex flex-col items-center justify-center p-4 bg-white border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+            <div className="flex flex-col items-center justify-center p-4 bg-white border-2 border-dashed border-slate-200 rounded-2xl space-y-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(selectedRegForQr.qrToken)}`}
                 alt={`QR Ticket for ${selectedRegForQr.competitorName}`}
                 className="w-48 h-48 object-contain rounded-lg"
               />
-              <p className="text-[10px] font-mono font-medium text-slate-500 text-center break-all px-2 bg-slate-50 py-1 rounded border border-slate-100 max-w-full select-all">
-                {selectedRegForQr.qrToken}
-              </p>
+              {(() => {
+                const expiresAt = getQrExpiresAt(selectedRegForQr.qrToken);
+                if (!expiresAt) return null;
+                return (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                    <Clock className="h-3.5 w-3.5 text-slate-400" />
+                    <span>Expires At:</span>
+                    <span className="font-semibold text-slate-700">{formatDate(expiresAt)}</span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Action Buttons */}
@@ -874,6 +895,7 @@ export default function RegistrationManagementPage({
                 onClick={() => {
                   const printWin = window.open('', '_blank');
                   if (printWin) {
+                    const expiresAt = getQrExpiresAt(selectedRegForQr.qrToken);
                     printWin.document.write(`
                       <html>
                         <head>
@@ -883,7 +905,7 @@ export default function RegistrationManagementPage({
                             h2 { margin-bottom: 4px; font-size: 24px; }
                             p { color: #555; margin: 4px 0; font-size: 14px; }
                             .qr { width: 260px; height: 260px; margin: 20px auto; }
-                            .code { font-family: monospace; font-size: 12px; word-break: break-all; color: #444; }
+                            .expires { font-size: 13px; color: #666; margin-top: 8px; font-weight: 500; }
                           </style>
                         </head>
                         <body>
@@ -891,7 +913,7 @@ export default function RegistrationManagementPage({
                           <p>User Code: <strong>${selectedRegForQr.competitorUserCode}</strong></p>
                           <p>Tournament: ${tournament.name}</p>
                           <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(selectedRegForQr.qrToken)}" class="qr" />
-                          <p class="code">${selectedRegForQr.qrToken}</p>
+                          ${expiresAt ? `<p class="expires">Expires At: <strong>${formatDate(expiresAt)}</strong></p>` : ''}
                           <script>window.print();</script>
                         </body>
                       </html>
